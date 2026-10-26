@@ -149,9 +149,16 @@ function hasAuthoredBreak(
   if (typeof consumed === 'string' && consumed.includes('\n')) return true;
 
   // A string the spec configured on an instance — the promoted text's new home,
-  // and equally a break an author typed into any component's text prop.
+  // and equally a break an author typed into any component's text prop. A
+  // member-keyed object value (ADR-111) carries its strings one level down.
   const configured = (element.propConfigurations ?? {}) as Record<string, unknown>;
-  return Object.values(configured).some(v => typeof v === 'string' && v.includes('\n'));
+  const carriesBreak = (v: unknown): boolean =>
+    typeof v === 'string' ? v.includes('\n')
+    : v !== null && typeof v === 'object' && !Array.isArray(v)
+        && Object.keys(v).every(k => !k.startsWith('$'))
+      ? Object.values(v).some(m => typeof m === 'string' && m.includes('\n'))
+      : false;
+  return Object.values(configured).some(carriesBreak);
 }
 
 /** Does this content — literal, or the prop it binds to — carry a newline? */
@@ -164,7 +171,11 @@ function contentHasLineBreak(
   const binding = (content as { $binding?: unknown }).$binding;
   if (typeof binding !== 'string') return false;
   const propKey = binding.match(/^#\/props\/(.+)$/)?.[1];
-  const prop = propKey ? apiProps[propKey] : undefined;
+  // A member pointer (ADR-111) reads the member's own definition.
+  const memberPath = propKey?.split('/members/');
+  const prop = memberPath && memberPath.length === 2
+    ? ((apiProps[memberPath[0]]?.members as Record<string, Record<string, unknown>> | undefined)?.[memberPath[1]])
+    : propKey ? apiProps[propKey] : undefined;
   if (!prop) return false;
   const candidates = [
     ...(Array.isArray(prop.examples) ? prop.examples : []),

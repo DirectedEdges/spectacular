@@ -46,6 +46,27 @@ describe('PropsAnalyzer', () => {
     expect(new PropsAnalyzer().name).toBe('props');
   });
 
+  it('reports an object prop as member rows, never a bare object row (ADR-111)', async () => {
+    const aggregate = await runAnalyzer({
+      card: {
+        props: {
+          margin: {
+            type: 'object',
+            members: {
+              compact: { type: 'string', default: 'None', enum: ['None', 'Tight'], nullable: false },
+              emphasized: { type: 'boolean', default: false },
+            },
+          },
+        },
+      },
+    });
+    const names = aggregate.propNameFrequency.map(entry => entry.name);
+    expect(names).toContain('margin.compact');
+    expect(names).toContain('margin.emphasized');
+    expect(names).not.toContain('margin');
+    expect(aggregate.summary.typeDistribution).toEqual({ string: 1, boolean: 1 });
+  });
+
   it('writes analysis/props.yaml when outputFormat is YAML', async () => {
     await runAnalyzer({ compA: { props: { label: { type: 'string' } } } }, 'YAML');
     expect(fs.existsSync(path.join(analysisDir, 'props.yaml'))).toBe(true);

@@ -174,8 +174,48 @@ function diffProps(ctx: Ctx, a: Record<string, unknown>, b: Record<string, unkno
         diffScalarSet(ctx, (ov ?? []) as unknown[], (nv ?? []) as unknown[], fieldPath, enumMap);
         continue;
       }
+      // Members (ADR-111) diff per member, not as one modified blob — a member is
+      // API surface, and its removal must grade as such.
+      if (field === 'members' && isObject(ov) && isObject(nv)) {
+        diffMembers(ctx, ov, nv, fieldPath);
+        continue;
+      }
       const op: Operation = ov === undefined ? 'added' : nv === undefined ? 'removed' : 'modified';
       push(ctx, fieldPath, op, ov, nv);
+    }
+  }
+}
+
+/** One object prop's members (ADR-111), diffed with prop semantics one level down. */
+function diffMembers(
+  ctx: Ctx,
+  a: Record<string, unknown>,
+  b: Record<string, unknown>,
+  basePath: string,
+): void {
+  for (const key of new Set([...Object.keys(a), ...Object.keys(b)])) {
+    const ov = a[key];
+    const nv = b[key];
+    const path = `${basePath}.${key}`;
+    if (ov === undefined) {
+      const optional = isObject(nv) && (nv.default !== undefined || nv.nullable === true);
+      push(ctx, path, 'added', undefined, nv, [optional ? 'optional' : 'required']);
+      continue;
+    }
+    if (nv === undefined) { push(ctx, path, 'removed', ov, undefined); continue; }
+    if (deepEqual(ov, nv)) continue;
+    if (!isObject(ov) || !isObject(nv)) { push(ctx, path, 'modified', ov, nv); continue; }
+    for (const field of new Set([...Object.keys(ov), ...Object.keys(nv)])) {
+      const o = ov[field];
+      const n = nv[field];
+      if (deepEqual(o, n)) continue;
+      const fieldPath = `${path}.${field}`;
+      if (PROP_FIELDS_SET.includes(field) && Array.isArray(o ?? []) && Array.isArray(n ?? [])) {
+        diffScalarSet(ctx, (o ?? []) as unknown[], (n ?? []) as unknown[], fieldPath, new Map());
+        continue;
+      }
+      const op: Operation = o === undefined ? 'added' : n === undefined ? 'removed' : 'modified';
+      push(ctx, fieldPath, op, o, n);
     }
   }
 }
@@ -329,6 +369,13 @@ export function findOrphans(component: AssembledComponent): string[] {
   const props = (api.props ?? {}) as Record<string, unknown>;
   const orphans: string[] = [];
 
+  const checkScalar = (key: string, value: unknown, def: unknown, where: string) => {
+    const allowed = isObject(def) && Array.isArray(def.enum) ? (def.enum as unknown[]) : null;
+    if (allowed && typeof value === 'string' && !allowed.includes(value)) {
+      orphans.push(`${where} uses \`${key}: ${value}\`, a value api.yaml no longer declares`);
+    }
+  };
+
   const checkConfig = (config: unknown, where: string) => {
     if (!isObject(config)) return;
     for (const [key, value] of Object.entries(config)) {
@@ -337,10 +384,23 @@ export function findOrphans(component: AssembledComponent): string[] {
         orphans.push(`${where} keys \`${key}\`, which api.yaml no longer declares`);
         continue;
       }
-      const allowed = isObject(def) && Array.isArray(def.enum) ? (def.enum as unknown[]) : null;
-      if (allowed && typeof value === 'string' && !allowed.includes(value)) {
-        orphans.push(`${where} uses \`${key}: ${value}\`, a value api.yaml no longer declares`);
+      // A member-keyed value under an object prop (ADR-111) validates per member:
+      // each key against the declared members, each value against its member's enum.
+      const members = isObject(def) && def.type === 'object' && isObject(def.members)
+        ? (def.members as Record<string, unknown>)
+        : null;
+      if (members && isObject(value)) {
+        for (const [memberKey, memberValue] of Object.entries(value)) {
+          const member = members[memberKey];
+          if (member === undefined) {
+            orphans.push(`${where} keys \`${key}.${memberKey}\`, a member api.yaml no longer declares`);
+            continue;
+          }
+          checkScalar(`${key}.${memberKey}`, memberValue, member, where);
+        }
+        continue;
       }
+      checkScalar(key, value, def, where);
     }
   };
 
@@ -349,9 +409,22 @@ export function findOrphans(component: AssembledComponent): string[] {
     if (!isObject(node)) return;
     const binding = node.$binding;
     if (typeof binding === 'string') {
-      const match = binding.match(/^#\/props\/([^/]+)$/);
-      if (match && props[match[1]] === undefined) {
-        orphans.push(`${where} binds \`${binding}\`, but api.yaml no longer declares \`props.${match[1]}\``);
+      // A member pointer (ADR-111) crosses the members level; both halves must
+      // still be declared.
+      const member = binding.match(/^#\/props\/([^/]+)\/members\/([^/]+)$/);
+      if (member) {
+        const parent = props[member[1]];
+        const declared = isObject(parent) && isObject(parent.members)
+          ? (parent.members as Record<string, unknown>)[member[2]]
+          : undefined;
+        if (declared === undefined) {
+          orphans.push(`${where} binds \`${binding}\`, but api.yaml no longer declares \`props.${member[1]}.members.${member[2]}\``);
+        }
+      } else {
+        const match = binding.match(/^#\/props\/([^/]+)$/);
+        if (match && props[match[1]] === undefined) {
+          orphans.push(`${where} binds \`${binding}\`, but api.yaml no longer declares \`props.${match[1]}\``);
+        }
       }
     }
     for (const value of Object.values(node)) checkBindings(value, where);

@@ -161,6 +161,14 @@ function extractProps(scopeKey: string, comp: Record<string, unknown>): PropEntr
   const props = (comp.props ?? {}) as Record<string, unknown>;
   for (const [name, raw] of Object.entries(props)) {
     const prop = raw as Record<string, unknown>;
+    // An object prop (ADR-111) reports its members, each a scalar prop row under
+    // `prop.member` — a bare `object` row says nothing a reader can act on.
+    if (prop.type === 'object' && prop.members && typeof prop.members === 'object') {
+      for (const [memberKey, member] of Object.entries(prop.members as Record<string, Record<string, unknown>>)) {
+        results.push(...extractProps(scopeKey, { props: { [`${name}.${memberKey}`]: member } }));
+      }
+      continue;
+    }
     const extensions = prop.$extensions as Record<string, unknown> | undefined;
     const figmaExt = extensions?.['com.figma'] as Record<string, unknown> | undefined;
     results.push({

@@ -37,6 +37,27 @@ describe('FileWriter.serialize — ids a YAML 1.1 parser would misread', () => {
   });
 });
 
+describe('FileWriter.serialize — object props pass through whole (ADR-111)', () => {
+  it('round-trips members and member-keyed configuration values byte-identically', () => {
+    const spec = {
+      props: {
+        margin: {
+          type: 'object',
+          members: {
+            compact: { type: 'string', default: 'None', enum: ['None', 'Tight'], nullable: false,
+              $extensions: { 'com.figma': { name: 'Margin.compact' } } },
+          },
+        },
+      },
+      variants: [{ configuration: { margin: { compact: 'Tight' } } }],
+    };
+    const text = out(spec);
+    expect(yaml.parse(text)).toEqual(spec);
+    // Serializing the parse again is byte-identical — nothing reshapes on the way through.
+    expect(out(yaml.parse(text))).toBe(text);
+  });
+});
+
 describe('FileWriter.serialize — everything else stays plain', () => {
   it('leaves an id whose second group exceeds 59 alone', () => {
     // 60 is out of range for a sexagesimal group, so 1.1 reads it as a string

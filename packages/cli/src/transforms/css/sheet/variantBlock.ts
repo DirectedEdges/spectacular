@@ -23,6 +23,29 @@ import type { TransformerContext } from '../../../transforms/transformer.js';
  * where order is what decides which wins). Labelling each one is what makes the
  * separation readable instead of merely repetitive.
  */
+/**
+ * Member-keyed object values (ADR-111) flattened to dotted keys
+ * (`margin.compact`), nulls dropped — the spelling the emitted trees hook their
+ * member data attributes under. A `$`-keyed object (`$binding`, `$slotContent`)
+ * is a reference, not a member value, and passes through.
+ */
+export function flattenMemberValues(configuration: Record<string, unknown>): Record<string, unknown> {
+  const flat: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(configuration)) {
+    if (
+      !key.startsWith('$') && value !== null && typeof value === 'object' && !Array.isArray(value)
+      && Object.keys(value).length > 0 && Object.keys(value).every(k => !k.startsWith('$'))
+    ) {
+      for (const [memberKey, memberValue] of Object.entries(value)) {
+        if (memberValue !== null) flat[`${key}.${memberKey}`] = memberValue;
+      }
+      continue;
+    }
+    flat[key] = value;
+  }
+  return flat;
+}
+
 function variantLabel(configuration: Record<string, unknown>): string {
   const pairs = Object.entries(configuration)
     .map(([k, v]) => (v === true ? k : v === false ? `not ${k}` : `${k}=${String(v)}`))
@@ -69,7 +92,10 @@ export function variantBlockLines(input: VariantBlockInput): string[] {
   const lines: string[] = [];
 
   for (const variant of variantList) {
-    const configuration = (variant.configuration ?? {}) as Record<string, unknown>;
+    // Member-keyed values (ADR-111) flatten to dotted keys so the expansion sees
+    // scalars — and the data attribute each member hooks as matches the emitted
+    // scaffolds' spelling (`data-margin-compact`).
+    const configuration = flattenMemberValues((variant.configuration ?? {}) as Record<string, unknown>);
     if (Object.keys(configuration).length === 0) continue;
 
     // What this variant's rule is written against. A pure function, so the
@@ -82,7 +108,7 @@ export function variantBlockLines(input: VariantBlockInput): string[] {
       stateLookup,
       nestedClaimedPairs,
       selectorFor,
-      attrNameFor: prop => attrNameFor(prop, rootAs),
+      attrNameFor: prop => attrNameFor(prop.replace('.', '-'), rootAs),
       guardsDisabled: Boolean(context.processingStates?.['disabled']),
     });
     for (const { prop, value } of unnamed) warnUnnamedValue(prop, value);
