@@ -471,6 +471,42 @@ describe('StylingAnalyzer.finalize', () => {
     expect(entry.component).toBe('compSub.item');
   });
 
+  it('byToken keys every set in ascending token-name order', async () => {
+    const t = new StylingAnalyzer();
+    const outOfOrder = {
+      anatomy: { root: { type: 'container' }, label: { type: 'text' } },
+      default: {
+        elements: {
+          root: {
+            styles: {
+              backgroundColor: { $token: 'Zebra/Surface', $type: 'color' },
+              borderColor: { $token: 'Alpha/Border', $type: 'color' },
+              boxShadow: { $token: 'Shadow/High', $type: 'shadow' },
+            },
+          },
+          label: {
+            styles: {
+              typography: { $token: 'Typography/Title', $type: 'typography' },
+              color: { $token: 'Mid/Text', $type: 'color' },
+            },
+          },
+        },
+      },
+      variants: [
+        { elements: { root: { styles: { boxShadow: { $token: 'Blur/Backdrop', $type: 'blur' } } } } },
+        { elements: { label: { styles: { typography: { $token: 'Typography/Body', $type: 'typography' } } } } },
+      ],
+    };
+    const compDir = path.join(outputDir, 'compOrder');
+    await fs.ensureDir(compDir);
+    await t.run(outOfOrder, { specDir: compDir, outputDir: compDir, workspaceDir: compDir, specsRoot: compDir, kind: 'component' as const, componentKey: 'compOrder', tokensFormat: 'TOKEN', outputFormat: 'JSON' });
+    await t.finalize!(outputDir);
+    const byToken = JSON.parse(await fs.readFile(path.join(outputDir, 'analysis', 'styling.byToken.json'), 'utf-8'));
+    expect(Object.keys(byToken.variables)).toEqual(['Alpha/Border', 'Mid/Text', 'Zebra/Surface']);
+    expect(Object.keys(byToken.textStyles)).toEqual(['Typography/Body', 'Typography/Title']);
+    expect(Object.keys(byToken.effectStyles)).toEqual(['Blur/Backdrop', 'Shadow/High']);
+  });
+
   it('does nothing when no components were processed', async () => {
     const t = new StylingAnalyzer();
     await t.finalize!(outputDir);

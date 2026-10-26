@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **An invalid `spec.collapsePrimitiveWrapper` now warns and falls back to the default** instead of silently turning the setting off
 
+- **`specs analyze styling` lists tokens alphabetically** in every set of the by-token report — variables, color styles, text styles and effect styles — instead of in the order the catalogue happened to reach them
+
 
 ## [0.35.0] - 2026-10-21
 

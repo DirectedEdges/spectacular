@@ -148,19 +148,34 @@ export class StylingAnalyzer implements Transformer {
   }
 
   private async _writeByToken(dictDir: string): Promise<void> {
+    const collected: Record<keyof StylingJson, Map<string, ByTokenEntry[]>> = {
+      variables: new Map(),
+      colorStyles: new Map(),
+      textStyles: new Map(),
+      effectStyles: new Map(),
+    };
+
+    for (const [scopeKey, data] of Array.from(this._componentData.entries()).sort((a, b) => a[0].localeCompare(b[0]))) {
+      for (const groupKey of CATEGORY_KEYS) {
+        for (const row of data[groupKey]) {
+          const entries = collected[groupKey].get(row.name) ?? [];
+          entries.push({ component: scopeKey, appliedAs: row.appliedAs, appliedTo: row.appliedTo });
+          collected[groupKey].set(row.name, entries);
+        }
+      }
+    }
+
+    // Token names are the reader's index into this report, so each set is keyed
+    // in ascending name order rather than in the order the walk met them.
     const out: Record<keyof StylingJson, Record<string, ByTokenEntry[]>> = {
       variables: {},
       colorStyles: {},
       textStyles: {},
       effectStyles: {},
     };
-
-    for (const [scopeKey, data] of Array.from(this._componentData.entries()).sort((a, b) => a[0].localeCompare(b[0]))) {
-      for (const groupKey of CATEGORY_KEYS) {
-        for (const row of data[groupKey]) {
-          const entries = out[groupKey][row.name] ?? (out[groupKey][row.name] = []);
-          entries.push({ component: scopeKey, appliedAs: row.appliedAs, appliedTo: row.appliedTo });
-        }
+    for (const groupKey of CATEGORY_KEYS) {
+      for (const name of Array.from(collected[groupKey].keys()).sort((a, b) => a.localeCompare(b))) {
+        out[groupKey][name] = collected[groupKey].get(name)!;
       }
     }
 
