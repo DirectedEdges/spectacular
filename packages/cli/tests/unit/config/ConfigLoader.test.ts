@@ -251,28 +251,28 @@ spec:
       writeSplitFile('settings.yaml', 'spec:\n  keys: INVALID');
 
       const config = configLoader.load();
-      expect(config.settings.spec.keys).toBe('SAFE'); // Default
+      expect(config.settings.spec.keys).toBe(DEFAULT_SETTINGS.spec.keys);
     });
 
     it('should validate spec.format and use default for invalid values', () => {
       writeSplitFile('settings.yaml', 'spec:\n  format: XML');
 
       const config = configLoader.load();
-      expect(config.settings.spec.format).toBe('JSON'); // Default
+      expect(config.settings.spec.format).toBe(DEFAULT_SETTINGS.spec.format);
     });
 
     it('should validate spec.layout and use default for invalid values', () => {
       writeSplitFile('settings.yaml', 'spec:\n  layout: INVALID');
 
       const config = configLoader.load();
-      expect(config.settings.spec.layout).toBe('LAYOUT'); // Default
+      expect(config.settings.spec.layout).toBe(DEFAULT_SETTINGS.spec.layout);
     });
 
     it('should validate spec.tokens and use default for invalid values', () => {
       writeSplitFile('settings.yaml', 'spec:\n  tokens: INVALID');
 
       const config = configLoader.load();
-      expect(config.settings.spec.tokens).toBe('TOKEN'); // Default
+      expect(config.settings.spec.tokens).toBe(DEFAULT_SETTINGS.spec.tokens);
     });
 
     it('should accept all valid spec.tokens values', () => {
@@ -302,7 +302,7 @@ spec:
       writeSplitFile('settings.yaml', 'spec:\n  color: INVALID');
 
       const config = configLoader.load();
-      expect(config.settings.spec.color).toBe('HEX'); // Default
+      expect(config.settings.spec.color).toBe(DEFAULT_SETTINGS.spec.color);
     });
 
     it('should accept all valid spec.color values', () => {
@@ -321,7 +321,7 @@ spec:
 
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const config = configLoader.load();
-      expect(config.settings.spec.color).toBe('HEX');
+      expect(config.settings.spec.color).toBe(DEFAULT_SETTINGS.spec.color);
       expect(warn.mock.calls.some(c => String(c[0]).includes('oklch'))).toBe(true);
       warn.mockRestore();
     });

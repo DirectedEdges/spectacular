@@ -24,6 +24,7 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
+| 112 | Settings Defaults Adopt Their Scaffolded Values | `format`, `keys`, `color`, `preserveManualSelections` and `collapsePrimitiveWrapper` default to the values every scaffolded workspace writes |
 | 110 | Rename `Spec*Document` to `Component*Document` | `Spec*Document` renamed to `Component*Document`, matching `CompositionApiDocument`'s naming now that a second spec kind exists |
 | 109 | Composition Concern Documents | Compositions get their own exact `splitConcerns` documents — never a loosened form of a component's, since a composition has no props to vary by |
 | 104 | Roles on a Collapsed Root — `childRole` Says Which Layer Was Annotated | A collapsed element records which of its two Figma layers carried a role: `role` the component node, `childRole` the collapsed child, both means both |

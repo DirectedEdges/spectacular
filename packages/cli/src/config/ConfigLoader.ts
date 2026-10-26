@@ -775,8 +775,16 @@ export class ConfigLoader {
     spec.color = enumCheck('color', spec.color, validColors as readonly typeof spec.color[], DEFAULT_SETTINGS.spec.color);
     spec.variantDepth = enumCheck('variantDepth', spec.variantDepth, validVariantDepths as readonly typeof spec.variantDepth[], DEFAULT_SETTINGS.spec.variantDepth);
     spec.details = enumCheck('details', spec.details, validDetails as readonly typeof spec.details[], DEFAULT_SETTINGS.spec.details);
+    // An invalid value falls back to the schema default, like every other field
+    // here. Naming a value of its own would make this a second place a default is
+    // stated, which is how the schema and the scaffold drifted (ADR-112).
     if (typeof spec.collapsePrimitiveWrapper !== 'boolean') {
-      spec.collapsePrimitiveWrapper = false;
+      if (spec.collapsePrimitiveWrapper !== undefined) {
+        console.warn(
+          `Invalid settings.spec.collapsePrimitiveWrapper: expected boolean, got ${typeof spec.collapsePrimitiveWrapper}. Using default: ${DEFAULT_SETTINGS.spec.collapsePrimitiveWrapper}`
+        );
+      }
+      spec.collapsePrimitiveWrapper = DEFAULT_SETTINGS.spec.collapsePrimitiveWrapper;
     }
 
     // roleValidation (ADR-067) — severity for unmet required role obligations

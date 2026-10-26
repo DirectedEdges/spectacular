@@ -10,13 +10,15 @@ When enabled, a component whose root is a container holding exactly one child is
 | **File** | `config/settings.yaml` |
 | **Path** | `spec.collapsePrimitiveWrapper` |
 | **Type** | boolean |
-| **Default** | `false` |
+| **Default** | `true` |
+
+The eligibility rules below are what make this safe as a default: a wrapper that carries a style the leaf cannot hold is not collapsed, so the setting never silently discards design intent. Turn it off when you want the Figma layer structure preserved exactly — most often to keep a role annotated on a collapsing component's child, as the last section explains.
 
 ## Example
 
 ```yaml
 spec:
-  collapsePrimitiveWrapper: true
+  collapsePrimitiveWrapper: false
 ```
 
 ## Result

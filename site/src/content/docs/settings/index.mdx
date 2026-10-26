@@ -137,7 +137,7 @@ data:
 spec:
   directory: ./specs
   format: YAML
-  keys: SAFE
+  keys: CAMEL
   layout: LAYOUT
   tokens: TOKEN
   variantDepth: 2
@@ -213,7 +213,7 @@ with a warning so builds continue:
 
 ```bash
 $ specs generate data/library.file -c Button
-Warning: Invalid spec.keys: 'invalid'. Using default: SAFE.
+Warning: Invalid spec.keys: 'invalid'. Using default: CAMEL.
 Valid values: SAFE, CAMEL, SNAKE, KEBAB, PASCAL, TRAIN
 ```
 

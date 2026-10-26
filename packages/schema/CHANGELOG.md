@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.39.0] - Unreleased
 
+### Breaking
+
+- `Settings.spec.format` — defaults to `YAML`, previously `JSON` (ADR-112)
+- `Settings.spec.keys` — defaults to `CAMEL`, previously `SAFE` (ADR-112)
+- `Settings.spec.color` — defaults to `HEXA`, previously `HEX` (ADR-112)
+- `Settings.curation.preserveManualSelections` — defaults to `true`, previously `false` (ADR-112)
+- `Settings.spec.collapsePrimitiveWrapper` — defaults to `true`, previously `false` (ADR-112)
+
 ### Added
 
 - `ObjectProp` — a prop whose value is an object of named scalar members (ADR-111)
@@ -17,6 +25,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Removed
+
+### Migration
+
+- `Settings.spec.format`, `Settings.spec.keys`, `Settings.spec.color`, `Settings.curation.preserveManualSelections`, `Settings.spec.collapsePrimitiveWrapper`: a workspace that sets the member explicitly is unaffected. One that left it unset now resolves to the new value — set it explicitly to keep the former output.
+- `Settings.spec.keys` carries the largest cost: a spec regenerated with `CAMEL` renames every anatomy key, prop key and reference to one, and every name derived from a key. Treat it as a migration, or set `keys: SAFE`.
+
+### ADRs
+
+#### Accepted
+
+- [ADR-112](../../adr/112-scaffolded-defaults.md) — Settings defaults adopt their scaffolded values
 
 
 ## [0.38.0] - 2026-10-21

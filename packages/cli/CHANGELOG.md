@@ -7,11 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.36.0] - Unreleased
 
-### Added
+### Breaking
+
+- **A workspace that leaves a setting unset now resolves it to a new value** for `spec.format`, `spec.keys`, `spec.color`, `curation.preserveManualSelections` and `spec.collapsePrimitiveWrapper`. Every workspace `specs init` scaffolded already writes four of the five, so only a hand-written `settings.yaml` that omitted them sees a change (ADR-112)
 
 ### Changed
 
-### Removed
+- **`specs init` writes every setting with a comment saying what that setting decides**, rather than a comment describing the value you would get by changing it. Three settings are scaffolded on while the schema defaults them off, and the file says which three and why
+
+### Fixed
+
+- **An invalid `spec.collapsePrimitiveWrapper` now warns and falls back to the default** instead of silently turning the setting off
+
+- **`specs analyze styling` lists tokens alphabetically** in every set of the by-token report — variables, color styles, text styles and effect styles — instead of in the order the catalogue happened to reach them
+
+- **`specs analyze styling` now reads the token references a name-shaped `spec.tokens` emits.** Under `TOKEN_NAME` and `FIGMA_NAME` a reference serializes to the token's name alone, which the analysis skipped — so every styling report came out empty while the run reported success. Names are now matched against the fetched variables and styles, so these two profiles report what `TOKEN` reports
+
+- **`specs analyze styling` says so when `spec.tokens` is a profile it cannot fully read.** `CUSTOM` and the three `FIGMA_SYNTAX_*` profiles serialize references into shapes the analysis cannot recognise without reproducing the generator, and `FIGMA_SYNTAX_*` falls back to `TOKEN` for tokens with no code syntax — so the reports were quietly partial rather than obviously empty. A warning now names the setting and what it costs. A name-shaped profile with no fetched data files warns too, and points at `specs fetch`
 
 
 ## [0.35.0] - 2026-10-21

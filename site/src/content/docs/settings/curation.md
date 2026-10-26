@@ -10,14 +10,14 @@ A library holds more components than a team actually consumes, and curation deci
 | **File** | `config/settings.yaml` |
 | **Path** | `curation` |
 | **Type** | block (`defaultSelection`, `preserveManualSelections`, `includeDependencies`) |
-| **Default** | `READY_FOR_DEV`, `false`, `true` |
+| **Default** | `READY_FOR_DEV`, `true`, `true` |
 
 ## Example
 
 ```yaml
 curation:
   defaultSelection: READY_FOR_DEV
-  preserveManualSelections: false
+  preserveManualSelections: true
   includeDependencies: true
 ```
 
@@ -40,10 +40,12 @@ A component unchecked in the manifest may later be marked Ready for dev in Figma
 
 | Value | Result |
 |---|---|
-| `false` (default) | Figma wins. The new status overrides the manual edit. |
-| `true` | The manual edit stands. |
+| `true` (default) | The manual edit stands. |
+| `false` | Figma wins. The new status overrides the manual edit. |
 
 This only comes up when the Figma status actually changed. A component nobody touched keeps whatever was set, either way.
+
+The default protects the edit, on the grounds that a correction the next scan discards was not worth making. Set it to `false` when the Figma status is the record you trust and the manifest is only a cache of it.
 
 The per-run flag `--keep-checks` does the same as `true` for a single scan.
 
@@ -79,7 +81,7 @@ This setting is about one component reaching for a *separate* component that liv
 
 ## Narrowed selections
 
-Turning `includeDependencies` off, or unchecking components by hand with `preserveManualSelections: true`, can leave a spec referring to a component that was never generated.
+Turning `includeDependencies` off, or unchecking components by hand, can leave a spec referring to a component that was never generated. A hand-unchecked component stays unchecked across later scans, because `preserveManualSelections` defaults to `true`.
 
 Nothing breaks loudly. No error, no failed build, no red Storybook. The generated React and Web Components code just leaves those pieces out — where the brand logo should appear, there is an empty box.
 

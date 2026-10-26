@@ -161,7 +161,7 @@ describe('ConfigTemplates', () => {
       expect(template).toContain('defaultSlotContent');
     });
 
-    it('declares the scaffolded serialization defaults', () => {
+    it('declares the scaffolded serialization settings', () => {
       const parsed = yaml.parse(generateSettingsTemplate());
       expect(parsed.spec.format).toBe('YAML');
       expect(parsed.spec.keys).toBe('CAMEL');
@@ -183,9 +183,44 @@ describe('ConfigTemplates', () => {
       expect(Object.keys(parsed)).toContain('curation');
     });
 
-    it('states the commenting contract rather than annotating each default', () => {
+    it('states the writing contract rather than annotating each setting', () => {
       const template = generateSettingsTemplate();
-      expect(template).toContain('Every commented line is the opposite of the default');
+      expect(template).toContain('Every setting is written out at the value this workspace');
+      expect(template).toContain("All but three are the schema's own default; those three are marked.");
+    });
+
+    /**
+     * The scaffold and `DEFAULT_SETTINGS` are two statements of what a fresh workspace
+     * produces, and for five members they disagreed for several releases because
+     * nothing compared them (ADR-112). A scaffolded value that silently departs from
+     * the schema means the published docs and a reader's own file give different
+     * answers, so every departure has to be deliberate and listed here.
+     *
+     * The three listed are on while the schema defaults them off. Each reads a
+     * convention a fresh workspace has not declared, so each finds nothing — on is
+     * free, and it makes declaring the convention the only later step.
+     */
+    const DECLARED_DEPARTURES = ['roles', 'promotePrimitives', 'defaultSlotContent'];
+
+    it('scaffolds the schema default for every setting but the declared departures', () => {
+      const parsed = yaml.parse(generateSettingsTemplate());
+      for (const [key, value] of Object.entries(DEFAULT_SETTINGS.spec)) {
+        if (typeof value === 'object' || DECLARED_DEPARTURES.includes(key)) continue;
+        expect(parsed.spec[key], `spec.${key} departs from the schema default`).toEqual(value);
+      }
+      for (const [key, value] of Object.entries(DEFAULT_SETTINGS.curation)) {
+        expect(parsed.curation[key], `curation.${key} departs from the schema default`).toEqual(value);
+      }
+    });
+
+    it('scaffolds each declared departure on, and says why in the file', () => {
+      const parsed = yaml.parse(generateSettingsTemplate());
+      const template = generateSettingsTemplate();
+      for (const key of DECLARED_DEPARTURES) {
+        expect(parsed.spec[key]).toBe(true);
+        expect(DEFAULT_SETTINGS.spec[key as 'roles']).toBe(false);
+      }
+      expect(template).toContain('on while the schema defaults them off');
     });
 
     /**
