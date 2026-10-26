@@ -4,6 +4,7 @@ import path from 'path';
 import os from 'os';
 import yaml from 'yaml';
 import { StylingAnalyzer } from '../../../src/analyze/Styling.js';
+import { tokenProfileWarnings } from '../../../src/commands/analyze.js';
 
 const transformer = new StylingAnalyzer();
 
@@ -651,5 +652,208 @@ describe('StylingAnalyzer unused tokens', () => {
     expect(out).not.toBeNull();
     expect(out.variables).toEqual(['Color/Never used']);
     expect(fs.existsSync(path.join(outputDir, 'analysis', 'styling.unused.json'))).toBe(false);
+  });
+});
+
+describe('StylingAnalyzer name-shaped token profiles', () => {
+  function makeFoundations() {
+    return {
+      variables: new Map([
+        ['VariableID:1', { name: 'Surface/Primary', variableCollectionId: 'VC:1', resolvedType: 'COLOR' }],
+        ['VariableID:2', { name: 'Layout/Vertical/M', variableCollectionId: 'VC:2', resolvedType: 'FLOAT' }],
+      ]),
+      collections: new Map([
+        ['VC:1', { name: 'Color' }],
+        ['VC:2', { name: 'Spacing' }],
+      ]),
+      styles: new Map([
+        ['S:text', { id: 'S:text', name: 'Typography/Body', type: 'TEXT' }],
+        ['S:fill', { id: 'S:fill', name: 'Brand/Accent', type: 'FILL' }],
+        ['S:effect', { id: 'S:effect', name: 'Shadow/Low', type: 'EFFECT' }],
+      ]),
+    };
+  }
+
+  let dir: string;
+
+  beforeEach(async () => {
+    dir = await fs.mkdtemp(path.join(os.tmpdir(), 'styling-names-'));
+  });
+
+  afterEach(async () => {
+    await fs.remove(dir);
+  });
+
+  async function runWith(
+    apiYaml: Record<string, unknown>,
+    tokensFormat: string,
+    // Explicit rather than defaulted: `undefined` is a case under test, and a
+    // default parameter would silently substitute foundations for it.
+    foundations: ReturnType<typeof makeFoundations> | undefined,
+  ) {
+    const t = new StylingAnalyzer();
+    await t.run(apiYaml, {
+      specDir: dir, outputDir: dir, workspaceDir: dir, specsRoot: dir,
+      kind: 'component' as const, componentKey: 'dsButton',
+      tokensFormat, outputFormat: 'JSON' as const, foundations,
+    });
+    const raw = await fs.readFile(path.join(dir, 'styling.json'), 'utf-8');
+    return JSON.parse(raw).dsButton as {
+      variables: Array<{ name: string; appliedAs: string; appliedTo: Record<string, number> }>;
+      colorStyles: Array<{ name: string }>;
+      textStyles: Array<{ name: string }>;
+      effectStyles: Array<{ name: string }>;
+    };
+  }
+
+  const WITH_NAMES = {
+    anatomy: { root: { type: 'container' }, label: { type: 'text' } },
+    default: {
+      elements: {
+        root: {
+          styles: {
+            backgroundColor: 'Color/Surface/Primary',
+            itemSpacing: 'Spacing/Layout/Vertical/M',
+          },
+        },
+        label: { styles: { typography: 'Typography/Body' } },
+      },
+    },
+  };
+
+  it('collects bare names as tokens under TOKEN_NAME', async () => {
+    const out = await runWith(WITH_NAMES, 'TOKEN_NAME', makeFoundations());
+    const names = out.variables.map(r => r.name).sort();
+    expect(names).toEqual(['Color/Surface/Primary', 'Spacing/Layout/Vertical/M']);
+  });
+
+  it('collects bare names as tokens under FIGMA_NAME', async () => {
+    const out = await runWith(WITH_NAMES, 'FIGMA_NAME', makeFoundations());
+    expect(out.variables.map(r => r.name)).toContain('Color/Surface/Primary');
+  });
+
+  it('records appliedAs and appliedTo for a name-matched token', async () => {
+    const out = await runWith(WITH_NAMES, 'TOKEN_NAME', makeFoundations());
+    const row = out.variables.find(r => r.name === 'Spacing/Layout/Vertical/M');
+    expect(row?.appliedAs).toBe('itemSpacing');
+    expect(row?.appliedTo).toEqual({ root: 1 });
+  });
+
+  it('categorizes a matched style name by its style type, not as a variable', async () => {
+    const out = await runWith(WITH_NAMES, 'TOKEN_NAME', makeFoundations());
+    expect(out.textStyles.map(r => r.name)).toEqual(['Typography/Body']);
+    expect(out.variables.map(r => r.name)).not.toContain('Typography/Body');
+  });
+
+  it('ignores literal enum values that name no token', async () => {
+    const out = await runWith({
+      anatomy: { root: { type: 'container' } },
+      default: {
+        elements: {
+          root: {
+            styles: {
+              layoutMode: 'VERTICAL',
+              crossAxisAlignment: 'CENTER',
+              layoutSizingHorizontal: 'FILL',
+              backgroundColor: 'Color/Surface/Primary',
+            },
+          },
+        },
+      },
+    }, 'TOKEN_NAME', makeFoundations());
+    expect(out.variables.map(r => r.name)).toEqual(['Color/Surface/Primary']);
+  });
+
+  it('matches names nested inside per-side objects', async () => {
+    const out = await runWith({
+      anatomy: { root: { type: 'container' } },
+      default: {
+        elements: {
+          root: {
+            styles: {
+              padding: { start: 'Spacing/Layout/Vertical/M', end: 'Spacing/Layout/Vertical/M', top: 0 },
+            },
+          },
+        },
+      },
+    }, 'TOKEN_NAME', makeFoundations());
+    expect(out.variables.map(r => r.appliedAs).sort()).toEqual(['padding.end', 'padding.start']);
+  });
+
+  it('collects nothing from bare names when foundations are absent', async () => {
+    const out = await runWith(WITH_NAMES, 'TOKEN_NAME', undefined);
+    expect(out.variables).toHaveLength(0);
+    expect(out.textStyles).toHaveLength(0);
+  });
+
+  it('ignores bare names under TOKEN, where a reference is always an object', async () => {
+    const out = await runWith(WITH_NAMES, 'TOKEN', makeFoundations());
+    expect(out.variables).toHaveLength(0);
+    expect(out.textStyles).toHaveLength(0);
+  });
+
+  it('still collects object-shaped references under a name-shaped profile', async () => {
+    // FIGMA_SYNTAX_* and CUSTOM fall back to object shapes for some tokens, and
+    // a mixed spec must not lose the ones that did serialize as objects.
+    const out = await runWith({
+      anatomy: { root: { type: 'container' } },
+      default: {
+        elements: {
+          root: {
+            styles: {
+              backgroundColor: { $token: 'Color/Surface/Primary', $type: 'color' },
+              itemSpacing: 'Spacing/Layout/Vertical/M',
+            },
+          },
+        },
+      },
+    }, 'TOKEN_NAME', makeFoundations());
+    expect(out.variables.map(r => r.name).sort()).toEqual(['Color/Surface/Primary', 'Spacing/Layout/Vertical/M']);
+  });
+
+  it('prefers the variable category when a name is both a variable and a style', async () => {
+    const foundations = makeFoundations();
+    foundations.styles.set('S:dup', { id: 'S:dup', name: 'Color/Surface/Primary', type: 'FILL' });
+    const out = await runWith(WITH_NAMES, 'TOKEN_NAME', foundations);
+    expect(out.variables.map(r => r.name)).toContain('Color/Surface/Primary');
+    expect(out.colorStyles).toHaveLength(0);
+  });
+});
+
+describe('tokenProfileWarnings', () => {
+  const styling = [{ name: 'styling' }] as Parameters<typeof tokenProfileWarnings>[2];
+  const notStyling = [{ name: 'props' }] as Parameters<typeof tokenProfileWarnings>[2];
+
+  it('says nothing for the object-shaped profiles', () => {
+    expect(tokenProfileWarnings('TOKEN', true, styling)).toEqual([]);
+    expect(tokenProfileWarnings('TOKEN_FIGMA_EXTENSIONS', true, styling)).toEqual([]);
+  });
+
+  it('says nothing for the name-shaped profiles when foundations loaded', () => {
+    expect(tokenProfileWarnings('TOKEN_NAME', true, styling)).toEqual([]);
+    expect(tokenProfileWarnings('FIGMA_NAME', true, styling)).toEqual([]);
+  });
+
+  it('warns for a name-shaped profile with no foundations data', () => {
+    const [warning] = tokenProfileWarnings('TOKEN_NAME', false, styling);
+    expect(warning).toContain('TOKEN_NAME');
+    expect(warning).toContain('specs fetch');
+  });
+
+  it('warns for the profiles the analysis cannot read', () => {
+    for (const profile of ['CUSTOM', 'FIGMA_SYNTAX_WEB', 'FIGMA_SYNTAX_IOS', 'FIGMA_SYNTAX_ANDROID']) {
+      const warnings = tokenProfileWarnings(profile, true, styling);
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toContain(profile);
+    }
+  });
+
+  it('warns about an unreadable profile even when foundations loaded', () => {
+    expect(tokenProfileWarnings('CUSTOM', false, styling)).toHaveLength(1);
+  });
+
+  it('says nothing when the styling analyzer is not running', () => {
+    expect(tokenProfileWarnings('CUSTOM', true, notStyling)).toEqual([]);
+    expect(tokenProfileWarnings('TOKEN_NAME', false, notStyling)).toEqual([]);
   });
 });
