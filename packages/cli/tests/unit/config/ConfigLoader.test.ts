@@ -502,6 +502,49 @@ subcomponents:
       expect(config.conventions.platforms!.figma.subcomponents).toEqual({ scope: 'NESTED', match: ['{C} / {S}'] });
     });
 
+    it('resolves an empty objectProps block to the default separator (ADR-111)', () => {
+      writeSplitFile('conventions/figma.yaml', 'objectProps: {}');
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.objectProps).toEqual({ separator: '.' });
+    });
+
+    it('keeps an explicit objectProps.separator', () => {
+      writeSplitFile('conventions/figma.yaml', 'objectProps:\n  separator: "_"');
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.objectProps).toEqual({ separator: '_' });
+    });
+
+    it('warns and defaults an invalid objectProps.separator', () => {
+      const warn = vi.mocked(console.warn);
+      writeSplitFile('conventions/figma.yaml', 'objectProps:\n  separator: ""');
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.objectProps).toEqual({ separator: '.' });
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid conventions/figma.yaml objectProps.separator')
+      );
+    });
+
+    it('warns and defaults a non-object objectProps value', () => {
+      const warn = vi.mocked(console.warn);
+      writeSplitFile('conventions/figma.yaml', 'objectProps: true');
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.objectProps).toEqual({ separator: '.' });
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid conventions/figma.yaml objectProps')
+      );
+    });
+
+    it('leaves objectProps undefined when the block is absent', () => {
+      writeSplitFile('conventions/figma.yaml', 'naming: SENTENCE');
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.objectProps).toBeUndefined();
+    });
+
     it('should remove subcomponents (and warn) when match is empty', () => {
       const warn = vi.mocked(console.warn);
       writeSplitFile('conventions/figma.json', JSON.stringify({ subcomponents: { match: [] } }));

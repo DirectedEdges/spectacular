@@ -73,3 +73,10 @@ subcomponents:
 # TEXT props whose values parse as numbers emit as NumberProp
 # https://spectacular.systems/settings/infer-number-props/
 # inferNumberProps: true
+
+# Separator-delimited property names (margin.compact, margin.expanded) fold into
+# one object prop; the block's presence is the on-switch
+# https://spectacular.systems/settings/object-props/
+# objectProps:
+#   # The member-name separator in flat property names (default: '.')
+#   separator: '.'
