@@ -148,14 +148,8 @@
           "description": "Must state `concern: examples`. This is what identifies the document, and what separates it from the other concerns in root.schema.json."
         },
         "slotContentExamples": {
-          "type": "object",
-          "description": "Named slot-content examples for this component (ADR-047). Each entry is a SlotContent — a flat anatomy+elements+layout triplet usable as a named slot fill. Referenced via SlotContentRef from SlotBinding.examples and from Element.propConfigurations slot-prop entries (ADR-049). specs-from-figma de-duplicates entries by structural equality.",
-          "patternProperties": {
-            "^[a-zA-Z0-9_-]+$": {
-              "$ref": "component.schema.json#/definitions/SlotContent"
-            }
-          },
-          "additionalProperties": false
+          "$ref": "component.schema.json#/definitions/SlotContentMap",
+          "description": "Named slot-content examples for this component (ADR-047). Each entry is a SlotContent — a flat anatomy+elements+layout triplet usable as a named slot fill. Referenced via SlotContentRef from SlotBinding.examples and from Element.propConfigurations slot-prop entries (ADR-049). specs-from-figma de-duplicates entries by structural equality."
         },
         "instanceExamples": {
           "$ref": "component.schema.json#/definitions/InstanceExamples",
@@ -258,14 +252,8 @@
       "additionalProperties": false,
       "properties": {
         "slotContentExamples": {
-          "type": "object",
-          "description": "Named slot-content examples for this component (ADR-047). Each entry is a SlotContent — a flat anatomy+elements+layout triplet usable as a named slot fill. Referenced via SlotContentRef from SlotBinding.examples and from Element.propConfigurations slot-prop entries (ADR-049). specs-from-figma de-duplicates entries by structural equality.",
-          "patternProperties": {
-            "^[a-zA-Z0-9_-]+$": {
-              "$ref": "component.schema.json#/definitions/SlotContent"
-            }
-          },
-          "additionalProperties": false
+          "$ref": "component.schema.json#/definitions/SlotContentMap",
+          "description": "Named slot-content examples for this component (ADR-047). Each entry is a SlotContent — a flat anatomy+elements+layout triplet usable as a named slot fill. Referenced via SlotContentRef from SlotBinding.examples and from Element.propConfigurations slot-prop entries (ADR-049). specs-from-figma de-duplicates entries by structural equality."
         },
         "instanceExamples": {
           "$ref": "component.schema.json#/definitions/InstanceExamples",

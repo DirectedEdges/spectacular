@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The component schema names its previously inline shapes as definitions**, so docs and tools link to `Layout`, `Scalar` and `ComponentName` instead of showing anonymous objects. Validation is unchanged.
+
 ### Removed
 
 ### Migration
