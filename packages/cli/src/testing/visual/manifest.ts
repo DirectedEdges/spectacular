@@ -205,7 +205,7 @@ function coerceValue(raw: string, apiProp: any, contractOptions?: string[]): unk
   return raw;
 }
 
-function buildPropMap(
+export function buildPropMap(
   figmaPropNames: Set<string>,
   apiProps: Record<string, any>,
   contract: Contract | null,
