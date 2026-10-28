@@ -742,6 +742,14 @@ the slot. The primitives inside it are its default content, their formatting is
 what `contentStyles` records, and they do not also persist as entries in `anatomy`
 or `elements`.
 
+That exclusion scopes to the **host component's** `anatomy` and `elements` only.
+The slot's recorded default content itself — the structure a generator captures
+for the fill, primitives included — is untouched by this ADR: the primitives stay
+represented there unchanged, and that record is what carries a primitive's actual
+content (its characters, its glyph identity) for reproduction. Deriving `anyOf`
+markers and `contentStyles` is additive to storing slot default content, never a
+replacement for it.
+
 ### Type changes (`types/`)
 
 | File | Change | Bump |
