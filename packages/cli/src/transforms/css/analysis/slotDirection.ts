@@ -70,7 +70,7 @@ export function slotDirectionResolver(componentsDir: string): SlotDirectionResol
     const direction: SlotDirection = { ...target.defaultDirection };
     // Later variants win, exactly as the stylesheet's own cascade orders them.
     for (const variant of target.variants) {
-      if (!satisfies(variant.configuration, propConfigurations)) continue;
+      if (!configurationSatisfies(variant.configuration, propConfigurations)) continue;
       if (variant.direction.layoutMode !== undefined) direction.layoutMode = variant.direction.layoutMode;
       if (variant.direction.crossAxisAlignment !== undefined) {
         direction.crossAxisAlignment = variant.direction.crossAxisAlignment;
@@ -80,8 +80,14 @@ export function slotDirectionResolver(componentsDir: string): SlotDirectionResol
   };
 }
 
-/** Every key the variant names is pinned to that value on the instance. */
-function satisfies(
+/**
+ * Every key the variant names is pinned to that value on the instance.
+ *
+ * Shared with the contentStyles read (ADR-102), which resolves a slot's
+ * primitive formatting by the same rule — the name matches the shared core's
+ * `configurationSatisfies` in from-specs' `slotDirection.ts`.
+ */
+export function configurationSatisfies(
   configuration: Record<string, unknown>,
   propConfigurations: Record<string, unknown>,
 ): boolean {
