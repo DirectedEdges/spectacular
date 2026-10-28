@@ -243,7 +243,7 @@
               "properties": {
                 "name": {
                   "type": "string",
-                  "description": "The element's name in Figma. Recorded on any of three triggers: primitive-wrapper collapse promoted this element to root (ADR-058), always and independent of format.figmaKeys; the name fell outside the safe key grammar so format.keys could not represent it losslessly (ADR-066); or the name was already written in the destination format and passed through unformatted, making reversal identity rather than re-derivation (ADR-066). The latter two apply only when format.figmaKeys is not NONE — under NONE, format divergence is not evaluated and this field is absent however the key was derived."
+                  "description": "The element's name in Figma. Recorded on any of three triggers: primitive-wrapper collapse promoted this element to root (ADR-058), always and independent of format.figmaKeys; the name fell outside the safe key grammar so format.keys could not represent it losslessly (ADR-066); or the name was already written in the destination format and passed through unformatted, making reversal identity rather than re-derivation (ADR-066). Under NONE no source convention is declared, so nothing can be re-derived from a key and reversal hands the key back as the name — the key reconstructs the name only where the two are already identical, and this field is recorded wherever formatting changed the name at all."
                 },
                 "childRole": {
                   "oneOf": [
@@ -414,7 +414,7 @@
         },
         "name": {
           "type": "string",
-          "description": "The Figma component-property name (ADR-066). Recorded when the name fell outside the safe key grammar, or when it was already written in the destination format and passed through unformatted — in which case reversal is identity, not re-derivation. Both triggers require format.figmaKeys to be other than NONE; under NONE this field is absent however the key was derived."
+          "description": "The Figma component-property name (ADR-066). Recorded when the name fell outside the safe key grammar, or when it was already written in the destination format and passed through unformatted — in which case reversal is identity, not re-derivation. Under NONE no source convention is declared, so nothing can be re-derived from a key and reversal hands the key back as the name — the key reconstructs the name only where the two are already identical, and this field is recorded wherever formatting changed the name at all."
         }
       },
       "additionalProperties": true

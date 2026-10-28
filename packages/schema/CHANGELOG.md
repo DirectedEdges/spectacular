@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `$extensions['com.figma'].name` — documented rule corrected on props, anatomy elements and `platforms.<platform>.naming`. The field was described as absent under `naming: NONE`; NONE declares no source convention, which means nothing can be re-derived from a key, not that no name is kept. The field is recorded wherever formatting changed the name (ADR-066). Description only — no type or validation change
+
 ### Removed
 
 ### Migration
@@ -35,11 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Accepted
 
-- [ADR-112](../../adr/112-scaffolded-defaults.md) — Settings defaults adopt their scaffolded values
-
-#### New drafts
-
 - [ADR-111](../../adr/111-object-props.md) — Object-Typed Props
+- [ADR-112](../../adr/112-scaffolded-defaults.md) — Settings defaults adopt their scaffolded values
 
 
 ## [0.38.0] - 2026-10-21

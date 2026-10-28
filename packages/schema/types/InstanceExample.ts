@@ -21,7 +21,10 @@ export type InstanceExample = {
    * `SlotContentRef` (into `Component.slotContentExamples`) for slot props;
    * `ObjectPropValue` for object props (ADR-111);
    * `null` when the prop is unset in this example (ADR-080).
-   * `PropBinding` is not permitted here.
+   * `PropBinding` is not permitted here. Since ADR-111 this union cannot enforce
+   * that on its own — `ObjectPropValue` is a scalar-valued record, which a
+   * `{ $binding }` object satisfies structurally — so the rule is carried by the
+   * JSON Schema, where a member name may not begin with `$`.
    */
   propConfigurations?: Record<string, string | number | boolean | null | SlotContentRef | ObjectPropValue>;
 };

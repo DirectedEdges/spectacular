@@ -194,9 +194,10 @@ export interface PlatformConventions {
    * the reversal target for `Settings.spec.keys`. A renderer reconstructs a name by
    * re-formatting the spec key into this convention.
    *
-   * NONE declares no convention: the safe key grammar is not evaluated, no
-   * `$extensions['com.figma'].name` is emitted for format divergence, and reversal is
-   * undefined. Optional; defaults to NONE inside a declared platform entry.
+   * NONE declares no convention: the safe key grammar is not evaluated and reversal is
+   * undefined, so a key is handed back unchanged as the name. `$extensions['com.figma'].name`
+   * is therefore recorded wherever formatting changed the name, since nothing can
+   * re-derive it. Optional; defaults to NONE inside a declared platform entry.
    */
   naming?: 'NONE' | 'SENTENCE' | 'TITLE';
   /**
