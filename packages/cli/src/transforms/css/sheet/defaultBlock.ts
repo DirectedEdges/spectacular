@@ -140,6 +140,10 @@ export function defaultBlockLines(input: DefaultBlockInput): DefaultBlockResult 
         tokensFormat,
         admitsComponents: slotAdmitsComponents(elem as Record<string, unknown>, apiProps),
         rootAs,
+        // The element's own rule above already wrote its flex-direction (if
+        // any) against this same selector — the vertical-align box must not
+        // restate a conflicting one later in the sheet (see contentRules.ts).
+        ownHasFlexDirection: decls.some(d => d.startsWith('flex-direction:')),
       }));
     }
   }

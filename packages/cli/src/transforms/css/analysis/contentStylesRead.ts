@@ -10,7 +10,9 @@
 // private and bundled into each emitter at build time — the CLI's own bundle
 // marks all packages external, so it cannot consume the module directly. The
 // same pattern this directory already uses for the slot-direction read: keep
-// the two in step when either changes.
+// the two in step when either changes. The shared core's `slotContentStylesOf`
+// also takes a `kind` ('component' | 'composition') parameter; it is omitted
+// here because the CSS analysis reads the component shape only.
 import type { PrimitiveSlotContent } from '@directededges/specs-schema';
 import { configurationSatisfies } from './slotDirection.js';
 
@@ -32,11 +34,13 @@ export interface SlotContentStyles {
   /**
    * Variant overlays, in spec order — the order the stylesheet's own cascade
    * applies them. Only variants that both name a configuration and carry a
-   * contentStyles entry for this element appear. `configuration` keeps the
-   * parsed document's own object, so a caller holding the same document can
-   * match an overlay to its variant by identity.
+   * contentStyles entry for this element appear. `index` is the position in
+   * `variantsYaml.variants` (the same array `SpecAnalysis.variantList` reads),
+   * so a caller iterating that list can match an overlay to its variant by
+   * index rather than by object identity — identity breaks across a re-parse,
+   * which would silently emit zero content rules.
    */
-  variants: Array<{ configuration: Record<string, unknown>; contentStyles: PrimitiveContentStyles }>;
+  variants: Array<{ index: number; configuration: Record<string, unknown>; contentStyles: PrimitiveContentStyles }>;
 }
 
 /**
@@ -52,7 +56,8 @@ export function slotContentStylesOf(
 
   const rawVariants = (variantsYaml?.variants ?? []) as Array<Record<string, unknown>>;
   const variants = rawVariants
-    .map(variant => ({
+    .map((variant, index) => ({
+      index,
       configuration: (variant.configuration ?? {}) as Record<string, unknown>,
       contentStyles: contentStylesIn(
         ((variant.elements ?? {}) as Record<string, Record<string, unknown>>)[elementKey],

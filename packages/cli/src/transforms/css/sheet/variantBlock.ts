@@ -94,7 +94,7 @@ export function variantBlockLines(input: VariantBlockInput): string[] {
 
   const lines: string[] = [];
 
-  for (const variant of variantList) {
+  for (const [variantIndex, variant] of variantList.entries()) {
     // Member-keyed values (ADR-111) flatten to dotted keys so the expansion sees
     // scalars — and the data attribute each member hooks as matches the emitted
     // scaffolds' spelling (`data-margin-compact`).
@@ -220,11 +220,13 @@ export function variantBlockLines(input: VariantBlockInput): string[] {
 
       // The variant's contentStyles overlay — formatting for the slot's
       // primitive content (ADR-102), riding the same selectors the element's
-      // own delta uses. Matched by the configuration object's identity, which
-      // the read preserves from this same parsed document.
+      // own delta uses. Matched by position in variantsYaml.variants — the
+      // same array this loop's own `variantList` reads — rather than by the
+      // configuration object's identity, which a future re-parse could break
+      // silently (emitting zero content rules with no error).
       const contentRead = facts.contentStylesOf(elemKey);
       const contentDelta = contentRead.variants.find(
-        v => v.configuration === variant.configuration,
+        v => v.index === variantIndex,
       )?.contentStyles;
       if (contentDelta && Object.keys(contentDelta).length > 0) {
         lines.push(...variantContentStylesLines({
