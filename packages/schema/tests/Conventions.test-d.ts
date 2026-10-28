@@ -9,6 +9,7 @@ import type {
   StorybookConventions,
   MetadataConventions,
   PlatformConventions,
+  ResolvedPlatformConventions,
   GlyphStructure,
   GlyphStructureNode,
   SpecsConventions,
@@ -350,3 +351,38 @@ const glyphScalarFill: GlyphStructure = { fill: '#161616', children: [{ type: 'V
 // The resolved shape mirrors the declared one, both forms optional
 const resolvedGlyphStructure: GlyphStructure | undefined = platform.glyphs?.structure;
 const resolvedGlyphMatch: string | undefined = platform.glyphs?.match;
+
+// ─── objectProps — separator-folded object props (ADR-111) ───────────────────
+
+// opt-in with the default separator left implicit
+const objectPropsDeclared: PlatformConventions = { objectProps: {} };
+
+// an explicit separator
+const objectPropsSeparator: PlatformConventions = { objectProps: { separator: '/' } };
+
+// absence means no folding — the field is optional
+const objectPropsAbsent: PlatformConventions = {};
+
+// @ts-expect-error — separator is a string, not a boolean switch
+const objectPropsBadSeparator: PlatformConventions = { objectProps: { separator: true } };
+
+// the resolved form guarantees separator inside a declared block, block stays optional
+const resolvedObjectProps: ResolvedPlatformConventions = {
+  naming: 'NONE',
+  slotConstraints: false,
+  inferNumberProps: false,
+  objectProps: { separator: '.' },
+};
+const resolvedObjectPropsAbsent: ResolvedPlatformConventions = {
+  naming: 'NONE',
+  slotConstraints: false,
+  inferNumberProps: false,
+};
+
+const resolvedObjectPropsEmpty: ResolvedPlatformConventions = {
+  naming: 'NONE',
+  slotConstraints: false,
+  inferNumberProps: false,
+  // @ts-expect-error — a declared resolved block has separator required
+  objectProps: {},
+};

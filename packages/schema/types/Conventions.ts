@@ -194,9 +194,10 @@ export interface PlatformConventions {
    * the reversal target for `Settings.spec.keys`. A renderer reconstructs a name by
    * re-formatting the spec key into this convention.
    *
-   * NONE declares no convention: the safe key grammar is not evaluated, no
-   * `$extensions['com.figma'].name` is emitted for format divergence, and reversal is
-   * undefined. Optional; defaults to NONE inside a declared platform entry.
+   * NONE declares no convention: the safe key grammar is not evaluated and reversal is
+   * undefined, so a key is handed back unchanged as the name. `$extensions['com.figma'].name`
+   * is therefore recorded wherever formatting changed the name, since nothing can
+   * re-derive it. Optional; defaults to NONE inside a declared platform entry.
    */
   naming?: 'NONE' | 'SENTENCE' | 'TITLE';
   /**
@@ -274,6 +275,17 @@ export interface PlatformConventions {
   slotConstraints?: boolean;
   /** This platform authors numeric props as Figma `TEXT` props whose default and examples parse as valid numbers, to be emitted as NumberProp rather than StringProp. Optional; defaults to false. */
   inferNumberProps?: boolean;
+  /**
+   * Encoding. This platform authors object-prop members as separator-delimited flat
+   * property names (e.g. `margin.compact`, `margin.expanded`), to be folded into one
+   * `ObjectProp` (ADR-111). Optional; absence means no folding — a property name
+   * containing the separator stays a flat prop.
+   * @since 0.39.0
+   */
+  objectProps?: {
+    /** The member-name separator in flat property names. Optional; defaults to `"."`. */
+    separator?: string;
+  };
   /**
    * Prop that receives styling no promotion mapped, for every promoted component on this
    * platform (e.g. `sx`, `style`, `modifier`). A **name only** — what is placed in it is
@@ -582,6 +594,10 @@ export interface ResolvedPlatformConventions {
   slotConstraints: boolean;
   /** Numeric props are authored as Figma `TEXT` props. */
   inferNumberProps: boolean;
+  /** Object-prop members are authored as separator-delimited flat property names. Optional; absence means no folding. `separator` is defaulted inside a declared block. @since 0.39.0 */
+  objectProps?: {
+    separator: string;
+  };
   /** Prop that receives styling no promotion mapped. Optional; absence means unmapped styling is dropped. */
   stylesProp?: string;
   /** Width of the container a fill-width root is placed in. Optional; no default — absence means the tool falls back to its own value. */

@@ -18,7 +18,7 @@ export type {
   ComponentExamplesSubcomponent,
 } from './ComponentConcernDocument.js';
 export type { Anatomy, AnatomyElement, ElementTypeRef, SubcomponentRef, RoleConceptName, ActionConceptName, ActionEntry } from './Anatomy.js';
-export type { Props, AnyProp, BooleanProp, StringProp, EnumProp, SlotProp, NumberProp, FigmaCodeOnlySource, FigmaPropExtension, PropExtensions } from './Props.js';
+export type { Props, AnyProp, BooleanProp, StringProp, EnumProp, SlotProp, NumberProp, ObjectProp, ObjectPropMember, FigmaCodeOnlySource, FigmaPropExtension, PropExtensions } from './Props.js';
 export type { Variant, Variants } from './Variant.js';
 export type { Metadata, RunMetadata, Concern } from './Metadata.js';
 export type { Subcomponent, Subcomponents, SubcomponentSource } from './Subcomponent.js';
@@ -38,7 +38,7 @@ export type {
 } from './CompositionConcernDocument.js';
 
 // Configuration types
-export type { PropConfigurations, PropConfigurationValue, NestedPropConfiguration } from './PropConfigurations.js';
+export type { PropConfigurations, PropConfigurationValue, NestedPropConfiguration, ObjectPropValue } from './PropConfigurations.js';
 export type {
   Conventions,
   ResolvedConventions,

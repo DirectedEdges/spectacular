@@ -357,6 +357,7 @@ export default defineConfig({
                 { label: 'images', slug: 'settings/images' },
                 { label: 'slotConstraints', slug: 'settings/slot-constraints', badge: pro },
                 { label: 'inferNumberProps', slug: 'settings/infer-number-props' },
+                { label: 'objectProps', slug: 'settings/object-props' },
                 { label: 'Promotion table', slug: 'settings/figma-primitives' },
               ],
             },

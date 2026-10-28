@@ -17,7 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `ObjectProp` — a prop whose value is an object of named scalar members (ADR-111)
+- `PropConfigurationValue` — accepts a member-keyed `ObjectPropValue` under an object-prop key (ADR-111)
+- `InstanceExample.propConfigurations` — accepts `ObjectPropValue` for object props (ADR-111)
+- `platforms.<platform>.objectProps` — opt-in folding of separator-named flat props into object props (ADR-111)
+
 ### Changed
+
+- `$extensions['com.figma'].name` — documented rule corrected on props, anatomy elements and `platforms.<platform>.naming`. The field was described as absent under `naming: NONE`; NONE declares no source convention, which means nothing can be re-derived from a key, not that no name is kept. The field is recorded wherever formatting changed the name (ADR-066). Description only — no type or validation change
 
 ### Removed
 
@@ -30,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Accepted
 
+- [ADR-111](../../adr/111-object-props.md) — Object-Typed Props
 - [ADR-112](../../adr/112-scaffolded-defaults.md) — Settings defaults adopt their scaffolded values
 
 

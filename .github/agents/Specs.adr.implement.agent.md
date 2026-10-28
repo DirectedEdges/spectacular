@@ -1,6 +1,10 @@
 ---
 description: Applies the changes described in an ADR to the specs-schema package only — types, schema, tests, docs, and changelog. Runs all validation gates. Author reviews the result as a normal code diff before merging.
 handoffs:
+  - label: Analyze downstream impact
+    agent: Specs.adr.analyze
+    prompt: Gates passed — assess downstream impact package by package and file the adoption issue
+    send: true
   - label: Accept ADR
     agent: Specs.adr.accept
     prompt: All gates passed — mark the ADR as ACCEPTED

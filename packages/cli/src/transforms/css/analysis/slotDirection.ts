@@ -85,8 +85,27 @@ function satisfies(
   configuration: Record<string, unknown>,
   propConfigurations: Record<string, unknown>,
 ): boolean {
-  for (const [key, value] of Object.entries(configuration)) {
-    const pinned = propConfigurations[key];
+  // Member-keyed values (ADR-111) compare per member — identity on the objects
+  // would make every folded variant read as unsatisfied.
+  const flat = (config: Record<string, unknown>): Record<string, unknown> => {
+    const out: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(config)) {
+      if (
+        !key.startsWith('$') && value !== null && typeof value === 'object' && !Array.isArray(value)
+        && Object.keys(value).every(k => !k.startsWith('$'))
+      ) {
+        for (const [memberKey, memberValue] of Object.entries(value)) {
+          if (memberValue !== null) out[`${key}.${memberKey}`] = memberValue;
+        }
+        continue;
+      }
+      out[key] = value;
+    }
+    return out;
+  };
+  const pinnedFlat = flat(propConfigurations);
+  for (const [key, value] of Object.entries(flat(configuration))) {
+    const pinned = pinnedFlat[key];
     if (pinned === undefined) return false;
     if (typeof value === 'string' && typeof pinned === 'string') {
       if (value.toLowerCase() !== pinned.toLowerCase()) return false;

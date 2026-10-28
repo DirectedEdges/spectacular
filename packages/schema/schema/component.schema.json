@@ -103,7 +103,7 @@
         },
         "propConfigurations": {
           "type": "object",
-          "description": "Prop values for this example. Scalar types for scalar props; SlotContentRef for slot props; null when the prop is unset in this example (ADR-080). PropBinding is not permitted here.",
+          "description": "Prop values for this example. Scalar types for scalar props; SlotContentRef for slot props; ObjectPropValue for object props (ADR-111); null when the prop is unset in this example (ADR-080). PropBinding is not permitted here.",
           "additionalProperties": {
             "oneOf": [
               {
@@ -120,6 +120,9 @@
               },
               {
                 "$ref": "#/definitions/SlotContentRef"
+              },
+              {
+                "$ref": "#/definitions/ObjectPropValue"
               }
             ]
           }
@@ -240,7 +243,7 @@
               "properties": {
                 "name": {
                   "type": "string",
-                  "description": "The element's name in Figma. Recorded on any of three triggers: primitive-wrapper collapse promoted this element to root (ADR-058), always and independent of format.figmaKeys; the name fell outside the safe key grammar so format.keys could not represent it losslessly (ADR-066); or the name was already written in the destination format and passed through unformatted, making reversal identity rather than re-derivation (ADR-066). The latter two apply only when format.figmaKeys is not NONE — under NONE, format divergence is not evaluated and this field is absent however the key was derived."
+                  "description": "The element's name in Figma. Recorded on any of three triggers: primitive-wrapper collapse promoted this element to root (ADR-058), always and independent of format.figmaKeys; the name fell outside the safe key grammar so format.keys could not represent it losslessly (ADR-066); or the name was already written in the destination format and passed through unformatted, making reversal identity rather than re-derivation (ADR-066). Under NONE no source convention is declared, so nothing can be re-derived from a key and reversal hands the key back as the name — the key reconstructs the name only where the two are already identical, and this field is recorded wherever formatting changed the name at all."
                 },
                 "childRole": {
                   "oneOf": [
@@ -315,8 +318,57 @@
         },
         {
           "$ref": "#/definitions/ImageProp"
+        },
+        {
+          "$ref": "#/definitions/ObjectProp"
         }
       ]
+    },
+    "ObjectProp": {
+      "type": "object",
+      "description": "Object property definition (ADR-111) — a prop whose value is an object of named, individually typed scalar members (e.g. a responsive margin with compact and expanded members). Members are one level deep: no SlotProp, ImageProp, or nested ObjectProp. Member names are opaque to the schema, must not begin with $, and must not contain the platform's declared objectProps.separator. No top-level default or nullable — defaults live per member.",
+      "examples": [],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "object"
+        },
+        "members": {
+          "type": "object",
+          "description": "Named members, each an existing scalar prop definition. At least one member.",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[^$]"
+          },
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/BooleanProp"
+              },
+              {
+                "$ref": "#/definitions/StringProp"
+              },
+              {
+                "$ref": "#/definitions/EnumProp"
+              },
+              {
+                "$ref": "#/definitions/NumberProp"
+              }
+            ]
+          }
+        },
+        "$extensions": {
+          "$ref": "#/definitions/PropExtensions"
+        }
+      },
+      "required": [
+        "type",
+        "members"
+      ],
+      "patternProperties": {
+        "^\\$": {}
+      },
+      "additionalProperties": false
     },
     "FigmaCodeOnlySource": {
       "type": "object",
@@ -362,7 +414,7 @@
         },
         "name": {
           "type": "string",
-          "description": "The Figma component-property name (ADR-066). Recorded when the name fell outside the safe key grammar, or when it was already written in the destination format and passed through unformatted — in which case reversal is identity, not re-derivation. Both triggers require format.figmaKeys to be other than NONE; under NONE this field is absent however the key was derived."
+          "description": "The Figma component-property name (ADR-066). Recorded when the name fell outside the safe key grammar, or when it was already written in the destination format and passed through unformatted — in which case reversal is identity, not re-derivation. Under NONE no source convention is declared, so nothing can be re-derived from a key and reversal hands the key back as the name — the key reconstructs the name only where the two are already identical, and this field is recorded wherever formatting changed the name at all."
         }
       },
       "additionalProperties": true
@@ -579,7 +631,7 @@
       ]
     },
     "PropConfigurationValue": {
-      "description": "The value of a single prop configuration entry (ADR-049): a scalar, a PropBinding for pass-through to a parent prop, a SlotContentRef under a slot-prop key for a named slot-content fill, or an ImageBinding under an image-prop key forwarding an image into a nested image instance (ADR-063), or null when the prop is unset in this configuration — a value, not an absence: an absent key inherits, a null key overrides an inherited value with no value (ADR-080).",
+      "description": "The value of a single prop configuration entry (ADR-049): a scalar, a PropBinding for pass-through to a parent prop, a SlotContentRef under a slot-prop key for a named slot-content fill, an ImageBinding under an image-prop key forwarding an image into a nested image instance (ADR-063), an ObjectPropValue under an object-prop key (ADR-111), or null when the prop is unset in this configuration — a value, not an absence: an absent key inherits, a null key overrides an inherited value with no value (ADR-080).",
       "oneOf": [
         {
           "type": "string"
@@ -601,8 +653,35 @@
         },
         {
           "$ref": "#/definitions/ImageBinding"
+        },
+        {
+          "$ref": "#/definitions/ObjectPropValue"
         }
       ]
+    },
+    "ObjectPropValue": {
+      "type": "object",
+      "description": "A member-keyed object value configuring an ObjectProp (ADR-111). Keys are the prop's member names; values are scalar member values, or null to unset a member. Layering is evaluated per member: an absent member key inherits, a null member value unsets (ADR-080). Member names must not begin with $, which keeps this form distinguishable from PropBinding, SlotContentRef, and ImageBinding.",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[^$]"
+      },
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
     },
     "PropConfigurations": {
       "type": "object",
