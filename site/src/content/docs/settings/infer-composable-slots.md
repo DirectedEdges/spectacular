@@ -1,5 +1,5 @@
 ---
-title: "Infer Composable Slots"
+title: "inferComposableSlots"
 description: "Read a slot's primitive default content as the primitives that slot accepts"
 ---
 
@@ -9,7 +9,14 @@ A library fact, declared in `config/conventions/figma.yaml`. It states that this
 
 That is why this works per component rather than per catalogue. An Alert's `description` is composable because *that* slot has a text layer in it; a Tooltip's `message` is a plain string because it is a `TEXT` prop. Neither needs an entry anywhere.
 
-## Configuration
+| | |
+|---|---|
+| **File** | `config/conventions/figma.yaml` |
+| **Path** | `inferComposableSlots` |
+| **Type** | boolean |
+| **Default** | `false` |
+
+## Example
 
 ```yaml
 inferComposableSlots: true  # Read a slot's primitive default content as what it accepts
@@ -86,13 +93,3 @@ Whether a slot accepts primitives and whether it is the component's [default slo
 **Placeholder slots read as composable.** A slot holding a primitive purely as placeholder scaffolding, with no intent that a primitive ever fill it, gets a marker too. The failure mode is a content set wider than intended, not a wrong one — a consumer permits a fill the design never meant to offer. This is why the reading is opt-in rather than on by default. Either author such slots without the placeholder, or leave this off.
 
 **Two primitives of one kind record only the first.** A default fill holding a label and a trailing counter records the label's formatting for `$text`; the counter's is not captured unless it is a component.
-
-## Options
-
-- **Type**: boolean
-- **Default**: `false`
-- **Effect**: When `true`, each primitive kind present as a top-level child of a slot's default content is recorded as a marker in `anyOf`, the first primitive of each kind supplies that kind's entry in the slot element's `contentStyles` per variant, and those primitives are not emitted as anatomy elements. When `false`, slots are emitted exactly as they are today.
-
-## Path
-
-`inferComposableSlots` in `config/conventions/figma.yaml`
