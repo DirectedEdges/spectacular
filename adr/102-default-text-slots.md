@@ -839,6 +839,8 @@ referenced, and documented on `anyOf`.
 | `specs-cli` | Loads and validates `inferComposableSlots` from `config/conventions/figma.yaml`, and documents it in the `init` template. The `react` and `webcomponents` transforms emit a primitive-accepting slot as content rather than a scalar prop — `children: ReactNode`, or a named `<slot>` — and emit `contentStyles` as the rule formatting slotted content, per primitive, applied to primitive fills only. | Config loader, template, and transform work. |
 | `specs-plugin-2` | None at this ADR's scope. | Recompiles against the new optional members. |
 
+Per-package adoption analysis: `specs-local-workspace/adr/102/plan.md` (maintained outside this repo).
+
 ---
 
 ## Semver Decision
