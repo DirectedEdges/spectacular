@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Specs Composition Concern Document Schema",
+  "description": "One concern of a composition, as written by a run with splitConcerns. Each concern has its own shape, requiring what it carries and permitting nothing else. Component-level definitions are referenced from component.schema.json rather than restated. (ADR-109)",
+  "oneOf": [
+    {
+      "$ref": "#/definitions/CompositionApiDocument"
+    },
+    {
+      "$ref": "#/definitions/CompositionVariantsDocument"
+    },
+    {
+      "$ref": "#/definitions/CompositionExamplesDocument"
+    }
+  ],
+  "definitions": {
+    "CompositionApiDocument": {
+      "type": "object",
+      "description": "The api concern of a composition: its identity and structure. Written as api.yaml by a run with splitConcerns. (ADR-109)",
+      "required": [
+        "metadata",
+        "anatomy"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "metadata": {
+          "allOf": [
+            {
+              "$ref": "component.schema.json#/definitions/Metadata"
+            },
+            {
+              "required": [
+                "concern"
+              ],
+              "properties": {
+                "concern": {
+                  "const": "api"
+                }
+              }
+            }
+          ],
+          "description": "Must state `concern: api`. This is what identifies the document, and what separates it from the other concerns in root.schema.json."
+        },
+        "title": {
+          "type": "string",
+          "description": "Human-readable label for the composition."
+        },
+        "description": {
+          "type": "string",
+          "description": "Purpose and usage notes for documentation tooling."
+        },
+        "anatomy": {
+          "$ref": "component.schema.json#/definitions/Anatomy",
+          "description": "The elements that comprise the composition, corresponding largely to Figma layers"
+        }
+      }
+    },
+    "CompositionVariantsDocument": {
+      "type": "object",
+      "description": "The variants concern of a composition: how it looks. A composition has no default/variants layering — elements and layout are the whole of its one, unvarying appearance. Written as variants.yaml by a run with splitConcerns. (ADR-109)",
+      "required": [
+        "metadata",
+        "elements",
+        "layout"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "metadata": {
+          "allOf": [
+            {
+              "$ref": "component.schema.json#/definitions/Metadata"
+            },
+            {
+              "required": [
+                "concern"
+              ],
+              "properties": {
+                "concern": {
+                  "const": "variants"
+                }
+              }
+            }
+          ],
+          "description": "Must state `concern: variants`. This is what identifies the document, and what separates it from the other concerns in root.schema.json."
+        },
+        "elements": {
+          "$ref": "component.schema.json#/definitions/Elements",
+          "description": "Per-element styles, content, and children for the composition"
+        },
+        "layout": {
+          "type": "array",
+          "items": {
+            "$ref": "component.schema.json#/definitions/LayoutNode"
+          },
+          "description": "The composition's layout tree"
+        }
+      }
+    },
+    "CompositionExamplesDocument": {
+      "type": "object",
+      "description": "The examples concern of a composition: the content it composes and the image registry those elements reference. Written as examples.yaml when a composition has any named slot fills or images. (ADR-109)",
+      "required": [
+        "metadata"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "metadata": {
+          "allOf": [
+            {
+              "$ref": "component.schema.json#/definitions/Metadata"
+            },
+            {
+              "required": [
+                "concern"
+              ],
+              "properties": {
+                "concern": {
+                  "const": "examples"
+                }
+              }
+            }
+          ],
+          "description": "Must state `concern: examples`. This is what identifies the document, and what separates it from the other concerns in root.schema.json."
+        },
+        "slotContent": {
+          "type": "object",
+          "description": "Named slot fills bundled alongside this composition's primary content (ADR-042, ADR-046).",
+          "patternProperties": {
+            "^[a-zA-Z0-9_-]+$": {
+              "$ref": "component.schema.json#/definitions/SlotContent"
+            }
+          },
+          "additionalProperties": false
+        },
+        "images": {
+          "$ref": "component.schema.json#/definitions/Images",
+          "description": "Registry of image data referenced by this composition's elements. Same shape and de-duplication as a component's (ADR-109 amendment)."
+        }
+      }
+    }
+  }
+}

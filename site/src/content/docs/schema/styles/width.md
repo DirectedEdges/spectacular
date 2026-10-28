@@ -1,6 +1,7 @@
 ---
 title: "width"
 description: "Fixed or resolved width of an element"
+tableOfContents: false
 ---
 
 Width.
@@ -11,6 +12,10 @@ Width.
 |---|---|
 | `number` | `48` |
 | [`TokenReference`](/schema/token-reference/) | `$token: DS.Size.400`<br>`$type: dimension` |
+
+#### Default
+
+`0`
 
 #### Supported on
 

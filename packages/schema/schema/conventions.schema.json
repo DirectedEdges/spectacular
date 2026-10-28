@@ -46,15 +46,27 @@
         },
         "glyphs": {
           "type": "object",
-          "description": "Glyph content assets. Absence means the library has no glyph naming convention.",
+          "description": "Glyph content assets. Absence means the library has no glyph convention. A declared block carries at least one form — match, structure, or both; membership is the union.",
           "properties": {
             "match": {
               "type": "string",
-              "description": "Naming pattern identifying glyph assets, using the {i} icon-name placeholder."
+              "description": "Name form — membership and naming in one pattern over the component name, using the {i} icon-name placeholder."
+            },
+            "structure": {
+              "$ref": "#/definitions/GlyphStructure"
             }
           },
-          "required": [
-            "match"
+          "anyOf": [
+            {
+              "required": [
+                "match"
+              ]
+            },
+            {
+              "required": [
+                "structure"
+              ]
+            }
           ],
           "additionalProperties": false
         },
@@ -185,6 +197,19 @@
           "default": false,
           "description": "The library authors composable content as a slot holding primitives in its default content. When declared, a slot whose default content includes a top-level primitive of a given kind — in at least one variant — is emitted with the matching PrimitiveSlotContent marker in its anyOf ($text, $glyph), and the first top-level primitive of that kind supplies that kind's entry in the slot element's contentStyles; those primitives are not emitted as anatomy elements. Absent, slots are emitted exactly as they are today. The distinction it reads is authored: a slot holding a primitive is the composable case, a TEXT prop on a text layer is the plain-string one. (ADR-102)"
         },
+        "objectProps": {
+          "type": "object",
+          "description": "This platform authors object-prop members as separator-delimited flat property names (e.g. margin.compact, margin.expanded), to be folded into one ObjectProp (ADR-111). Absence means no folding — a property name containing the separator stays a flat prop.",
+          "properties": {
+            "separator": {
+              "type": "string",
+              "minLength": 1,
+              "default": ".",
+              "description": "The member-name separator in flat property names."
+            }
+          },
+          "additionalProperties": false
+        },
         "stylesProp": {
           "type": "string",
           "description": "Prop that receives styling no promotion mapped, for every promoted component on this platform (e.g. sx, style, modifier). A name only \u2014 what is placed in it is the generator's decision. Absence means unmapped styling is dropped. (ADR-076)"
@@ -195,6 +220,60 @@
           "description": "Width in pixels of the container this platform places a component in when the component's root resizes to fill its parent. Applies only when the root's layoutSizingHorizontal is FILL; fixed and hugging roots are unaffected. Absence means the platform declares no width and the rendering tool uses its own fallback. (ADR-081)"
         }
       },
+      "additionalProperties": false
+    },
+    "GlyphStructure": {
+      "type": "object",
+      "description": "Structural form of the glyphs convention (ADR-103): membership from child structure, naming from the component name. A component is a glyph when every child matches some entry in children (set-cover, exhaustive); when fill is declared, every matched leaf must carry one of the listed fills.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Naming rule applied to the component name, using the {i} placeholder. Defaults to '{i}' — the whole component name is the glyph name."
+        },
+        "fill": {
+          "type": "array",
+          "description": "Accepted leaf fills: a raw color ('#RRGGBB') or a token/variable/style name. Tested only on a component's stored structure — an instance mirror is contextually recolored, so fill is skipped there. Absence means fills are not tested.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "children": {
+          "type": "array",
+          "description": "Node matchers covering the component's children.",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/GlyphStructureNode"
+          }
+        }
+      },
+      "required": [
+        "children"
+      ],
+      "additionalProperties": false
+    },
+    "GlyphStructureNode": {
+      "type": "object",
+      "description": "One node matcher within a GlyphStructure. type is an open string carrying a Figma node type (e.g. 'VECTOR', 'BOOLEAN_OPERATION'); an unknown type never matches.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Figma node type this entry matches."
+        },
+        "name": {
+          "type": "string",
+          "description": "Layer name, literal with '*' wildcard. Absence means any name."
+        },
+        "children": {
+          "type": "array",
+          "description": "Matchers covering this node's own children, same set-cover semantics. Absence means children are not tested.",
+          "items": {
+            "$ref": "#/definitions/GlyphStructureNode"
+          }
+        }
+      },
+      "required": [
+        "type"
+      ],
       "additionalProperties": false
     },
     "Conventions": {
@@ -221,7 +300,7 @@
         },
         "storybook": {
           "$ref": "#/definitions/StorybookConventions",
-          "description": "Workspace Storybook presentation conventions, loaded from conventions/storybook.yaml \u2014 a reserved basename, not a platform."
+          "description": "Workspace Storybook conventions \u2014 how its pages present, and where it serves. Loaded from conventions/storybook.yaml \u2014 a reserved basename, not a platform."
         }
       },
       "additionalProperties": false
@@ -412,7 +491,7 @@
     },
     "StorybookConventions": {
       "type": "object",
-      "description": "Workspace Storybook presentation conventions, keyed by publish concern, each holding per-feature settings. Both levels are open (ADR-098): feature vocabulary is validated by the concern implementation, which warns by name on anything unknown.",
+      "description": "Workspace Storybook conventions, keyed by concern, each holding per-feature settings. Most concerns are publish concerns naming how a page presents; `host` names where the Storybook serves. Both levels are open (ADR-098): feature vocabulary is validated by the concern implementation, which warns by name on anything unknown.",
       "additionalProperties": {
         "type": "object",
         "description": "One concern's feature settings. Values are deliberately unconstrained here.",

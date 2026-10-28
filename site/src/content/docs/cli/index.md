@@ -2,7 +2,7 @@
 title: "CLI Overview"
 ---
 
-The Specs command-line interface (CLI) generates design system specifications from Figma REST API data without requiring the Figma Plugin UI. It enables automation, batch processing, and CI/CD integration.
+The Spectacular command-line interface (CLI) generates design system specifications from Figma REST API data without requiring the Figma Plugin UI. It enables automation, batch processing, and CI/CD integration.
 
 ## Commands
 
@@ -48,7 +48,7 @@ specs fetch    you tick the boxes
 
 ## Free vs. Pro
 
-Specs CLI works without a license key. At the **free tier**, specs include full component structure: anatomy, props, variants, and raw style values.
+Spectacular CLI works without a license key. At the **free tier**, specs include full component structure: anatomy, props, variants, and raw style values.
 
 With a **Pro license**, specs also include design token references, variable bindings, and visibility bindings — connecting your specs directly to your design token system.
 
@@ -119,7 +119,7 @@ data/
 - **Figma access token** (for `fetch`) via `FIGMA_TOKEN`
 - **Figma REST API data** (JSON files from Figma API endpoints, produced by `fetch`):
   - `file` / `styles` — any Figma plan with REST API access
-  - `variables` — Figma restricts the variables REST endpoints to organizations on an **Enterprise** plan, regardless of your Specs license; on any other plan, fetch variables through the plugin with [`--from-bridge`](/cli/commands/fetch/#fetching-variables-via-the-bridge)
+  - `variables` — Figma restricts the variables REST endpoints to organizations on an **Enterprise** plan, regardless of your Spectacular license; on any other plan, fetch variables through the plugin with [`--from-bridge`](/cli/commands/fetch/#fetching-variables-via-the-bridge)
 - **License key** (optional) via `SPECS_LICENSE_KEY` for Pro features
 - **A running CLI bridge and open Figma session** (for `render` only) — see the [Render to Figma guide](/guides/render-to-figma/)
 

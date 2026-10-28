@@ -1,6 +1,6 @@
 ---
 title: License
-description: License information for Specs packages.
+description: License information for Spectacular packages.
 ---
 
 This repository contains multiple packages with different licenses:

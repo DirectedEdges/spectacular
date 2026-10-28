@@ -252,6 +252,25 @@ export class PayloadSplitter {
     this.pageClosers.push(sink.close().then(hash => { entry.sha256 = hash; }));
   }
 
+  /**
+   * The scanner's own state is the only evidence that the payload arrived whole.
+   * Figma sends the file payload chunked with no `content-length`, so a body that
+   * stops early without a transport error is indistinguishable by length from a
+   * complete one, and a split built from it would be written and reported as a
+   * real artifact.
+   *
+   * Balanced depth is the signal, not a finished `document.children`: a payload
+   * carrying no `document.children` at all is legal and ends at depth 0.
+   */
+  private assertComplete(): void {
+    if (this.sourceBytes === 0) throw new Error('payload was empty — nothing to split');
+    // Pages hold nearly every byte, so this is the likeliest cut point by a wide
+    // margin and worth naming on its own.
+    if (this.pageSink) throw new Error('payload ended inside a page — truncated or malformed JSON');
+    if (this.inString) throw new Error('payload ended inside a string — truncated or malformed JSON');
+    if (this.depth !== 0) throw new Error(`payload ended at JSON depth ${this.depth}, expected 0 — truncated or malformed JSON`);
+  }
+
   private flushSeparatorAsFinal(): void {
     // Whitespace between the last page and the closing ']' (rare) belongs to no
     // gap; append it to the suffix instead so no byte is lost.
@@ -261,9 +280,10 @@ export class PayloadSplitter {
     }
   }
 
-  /** Close all sinks and write manifest.json. */
+  /** Close all sinks and write manifest.json. Throws unless the payload ended on
+   *  a structural boundary — see `assertComplete`. */
   async finish(): Promise<SplitManifest> {
-    if (this.pageSink) throw new Error('payload ended inside a page — malformed JSON');
+    this.assertComplete();
     if (this.separatorBuf.length > 0) this.flushSeparatorAsFinal();
     await Promise.all(this.pageClosers);
     await this.rootSink.close();

@@ -1,0 +1,107 @@
+# Choices about this run — curation, sources, spec output, assets.
+# A different team reading the same library could set any of these differently
+# and still be correct. Every setting is written out at the value this workspace
+# starts on, so the whole surface is visible and editable in place. Each comment
+# says what its setting decides, and lists the values where there is a choice.
+# All but three are the schema's own default; those three are marked.
+# Reference: https://spectacular.systems/schema/settings/
+
+author: <Your Name Here>
+
+# Which components get a spec — https://spectacular.systems/settings/curation/
+curation:
+  # Which components a first pass selects: READY_FOR_DEV, or ALL to ignore the marking
+  defaultSelection: READY_FOR_DEV
+
+  # Keep a hand-edited selection when the Figma signal changes under it
+  preserveManualSelections: true
+
+  # Select what a selected component is built from, transitively
+  includeDependencies: true
+
+# What to fetch, and where it lands — https://spectacular.systems/settings/data-sources/
+data:
+  directory: ./data
+  sources:
+    library:
+      key: YOUR_FIGMA_FILE_KEY
+      # Add icons once a glyphs convention is declared in conventions/figma.yaml
+      fetch: [file, variables, styles]
+
+# Icons, images, generated CSS, fonts — https://spectacular.systems/settings/folders/
+assets:
+  directory: ./assets
+
+spec:
+  # Overridable with -o — https://spectacular.systems/settings/folders/
+  directory: ./specs
+
+  # JSON or YAML — https://spectacular.systems/settings/output-format/
+  format: YAML
+
+  # SAFE, CAMEL, SNAKE, KEBAB, PASCAL, TRAIN — https://spectacular.systems/settings/keys/
+  keys: CAMEL
+
+  # LAYOUT, PARENT_CHILDREN, BOTH — https://spectacular.systems/settings/layout/
+  layout: LAYOUT
+
+  # TOKEN, TOKEN_NAME, TOKEN_FIGMA_EXTENSIONS, FIGMA_NAME, CUSTOM,
+  # FIGMA_SYNTAX_WEB, FIGMA_SYNTAX_IOS, FIGMA_SYNTAX_ANDROID
+  # Pro — https://spectacular.systems/settings/tokens/
+  tokens: TOKEN
+
+  # HEX, HEXA, RGB, RGBA, HSLA, HSB, OKLCH, OKLAB, OBJECT
+  # https://spectacular.systems/settings/color/
+  color: HEXA
+
+  # 1, 2, 3, or 9999 — https://spectacular.systems/settings/variant-depth/
+  variantDepth: 9999
+
+  # FULL or LAYERED — https://spectacular.systems/settings/details/
+  details: LAYERED
+
+  # Strip a root container that only wraps one child
+  # https://spectacular.systems/settings/collapse-primitive-wrapper/
+  collapsePrimitiveWrapper: true
+
+  # Give variants the library marks invalid a spec of their own
+  # https://spectacular.systems/settings/invalid-variants/
+  invalidVariants: false
+
+  # Record which prop combinations the library marks invalid (Pro)
+  # https://spectacular.systems/settings/invalid-combinations/
+  invalidCombinations: true
+
+  # Emit layered variants that override no element
+  # https://spectacular.systems/settings/empty-variants/
+  emptyVariants: false
+
+  # File layout — https://spectacular.systems/settings/output/
+  # A file per component rather than one file for the whole library
+  splitComponents: true
+
+  # A file per concern — api, styling, variants — rather than one per component
+  splitConcerns: true
+
+  # Nest each component's files in a subfolder named for the component
+  useSubfolders: true
+
+  # Severity of an unmet role obligation: warn and continue, or error and stop
+  roleValidation: warn
+
+  # The three below are on while the schema defaults them off. Each reads something
+  # this workspace has not declared yet, so each finds nothing and changes nothing —
+  # they are on so that declaring the convention is the only step needed later.
+
+  # Read Dev Mode annotations into anatomy roles — needs annotations in Figma
+  # https://spectacular.systems/roles/
+  roles: true
+
+  # Promote primitive layers in composed examples to component instances —
+  # needs a figma.primitives convention
+  # https://spectacular.systems/settings/promote-primitives/
+  promotePrimitives: true
+
+  # Emit default slot content as examples (Pro) — needs a slots convention
+  # https://spectacular.systems/settings/default-slot-content/
+  defaultSlotContent: true

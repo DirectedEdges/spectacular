@@ -1,22 +1,23 @@
 ---
-title: "Promote Primitives"
+title: "promotePrimitives"
 description: "Turn primitive layers in composed example content into instances of the design system's own components"
 ---
 
-A run choice in `config/settings.yaml`. When enabled, a `text`, `glyph` or `container` layer in composed example content becomes an instance of the design system component it stands for, using the [`primitives`](/schema/conventions/#primitives) table.
+When enabled, a `text`, `glyph` or `container` layer in composed example content becomes an instance of the design system component it stands for, using the [`primitives`](/schema/conventions/#primitives) table. Designers build examples out of raw layers because composing with real instances in a design file is laborious — a text layer wearing the design system's typography token is standing in for that system's text component, and promotion records the component rather than the approximation.
 
-Designers build examples out of raw layers because composing with real instances in a design file is laborious. A text layer wearing the design system's typography token is standing in for that system's text component; promotion records the component rather than the approximation.
+| | |
+|---|---|
+| **File** | `config/settings.yaml` |
+| **Path** | `spec.promotePrimitives` |
+| **Type** | boolean |
+| **Default** | `false` |
 
-**Composed content only.** `slotContentExamples` and `instanceExamples` are affected. A component's own `variants.yaml` is never promoted — someone who put a text layer in a component's anatomy chose a text layer, and that is what the component contains.
-
-## Configuration
+## Example
 
 ```yaml
 spec:
   promotePrimitives: true
 ```
-
-Off by default. Promotion restructures composed content, so a workspace elects it rather than receiving it on upgrade. A [`primitives`](/schema/conventions/#primitives) table is inert until this is turned on.
 
 ## Result
 
@@ -59,6 +60,12 @@ elements:
 ```
 
 The styles are **partitioned**, not copied. What the promotion consumed moves to `$extensions.com.figma.styles`; what nothing claimed stays in `styles` and reaches output as before. No value is stored twice.
+
+## Scope
+
+**Composed content only.** `slotContentExamples` and `instanceExamples` are affected. A component's own `variants.yaml` is never promoted — someone who put a text layer in a component's anatomy chose a text layer, and that is what the component contains.
+
+Off by default. Promotion restructures composed content, so a workspace elects it rather than receiving it on upgrade. A [`primitives`](/schema/conventions/#primitives) table is inert until this is turned on.
 
 ## Provenance
 
@@ -136,11 +143,7 @@ A spec captured with promotion and one captured without differ throughout their 
 
 The value is recorded in `metadata.settings.spec`, so a spec states how it was produced.
 
-## Path
+## Further reading
 
-`spec.promotePrimitives` in `config/settings.yaml`
-
-## See Also
-
-- [`primitives`](/schema/conventions/#primitives) — the table promotion consults
-- [Collapse Primitive Wrapper](/settings/collapse-primitive-wrapper/) — the other capture-time restructuring, also opt-in
+- [`primitives`](/schema/conventions/#primitives) — the table promotion consults.
+- [Collapse Primitive Wrapper](/settings/collapse-primitive-wrapper/) — the other capture-time restructuring, also opt-in.

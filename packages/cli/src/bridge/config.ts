@@ -7,6 +7,7 @@ export const WS_PORT = 9001;
 export const HTTP_PORT = 9002;
 
 // Default render target page — the "Specs 2 Testing" render page.
+// Named for the page as it exists in the Figma file; rename there first.
 // Override per-request via body.pageId or CLI --pageId.
 export const DEFAULT_PAGE_ID = '1462-365';
 

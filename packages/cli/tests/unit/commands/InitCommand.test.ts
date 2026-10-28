@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'fs-extra';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { generateConfigTemplates } from '../../../src/Config/ConfigTemplates.js';
-import { Init } from '../../../src/commands/InitCommand.js';
+import { generateConfigTemplates } from '../../../src/config/ConfigTemplates.js';
+import { Init } from '../../../src/commands/init.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const testDir = path.join(__dirname, '../../tmp/test-init-' + Date.now());
@@ -55,12 +55,12 @@ describe('InitCommand', () => {
         expect(template).toContain('#');
       }
       const settings = generateConfigTemplates()['config/settings.yaml'];
-      expect(settings).toContain('www.specsplugin.com/settings/');
+      expect(settings).toContain('spectacular.systems/settings/');
     });
 
-    it('states the commenting contract', () => {
+    it('states the writing contract', () => {
       const settings = generateConfigTemplates()['config/settings.yaml'];
-      expect(settings).toContain('Every commented line is the opposite of the default');
+      expect(settings).toContain('Every setting is written out at the value this workspace');
     });
 
     it('should have consistent YAML indentation', () => {
@@ -167,8 +167,8 @@ describe('InitCommand', () => {
     it('should have all required documentation URLs', () => {
       const settings = generateConfigTemplates()['config/settings.yaml'];
       const requiredUrls = [
-        'www.specsplugin.com/settings/',
-        'www.specsplugin.com/',
+        'spectacular.systems/settings/',
+        'spectacular.systems/',
       ];
 
       requiredUrls.forEach(url => {

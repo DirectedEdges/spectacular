@@ -1,6 +1,7 @@
 ---
 title: "wrapAlignment"
 description: "Space distribution between wrapped auto-layout lines"
+tableOfContents: false
 ---
 
 Space distribution between wrapped lines. Only meaningful when `wrap` is `true`.
@@ -13,6 +14,10 @@ Space distribution between wrapped lines. Only meaningful when `wrap` is `true`.
 | `null` | `null` |
 
 Not token-bindable — structural property, not a design value.
+
+#### Default
+
+`null`
 
 #### Supported on
 

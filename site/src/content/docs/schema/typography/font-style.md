@@ -1,6 +1,7 @@
 ---
 title: "fontStyle"
 description: "Font style (weight/italic) for a text node"
+tableOfContents: false
 ---
 
 Font style name as defined in the font (e.g. weight and italic). Part of [`Typography`](/schema/typography/).
@@ -11,6 +12,10 @@ Font style name as defined in the font (e.g. weight and italic). Part of [`Typog
 |---|---|
 | `string` | `"Bold Italic"` |
 | [`TokenReference`](/schema/token-reference/) | `$token: DS.Font.Style.Bold`<br>`$type: string` |
+
+#### Default
+
+`null`
 
 #### Source
 

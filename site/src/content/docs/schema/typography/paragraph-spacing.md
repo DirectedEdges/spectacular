@@ -1,6 +1,7 @@
 ---
 title: "paragraphSpacing"
 description: "Spacing between paragraphs for a text node"
+tableOfContents: false
 ---
 
 Spacing between paragraphs in pixels. Part of [`Typography`](/schema/typography/).
@@ -11,6 +12,10 @@ Spacing between paragraphs in pixels. Part of [`Typography`](/schema/typography/
 |---|---|
 | `number` | `8` |
 | [`TokenReference`](/schema/token-reference/) | `$token: DS.Space.200`<br>`$type: dimension` |
+
+#### Default
+
+`0`
 
 #### Source
 

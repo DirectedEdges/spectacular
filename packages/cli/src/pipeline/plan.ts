@@ -6,7 +6,7 @@
 import path from 'path';
 import type { Workspace } from '../storybook/workspace.js';
 import { STEPS, OPT_IN, type Step } from './steps.js';
-import { STEP_IDS, StepError } from './types.js';
+import { STEP_IDS, StepError, type StepId } from './types.js';
 
 export interface PlanOptions {
   only?: string[];
@@ -19,6 +19,14 @@ export interface Plan {
   steps: Step[];
   /** Steps a workspace has but this run was told to leave out, for reporting. */
   excluded: Step[];
+  /**
+   * Steps this workspace has nothing for, each with why.
+   *
+   * Reported because an absent step is indistinguishable from a broken run.
+   * These were dropped before anything could name them, so a fresh workspace
+   * ran three of six steps and said nothing about the other three.
+   */
+  inactive: Array<{ step: Step; reason: string }>;
 }
 
 function assertKnown(names: string[], flag: string): void {
@@ -32,11 +40,31 @@ function assertKnown(names: string[], flag: string): void {
   }
 }
 
+/** The steps whose `active` is "this tree exists", which is an opt-out rather than a fact. */
+const PLATFORM_STEPS = new Set<StepId>(['react', 'webcomponents']);
+
 /**
  * The steps this run will perform, in order.
  *
  * A step is in when the workspace has something for it to do, it is not opt-in
  * (or was opted into), and `--only`/`--skip` did not remove it.
+ *
+ * A platform step is the exception, because its `active` reads a directory that
+ * means two different things. `react/src` present is "emit React here"; absent is
+ * either "this workspace does not want React" or "nothing has ever run" — and the
+ * chain cannot tell those apart from the directory alone. Deciding it is an
+ * opt-out either way is wrong on a new workspace, where it silently performs three
+ * of its six steps and emits no code at all.
+ *
+ * So the opt-out only counts once there is evidence of a choice. With **specs to
+ * emit, no platform tree at all, and no scoping flag**, nothing has expressed a
+ * preference, and every platform emits. From the moment one tree exists, the
+ * directories are the answer and a missing one means opted out. Deleting a tree
+ * still turns that platform off; deleting the last one returns the workspace to
+ * "no preference", which is what it meant before the first run.
+ *
+ * The specs precondition is what keeps a bare directory bare: with nothing to emit
+ * from, a platform step is not an unexpressed preference, it is nothing to do.
  */
 export function resolvePlan(workspace: Workspace, options: PlanOptions = {}): Plan {
   if (options.only?.length && options.skip?.length) {
@@ -49,11 +77,20 @@ export function resolvePlan(workspace: Workspace, options: PlanOptions = {}): Pl
   const only = options.only?.length ? new Set(options.only) : null;
   const skip = new Set(options.skip ?? []);
 
+  // Naming any step is itself a preference, so a scoped run never takes this path.
+  const noPlatformChosen =
+    workspace.hasSpecs && !workspace.hasReact && !workspace.hasWebComponents && !only && skip.size === 0;
+
   const steps: Step[] = [];
   const excluded: Step[] = [];
+  const inactive: Array<{ step: Step; reason: string }> = [];
 
   for (const step of STEPS) {
-    if (!step.active(workspace)) continue;
+    const active = step.active(workspace) || (noPlatformChosen && PLATFORM_STEPS.has(step.id));
+    if (!active) {
+      inactive.push({ step, reason: step.inactiveBecause(workspace) });
+      continue;
+    }
 
     // `--only` names exactly what runs, opt-in steps included: naming `render`
     // is as explicit as `--render`.
@@ -72,7 +109,7 @@ export function resolvePlan(workspace: Workspace, options: PlanOptions = {}): Pl
     );
   }
 
-  return { steps, excluded };
+  return { steps, excluded, inactive };
 }
 
 export interface Entry {

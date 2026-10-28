@@ -8,7 +8,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { PayloadSplitter, splitDirFor } from '../../../src/utilities/payloadSplit.js';
 import { SectionedFile } from '../../../src/utilities/sectionedFile.js';
-import { resolveComponentInSplitRoot } from '../../../src/commands/GenerateCommand.js';
+import { resolveComponentInSplitRoot } from '../../../src/commands/generate.js';
 
 const FIXTURE = join(__dirname, '../../fixtures/sectioned/cross-page.file.json');
 

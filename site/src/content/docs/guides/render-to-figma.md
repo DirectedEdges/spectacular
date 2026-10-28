@@ -3,7 +3,7 @@ title: "Render to Figma"
 description: "The full command sequence behind a successful render — config, fetch, cache, bridge, plugin, render, and verification"
 ---
 
-Every other command in Specs reads Figma and produces a spec. [`render`](/cli/commands/render/) runs the pipeline in reverse: it takes a spec and creates or updates the matching component in a real, open Figma file.
+Every other command in Spectacular reads Figma and produces a spec. [`render`](/cli/commands/render/) runs the pipeline in reverse: it takes a spec and creates or updates the matching component in a real, open Figma file.
 
 `render` itself is a thin client. Almost everything that determines whether a render succeeds happens *before* you type it — the data you fetched, the lookup cache built from it, the bridge process, and the plugin connection. This guide walks the whole chain in order, with what each stage contributes, how to verify it before moving on, and what it looks like when it's wrong.
 
@@ -30,7 +30,7 @@ The first three stages are about *meaning* — a spec names components, styles, 
 
 ## Stage 1 — Config
 
-A render workspace is an ordinary Specs workspace. If you don't have one:
+A render workspace is an ordinary Spectacular workspace. If you don't have one:
 
 ```bash
 specs init
@@ -110,7 +110,7 @@ Bridge started (pid 12345).
   WebSocket : ws://localhost:9001  (plugin)
   HTTP      : http://localhost:9002/render  (control)
   Logs      : /Users/you/.specs/bridge.log
-Enable the CLI Bridge in the Specs 2 plugin to connect.
+Enable the CLI Bridge in the Figma plugin to connect.
 ```
 
 It runs in the background until you stop it, so this is once per session, not once per render. `specs render` never starts it for you — if it isn't running, the command fails immediately rather than hanging:

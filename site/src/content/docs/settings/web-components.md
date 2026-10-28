@@ -3,13 +3,14 @@ title: "Web Components"
 description: "What the Web Components platform calls the elements a promoted primitive becomes, and which attribute receives unmapped styling"
 ---
 
-`config/conventions/web-components.yaml` states facts about the Web Components platform.
-It carries the same three keys as [React](/settings/react/) — what differs is only what
-genuinely differs between the platforms.
+`config/conventions/web-components.yaml` states facts about the Web Components platform. It carries the same three keys as [React](/settings/react/) — what differs is only what genuinely differs between the platforms: a custom element has a tag name where React has a component name, and an attribute where React has a prop, which is why the two are separate platform files rather than one shared `web` key.
 
-The two are separate platform files rather than one shared `web` key precisely because
-of that difference: a custom element has a tag name where React has a component name,
-and an attribute where React has a prop.
+| | |
+|---|---|
+| **File** | `config/conventions/web-components.yaml` |
+| **Path** | file root |
+| **Type** | block (`stylesProp`, `primitives`, `defaultFillWidth`) |
+| **Default** | absent |
 
 ## `stylesProp`
 
@@ -53,8 +54,8 @@ Identical in meaning to [React's](/settings/react/#defaultfillwidth): the contai
 width used when a root resizes to fill its parent, and nothing at all when the root
 states its own width.
 
-## See Also
+## Further reading
 
-- [React](/settings/react/) — the peer platform
-- [`specs webcomponents`](/cli/commands/webcomponents/) — the command that reads this
-- [Conventions schema reference](/schema/conventions/) — the full shape
+- [React](/settings/react/) — the peer platform.
+- [`specs webcomponents`](/cli/commands/webcomponents/) — the command that reads this.
+- [Conventions schema reference](/schema/conventions/) for the full shape.

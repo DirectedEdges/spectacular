@@ -8,17 +8,21 @@ import path from 'path';
 import type { Workspace } from './workspace.js';
 import { readTemplate, renderTemplate, templatesHash, STORYBOOK_VERSION, STORYBOOK_MAJOR } from './templates.js';
 import { deriveTabs, deriveModes } from './concerns/components/index.js';
+import { resolveStorybookPort, type PortSource } from './port.js';
 
 declare const __SPECS_CLI_VERSION__: string;
 
 export interface InitOptions {
   force: boolean;
-  port: string;
+  /** `--port`, when given. Absent means resolve from the workspace (port.ts). */
+  port?: string;
 }
 
 export interface InitResult {
   written: string[];
   port: string;
+  /** Where the port came from, so the caller can say whether a flag was needed. */
+  portSource: PortSource;
   /**
    * Declared deps the existing storybook/node_modules does not satisfy —
    * missing packages or a different major. Non-empty only when an install
@@ -52,9 +56,15 @@ export function init(ws: Workspace, options: InitOptions): InitResult {
 
   const workspaceName = path.basename(ws.root);
   const cssvarsPath = path.join(ws.assetsDir, 'cssvars', 'cssvars.css');
+  // The port is resolved, not defaulted: a `--force` that defaulted the flag
+  // to 6006 rewrote the npm script and moved an already-running workspace off
+  // its own address — including for the screenshot runner, which reads the
+  // same script. A declared port now survives a rewrite, and so does an
+  // existing scaffold's port when nothing declares one.
+  const resolvedPort = resolveStorybookPort(ws, options.port);
   const vars: Record<string, string> = {
     WORKSPACE_NAME: workspaceName,
-    PORT: options.port,
+    PORT: String(resolvedPort.port),
     STORYBOOK_VERSION,
     STORYBOOK_MAJOR,
     // Only asset kinds present produce config entries (specs#610): a workspace
@@ -109,7 +119,12 @@ export function init(ws: Workspace, options: InitOptions): InitResult {
     written.push(path.join('storybook', 'content', 'components', 'modes.json'));
   }
 
-  return { written, port: options.port, staleInstall: staleInstall(ws, packageJson) };
+  return {
+    written,
+    port: String(resolvedPort.port),
+    portSource: resolvedPort.source,
+    staleInstall: staleInstall(ws, packageJson),
+  };
 }
 
 /**

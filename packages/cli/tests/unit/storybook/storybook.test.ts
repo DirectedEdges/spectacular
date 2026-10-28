@@ -3,10 +3,10 @@ import fs from 'fs-extra';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
-import { Storybook } from '../../../src/commands/StorybookCommand.js';
+import { Storybook } from '../../../src/commands/storybook.js';
 import { registry, concernNames } from '../../../src/storybook/concerns/registry.js';
 import { deriveTabs, deriveCompositions, deriveModes } from '../../../src/storybook/concerns/components/index.js';
-import { kebabizePath } from '../../../src/transforms/css/values.js';
+import { kebabizePath } from '../../../src/transforms/css/values/tokens.js';
 import { buildColorData } from '../../../src/storybook/concerns/foundations/color.js';
 import { buildIconsData } from '../../../src/storybook/concerns/foundations/icons.js';
 import { buildTypographyData } from '../../../src/storybook/concerns/foundations/typography.js';
@@ -21,7 +21,7 @@ describe('StorybookCommand', () => {
     const subs = Storybook.commands.map(c => c.name());
     expect(subs).toContain('init');
     expect(subs).toContain('publish');
-    expect(concernNames()).toEqual(['overview', 'foundations', 'components', 'analysis', 'versions']);
+    expect(concernNames()).toEqual(['overview', 'foundations', 'components', 'analysis', 'visualtesting', 'versions']);
   });
 });
 

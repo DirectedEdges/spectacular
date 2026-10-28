@@ -20,7 +20,7 @@ The `init` command scaffolds the split configuration (ADR-071, ADR-078), each fi
 
 Each file ships with sensible defaults and inline documentation with links to the full configuration reference. `settings.yaml` includes an empty `data.sources` object ready for your Figma file keys.
 
-This is the recommended way to get started with Specs in a new project.
+This is the recommended way to get started with Spectacular in a new project.
 
 ## What Gets Created
 

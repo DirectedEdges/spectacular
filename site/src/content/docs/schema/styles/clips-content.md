@@ -1,6 +1,7 @@
 ---
 title: "clipsContent"
 description: "Whether a container clips overflowing content"
+tableOfContents: false
 ---
 
 Whether the container clips content that overflows its box.
@@ -11,6 +12,10 @@ Whether the container clips content that overflows its box.
 |---|---|
 | `boolean` | `true` |
 | [`TokenReference`](/schema/token-reference/) | `$token: ...`<br>`$type: boolean` |
+
+#### Default
+
+`false`
 
 #### Supported on
 

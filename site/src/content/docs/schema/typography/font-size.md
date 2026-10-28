@@ -1,6 +1,7 @@
 ---
 title: "fontSize"
 description: "Font size for a text node"
+tableOfContents: false
 ---
 
 Font size in pixels. Part of [`Typography`](/schema/typography/).
@@ -11,6 +12,10 @@ Font size in pixels. Part of [`Typography`](/schema/typography/).
 |---|---|
 | `number` | `16` |
 | [`TokenReference`](/schema/token-reference/) | `$token: DS.Font.Size.400`<br>`$type: dimension` |
+
+#### Default
+
+`16`
 
 #### Source
 

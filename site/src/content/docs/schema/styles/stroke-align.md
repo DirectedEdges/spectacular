@@ -1,6 +1,7 @@
 ---
 title: "strokeAlign"
 description: "Stroke alignment relative to an element's bounds"
+tableOfContents: false
 ---
 
 Stroke alignment relative to the element's bounds.
@@ -11,6 +12,10 @@ Stroke alignment relative to the element's bounds.
 |---|---|
 | `string` | `"INSIDE"`, `"OUTSIDE"`, `"CENTER"` |
 | [`TokenReference`](/schema/token-reference/) | `$token: ...`<br>`$type: string` |
+
+#### Default
+
+`"INSIDE"`
 
 #### Supported on
 

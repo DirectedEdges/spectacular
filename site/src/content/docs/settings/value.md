@@ -1,20 +1,24 @@
 ---
-title: "Value prop"
+title: "value"
 description: "The prop supplying a control's value where no element represents it"
 ---
 
-A progress bar draws its progress rather than writing it, so nothing in its anatomy
-stands for the value. Which prop carries it is declared in
-`config/conventions/specs.yaml`.
+A progress bar draws its progress rather than writing it, so nothing in its anatomy stands for the value — which prop carries it is declared here. `prop` names the prop carrying the value, and a generated component binds it to the value attribute the resolved role calls for — `aria-valuenow` on a progress bar, for instance.
+
+| | |
+|---|---|
+| **File** | `config/conventions/specs.yaml` |
+| **Path** | `value` |
+| **Type** | block (`prop`, `indeterminate`) |
+| **Default** | absent |
+
+## Example
 
 ```yaml
 value:
   prop: percent
   indeterminate: isIndeterminate
 ```
-
-`prop` names the prop carrying the value. A generated component binds it to the value
-attribute the resolved role calls for — `aria-valuenow` on a progress bar, for instance.
 
 ## An element beats a prop
 
@@ -30,7 +34,7 @@ Resolution runs in order:
 2. otherwise `prop` resolves — the determinate form is emitted
 3. otherwise the indeterminate form is emitted, with a warning
 
-## Why this is not a state concept
+## Distinction from state concepts
 
 The state concepts are a governed vocabulary, each resolving to a canonical selector,
 and `indeterminate` there already means a checkbox's mixed state — `:indeterminate`,
@@ -41,8 +45,8 @@ suppresses `aria-valuenow` and has no selector at all. Folding the two would wid
 governed vocabulary to absorb a prop binding, which is what the governance exists to
 prevent — so it is modelled as what it actually is: a property of the value.
 
-## See Also
+## Further reading
 
-- [Accessibility props](/settings/accessibility/) — the same idea for an accessible name
-- [States](/settings/states/) — the governed state vocabulary
-- [`value` role](/roles/value/) — where an element represents the value instead
+- [Accessibility props](/settings/accessibility/) — the same idea for an accessible name.
+- [States](/settings/states/) — the governed state vocabulary.
+- [`value` role](/roles/value/) — where an element represents the value instead.

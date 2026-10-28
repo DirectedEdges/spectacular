@@ -11,50 +11,6 @@ Three ways to generate specs, depending on how many components you need:
 
 There's also a reverse direction — turning a spec back into a live Figma component with [`render`](#render-to-figma). Unlike the workflows above, it's inherently interactive (it needs an open Figma session) and isn't a fit for CI/CD.
 
-## Or let one command do it
-
-The workflows below type each step. [`specs build`](/cli/commands/build/) *(experimental)* runs all of them in order instead, and [`specs run`](/cli/commands/run/) *(experimental)* keeps doing it as you work:
-
-```bash
-specs fetch     # you choose when to spend an API call
-specs build     # scan → generate → react, webcomponents → storybook
-```
-
-Both work out what your workspace has from what is on disk, so there is nothing to configure. They are worth reading first if you keep forgetting which command comes next — that is the problem they exist to remove. The steps below are still the reference for what each one does, and still what you reach for when you want to run just one.
-
-## Single Component
-
-Generate a spec for one component:
-
-```bash
-specs fetch --verbose
-
-specs generate data/library.file \
-  -c "DS Alert" \
-  -o specs/ \
-  --verbose
-```
-
-### Using Node IDs
-
-If component names have special characters or duplicates, use node IDs:
-
-```bash
-# Find the node ID from a manifest
-specs scan -o manifest.md
-# Look in the table for the row whose Name matches:
-# | [x] | DS Button/Icon | 5507:123 | COMPONENT_SET | READY_FOR_DEV |
-
-# Generate by ID
-specs generate data/library.file \
-  -c "5507:123" \
-  -o specs/
-```
-
-Use `--format json` to output JSON instead of YAML. See [Output configuration](/settings/output/) for all output modes and format options.
-
----
-
 ## Many Components
 
 Process multiple components from a design system using a curated manifest.
@@ -112,6 +68,50 @@ Split output into per-component files, subfolders, or separate API and variant f
 
 ---
 
+## Single Component
+
+Generate a spec for one component:
+
+```bash
+specs fetch
+
+specs generate data/library.file \
+  -c "DS Alert"
+```
+
+### Using Node IDs
+
+If component names have special characters or duplicates, use node IDs:
+
+```bash
+# Find the node ID from a manifest
+specs scan -o manifest.md
+# Look in the table for the row whose Name matches:
+# | [x] | DS Button/Icon | 5507:123 | COMPONENT_SET | READY_FOR_DEV |
+
+# Generate by ID
+specs generate data/library.file \
+  -c "5507:123" \
+  -o specs/
+```
+
+Use `--format json` to output JSON instead of YAML. See [Output configuration](/settings/output/) for all output modes and format options.
+
+---
+
+
+## Fetch and build
+
+The workflows below type each step. [`specs build`](/cli/commands/build/) *(experimental)* runs all of them in order instead, and [`specs run`](/cli/commands/run/) *(experimental)* keeps doing it as you work:
+
+```bash
+specs fetch     # you choose when to spend an API call
+specs build     # scan → generate → analyze → react, webcomponents → storybook
+```
+
+Both work out what your workspace has from what is on disk, so there is nothing to configure. They are worth reading first if you keep forgetting which command comes next — that is the problem they exist to remove. The steps below are still the reference for what each one does, and still what you reach for when you want to run just one.
+
+---
 ## CI/CD Integration
 
 ### GitHub Actions
@@ -142,7 +142,7 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install Specs CLI
+      - name: Install Spectacular CLI
         run: npm install -g @directededges/specs-cli
 
       - name: Fetch Figma data
@@ -166,7 +166,7 @@ jobs:
 
 **Secrets Required:**
 - `FIGMA_TOKEN` - Figma Personal Access Token
-- `SPECS_LICENSE_KEY` - Specs license key (optional, for Pro features)
+- `SPECS_LICENSE_KEY` - Spectacular license key (optional, for Pro features)
 
 To bring the emitted platform trees and Storybook up to date in the same run, replace the generate step with [`specs build`](/cli/commands/build/) *(experimental)*. It runs generate and everything downstream of it, and exits non-zero at the first step that fails:
 

@@ -2,14 +2,14 @@ import { describe, it, expect, afterEach } from 'vitest';
 import fs from 'fs-extra';
 import path from 'path';
 import { resolveWorkspace } from '../../../src/version/assemble.js';
-import { planCut, commitCut } from '../../../src/version/cut.js';
+import { planCut, commitCut } from '../../../src/version/ledger/cut.js';
 import {
   readComponentLedger,
   readLibraryLedger,
   specPathAtVersion,
   ledgeredComponents,
-} from '../../../src/version/ledger.js';
-import { loadRules } from '../../../src/version/rules.js';
+} from '../../../src/version/ledger/store.js';
+import { loadRules } from '../../../src/version/rules/grade.js';
 import { makeWorkspace, removeWorkspace, editYaml, writeYaml, writeAsset } from './helpers.js';
 
 const ruleSet = loadRules();

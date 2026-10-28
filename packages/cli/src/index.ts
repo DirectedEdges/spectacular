@@ -21,21 +21,24 @@ try {
 } catch { /* no .env file, that's fine */ }
 
 import { Command } from 'commander';
-import { Generate } from './commands/GenerateCommand.js';
-import { Scan } from './commands/ScanCommand.js';
-import { Fetch } from './commands/FetchCommand.js';
-import { Cache } from './commands/CacheCommand.js';
-import { Init } from './commands/InitCommand.js';
-import { Migrate } from './commands/MigrateCommand.js';
-import { Analyze } from './commands/AnalyzeCommand.js';
-import { ApplyCustomTokens } from './commands/ApplyCustomTokensCommand.js';
-import { React, WebComponents } from './commands/TargetCommands.js';
-import { Render } from './commands/RenderCommand.js';
-import { Bridge } from './commands/BridgeCommand.js';
-import { Version } from './commands/VersionCommand.js';
-import { Skills } from './commands/SkillsCommand.js';
-import { Storybook } from './commands/StorybookCommand.js';
-import { Build, Run } from './commands/BuildRunCommands.js';
+import { Generate } from './commands/generate.js';
+import { Scan } from './commands/scan.js';
+import { Fetch } from './commands/fetch.js';
+import { Cache } from './commands/cache.js';
+import { Init } from './commands/init.js';
+import { Migrate } from './commands/migrate.js';
+import { Analyze } from './commands/analyze.js';
+import { ApplyCustomTokens } from './commands/applyCustomTokens.js';
+import { React } from './commands/react.js';
+import { WebComponents } from './commands/webcomponents.js';
+import { Render } from './commands/render.js';
+import { Bridge } from './commands/bridge.js';
+import { Version } from './commands/version.js';
+import { Skills } from './commands/skills.js';
+import { Storybook } from './commands/storybook.js';
+import { Testing } from './commands/testing.js';
+import { Build } from './commands/build.js';
+import { Run } from './commands/run.js';
 
 declare const __SPECS_CLI_VERSION__: string;
 
@@ -90,6 +93,7 @@ export function createProgram(): Command {
   program.addCommand(Version);
   program.addCommand(Skills);
   program.addCommand(Storybook);
+  program.addCommand(Testing);
 
   // Deprecated alias: 'audit' → 'scan'
   const auditAlias = new Command('audit')

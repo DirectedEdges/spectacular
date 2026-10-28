@@ -1,19 +1,39 @@
+// The stylesheet transformer: one pass produces both platforms' CSS.
+//
+// This file is the transformer and the order its parts run in. The parts
+// themselves live under `css/`, each answering one question (specs#691):
+//
+//   analyzeSpec      what the whole spec says about its elements
+//   roleResets       neutralising what a role's emitted element brings with it
+//   defaultBlock     the base rules, before any variant
+//   variantSelectors what one variant's rule is written against
+//   variantBlock     one rule set per variant
+//   cursors          the press and disabled affordances
+//
+// Those were a single 600-line function, which is why the selector expansion —
+// the subtlest step, and the one that fails silently — could only ever be
+// exercised by generating a whole stylesheet and reading it.
 import fs from 'fs-extra';
 import { writeAtomic } from './writeAtomic.js';
 import path from 'path';
 import yaml from 'yaml';
-import type { Transformer, TransformerContext } from '../Types/Transformer.js';
-import { styleToCSS, impliesAbsolute } from './css/styleToCSS.js';
-import { layoutToCSS } from './css/layoutToCSS.js';
-import { toKebab, isGradient, isGradientToken, gradientValue, dimensionValue, resolveTokenVar, reportNameWarnings, withNameWarningsSuppressed } from './css/values.js';
-import { normalizeEnumValue } from './enumCase.js';
-import { subComponentKey } from './naming.js';
+import type { Transformer, TransformerContext } from '../transforms/transformer.js';
+import { reportNameWarnings, withNameWarningsSuppressed } from './css/values/nameWarnings.js';
+import { capitalize, subComponentKey, toKebab } from './naming.js';
 import { dirNameFor } from '../utilities/specsLayout.js';
-import { attrNameFor } from './hostAttributes.js';
-import { CONCEPT_TABLE, buildStateLookup, conceptsClaimedByNestedRoles, COLLAPSING_ROLES } from './states.js';
+import { CONCEPT_TABLE, buildStateLookup, conceptsClaimedByNestedRoles } from './states.js';
 import { resolveRules } from './css/rules/index.js';
-import { parseLayout, type LayoutNode } from './css/layoutTree.js';
-import { loadExamples, type ExamplesData } from './examples.js';
+import { loadExamples } from './examples.js';
+import { analyzeSpec } from './css/analysis/analyzeSpec.js';
+import { slotDirectionResolver } from './css/analysis/slotDirection.js';
+import { resolveSpecsLayout } from '../utilities/specsLayout.js';
+import { anatomyRoles, anatomyTypes, apiPropsOf } from './css/analysis/readApi.js';
+import { disabledSelectorFor, focusSelectorFor, rootSelector } from './css/sheet/selectors.js';
+import { roleResetLines } from './css/sheet/roleResets.js';
+import { defaultBlockLines } from './css/sheet/defaultBlock.js';
+import { variantBlockLines } from './css/sheet/variantBlock.js';
+import { cursorLines } from './css/sheet/cursors.js';
+import type { ImagesCssContext, RootForm } from './css/types.js';
 // The filenames come from the packages that emit the scaffolds importing them,
 // so a stylesheet can never be written under a name no scaffold reaches for.
 import { REACT_FILES } from '@directededges/react-from-specs';
@@ -40,8 +60,19 @@ function lightDomLines(tag: string): string[] {
   ];
 }
 
-/** Which element a stylesheet's root rules target: the block class, or the custom element. */
-type RootForm = 'class' | 'host';
+/**
+ * Where a stylesheet reaches the shared image assets from.
+ *
+ * `specs generate --get-images` writes them to `<workspace>/assets/images/`, while a
+ * stylesheet sits at `<workspace>/<tree>/src/components/<Component>/` — four levels
+ * down, and five for a subcomponent. Stated as a depth rather than a literal so the
+ * two cannot drift apart, and so a change to either tree moves both.
+ *
+ * A composition emits at `<tree>/src/compositions/<Name>/`, the same depth as a
+ * component, so both kinds reach the assets at the same distance.
+ */
+const IMAGES_FROM_COMPONENT = '../'.repeat(4) + 'assets/images';
+const IMAGES_FROM_SUBCOMPONENT = '../'.repeat(5) + 'assets/images';
 
 /**
  * A component's directory inside a platform tree.
@@ -50,19 +81,6 @@ type RootForm = 'class' | 'host';
  * cannot declare a single `outputTree` the way the platform transformers do — it
  * derives both. Its output is free, as it was when it lived beside the spec.
  */
-/**
- * Where a stylesheet reaches the shared image assets from.
- *
- * `specs generate --get-images` writes them to `<workspace>/assets/images/`, while a
- * stylesheet sits at `<workspace>/<tree>/src/components/<Component>/` — four levels
- * down, and five for a subcomponent. Stated as a depth rather than a literal so the
- * two cannot drift apart, and so a change to either tree moves both.
- */
-// A composition emits at `<tree>/src/compositions/<Name>/`, the same depth as a
-// component, so both kinds reach the assets at the same distance.
-const IMAGES_FROM_COMPONENT = '../'.repeat(4) + 'assets/images';
-const IMAGES_FROM_SUBCOMPONENT = '../'.repeat(5) + 'assets/images';
-
 function componentOutDir(context: TransformerContext, tree: string, prefix: string): string {
   return path.join(context.workspaceDir, tree, 'src', dirNameFor(context.kind), prefix);
 }
@@ -86,7 +104,7 @@ export class CssTransformer implements Transformer {
   }
 
   async run(apiYaml: Record<string, unknown>, context: TransformerContext): Promise<void> {
-    const { specDir, outputDir, componentKey, tokensFormat } = context;
+    const { specDir, componentKey, tokensFormat } = context;
 
     const variantsPath = path.join(specDir, 'variants.yaml');
     if (!fs.existsSync(variantsPath)) {
@@ -98,14 +116,19 @@ export class CssTransformer implements Transformer {
     const variantsYaml = yaml.parse(raw) as Record<string, unknown>;
 
     const componentClass = toKebab(componentKey);
-    const prefix = toPascalCase(componentKey);
+    const prefix = capitalize(componentKey);
     // Images registry (ADR-063): backgroundImage fills resolve against it;
     // urls are emitted relative to each stylesheet's location.
     const examples = loadExamples(specDir);
-    const lines = buildCssLines(componentClass, variantsYaml, tokensFormat, context, anatomyTypes(apiYaml), {
-      examples,
-      relPrefix: IMAGES_FROM_COMPONENT,
-    }, 'class', anatomyRoles(apiYaml), apiPropsOf(apiYaml));
+    const images: ImagesCssContext = { examples, relPrefix: IMAGES_FROM_COMPONENT };
+    const elemTypes = anatomyTypes(apiYaml);
+    const elemRoles = anatomyRoles(apiYaml);
+    const apiProps = apiPropsOf(apiYaml);
+
+    const sheet = (rootAs: RootForm) =>
+      buildCssLines({ componentClass, variantsYaml, tokensFormat, context, elemTypes, images, rootAs, elemRoles, apiProps });
+
+    const lines = sheet('class');
     // Each platform's stylesheet lands in that platform's tree beside the scaffold
     // that imports it (project 024). `styles.css` is React's — it targets the
     // component's own class — and `host.css`/`light.css` are the custom element's.
@@ -120,10 +143,7 @@ export class CssTransformer implements Transformer {
     // is the root: root rules target `:host`, so a caller can size and place the
     // component by styling the element, exactly as it would any other. Element
     // rules are identical — they match inside the shadow tree either way.
-    const hostLines = withNameWarningsSuppressed(() => buildCssLines(componentClass, variantsYaml, tokensFormat, context, anatomyTypes(apiYaml), {
-      examples,
-      relPrefix: IMAGES_FROM_COMPONENT,
-    }, 'host', anatomyRoles(apiYaml), apiPropsOf(apiYaml)));
+    const hostLines = withNameWarningsSuppressed(() => sheet('host'));
     if (this.writes('webcomponents')) {
       await fs.ensureDir(wcDir);
       await writeAtomic(path.join(wcDir, WEBCOMPONENT_FILES.hostCss), hostLines.join('\n'));
@@ -139,22 +159,26 @@ export class CssTransformer implements Transformer {
       // emitters put on the subcomponent's root. The two are written by different
       // packages; if only one composes the parent, nothing selects.
       const subClass = toKebab(subComponentKey(componentKey, subKey));
-      const subFilePrefix = toPascalCase(subKey);
+      const subFilePrefix = capitalize(subKey);
       const subTypes = anatomyTypes((apiSubs[subKey] ?? {}) as Record<string, unknown>);
-      const subLines = buildCssLines(subClass, subVariantsYaml, tokensFormat, context, subTypes, {
-        examples,
-        relPrefix: IMAGES_FROM_SUBCOMPONENT,
-      });
+      const subSheet = (rootAs: RootForm) =>
+        buildCssLines({
+          componentClass: subClass,
+          variantsYaml: subVariantsYaml,
+          tokensFormat,
+          context,
+          elemTypes: subTypes,
+          images: { examples, relPrefix: IMAGES_FROM_SUBCOMPONENT },
+          rootAs,
+        });
+      const subLines = subSheet('class');
       const subReactDir = path.join(reactDir, subFilePrefix);
       const subWcDir = path.join(wcDir, subFilePrefix);
       if (this.writes('react')) {
         await fs.ensureDir(subReactDir);
         await writeAtomic(path.join(subReactDir, REACT_FILES.styles), subLines.join('\n'));
       }
-      const subHostLines = withNameWarningsSuppressed(() => buildCssLines(subClass, subVariantsYaml, tokensFormat, context, subTypes, {
-        examples,
-        relPrefix: IMAGES_FROM_SUBCOMPONENT,
-      }, 'host'));
+      const subHostLines = withNameWarningsSuppressed(() => subSheet('host'));
       if (this.writes('webcomponents')) {
         await fs.ensureDir(subWcDir);
         await writeAtomic(path.join(subWcDir, WEBCOMPONENT_FILES.hostCss), subHostLines.join('\n'));
@@ -169,264 +193,37 @@ export class CssTransformer implements Transformer {
   }
 }
 
-interface ImagesCssContext {
-  examples: ExamplesData | undefined;
-  relPrefix: string;
+interface SheetInput {
+  componentClass: string;
+  variantsYaml: Record<string, unknown>;
+  tokensFormat: string | undefined;
+  context: TransformerContext;
+  elemTypes?: Record<string, string>;
+  images?: ImagesCssContext;
+  rootAs?: RootForm;
+  elemRoles?: Record<string, string>;
+  apiProps?: Record<string, Record<string, unknown>>;
 }
 
 /**
- * backgroundImage style ({ $image, objectFit? } | null) → CSS declarations.
+ * One stylesheet, in the order its parts have to appear.
  *
- * Fit describes the element, not the asset. An element that declares a
- * background image sizes and positions it the same way whether the URL comes
- * from the registry here or from a code-only source prop supplied at runtime,
- * so the fit declarations come from the declaration itself and only the
- * `background-image` URL depends on the registry entry resolving.
+ * Order is not arrangement: a role reset must land before any spec declaration,
+ * the default block before the variants that override it, and the cursor
+ * affordances last because nothing overrides them. Everything else about each
+ * part lives in that part's own module.
  */
-function backgroundImageDecls(value: unknown, images: ImagesCssContext | undefined): string[] {
-  if (value === null) return ['background-image: none'];
-  if (!value || typeof value !== 'object') return [];
-  const v = value as Record<string, unknown>;
-  if (typeof v.$image !== 'string') return [];
-  const url = imageUrl(v.$image, images);
-  return [...(url ? [`background-image: ${url}`] : []), ...fitDecls(v.objectFit)];
-}
+function buildCssLines(input: SheetInput): string[] {
+  const {
+    componentClass, context, tokensFormat,
+    elemTypes = {}, images, rootAs = 'class', elemRoles = {}, apiProps = {},
+  } = input;
+  const rootSel = rootSelector(componentClass, rootAs);
 
-/**
- * The `url()` for a `$image` ref, or undefined when the registry entry is
- * unresolved. `src` is the registry's own portable data: an entry without one
- * has nothing further to try. Reading a Figma image hash to guess a filename
- * made output depend on where the spec came from (ADR-063).
- */
-function imageUrl(ref: string, images: ImagesCssContext | undefined): string | undefined {
-  if (!images?.examples) return undefined;
-  const id = ref.match(/#\/components\/[^/]+\/images\/(.+)$/)?.[1];
-  const entry = id ? images.examples.images[id] : undefined;
-  if (typeof entry?.src !== 'string') return undefined;
-  if (/^(data:|https?:)/.test(entry.src)) return `url('${entry.src}')`;
-  return `url('${images.relPrefix}/${path.basename(entry.src)}')`;
-}
-
-function fitDecls(objectFit: unknown): string[] {
-  return [
-    'background-position: center',
-    'background-repeat: no-repeat',
-    `background-size: ${objectFit === 'CONTAIN' ? 'contain' : 'cover'}`,
-  ];
-}
-
-/** Glyphs, raw vectors, and icon-wrapper instances (instance with a name propConfiguration). */
-function isGlyphLike(elemType: string | undefined): boolean {
-  return elemType === 'glyph' || elemType === 'vector';
-}
-
-/** Declarations that only mean something on an element that generates a box. */
-const BOX_DECL = /^(width|height|min-width|min-height|max-width|max-height|flex|align-self|padding|margin):/;
-
-/**
- * A text element renders as an inline span, and on a non-replaced inline box
- * the sizing declarations the spec asked for do nothing — nor does the line box
- * a declared line-height describes, which leaves the element measuring the
- * font's content area instead of its leading. When the spec gives a text
- * element box declarations, it means it as a box: `inline-block` makes them
- * apply without forcing the line break `block` would.
- */
-function inlineBlockIfBoxed(elemType: string | undefined, decls: string[]): void {
-  if (elemType !== 'text') return;
-  if (decls.some(d => d.startsWith('display:'))) return;
-  if (!decls.some(d => BOX_DECL.test(d))) return;
-  decls.push('display: inline-block');
-}
-
-
-/** api.yaml anatomy → element key → type ("container" | "rectangle" | "ellipse" | "vector" | "text" | …). */
-function anatomyTypes(apiYaml: Record<string, unknown>): Record<string, string> {
-  const anatomy = (apiYaml.anatomy ?? {}) as Record<string, Record<string, unknown>>;
-  const types: Record<string, string> = {};
-  for (const [key, entry] of Object.entries(anatomy)) {
-    if (entry && typeof entry.type === 'string') types[key] = entry.type;
-  }
-  return types;
-}
-
-/**
- * The disabled selector that can actually match, for this target and this root.
- *
- * `CONCEPT_TABLE` pairs `:disabled` with `[aria-disabled="true"]` because either
- * may carry the state. Emitting both everywhere produces selectors that can never
- * match: a role emitting a native control sets the real `disabled` property and
- * never the ARIA string, and a custom element host can never match `:disabled` at
- * all — that requires form association.
- */
-function disabledSelectorFor(rootAs: RootForm, rootRole: string | undefined): string {
-  // A shadow host is not a form control, so `:disabled` cannot match it.
-  if (rootAs === 'host') {
-    // Where the root's role emits a native control, that control lives INSIDE the
-    // shadow root and the host announces nothing — so `[aria-disabled]` never
-    // matches either, and every disabled rule is dead while `:not()` guards on
-    // hover always pass. The scaffold puts a plain `disabled` attribute on the host
-    // for exactly this, and the two spellings must agree: `HOST_STATE_ATTRS` in
-    // webcomponents-from-specs' `Emit/rootAttrs.ts`, a different repo.
-    if (rootRole && NATIVE_DISABLED_ROLES.has(rootRole)) return '[disabled]';
-    return '[aria-disabled="true"]';
-  }
-  // An anchor has no `disabled` property either — a disabled link is expressed by
-  // dropping `href` and announcing `aria-disabled`, so `:disabled` never matches.
-  if (rootRole === 'link') return '[aria-disabled="true"]';
-  const native = rootRole ? NATIVE_DISABLED_ROLES.has(rootRole) : false;
-  return native ? ':disabled' : ':disabled, [aria-disabled="true"]';
-}
-
-/**
- * Declarations that describe TEXT rather than the box around it.
- *
- * Used when a collapsing role consumes a part: the part's box is gone with the
- * element, but its typography and colour are what the emitted control must
- * look like. Listed rather than inferred — a prefix test would sweep up
- * `text-indent` and `font` shorthand inconsistently, and the set is closed.
- */
-const TEXT_PROPERTIES: ReadonlySet<string> = new Set([
-  'color',
-  'font',
-  'font-family',
-  'font-size',
-  'font-style',
-  'font-weight',
-  'font-variant',
-  'line-height',
-  'letter-spacing',
-  'word-spacing',
-  'text-align',
-  'text-transform',
-  'text-decoration',
-  'font-feature-settings',
-  '-webkit-font-smoothing',
-]);
-
-/** Roles whose emitted element carries a real `disabled` property. */
-const NATIVE_DISABLED_ROLES = new Set(['button', 'togglebutton', 'disclosure']);
-
-/**
- * The focus selector that can actually match, for this target and this root.
- *
- * The `focus` concept means the platform's visible-focus heuristic
- * (`:focus-visible`), but that selector only matches a root that can itself
- * hold focus. A wrapper root reaches its control with `:has(:focus-visible)`:
- * a text control matches whenever it is focused, a button-like control only
- * from the keyboard — so click-into-a-field styling survives while a clicked
- * button does not hold its ring. A shadow host matches `:focus-visible`
- * itself when its roled scaffold delegates focus; an un-roled host cannot,
- * and `:focus-within` is the only spelling that can match, because `:has()`
- * does not cross the shadow boundary. A library that declares the
- * `focus-within` concept has said exactly what it means and is never
- * narrowed.
- */
-function focusSelectorFor(rootAs: RootForm, rootRole: string | undefined): string {
-  const native = rootRole ? NATIVE_FOCUSABLE_ROLES.has(rootRole) : false;
-  if (rootAs === 'host') return native ? ':focus-visible' : ':focus-within';
-  return native ? ':focus-visible' : ':has(:focus-visible)';
-}
-
-/** Roles whose emitted element can itself hold visible focus. */
-const NATIVE_FOCUSABLE_ROLES = new Set(['button', 'togglebutton', 'disclosure', 'link', 'textbox']);
-
-/** api.yaml props, keyed by prop name. */
-function apiPropsOf(apiYaml: Record<string, unknown>): Record<string, Record<string, unknown>> {
-  return (apiYaml.props ?? {}) as Record<string, Record<string, unknown>>;
-}
-
-/** api.yaml anatomy → element key → behavior role (ADR-067), where one is annotated. */
-function anatomyRoles(apiYaml: Record<string, unknown>): Record<string, string> {
-  const anatomy = (apiYaml.anatomy ?? {}) as Record<string, Record<string, unknown>>;
-  const roles: Record<string, string> = {};
-  for (const [key, entry] of Object.entries(anatomy)) {
-    if (entry && typeof entry.role === 'string') roles[key] = entry.role;
-  }
-  return roles;
-}
-
-/**
- * Roles whose emitted element carries user-agent styling a `div` never had.
- *
- * Swapping the tag inherits the UA's own border, background, font and padding,
- * which the spec's declarations were authored without. The most visible symptom
- * is a size change between states: a state block that sets `border-width`
- * suppresses the UA border, and the state that does not set one keeps it, so the
- * control changes size when it changes state.
- */
-const UA_STYLED_ROLES = new Set(['button', 'togglebutton', 'link', 'disclosure', 'textbox']);
-
-/** Neutralize the emitted element's UA styling so the spec's declarations govern. */
-function uaResetDecls(role: string): string[] {
-  const decls = [
-    'appearance: none',
-    '-webkit-appearance: none',
-    'background: none',
-    'border: 0',
-    'margin: 0',
-    'padding: 0',
-    'font: inherit',
-    'color: inherit',
-    'text-align: inherit',
-  ];
-  // An anchor is not a button: it carries link decoration rather than a border.
-  if (role === 'link') decls.push('text-decoration: none');
-  return decls;
-}
-
-/**
- * Whether this component declares the prop a state concept is classified to.
- *
- * Deterministic in two steps, both over declared data: the workspace's `states`
- * config names the prop (and optionally the enum value) that carries the concept,
- * and the component's own props either declare that prop or do not. Where the
- * classification names a value, the prop's enum must actually offer it — a
- * mapping pointing at a value no variant produces is dead and must not count.
- * Value comparison is case-insensitive, matching how the state lookup resolves.
- */
-function declaresState(
-  context: TransformerContext,
-  apiProps: Record<string, Record<string, unknown>>,
-  concept: string,
-): boolean {
-  const entry = (context.processingStates ?? {})[concept];
-  if (!entry?.prop) return false;
-  const prop = apiProps[entry.prop];
-  if (!prop) return false;
-  if (entry.value == null) return true;
-  const values = Array.isArray(prop.enum) ? (prop.enum as unknown[]) : null;
-  if (!values) return true; // a boolean prop carries no enum to check
-  return values.some(v => String(v).toLowerCase() === String(entry.value).toLowerCase());
-}
-
-function buildCssLines(
-  componentClass: string,
-  variantsYaml: Record<string, unknown>,
-  tokensFormat: string | undefined,
-  context: TransformerContext,
-  elemTypes: Record<string, string> = {},
-  images?: ImagesCssContext,
-  rootAs: RootForm = 'class',
-  elemRoles: Record<string, string> = {},
-  apiProps: Record<string, Record<string, unknown>> = {},
-): string[] {
-  /**
-   * The root's selector, in the form this stylesheet is written for.
-   *
-   * `class` targets the root element by its block class, which is what a React
-   * scaffold renders. `host` targets `:host` — the custom element itself is the
-   * root, so its qualifiers go inside the functional form
-   * (`:host([data-size="L"]:hover)`) rather than being appended. Element rules
-   * match inside the shadow tree and are identical in both forms.
-   */
-  const rootSel = (qualifiers = ''): string =>
-    rootAs === 'host'
-      ? (qualifiers ? `:host(${qualifiers})` : ':host')
-      : `.${componentClass}${qualifiers}`;
-  // Apply configured rules as pre-passes on the structured variants data
-  const ruleNames = (context.transformerOptions?.rules as string[] | undefined) ?? [];
-  const rules = resolveRules(ruleNames);
-  for (const rule of rules) {
+  // Configured rules are pre-passes on the structured variants data, so every
+  // part below reads the same already-transformed spec.
+  let variantsYaml = input.variantsYaml;
+  for (const rule of resolveRules((context.transformerOptions?.rules as string[] | undefined) ?? [])) {
     variantsYaml = rule.apply(variantsYaml, { tokensFormat });
   }
 
@@ -451,318 +248,50 @@ function buildCssLines(
     '',
   ];
 
-  // A role may have replaced the root's tag with an interactive element (ADR-067).
-  // Reset the UA styling that tag brings before any spec declaration lands, so the
-  // spec still fully describes the appearance and states cannot differ in size for
-  // reasons the design never expressed.
-  // A non-root element whose role emits a native control needs the same
-  // neutralization, scoped to its own selector — a disclosure trigger layer
-  // becomes a real <button>, and browser chrome would paint over the design.
-  for (const [elemKey, elemRole] of Object.entries(elemRoles)) {
-    if (elemKey === 'root' || !UA_STYLED_ROLES.has(elemRole)) continue;
-    lines.push(
-      `/* ${elemRole} role: neutralize user-agent styling for the emitted element. */`,
-      `.${componentClass}__${toKebab(elemKey)} {`,
-      ...uaResetDecls(elemRole).map(d => `  ${d};`),
-      '}',
-      '',
-    );
-  }
-  // A proxy-input role injects a hidden native control beside the visual
-  // proxy, which is itself the click-target <label htmlFor> — its whole
-  // footprint activates the input with no positioning involved. The input is
-  // visually hidden but still focusable and announceable.
-  for (const [elemKey, elemRole] of Object.entries(elemRoles)) {
-    if (elemRole !== 'checkbox' && elemRole !== 'switch') continue;
-    const base = `.${componentClass}__${toKebab(elemKey)}`;
-    lines.push(
-      `/* ${elemRole} role: the click-target proxy label and its injected input. */`,
-      `${base} {`,
-      '  cursor: pointer;',
-      '}',
-      `${base}-input {`,
-      '  position: absolute;',
-      '  width: 1px;',
-      '  height: 1px;',
-      '  margin: -1px;',
-      '  padding: 0;',
-      '  overflow: hidden;',
-      '  clip: rect(0 0 0 0);',
-      '  white-space: nowrap;',
-      '  border: 0;',
-      '}',
-      // The platform focus ring draws around the focused element — the hidden
-      // input, which has no visible box. Re-draw it on the visible proxy: the
-      // input is injected immediately before the proxy, so the adjacent-sibling
-      // selector holds by construction, and `outline-style: auto` asks for the
-      // platform's own ring rather than imitating it.
-      `${base}-input:focus-visible + ${base} {`,
-      '  outline: auto;',
-      '  outline-offset: 2px;',
-      '}',
-      '',
-    );
-  }
+  // A role may have replaced an element's tag with an interactive one (ADR-067).
+  // These come first: the spec's declarations were authored against the plain
+  // box, so what the new tag brings has to be neutralized before any of them.
+  lines.push(...roleResetLines(componentClass, rootAs, elemRoles));
 
-  const rootRole = elemRoles.root;
-  if (rootRole && UA_STYLED_ROLES.has(rootRole)) {
-    if (rootAs === 'host') {
-      // The shadow root renders a real interactive element wrapping the root's
-      // content, so the platform supplies keyboard activation and `disabled`.
-      // It is styled to nothing and takes no box: the host keeps the root's
-      // layout and appearance exactly as the rules below describe them.
-      lines.push(
-        `/* ${rootRole} role: the inner semantic element carries behavior, not appearance. */`,
-        '[part="button"] {',
-        ...uaResetDecls(rootRole).map(d => `  ${d};`),
-        '  display: contents;',
-        '}',
-        '',
-      );
-    } else {
-      lines.push(
-        `/* ${rootRole} role: neutralize user-agent styling for the emitted element. */`,
-        `${rootSel()} {`,
-        ...uaResetDecls(rootRole).map(d => `  ${d};`),
-        '}',
-        '',
-      );
-    }
-  }
+  // Built per component rather than cached for the process: `specs run` keeps a
+  // watcher alive across edits, and a resolver that outlived one would answer from
+  // the spec a component had before it was regenerated. Each resolver caches within
+  // its own component, which is where the repetition actually is — one composition
+  // asks about the same few layout components for every element it holds.
+  const facts = analyzeSpec(
+    variantsYaml,
+    elemRoles,
+    slotDirectionResolver(resolveSpecsLayout(input.context.specsRoot).dirFor('component')),
+  );
 
-  // ── Default styles ─────────────────────────────────────────────────────────
-  const defaultBlock = variantsYaml.default as Record<string, unknown> | undefined;
-  const defaultElements = (defaultBlock?.elements ?? {}) as Record<string, Record<string, unknown>>;
-  const variantList = (variantsYaml.variants ?? []) as Array<Record<string, unknown>>;
+  const base = defaultBlockLines({ componentClass, rootAs, tokensFormat, elemTypes, elemRoles, images, facts, apiProps });
+  lines.push(...base.lines);
 
-  // Elements absent from the default layout but added by variant layouts are
-  // hidden at base and un-hidden under each including variant's selector.
-  const defaultKeys = new Set<string>();
-  collectLayoutKeys(parseLayout(defaultBlock?.layout), defaultKeys);
-  const structuralKeys = new Set<string>();
-  // Parents of absolutely-positioned elements must establish a containing
-  // block, or inset: 0 resolves against the viewport. Their non-absolute
-  // siblings must also be positioned: layout order is Figma children order
-  // (first = back-most, last on top), and only positioned siblings paint in
-  // DOM order — an absolute element would otherwise jump above static ones.
-  const needsRelative = new Set<string>();
-  // Element key → parent element key, from the default layout tree.
-  const parentOf = new Map<string, string>();
-  {
-    const layouts = [parseLayout(defaultBlock?.layout), ...variantList.map(v => parseLayout(v.layout))];
-    for (const layout of layouts) {
-      collectStackingFixes(layout, defaultElements, needsRelative);
-      collectParents(layout, parentOf);
-      if (layout !== layouts[0]) {
-        const keys = new Set<string>();
-        collectLayoutKeys(layout, keys);
-        for (const k of keys) if (!defaultKeys.has(k)) structuralKeys.add(k);
-      }
-    }
-  }
-  // Parent flex direction context for FILL sizing translation.
-  const parentLayoutMode = (elemKey: string): string | null => {
-    const parent = parentOf.get(elemKey);
-    if (!parent) return null;
-    const styles = (defaultElements[parent]?.styles ?? {}) as Record<string, unknown>;
-    return (styles.layoutMode as string | undefined) ?? null;
-  };
-  const parentIsAutoLayout = (elemKey: string): boolean => {
-    const mode = parentLayoutMode(elemKey);
-    return mode === 'HORIZONTAL' || mode === 'VERTICAL';
-  };
-  // Coordinates imply absolute placement per impliesAbsolute; roots never infer.
-  const inferAbsolute = (elemKey: string): boolean =>
-    parentOf.has(elemKey) &&
-    impliesAbsolute(
-      (defaultElements[elemKey]?.styles ?? {}) as Record<string, unknown>,
-      parentIsAutoLayout(elemKey)
-    );
-  // Elements whose strokes are a gradient in any layer. Two things depend on
-  // knowing this per element rather than per declaration set:
-  //
-  // - A solid stroke override has to reset what the gradient painted, or the
-  //   earlier layer outranks the later one (see styleToCSS).
-  // - A gradient ring takes its thickness from a transparent border, so a
-  //   variant restating only `strokeWeight` must put that width on the border
-  //   rather than on the outline a solid stroke would use. The variant does not
-  //   restate `strokes`, so it cannot tell on its own.
-  const gradientStrokeKeys = new Set<string>();
-  for (const elements of [defaultElements, ...variantList.map(v => (v.elements ?? {}) as Record<string, Record<string, unknown>>)]) {
-    for (const [k, elem] of Object.entries(elements)) {
-      const strokes = ((elem.styles ?? {}) as Record<string, unknown>).strokes;
-      if (isGradient(strokes) || isGradientToken(strokes)) gradientStrokeKeys.add(k);
-    }
-  }
-  // The ring is an absolutely positioned ::before, so its host has to be the
-  // containing block or it would size itself against some ancestor instead.
-  for (const k of gradientStrokeKeys) needsRelative.add(k);
-
-  const styleOptions = (elemKey: string) => ({
-    inferAbsolute: inferAbsolute(elemKey),
-    resetBorderImage: gradientStrokeKeys.has(elemKey),
-    gradientStroke: gradientStrokeKeys.has(elemKey),
-  });
-
-  // Elements whose default rule already states a `display`. A variant rule must
-  // not restate it: see the note at the variant call site.
-  const displayedInDefault = new Set<string>();
-
-  // A collapsing role consumes its `value` and `placeholder` parts into the
-  // emitted control's attributes, so those elements never reach the page and
-  // every declaration written for them is dead. Their TEXT styling is not dead
-  // though — it is what the field is supposed to look like — so it moves onto
-  // the control, and the placeholder's onto `::placeholder`.
-  //
-  // Resolved only where the component declares exactly one collapsing control,
-  // matching how part ownership resolves for a value-bearing concept. More than
-  // one and the pairing is ambiguous: nothing is moved and nothing suppressed.
-  const collapsingKeys = Object.entries(elemRoles)
-    .filter(([, role]) => COLLAPSING_ROLES.has(role))
-    .map(([key]) => key);
-  const collapseControl = collapsingKeys.length === 1 ? collapsingKeys[0]! : undefined;
-  const consumedByCollapse = new Map<string, 'value' | 'placeholder'>();
-  if (collapseControl) {
-    for (const [elemKey, role] of Object.entries(elemRoles)) {
-      if (role === 'value' || role === 'placeholder') consumedByCollapse.set(elemKey, role);
-    }
-  }
-  const foldedText = new Map<'value' | 'placeholder', string[]>();
-
-  for (const [elemKey, elem] of Object.entries(defaultElements)) {
-    const selector = elemKey === 'root' ? rootSel() : elemSelector(componentClass, elemKey);
-    const styles = (elem.styles ?? {}) as Record<string, unknown>;
-    const decls = [
-      ...layoutToCSS(styles, tokensFormat, parentLayoutMode(elemKey)),
-      ...styleToCSS(styles, tokensFormat, elemTypes[elemKey], { ...styleOptions(elemKey), isDefaultBlock: true }),
-    ];
-    if ('backgroundImage' in styles) decls.push(...backgroundImageDecls(styles.backgroundImage, images));
-
-    // Ellipses are circular unless the spec sets an explicit radius.
-    if (elemTypes[elemKey] === 'ellipse' && !decls.some(d => d.startsWith('border-radius:'))) {
-      decls.push('border-radius: 50%');
-    }
-    // Glyphs/vectors paint their background-color through a mask image the
-    // scaffold provides via --glyph (an unresolvable mask renders nothing).
-    // Spans need block display; without a fill they tint with the inherited
-    // text color.
-    //
-    // Element type decides this, and nothing else. An `instance` delegates its
-    // appearance to the component it instantiates — that component masks its own
-    // glyph in its own stylesheet — so a wrapper holding an instance draws
-    // nothing and must not be given a mask. An earlier version also treated an
-    // instance carrying a `name` propConfiguration as glyph-like, which inferred
-    // meaning from a prop name and painted a solid `currentColor` box wherever
-    // composition resolved the instance instead.
-    inlineBlockIfBoxed(elemTypes[elemKey], decls);
-    if (decls.some(d => d.startsWith('display:'))) displayedInDefault.add(elemKey);
-    if (isGlyphLike(elemTypes[elemKey])) {
-      decls.push('mask: var(--glyph, none) no-repeat center / contain');
-      decls.push('-webkit-mask: var(--glyph, none) no-repeat center / contain');
-      if (!decls.some(d => d.startsWith('display:'))) decls.push('display: block');
-      if (!decls.some(d => d.startsWith('background'))) decls.push('background-color: currentColor');
-    }
-    // A full-bleed absolute child visually IS its rounded parent's surface —
-    // without inheriting the radius, its background paints square corners.
-    if (
-      !decls.some(d => d.startsWith('border-radius:')) &&
-      coversParent(styles, (defaultElements[parentOf.get(elemKey) ?? '']?.styles ?? {}) as Record<string, unknown>) &&
-      'cornerRadius' in ((defaultElements[parentOf.get(elemKey) ?? '']?.styles ?? {}) as Record<string, unknown>)
-    ) {
-      decls.push('border-radius: inherit');
-    }
-    if (needsRelative.has(elemKey) && !decls.some(d => d.startsWith('position:'))) {
-      decls.push('position: relative');
-    }
-    if (structuralKeys.has(elemKey)) {
-      decls.push('display: none');
-    }
-
-    const consumed = consumedByCollapse.get(elemKey);
-    if (consumed) {
-      // Keep the text styling for the control; drop the rest with the element.
-      foldedText.set(consumed, decls.filter(d => TEXT_PROPERTIES.has(d.split(':')[0]!.trim())));
-      continue;
-    }
-
-    if (decls.length > 0) {
-      lines.push(`${selector} {`);
-      for (const d of decls) lines.push(`  ${d};`);
-      lines.push('}');
-      lines.push('');
-    }
-    lines.push(...instanceFitRule(selector, elemTypes[elemKey], styles));
-    lines.push(...overlapRule(selector, styles));
-    lines.push(...gradientRingRule(selector, styles, tokensFormat));
-
-    // An unfilled slot is still a flex item, so the parent's gap paints as
-    // spacing around nothing. `:empty` covers the react scaffold, which renders
-    // the slot's children directly; the webcomponents scaffold always holds a
-    // `<slot>` element and so is never `:empty`, and sets data-empty instead.
-    if (elemTypes[elemKey] === 'slot') {
-      lines.push(`${selector}:empty,`);
-      lines.push(`${selector}[data-empty] {`);
-      lines.push('  display: none;');
-      lines.push('}');
-      lines.push('');
-    }
-  }
-
-  if (collapseControl) {
-    const controlSel =
-      collapseControl === 'root' ? rootSel() : elemSelector(componentClass, collapseControl);
-    const valueText = foldedText.get('value') ?? [];
-    if (valueText.length) {
-      lines.push(
-        `/* ${elemRoles[collapseControl]} role: text styling from the consumed value element. */`,
-        `${controlSel} {`,
-        ...valueText.map(d => `  ${d};`),
-        '}',
-        '',
-      );
-    }
-    const placeholderText = foldedText.get('placeholder') ?? [];
-    if (placeholderText.length) {
-      lines.push(
-        `/* ${elemRoles[collapseControl]} role: text styling from the consumed placeholder element. */`,
-        `${controlSel}::placeholder {`,
-        ...placeholderText.map(d => `  ${d};`),
-        '}',
-        '',
-      );
-    }
-  }
-
-  // ── State lookup — built from config.processing.states ────────────────────
-  // Each concept maps a (prop, value) pair to a canonical CSS selector.
-  // Props in classifiedProps use real CSS selectors instead of data attributes.
-  // Any classified prop whose variant value doesn't match a known concept is
-  // the base/rest state — the variant is skipped (base block already covers it).
-  const { lookup: stateLookup, classifiedProps } =
-    buildStateLookup(context.processingStates ?? {});
+  // ── Which selector carries which state ─────────────────────────────────────
+  // Each concept maps a (prop, value) pair to a canonical CSS selector. Props in
+  // classifiedProps use real CSS selectors instead of data attributes.
+  const { lookup: stateLookup, classifiedProps } = buildStateLookup(context.processingStates ?? {});
 
   // A concept claimed by a role on a nested element is announced there, not on
   // the root, so the root's rules key off the variant prop's data attribute —
   // which the scaffold always emits — instead of an aria selector the root no
   // longer carries. Dropping the classification routes these through the
-  // ordinary data-attribute path below.
+  // ordinary data-attribute path.
   const nestedClaimed = conceptsClaimedByNestedRoles(elemRoles);
   // The (prop, value) pairs this removal declassified. A prop keeps its
   // classification when another concept still uses it — `validation` mapping both
   // `invalid` (claimed by a nested textbox) and `valid` (not claimed) — and then
-  // the claimed value looks unnamed to the variant loop below, which would drop
+  // the claimed value would look unnamed to the variant loop, which would drop
   // the whole variant and warn about a states entry the config already has.
   const nestedClaimedPairs = new Set<string>();
-  if (nestedClaimed.size) {
-    for (const [pair, concept] of [...stateLookup]) {
-      if (!nestedClaimed.has(concept)) continue;
-      stateLookup.delete(pair);
-      nestedClaimedPairs.add(pair);
-      const prop = pair.split('::')[0];
-      // The prop stays classified only if another still-classified concept uses it.
-      const stillUsed = [...stateLookup.entries()].some(([k]) => k.split('::')[0] === prop);
-      if (!stillUsed) classifiedProps.delete(prop);
-    }
+  for (const [pair, concept] of [...stateLookup]) {
+    if (!nestedClaimed.has(concept)) continue;
+    stateLookup.delete(pair);
+    nestedClaimedPairs.add(pair);
+    const prop = pair.split('::')[0];
+    // The prop stays classified only if another still-classified concept uses it.
+    const stillUsed = [...stateLookup.entries()].some(([k]) => k.split('::')[0] === prop);
+    if (!stillUsed) classifiedProps.delete(prop);
   }
 
   /**
@@ -801,441 +330,15 @@ function buildCssLines(
         ? focusSelectorFor(rootAs, elemRoles.root)
         : CONCEPT_TABLE[concept]?.selector;
 
-  // ── Variants — in schema order ─────────────────────────────────────────────
-  // variants.yaml variant order is intentional: single-prop variants before
-  // multi-prop compound variants, matching the layering cascade.
-  const variants = (variantsYaml.variants ?? []) as Array<Record<string, unknown>>;
+  lines.push(...variantBlockLines({
+    componentClass, rootAs, tokensFormat, elemTypes, images, context, facts,
+    displayedInDefault: base.displayedInDefault,
+    classifiedProps, stateLookup, nestedClaimedPairs, selectorFor, warnUnnamedValue,
+  }));
 
-  for (const variant of variants) {
-    const configuration = (variant.configuration ?? {}) as Record<string, unknown>;
-    const configEntries = Object.entries(configuration);
-    if (configEntries.length === 0) continue;
-
-    // Classify each config entry as a state selector or a data attribute.
-    // stateSelSuffixes accumulates the cartesian product of all state selectors —
-    // comma-separated selectors like ':disabled, [aria-disabled="true"]' expand
-    // into multiple suffixes so each gets its own CSS rule.
-    let skip = false;
-    const dataAttrs: string[] = [];
-    let stateSelSuffixes: string[] = [''];
-
-    for (const [k, v] of configEntries) {
-      const vStr = String(v);
-      if (classifiedProps.has(k)) {
-        const concept = stateLookup.get(`${k}::${vStr}`) ?? stateLookup.get(`${k}::${vStr.toLowerCase()}`);
-        // A classified boolean's FALSE value has no concept of its own — it is
-        // the NEGATION of the true concept. Without this the whole variant is
-        // dropped as base/rest state, so an unselected/unchecked variant (and
-        // every hover/pressed pairing with it) emits no rule at all.
-        let negated: string | undefined;
-        if (!concept && v === false) {
-          const trueConcept = stateLookup.get(`${k}::true`);
-          const trueSel = trueConcept ? selectorFor(trueConcept) : undefined;
-          // Negating a multi-part concept is an AND of nots, not a cartesian
-          // expansion: `:disabled, [aria-disabled="true"]` becomes
-          // `:not(:disabled):not([aria-disabled="true"])`.
-          if (trueSel) negated = trueSel.split(',').map(part => `:not(${part.trim()})`).join('');
-        }
-        if (!concept && !negated) {
-          // A value whose concept was claimed by a nested role is not unnamed —
-          // it was declassified deliberately, and the root carries the variant
-          // prop's data attribute for exactly this case. Route it there.
-          if (nestedClaimedPairs.has(`${k}::${vStr}`) || nestedClaimedPairs.has(`${k}::${vStr.toLowerCase()}`)) {
-            dataAttrs.push(`[${attrNameFor(k, rootAs)}="${normalizeEnumValue(vStr)}"]`);
-            continue;
-          }
-          // Unmatched value: the base block covers the resting one; anything else
-          // is declared styling that will not be emitted, so say so.
-          warnUnnamedValue(k, vStr);
-          skip = true;
-          break;
-        }
-        const sel = negated ?? (concept ? selectorFor(concept) : undefined) ?? `[${attrNameFor(k, rootAs)}="${normalizeEnumValue(vStr)}"]`;
-        const parts = negated ? [negated] : sel.split(',').map(s => s.trim());
-        const expanded: string[] = [];
-        for (const existing of stateSelSuffixes) {
-          for (const part of parts) expanded.push(existing + part);
-        }
-        stateSelSuffixes = expanded;
-      } else {
-        // Scaffolds emit booleans as presence: the attribute is set to "" when
-        // true and omitted when false — never written as "false". So a false
-        // variant is the ABSENCE of the attribute; `[data-x="false"]` would
-        // match nothing and the variant's styling would never apply.
-        dataAttrs.push(
-          v === true ? `[${attrNameFor(k, rootAs)}]`
-            : v === false ? `:not([${attrNameFor(k, rootAs)}])`
-              : `[${attrNameFor(k, rootAs)}="${normalizeEnumValue(vStr)}"]`
-        );
-      }
-    }
-    if (skip) continue;
-
-    // Guard :hover and :active against firing when disabled, if disabled is configured
-    if (context.processingStates?.['disabled']) {
-      const disabledSel = selectorFor('disabled') ?? ':disabled';
-      const notGuard = disabledSel.split(',').map(s => `:not(${s.trim()})`).join('');
-      stateSelSuffixes = stateSelSuffixes.map(s =>
-        (s.includes(':hover') || s.includes(':active')) ? s + notGuard : s
-      );
-    }
-
-    const dataAttrStr = dataAttrs.join('');
-    const rootSelectors = stateSelSuffixes.map(s => rootSel(`${dataAttrStr}${s}`));
-
-    const variantElements = (variant.elements ?? {}) as Record<string, Record<string, unknown>>;
-
-    // Structural layout changes: a variant layout that adds an element
-    // un-hides it; one that drops a default element hides it.
-    const displayDecls = new Map<string, string>();
-    if (variant.layout) {
-      const variantKeys = new Set<string>();
-      collectLayoutKeys(parseLayout(variant.layout), variantKeys);
-      for (const key of variantKeys) {
-        if (!structuralKeys.has(key)) continue;
-        const styles = (defaultElements[key]?.styles ?? {}) as Record<string, unknown>;
-        displayDecls.set(key, `display: ${styles.layoutMode ? 'flex' : 'block'}`);
-      }
-      for (const key of defaultKeys) {
-        if (key !== 'root' && !variantKeys.has(key)) displayDecls.set(key, 'display: none');
-      }
-    }
-
-    // A variant layout that reverses a flex parent's children is a visual swap,
-    // not a structural one — emit the reversal here so the scaffold keeps one
-    // copy of each child and DOM order (reading and tab order) stays as
-    // authored. Partial reorders are not expressible this way and are handled
-    // by the emitters relocating the element instead.
-    const reverseDecls = new Map<string, string>();
-    if (variant.layout) {
-      const defOrder = childOrder(parseLayout(defaultBlock?.layout));
-      const varOrder = childOrder(parseLayout(variant.layout));
-      for (const [parent, vlist] of varOrder) {
-        if (parent === null) continue;
-        const dlist = defOrder.get(parent);
-        if (!dlist || dlist.length < 2 || dlist.length !== vlist.length) continue;
-        if (vlist.join('\u0000') !== [...dlist].reverse().join('\u0000')) continue;
-        const mode = ((defaultElements[parent]?.styles ?? {}) as Record<string, unknown>).layoutMode;
-        if (mode === 'HORIZONTAL') reverseDecls.set(parent, 'flex-direction: row-reverse');
-        else if (mode === 'VERTICAL') reverseDecls.set(parent, 'flex-direction: column-reverse');
-      }
-    }
-
-    const elemKeys = new Set([...Object.keys(variantElements), ...displayDecls.keys(), ...reverseDecls.keys()]);
-    for (const elemKey of elemKeys) {
-      const elemSuffix = elemKey === 'root' ? '' : ` ${elemSelector(componentClass, elemKey)}`;
-      const selector = rootSelectors.map(s => `${s}${elemSuffix}`).join(',\n');
-
-      const styles = (variantElements[elemKey]?.styles ?? {}) as Record<string, unknown>;
-      // A variant revealing an element the default hides (`visible: true` over
-      // a default `visible: false`) must restore the display the base rule
-      // suppressed — the delta itself carries no layoutMode, so nothing else
-      // re-emits one, and the element stays display: none (an expando's body
-      // never opened). The default's own layout says what to restore; absent
-      // one, revert-layer rolls the property back to the element's un-hidden
-      // default within the cascade.
-      const defaultStyles = (defaultElements[elemKey]?.styles ?? {}) as Record<string, unknown>;
-      const revealDecls: string[] = [];
-      if (styles.visible === true && defaultStyles.visible === false && !('layoutMode' in styles)) {
-        const mode = defaultStyles.layoutMode as string | null | undefined;
-        if (mode === 'HORIZONTAL') revealDecls.push('display: flex', 'flex-direction: row');
-        else if (mode === 'VERTICAL') revealDecls.push('display: flex', 'flex-direction: column');
-        else if (mode === 'NONE' || mode === null) revealDecls.push('display: block');
-        else revealDecls.push('display: revert-layer');
-      }
-      const decls = [
-        ...revealDecls,
-        ...layoutToCSS(styles, tokensFormat, parentLayoutMode(elemKey)),
-        ...styleToCSS(styles, tokensFormat, elemTypes[elemKey], styleOptions(elemKey)),
-      ];
-      if ('backgroundImage' in styles) decls.push(...backgroundImageDecls(styles.backgroundImage, images));
-      // The inline-block floor belongs to the element's default rule. Re-asserting
-      // it here attaches a `display` to a rule whose only job is a size change,
-      // and that rule outranks the single-attribute rule that hid the element —
-      // so an avatar showing an image also showed its initials, which then took
-      // the flex space the image needed.
-      if (!displayedInDefault.has(elemKey)) inlineBlockIfBoxed(elemTypes[elemKey], decls);
-      const display = displayDecls.get(elemKey);
-      if (display && !decls.some(d => d.startsWith('display:'))) decls.push(display);
-      const reverse = reverseDecls.get(elemKey);
-      if (reverse && !decls.some(d => d.startsWith('flex-direction:'))) decls.push(reverse);
-
-      if (decls.length > 0) {
-        lines.push(`/* ${variantLabel(configuration)}${elemKey === 'root' ? '' : ` — ${elemKey}`} */`);
-        lines.push(`${selector} {`);
-        for (const d of decls) lines.push(`  ${d};`);
-        lines.push('}');
-        lines.push('');
-      }
-      lines.push(...overlapRule(selector, styles));
-      lines.push(...gradientRingRule(
-        selector,
-        styles,
-        tokensFormat,
-        ((defaultElements[elemKey]?.styles ?? {}) as Record<string, unknown>).strokeWeight,
-      ));
-    }
-  }
-
-  // Cursor is an affordance CSS needs and Figma has no concept of. It is read
-  // from the declared state classification: a component whose `states` config
-  // names a press concept, and which declares the prop that concept is keyed to,
-  // is a press target.
-  //
-  // An earlier version regexed this stylesheet's own emitted text for `:active`
-  // and `[aria-pressed]`. That made the cursor depend on whether a pressed state
-  // happened to produce any *styling* — a button that looks identical pressed and
-  // unpressed silently lost its pointer — and it inferred behavior from output
-  // rather than reading what the library declared.
-  if (declaresState(context, apiProps, 'active') || declaresState(context, apiProps, 'pressed')) {
-    lines.push(
-      '/* Press affordance: the states convention names an active or pressed concept, so this is a press target. Figma has no cursor. */',
-      `${rootSel()} {`, '  cursor: pointer;', '}', '',
-    );
-  }
-  if (declaresState(context, apiProps, 'disabled')) {
-    // Where a nested role claims `disabled`, the native control announces it and
-    // the root carries only the variant prop's data attribute — so `:disabled`
-    // and `[aria-disabled]` both match nothing and the affordance is dead CSS.
-    const disabledEntry = (context.processingStates ?? {}).disabled as
-      | { prop?: string; value?: string }
-      | undefined;
-    const disabledSel =
-      nestedClaimed.has('disabled') && disabledEntry?.prop
-        ? disabledEntry.value === undefined
-          ? `[${attrNameFor(disabledEntry.prop, rootAs)}]`
-          : `[${attrNameFor(disabledEntry.prop, rootAs)}="${normalizeEnumValue(disabledEntry.value)}"]`
-        : disabledSelectorFor(rootAs, elemRoles.root);
-    lines.push(
-      '/* Disabled affordance: the states convention names a disabled concept. */',
-      disabledSel.split(',').map(part => rootSel(part.trim())).join(',\n') + ' {',
-      '  cursor: not-allowed;',
-      '}',
-      '',
-    );
-  }
+  lines.push(...cursorLines({ componentClass, rootAs, context, apiProps, elemRoles, nestedClaimed }));
 
   lines.push('}');
   lines.push('');
   return lines;
-}
-
-/**
- * The spec configuration a rule block came from, as a CSS comment body.
- *
- * Blocks sharing a selector are kept apart rather than merged — each is a
- * separate statement about the component, and merging them would lose which
- * statement a declaration belongs to (and move rules relative to each other,
- * where order is what decides which wins). Labelling each one is what makes the
- * separation readable instead of merely repetitive.
- */
-function variantLabel(configuration: Record<string, unknown>): string {
-  const pairs = Object.entries(configuration)
-    .map(([k, v]) => (v === true ? k : v === false ? `not ${k}` : `${k}=${String(v)}`))
-    .join(', ');
-  return pairs ? `Variant: ${pairs}` : 'Variant';
-}
-
-function collectLayoutKeys(nodes: LayoutNode[], into: Set<string>): void {
-  for (const node of nodes) {
-    into.add(node.key);
-    collectLayoutKeys(node.children, into);
-  }
-}
-
-function collectParents(nodes: LayoutNode[], into: Map<string, string>, parent?: string): void {
-  for (const node of nodes) {
-    if (parent && !into.has(node.key)) into.set(node.key, parent);
-    collectParents(node.children, into, node.key);
-  }
-}
-
-/**
- * True when an absolutely-placed child exactly covers its parent's bounds:
- * either zero insets on all sides, or zero offset with dimensions equal to
- * the parent's.
- */
-function coversParent(styles: Record<string, unknown>, parentStyles: Record<string, unknown>): boolean {
-  const n = (v: unknown) => (typeof v === 'number' ? v : undefined);
-  const allInsetsZero =
-    n(styles.top) === 0 && n(styles.bottom) === 0 && n(styles.start) === 0 && n(styles.end) === 0;
-  const sameSizeAtOrigin =
-    n(styles.top) === 0 &&
-    n(styles.start) === 0 &&
-    n(styles.width) !== undefined &&
-    n(styles.width) === n(parentStyles.width) &&
-    n(styles.height) !== undefined &&
-    n(styles.height) === n(parentStyles.height);
-  return allInsetsZero || sameSizeAtOrigin;
-}
-
-/**
- * Mark elements that need `position: relative` for correct stacking: the
- * layout parent of any absolutely-positioned element (containing block), and
- * that element's non-absolute siblings (so painting follows layout order —
- * last on top — instead of absolute elements covering static siblings).
- */
-function collectStackingFixes(
-  nodes: LayoutNode[],
-  elements: Record<string, Record<string, unknown>>,
-  into: Set<string>,
-  parent?: string,
-): void {
-  const parentStyles = (elements[parent ?? '']?.styles ?? {}) as Record<string, unknown>;
-  const parentAutoLayout =
-    parentStyles.layoutMode === 'HORIZONTAL' || parentStyles.layoutMode === 'VERTICAL';
-  const isAbsolute = (key: string) => {
-    if (parent === undefined) return false; // roots never infer
-    const styles = (elements[key]?.styles ?? {}) as Record<string, unknown>;
-    return impliesAbsolute(styles, parentAutoLayout);
-  };
-
-  if (nodes.some(n => isAbsolute(n.key))) {
-    if (parent) into.add(parent);
-    for (const n of nodes) {
-      if (!isAbsolute(n.key)) into.add(n.key);
-    }
-  }
-  for (const node of nodes) {
-    collectStackingFixes(node.children, elements, into, node.key);
-  }
-}
-
-function toPascalCase(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-function elemSelector(componentClass: string, elemKey: string): string {
-  return elemKey === 'root'
-    ? `.${componentClass}`
-    : `.${componentClass}__${toKebab(elemKey)}`;
-}
-
-/**
- * Overlapping children: Figma expresses overlap as a NEGATIVE itemSpacing,
- * which `gap` cannot represent. CSS does it with a negative margin on every
- * child after the first, along the parent's main axis.
- */
-/**
- * A composed instance fills the slot its parent gave it.
- *
- * The wrapper element carries the size of the instance *node* — what the design
- * resized this particular instance to. The component it composes carries the
- * size of its own master, which is a different number whenever the instance was
- * resized. Without this the child paints at its master's size: a 73x73 image
- * component dropped into a 13x13 slot covered the whole parent.
- *
- * Only dimensions the slot states definitely are passed on. A slot that HUGs is
- * sized *by* its child, so forcing the child to fill it would be circular.
- *
- * An absolutely positioned slot states its size a third way: opposing insets.
- * `start` and `end` together say the slot spans its container's width, and
- * `top` with `bottom` says the same vertically — a dialog's blanket pinned to
- * all four edges names no width at all, yet is exactly as wide as the dialog.
- * Without this the child painted at its master's size inside a slot that had
- * stretched around it.
- *
- * The selector doubles the class to outrank the child's own root rule, which is
- * a single class and would otherwise win or lose on stylesheet order alone. For
- * the custom-element build the child's size lives in a `:host` rule, and an
- * outer-tree declaration already beats that.
- */
-function instanceFitRule(
-  selector: string,
-  elemType: string | undefined,
-  styles: Record<string, unknown>,
-): string[] {
-  if (elemType !== 'instance') return [];
-  const stated = (a: string, b: string) =>
-    styles.position === 'ABSOLUTE' && styles[a] !== undefined && styles[a] !== null
-      && styles[b] !== undefined && styles[b] !== null;
-  const decls: string[] = [];
-  if ('width' in styles || styles.layoutSizingHorizontal === 'FILL' || stated('start', 'end')) {
-    decls.push('width: 100%');
-  }
-  if ('height' in styles || styles.layoutSizingVertical === 'FILL' || stated('top', 'bottom')) {
-    decls.push('height: 100%');
-  }
-  if (!decls.length) return [];
-  const own = selector.split(' ').pop() ?? selector;
-  return [`${selector}${own} > * {`, ...decls.map(d => `  ${d};`), '}', ''];
-}
-
-/**
- * The ring that paints a gradient stroke, as a `::before` on the element.
- *
- * A gradient cannot be an outline, and `border-image` — the one border
- * property that takes a gradient — ignores `border-radius`, so a rounded
- * element comes out as a square frame. Painting into the element's own
- * `background` works only for an element that has no fill of its own; where
- * one exists, the ring and the fill compete for the same property and the fill
- * loses.
- *
- * A pseudo-element owns none of that. It covers the host exactly, inherits its
- * radius, and masks out its own middle so only the ring paints. The host keeps
- * its background, declares no border, and so costs no layout — the same as the
- * outline a solid stroke emits, which is what a Figma stroke does.
- *
- * Thickness is the pseudo-element's padding: it has no content, so the padding
- * box IS the ring, and excluding the content box from the border box leaves
- * exactly it.
- */
-function gradientRingRule(
-  selector: string,
-  styles: Record<string, unknown>,
-  tokensFormat: string | undefined,
-  fallbackWeight?: unknown,
-): string[] {
-  const strokes = styles.strokes;
-  if (!isGradient(strokes) && !isGradientToken(strokes)) return [];
-  const fmt = tokensFormat ?? 'TOKEN';
-  const paint = isGradientToken(strokes)
-    ? resolveTokenVar(strokes, fmt)
-    : gradientValue(strokes, fmt);
-  if (!paint) return [];
-  // Thickness may be stated on another layer: a variant that restates only the
-  // paint gets no `strokeWeight` of its own, and a ::before rule inherits
-  // nothing from the default block's ::before — which may not even exist, since
-  // the default's stroke can be solid. Without a width the mask excludes
-  // everything and the ring paints nothing at all.
-  const width =
-    dimensionValue(styles.strokeWeight, fmt) ?? dimensionValue(fallbackWeight, fmt);
-  return [
-    `${selector}::before {`,
-    "  content: '';",
-    '  position: absolute;',
-    '  inset: 0;',
-    '  border-radius: inherit;',
-    ...(width ? [`  padding: ${width};`] : []),
-    `  background: ${paint};`,
-    '  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);',
-    '  mask-composite: exclude;',
-    '  -webkit-mask-composite: xor;',
-    '  pointer-events: none;',
-    '}',
-    '',
-  ];
-}
-
-function overlapRule(selector: string, styles: Record<string, unknown>): string[] {
-  const v = styles.itemSpacing;
-  if (typeof v !== 'number' || v >= 0) return [];
-  const prop = styles.layoutMode === 'VERTICAL' ? 'margin-block-start' : 'margin-inline-start';
-  // This reaches the react scaffold's children directly. The webcomponents
-  // scaffold projects slot content through a holder, and ::slotted() cannot
-  // style a slotted node's descendants — so composed example content carries
-  // the same margin inline instead (see composeSlotHtml).
-  return [`${selector} > * + * {`, `  ${prop}: ${v}px;`, '}', ''];
-}
-
-/** Parent key → ordered child keys, for every parent in a layout tree. */
-function childOrder(nodes: LayoutNode[], parent: string | null = null, out?: Map<string | null, string[]>): Map<string | null, string[]> {
-  const map = out ?? new Map<string | null, string[]>();
-  for (const n of nodes) {
-    const list = map.get(parent) ?? [];
-    list.push(n.key);
-    map.set(parent, list);
-    childOrder(n.children, n.key, map);
-  }
-  return map;
 }

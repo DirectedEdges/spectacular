@@ -1,6 +1,7 @@
 ---
 title: "cornerSmoothing"
 description: "Squircle-style corner smoothing amount"
+tableOfContents: false
 ---
 
 Corner smoothing amount (Figma's "squircle" effect), 0–1.
@@ -13,6 +14,10 @@ Corner smoothing amount (Figma's "squircle" effect), 0–1.
 | [`TokenReference`](/schema/token-reference/) | `$token: ...`<br>`$type: number` |
 
 Follows the same rectangle-only restriction as [`cornerRadius`](/schema/styles/corner-radius/).
+
+#### Default
+
+`0`
 
 #### Supported on
 

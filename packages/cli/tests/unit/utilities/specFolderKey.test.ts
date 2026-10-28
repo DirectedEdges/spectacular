@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { specFolderKey } from '../../../src/utilities/specFolderKey.js';
-import { allAnalyzers } from '../../../src/analyzers/index.js';
+import { allAnalyzers } from '../../../src/analyze/index.js';
 
 /**
  * One derivation for the key a spec is written under. Two were the bug: the guard that

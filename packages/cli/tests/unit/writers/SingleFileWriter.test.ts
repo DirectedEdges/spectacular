@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { SingleFileWriter } from '../../../src/Writers/SingleFileWriter.js';
-import { FileManifest } from '../../../src/Writers/FileManifest.js';
-import type { OutputConfig } from '../../../src/Types/OutputConfig.js';
+import { SingleFileWriter } from '../../../src/writers/SingleFileWriter.js';
+import { FileManifest } from '../../../src/writers/FileManifest.js';
+import type { OutputConfig } from '../../../src/writers/outputConfig.js';
 import fs from 'fs-extra';
 import path from 'path';
 import yaml from 'yaml';

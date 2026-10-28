@@ -2,8 +2,6 @@
 title: "cache"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge experimental-badge">Experimental</span>')</script>
-
 Builds the lookup tables `render` uses to resolve a spec's references against your fetched Figma data.
 
 You rarely run this by hand. [`fetch`](/cli/commands/fetch/) and [`applyCustomTokens`](/cli/commands/apply-custom-tokens/) build the cache themselves as their last step, which covers the normal workflow. Reach for `specs cache` when the cache is missing, when something outside those commands changed the files in your data directory, or when `render` tells you to.

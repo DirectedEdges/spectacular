@@ -68,6 +68,34 @@ The component's baseline stylesheet, derived from what Figma applied: a rule per
 
 The `data-*` attributes here are exactly what the [scaffold](/code/scaffold/) writes on the root.
 
+## Mapping Specs to CSS
+
+Every spec style key the transformer maps, by family. Each links to its entry in the [style mapping appendix](/code/style-mapping/), which carries the declaration each key produces and the cases where it is not the obvious one.
+
+| Family | Spec keys |
+|---|---|
+| [Fills](/code/style-mapping/#fills) | `backgroundColor`, `textColor`, `fillColor` |
+| [Opacity](/code/style-mapping/#opacity) | `opacity` |
+| [Border](/code/style-mapping/#border) | `strokes`, `strokeWeight`, `strokeAlign` |
+| [Corner radius](/code/style-mapping/#corner-radius) | `cornerRadius` |
+| [Effects](/code/style-mapping/#effects) | `effects` |
+| [Size](/code/style-mapping/#size) | `width`, `height`, `minWidth`, `minHeight`, `maxWidth`, `maxHeight` |
+| [Padding](/code/style-mapping/#padding) | `padding` |
+| [Typography](/code/style-mapping/#typography) | `typography` and its sub-keys |
+| [Text alignment](/code/style-mapping/#text-alignment) | `textAlignHorizontal` |
+| [Text truncation](/code/style-mapping/#text-truncation) | `maxLines`, `textOverflow` |
+| [Aspect ratio](/code/style-mapping/#aspect-ratio) | `aspectRatio` |
+| [Visibility and overflow](/code/style-mapping/#visibility-and-overflow) | `visible`, `clipsContent` |
+| [Transform](/code/style-mapping/#transform) | `rotation` |
+| [Position](/code/style-mapping/#position-and-offsets) | `position`, `top`, `bottom`, `start`, `end` |
+| [Layout](/code/style-mapping/#layout) | `layoutMode`, `mainAxisAlignment`, `crossAxisAlignment`, `wrap`, `wrapAlignment`, `itemSpacing`, `layoutSizingHorizontal`, `layoutSizingVertical` |
+
+A key absent from this table is not mapped. Some are [deliberately skipped](/code/style-mapping/#skipped-keys) — Figma concepts with no CSS equivalent, like layer locking or corner smoothing.
+
+These are the keys a spec carries. A configured rule can also inject [raw declarations](/code/style-mapping/#raw-css) before any of this runs, which emit verbatim and last, so a rule can override what the mapping derived.
+
+Some spec facts produce a whole rule rather than a declaration on the element: an unfilled slot collapsing, a gradient stroke painting as a ring, the cursor a press target gets. Those are [listed separately](/code/style-mapping/#additional-rules).
+
 ## The Web Components split
 
 `host.css` styles the element itself and its shadow-root children — the same content as the React sheet, with `:host` in place of the root class.
@@ -241,6 +269,7 @@ A subcomponent gets its own stylesheet in its own directory, scoped to its own k
 
 ## See Also
 
+- [**Appendix — Style mapping reference**](/code/style-mapping/) — every spec style key and the declaration it produces, key by key
 - [CSS variables](/code/cssvars/) — what these `var()` references resolve against
 - [Scaffold](/code/scaffold/) — where the class names and data attributes are written
 - [`states` convention](/settings/states/) — classify variant props as semantic states

@@ -7,6 +7,7 @@
     { "$ref": "component.schema.json" },
     { "$ref": "components.schema.json" },
     { "$ref": "metadata.schema.json" },
-    { "$ref": "concern.schema.json" }
+    { "$ref": "component-concern.schema.json" },
+    { "$ref": "composition-concern.schema.json" }
   ]
 }

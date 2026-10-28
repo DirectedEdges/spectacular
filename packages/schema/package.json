@@ -1,12 +1,12 @@
 {
   "name": "@directededges/specs-schema",
-  "version": "0.35.0",
+  "version": "0.39.0",
   "description": "Specs UI Component Schema - TypeScript types and JSON schema definitions for component specifications",
   "license": "CC-BY-4.0",
   "author": "Nathan Curtis <nathan@directededges.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/DirectedEdges/specs.git",
+    "url": "https://github.com/DirectedEdges/spectacular.git",
     "directory": "packages/schema"
   },
   "type": "module",
@@ -18,7 +18,7 @@
       "default": "./dist/index.js"
     },
     "./schema/component": "./schema/component.schema.json",
-    "./schema/concern": "./schema/concern.schema.json",
+    "./schema/component-concern": "./schema/component-concern.schema.json",
     "./schema/metadata": "./schema/metadata.schema.json",
     "./schema/conventions": "./schema/conventions.schema.json",
     "./schema/settings": "./schema/settings.schema.json"

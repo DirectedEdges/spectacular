@@ -15,11 +15,11 @@ interface Effects {
 
 ## Properties
 
-| Name | Category | Description |
-|------|----------|-------------|
-| [`shadows`](/schema/effects/shadows/) | shadow | Array of drop and inner shadow definitions |
-| [`layerBlur`](/schema/effects/layer-blur/) | blur | Layer blur (`filter: blur()`) |
-| [`backgroundBlur`](/schema/effects/background-blur/) | blur | Background blur (`backdrop-filter: blur()`) |
+| Name | Category | Description | Default |
+|------|----------|-------------|---------|
+| [`shadows`](/schema/effects/shadows/) | shadow | Array of drop and inner shadow definitions | absent (no shadows) |
+| [`layerBlur`](/schema/effects/layer-blur/) | blur | Layer blur (`filter: blur()`) | absent (no blur) |
+| [`backgroundBlur`](/schema/effects/background-blur/) | blur | Background blur (`backdrop-filter: blur()`) | absent (no blur) |
 
 ## Values
 
@@ -30,22 +30,26 @@ interface Effects {
 
 ### Shadow
 
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `visible` | `boolean` | Yes | Whether the shadow is active |
-| `inset` | `boolean` | No | `true` for inner shadow; absent or `false` for drop shadow |
-| `offsetX` | `number \| TokenReference` | Yes | Horizontal offset |
-| `offsetY` | `number \| TokenReference` | Yes | Vertical offset |
-| `blur` | `number \| TokenReference` | Yes | Blur radius |
-| `spread` | `number \| TokenReference` | Yes | Spread distance |
-| `color` | `string \| TokenReference` | Yes | Shadow color (`#RRGGBBAA` or [token](/schema/token-reference/)) |
+Defaults below are the evaluator's field defaults before a Figma shadow effect is read — see [`Shadow`](https://github.com/DirectedEdges/specs-from-figma/blob/main/packages/specs-from-figma/src/Component/Effects/Shadow.ts) in specs-from-figma.
+
+| Property | Type | Required | Description | Default |
+|----------|------|----------|-------------|---------|
+| `visible` | `boolean` | Yes | Whether the shadow is active | `true` |
+| `inset` | `boolean` | No | `true` for inner shadow; absent or `false` for drop shadow | absent (drop shadow) |
+| `offsetX` | `number \| TokenReference` | Yes | Horizontal offset | `0` |
+| `offsetY` | `number \| TokenReference` | Yes | Vertical offset | `0` |
+| `blur` | `number \| TokenReference` | Yes | Blur radius | `0` |
+| `spread` | `number \| TokenReference` | Yes | Spread distance | `0` |
+| `color` | `string \| TokenReference` | Yes | Shadow color (`#RRGGBBAA` or [token](/schema/token-reference/)) | transparent black (`#00000000`) |
 
 ### Blur
 
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `visible` | `boolean` | Yes | Whether the blur is active |
-| `radius` | `number \| TokenReference` | Yes | Blur radius |
+Defaults below are the evaluator's field defaults before a Figma blur effect is read — see [`Blur`](https://github.com/DirectedEdges/specs-from-figma/blob/main/packages/specs-from-figma/src/Component/Effects/Blur.ts) in specs-from-figma.
+
+| Property | Type | Required | Description | Default |
+|----------|------|----------|-------------|---------|
+| `visible` | `boolean` | Yes | Whether the blur is active | `true` |
+| `radius` | `number \| TokenReference` | Yes | Blur radius | `0` |
 
 ## Example
 

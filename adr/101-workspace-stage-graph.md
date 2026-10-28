@@ -25,11 +25,18 @@ explicitly rather than omitting it.
 A workspace is a chain of artifacts, each derived from the one before it:
 
 ```
-Figma REST ──► data/ ──► data/*.manifest.md ──► specs/ ──┬──► react/src/
+Figma REST ──► data/ ──► data/*.manifest.md ──► specs/ ──┬──► specs/analysis/
+                                                          ├──► react/src/
                                                           ├──► webcomponents/src/
                                                           ├──► storybook/content/
                                                           └──► the Figma file (render)
+
+specs/analysis/ ──► storybook/content/
 ```
+
+`specs/analysis/` is both derived from `specs/` and read by `storybook publish`, which
+publishes a page per analysis report. It is the only edge in the chain between two local
+stages — every other stage reads `specs/` or `data/` directly.
 
 Every edge in that chain is real and already enforced by the commands. What is
 missing is any place where the chain itself is **written down**. Today it lives
@@ -38,6 +45,7 @@ in the order a person types commands:
 ```bash
 specs scan
 specs generate
+specs analyze
 specs react
 specs webcomponents
 specs storybook publish
@@ -364,10 +372,18 @@ someone's work. It joins only on `--render`.
 |-------|-------|--------|---------|
 | `scan` | `data/{alias}.file/` | `data/{alias}.manifest.md` | Yes |
 | `generate` | `data/{alias}.manifest.md`, `data/{alias}.file/` | `specs/` | Yes |
+| `analyze` | `specs/`, `config/`, `data/{alias}.variables.json`, `data/{alias}.styles.json` | `specs/analysis/`, `styling.*` in each spec folder | Yes |
 | `react` | `specs/`, `config/` | `react/src/` | When `react/src/` exists |
 | `webcomponents` | `specs/`, `config/` | `webcomponents/src/` | When `webcomponents/src/` exists |
-| `storybook publish` | `config/`, `specs/`, `assets/` | `storybook/content/` | When `storybook/.storybook/` exists |
+| `storybook publish` | `config/`, `specs/`, `specs/analysis/`, `assets/` | `storybook/content/` | When `storybook/.storybook/` exists |
 | `render` | `specs/` | **the connected Figma file** | **No** — `--render` |
+
+`analyze` sits between `generate` and the target stages, which is where both its edges put
+it: it reads `specs/`, so it cannot precede `generate`, and `storybook publish` reads the
+`specs/analysis/` it writes, so it cannot follow the stage that consumes it. Its position
+relative to `react` and `webcomponents` is not a dependency — those read no analysis — but
+it is not arbitrary either, and the reason is in the Notes below: `analyze` writes into
+`specs/`, which is what the target stages watch.
 
 **Pros**:
 - Every step in the chain has something the CLI can watch, so every step has a
@@ -428,6 +444,8 @@ everything downstream, with no re-scan.
 |---------------|------------|
 | `data/{alias}.file/**` | `scan` |
 | `data/{alias}.manifest.md` | `generate` |
+| `data/{alias}.variables.json`, `data/{alias}.styles.json` | `analyze` |
+| `specs/**` (hand edit) | `analyze` |
 
 **Pros**:
 - Curation becomes a first-class input to the loop rather than something a
@@ -531,8 +549,15 @@ Shared options:
 There is no `--fetch`. Fetching is `specs fetch`, which a person runs when they
 mean to; what it writes into `data/` is picked up from `scan` onward.
 
-`run` also starts the Storybook dev server when `storybook/.storybook/` exists,
-which is what `specs storybook dev` does today.
+`run` starts the Storybook dev server once the publish step has made its content
+current, when the workspace has a Storybook host. One command covers the whole
+workspace, which is the point of having it at all.
+
+The server and its index-recovery handling are shared with `specs storybook dev`
+rather than reimplemented — one function both commands call. That code is the
+subtlest in the package and the least likely to survive being kept in step
+twice. `--skip storybook` skips the server along with the publish: a server
+showing content nothing maintains is worse than no server.
 
 ### The chain
 
@@ -589,13 +614,22 @@ once with a stale `dist/bridge-server.js`.
 ```
 $ specs run
 [specs run] license: PRO (active) — resolved once for this session
-[specs run] plan: scan → generate → react, webcomponents → storybook publish
+[specs run] plan: scan → generate → analyze → react, webcomponents → storybook publish
 [specs run] watching data/, specs/, config/, assets/
 
-specs/Alert/api.yaml changed
-  → generate (Alert) → react (Alert), webcomponents (Alert) → storybook publish
-  ✓ 3 stages, 1 component, 1.4s
+data/ds.manifest.md changed
+  → generate (Alert) → analyze → react (Alert), webcomponents (Alert) → storybook publish
+  ✓ 5 stages, 1 component, 2.1s
+
+specs/components/alert/api.yaml changed
+  → analyze → react (Alert), webcomponents (Alert) → storybook publish
+  ✓ 4 stages, 1 component, 1.4s
 ```
+
+The second line is the hand-edit case, and it enters **below** `generate`, not at it. A
+person editing a spec is editing the hub (ADR-096); re-running `generate` would overwrite
+what they just wrote from `data/`. `specs/` is an input to the stages that read it and an
+output of the stage that writes it, and no change to it ever starts the chain further up.
 
 ### Driver semantics
 
@@ -603,7 +637,8 @@ specs/Alert/api.yaml changed
 |---|---|---|
 | Traversal | Once | Once at startup, then per change |
 | Stage failure | Stop; exit non-zero | Report the stage; keep watching |
-| Terminal node | `storybook publish` writes, process exits | Storybook dev server stays up and hot-reloads |
+| Last step | `storybook publish`, then the process exits | `storybook publish`, then back to waiting, with the Storybook server up alongside |
+| Which steps run | Decided once | Re-derived per pass — a workspace changes shape while a session is open |
 | Concurrency | Independent stages may run in parallel | Same, plus in-flight runs are cancelled by a newer change |
 | Entitlement | Resolved once, before the first stage | Resolved once, at startup, for the session |
 | Exit | `0` all stages succeeded, non-zero otherwise | Only on Ctrl-C |
@@ -658,8 +693,25 @@ changed.
   `--file` is accepted by both commands so the advice in the skip message works
   on the command that printed it.
 - `--only` and `--skip` name steps, not commands, and cannot be combined.
-- The step names are the first column of the table above: `scan`, `generate`,
+- The step names are the first column of the table above: `scan`, `generate`, `analyze`,
   `react`, `webcomponents`, `storybook`, `render`.
+- **`analyze` always runs whole, and `--components` does not scope it.** Each analyzer's
+  `finalize()` writes one aggregate report per concern — `analysis/props.yaml`,
+  `analysis/dependencies.graph.yaml`, `analysis/styling.byToken.yaml` and the rest — from
+  the specs that run visited. A scoped analyze would therefore replace a catalogue-wide
+  report with a one-component one and report success. This is the shared-input rule stated
+  under *How precisely a change is matched to work*, applied to a stage whose output is
+  shared by construction even though its input is read per spec.
+- **`analyze` writes into `specs/`, which the target stages watch.** Besides
+  `specs/analysis/`, the styling analyzer writes a `styling.*` document into each spec
+  folder. Those are declared outputs of the stage, so the driver suppresses them as events
+  — the same suppression `scan` already requires for the manifest it writes. Ordering
+  `analyze` before `react` and `webcomponents` is what makes a traversal settle in one
+  pass regardless: by the time the target stages read a spec folder, everything that run
+  will write into it is already there.
+- **A spec folder's `styling.*` is an analyze output, not a generate output.** A workspace
+  that never runs `analyze` has none, and the target stages do not require one — so
+  skipping the stage degrades the Storybook analysis pages and nothing else.
 - `--dry-run` makes no license call. Printing what would happen is not doing it,
   and a dry run that spent a license call would make the tool you reach for when
   something is wrong part of what is wrong.
@@ -682,7 +734,7 @@ later need forces one, the shape is recorded as the rejected Option C under
 
 | Consumer | Impact | Action required |
 |----------|--------|-----------------|
-| `specs-cli` | Implements both commands and the chain | New `src/pipeline/` module; `index.ts` registers `Build` and `Run`; the work inside `ScanCommand` and `GenerateCommand` pulled out into functions that return instead of calling `process.exit()`; `storybook/dev.ts` rebuilt on the same machinery |
+| `specs-cli` | Implements both commands and the chain | New `src/pipeline/` module; `index.ts` registers `Build` and `Run`; the work inside `ScanCommand`, `GenerateCommand` and `AnalyzeCommand` pulled out into functions that return instead of calling `process.exit()`; `storybook/dev.ts` rebuilt on the same machinery |
 | `specs-schema` | None | None |
 | `specs-from-figma` | One internal change | `LicenseManager.resolve()` remembers the proxy's answer for the life of the process, keyed by license key, and remembers only completed checks. No change to any exported signature, and nothing new that a caller can pass in |
 | `specs-plugin-2` | None | None — `render` reaches the plugin over the existing bridge, unchanged |
@@ -727,9 +779,13 @@ key.
   key is gone, because the question is only asked once.
 - The double check inside `specs generate` goes away for everyone, including
   people running `specs generate` on its own.
-- Steps become plain functions, which makes them testable directly. `scan` and
-  `generate` currently end by exiting the process, so today they can only be
+- Steps become plain functions, which makes them testable directly. `scan`,
+  `generate` and `analyze` currently end by exiting the process, so today they can only be
   tested by running the CLI.
+- Analysis reports stop going stale silently. `specs/analysis/` is derived from `specs/`
+  and read by `storybook publish`, so a published analysis page describing a catalogue two
+  revisions old was the same staleness failure this ADR exists to remove — just one nobody
+  was looking for, because no command sequence anyone typed included `specs analyze`.
 - A new risk: the chain can decide wrongly what needs rebuilding, and a wrong
   decision looks exactly like a broken transform. Printing what it decided, and
   `--dry-run`, are how that stays diagnosable — they are not conveniences.

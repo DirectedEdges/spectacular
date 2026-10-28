@@ -20,8 +20,9 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { writeAtomic } from './writeAtomic.js';
-import type { Transformer, TransformerContext } from '../Types/Transformer.js';
-import { kebabizePath, reportNameWarnings } from './css/values.js';
+import type { Transformer, TransformerContext } from '../transforms/transformer.js';
+import { kebabizePath } from './css/values/tokens.js';
+import { reportNameWarnings } from './css/values/nameWarnings.js';
 import { recordExternalWrite } from './externalWrites.js';
 import { loadFoundations, type FoundationsData } from '../utilities/loadFoundations.js';
 import { SectionedFile } from '../utilities/sectionedFile.js';

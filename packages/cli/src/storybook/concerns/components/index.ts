@@ -7,7 +7,7 @@ import yaml from 'yaml';
 import type { Concern, BuiltFile } from '../types.js';
 import type { Workspace } from '../../workspace.js';
 import { resolveSpecsLayout } from '../../../utilities/specsLayout.js';
-import { kebabizePath } from '../../../transforms/css/values.js';
+import { kebabizePath } from '../../../transforms/css/values/tokens.js';
 
 export type TabId = 'react' | 'webcomponents' | 'specs';
 

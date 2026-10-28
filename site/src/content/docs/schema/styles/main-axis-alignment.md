@@ -1,6 +1,7 @@
 ---
 title: "mainAxisAlignment"
 description: "Main-axis alignment for an auto-layout container"
+tableOfContents: false
 ---
 
 Alignment along the main axis (depends on `layoutMode`).
@@ -13,6 +14,10 @@ Alignment along the main axis (depends on `layoutMode`).
 | `null` | `null` |
 
 Not token-bindable — structural property, not a design value.
+
+#### Default
+
+`"START"`
 
 #### Supported on
 

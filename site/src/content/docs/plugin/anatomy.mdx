@@ -30,7 +30,7 @@ Additional variant exhibits are included whenever a new, uniquely named layer is
 ## Related Settings
 
 - **[Variant Depth](/settings/variant-depth/)** — More depth means more variant exhibits to check for revealed elements
-- **[Glyph Name Pattern](/settings/glyph-name-pattern/)** — Matched icon layers get typed as glyphs with resolved names
+- **[Glyph Name Pattern](/settings/glyphs/)** — Matched icon layers get typed as glyphs with resolved names
 - **[Subcomponents](/settings/subcomponents/)** — Discovered subcomponents get their own separate Anatomy exhibits
 - **[Collapse Primitive Wrapper](/settings/collapse-primitive-wrapper/)** — Strips wrapper containers, changing the root element markers
 
@@ -38,7 +38,7 @@ Additional variant exhibits are included whenever a new, uniquely named layer is
 
 ### Multiple Anatomy Blocks
 
-When a component has variants that reveal elements hidden by default — like an error message that only appears in an "error" state — Specs adds a second exhibit just for that variant. It shows only the newly revealed elements, so nothing already shown gets repeated.
+When a component has variants that reveal elements hidden by default — like an error message that only appears in an "error" state — Spectacular adds a second exhibit just for that variant. It shows only the newly revealed elements, so nothing already shown gets repeated.
 
 <Figure src={anatomyMulti} alt="Two Anatomy exhibits for a Checkbox Group component: a default exhibit marking root, Group label, and Items, and a second exhibit marking only the Error message revealed in that variant" caption="A Checkbox Group component's Anatomy: the default exhibit marks root, Group label, and Items (1–3); a second exhibit for the error variant marks only the newly revealed Error message (4), without repeating what's already shown." maxWidth="none" />
 

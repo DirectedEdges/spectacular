@@ -1,0 +1,82 @@
+# Facts about the Figma library — every consumer of that library declares the same
+# values. A wrong value here produces incorrect output, not merely different output.
+# Absence of a block means the library has no such convention.
+#
+# One file per platform: this file's name IS the platform id, so its contents start
+# at the entry body with no wrapping key.
+# Every commented line is the opposite of the default: uncomment it to change
+# behaviour. A commented block is off until uncommented.
+# Reference: https://spectacular.systems/schema/conventions/
+
+# Layer and property naming the library follows, and the target a spec reverses
+# into: NONE, SENTENCE, or TITLE (default: NONE, no convention declared)
+# https://spectacular.systems/settings/figma-keys/
+# naming: SENTENCE
+
+# Icon glyph components, by name pattern ({i} is the glyph name) and/or by
+# child structure for libraries whose glyphs are plainly named (ADR-103)
+# https://spectacular.systems/settings/glyphs/
+# glyphs:
+#   match: 'DS Icon Glyph / {i}'
+#   structure:
+#     name: '{i}'          # naming rule over the component name (default '{i}')
+#     fill: ['#161616']    # accepted leaf fills (optional)
+#     children:
+#       - type: VECTOR
+#         name: 'Vector'
+
+# Layer holding code-only props — https://spectacular.systems/settings/code-only-props-pattern/
+# codeOnlyProps:
+#   match: 'Code only props'
+
+# Subcomponents; the block's presence is the on-switch
+# https://spectacular.systems/guides/subcomponent-scoping/
+subcomponents:
+  # Also search the Figma page, not component anatomy alone (default: NESTED)
+  # scope: PAGE
+
+  # Which assets are subcomponents; {C} = component, {S} = subcomponent
+  match:
+    - '{C} / _ / {S}'
+
+  # Patterns to exclude from those matches
+  # exclude:
+  #   - '{C} / Examples / {S}'
+
+# Instance examples (Pro); the block's presence is the on-switch
+# https://spectacular.systems/guides/instance-examples/
+# instanceExamples:
+#   # PAGE (default) or FILE, which searches every page
+#   scope: PAGE
+#   # Name filter; omit to match every in-scope instance
+#   match:
+#     - '{C} Example'
+#   # A candidate's immediate parent frame or section must match one of these
+#   parentNames:
+#     - Examples
+
+# How the library expresses images; each member is an independent trigger
+# https://spectacular.systems/guides/images/
+# images:
+#   # Container fills emit as backgroundImage
+#   backgroundImage: true
+#   # The library's image component; requires sourceProps
+#   match: DS Image
+#   # Image-typed code-only props; the first is the image component's own
+#   sourceProps:
+#     - imageSource
+
+# Slot constraints authored as code-only props (requires codeOnlyProps)
+# https://spectacular.systems/settings/slot-constraints/
+# slotConstraints: true
+
+# TEXT props whose values parse as numbers emit as NumberProp
+# https://spectacular.systems/settings/infer-number-props/
+# inferNumberProps: true
+
+# Separator-delimited property names (margin.compact, margin.expanded) fold into
+# one object prop; the block's presence is the on-switch
+# https://spectacular.systems/settings/object-props/
+# objectProps:
+#   # The member-name separator in flat property names (default: '.')
+#   separator: '.'

@@ -13,9 +13,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'fs-extra';
 import path from 'path';
 import yaml from 'yaml';
-import { Migrate } from '../../../src/commands/MigrateCommand.js';
-import { migrateConfigV1 } from '../../../src/Config/migrations/configV1.js';
-import { ConfigLoader } from '../../../src/Config/ConfigLoader.js';
+import { Migrate } from '../../../src/commands/migrate.js';
+import { migrateConfigV1 } from '../../../src/config/migrations/configV1.js';
+import { ConfigLoader } from '../../../src/config/ConfigLoader.js';
 
 /**
  * v1 defaulted the three layout flags to false and v2 defaults them to true, so

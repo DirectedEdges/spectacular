@@ -1,6 +1,7 @@
 ---
 title: "paragraphIndent"
 description: "First-line paragraph indent for a text node"
+tableOfContents: false
 ---
 
 First-line indent in pixels. Part of [`Typography`](/schema/typography/).
@@ -11,6 +12,10 @@ First-line indent in pixels. Part of [`Typography`](/schema/typography/).
 |---|---|
 | `number` | `16` |
 | [`TokenReference`](/schema/token-reference/) | `$token: DS.Space.400`<br>`$type: dimension` |
+
+#### Default
+
+`0`
 
 #### Source
 

@@ -72,5 +72,6 @@ reached for is documented once.
 ## See also
 
 - [Roles overview](/roles/) — what a role is, how one is authored, and the platform reach
+- [Choosing a role](/roles/choosing/) — which of two plausible roles an element takes
 - [Precedence](/roles/precedence/) — how a role, a states classification and an action resolve together
 - [Actions](/actions/) — the second annotation key

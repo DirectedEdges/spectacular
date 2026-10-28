@@ -1,6 +1,7 @@
 ---
 title: "position"
 description: "Layout positioning mode for a child element"
+tableOfContents: false
 ---
 
 Layout positioning mode — whether the element participates in its parent's auto-layout flow or is positioned absolutely.
@@ -15,6 +16,10 @@ Layout positioning mode — whether the element participates in its parent's aut
 Not token-bindable — structural property, not a design value.
 
 `ABSOLUTE` elements use [`top`](/schema/styles/top/) / [`bottom`](/schema/styles/bottom/) / [`start`](/schema/styles/start/) / [`end`](/schema/styles/end/) / [`centerHorizontalOffset`](/schema/styles/center-horizontal-offset/) / [`centerVerticalOffset`](/schema/styles/center-vertical-offset/) to place themselves relative to the parent.
+
+#### Default
+
+`"AUTO"`
 
 #### Supported on
 

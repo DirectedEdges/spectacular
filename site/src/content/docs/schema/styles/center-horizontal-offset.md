@@ -1,6 +1,7 @@
 ---
 title: "centerHorizontalOffset"
 description: "Horizontal offset from center for a positioned child"
+tableOfContents: false
 ---
 
 Horizontal offset from center. Present when the horizontal constraint is `CENTER`.
@@ -13,6 +14,10 @@ Horizontal offset from center. Present when the horizontal constraint is `CENTER
 | `null` | `null` |
 
 Not token-bindable — structural property computed from Figma layout constraints, not a design value.
+
+#### Default
+
+`null`
 
 #### Supported on
 

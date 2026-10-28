@@ -1,6 +1,7 @@
 ---
 title: "textAlignHorizontal"
 description: "Horizontal text alignment using logical inline-axis directions"
+tableOfContents: false
 ---
 
 Horizontal text alignment using logical inline-axis directions. `START` resolves to left in LTR and right in RTL; `END` is the inverse.
@@ -13,6 +14,10 @@ Horizontal text alignment using logical inline-axis directions. `START` resolves
 | `null` | `null` |
 
 Not token-bindable — structural property, not a design value.
+
+#### Default
+
+`"START"`
 
 #### Supported on
 

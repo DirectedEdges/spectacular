@@ -1,6 +1,7 @@
 ---
 title: "primaryAxisSizingMode"
 description: "Main-axis sizing mode for an auto-layout container"
+tableOfContents: false
 ---
 
 Main-axis sizing mode.
@@ -11,6 +12,10 @@ Main-axis sizing mode.
 |---|---|
 | `string` | `"FIXED"`, `"AUTO"` |
 | [`TokenReference`](/schema/token-reference/) | `$token: ...`<br>`$type: string` |
+
+#### Default
+
+`"AUTO"`
 
 #### Supported on
 

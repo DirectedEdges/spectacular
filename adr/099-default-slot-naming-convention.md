@@ -378,21 +378,76 @@ instance **directly** as an ordinary `Element`, referenced through plain
 `children: string[]` in the composing element's own `children` array — an
 instance element whose `instanceOf` names the next component in the chain,
 placed as a normal child, with no `PropBinding`/`SlotContentRef` hop required
-for that nesting:
+for that nesting.
+
+The consolidation this buys is clearest in `layout`, not in `elements`. A layout
+component's whole job is to hold one stream of children, so a composition built from four
+of them nests four times before reaching anything a reader came to see — and today each of
+those four levels is its own `anatomy + elements + layout` triplet, stored as a separate
+`slotContent` entry and reached by a `$slotContent` pointer:
 
 ```yaml
-# Before — explicit binding at every layout level
-elements:
-  dePageRow:
-    propConfigurations:
-      children: { $binding: "#/props/children" }
-    children:
-      - deSection   # deSection itself repeats this pattern down to deCard
+# Before — one slotContent entry per layout level, each a separate triplet
+layout:
+  - dePage:
+      - dePageRow            # what fills its children slot is not in this tree
 
-# After — flattened: deSection nested as a plain child of dePageRow,
-# because dePageRow's children slot matches slots.default.match
 elements:
   dePageRow:
+    instanceOf: dePageRow
+    propConfigurations:
+      children: { $slotContent: "#/compositions/dePage/slotContent/row" }
+
+slotContent:
+  row:                       # triplet 2 of 4
+    layout:
+      - deSection
+    elements:
+      deSection:
+        instanceOf: deSection
+        propConfigurations:
+          children: { $slotContent: "#/compositions/dePage/slotContent/section" }
+  section:                   # triplet 3 of 4
+    layout:
+      - deBlock
+    elements:
+      deBlock:
+        instanceOf: deBlock
+        propConfigurations:
+          children: { $slotContent: "#/compositions/dePage/slotContent/block" }
+  block:                     # triplet 4 of 4 — the cards, finally
+    layout:
+      - deContainer:
+          - deCard1
+          - deCard2
+          - deCard3
+```
+
+Four layout levels produce four triplets and three pointer hops, and the three cards — the
+only content in the composition — are in the last one. No `layout` tree in that document
+shows more than one level of the hierarchy, so the nesting a designer sees in the frame is
+reconstructable only by following pointers. Every hop exists because the binding mechanism
+required one, not because a reader or a renderer needed a decision at that level.
+
+Flattened, the same composition is one `layout` tree, in one triplet, with no
+`slotContent` entries at all:
+
+```yaml
+# After — one tree. Each layout level is an ordinary parent, because every
+# one of their children slots matches slots.default.match
+layout:
+  - dePage:
+      - dePageRow:
+          - deSection:
+              - deBlock:
+                  - deContainer:
+                      - deCard1
+                      - deCard2
+                      - deCard3
+
+elements:
+  dePageRow:
+    instanceOf: dePageRow
     children: [deSection]
   deSection:
     instanceOf: deSection
@@ -410,6 +465,13 @@ elements:
   deCard3:
     instanceOf: deCard
 ```
+
+The hierarchy is unchanged — `deCard1` is still four layout levels below `dePage`. What
+collapses is the *representation*: one `elements` record and one `layout` tree instead of
+four of each, and a reader scans the nesting in one place rather than opening a document
+per level. This is the shape a generated composition's `layout` already takes for its own
+containers (`root → layout → section1 → block1 → …`); flattening makes a nested instance
+read the same way as a nested container, which is how a designer sees the frame.
 
 This is **verified against the current type system, not a new capability it
 grants**: `Elements = Record<string, Element>`, and `Element.children` as a

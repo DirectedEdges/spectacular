@@ -5,13 +5,13 @@ description: "Inject your team's token shapes into fetched Figma data so generat
 
 ## The Problem
 
-Specs generates token references in a fixed shape — `{ $token, $type }` or one of the other [built-in profiles](/settings/tokens/). But many teams already have a token system with its own naming conventions and output shapes: Style Dictionary aliases, JSON schema references, platform-specific formats, or custom structures built for their toolchain.
+Spectacular generates token references in a fixed shape — `{ $token, $type }` or one of the other [built-in profiles](/settings/tokens/). But many teams already have a token system with its own naming conventions and output shapes: Style Dictionary aliases, JSON schema references, platform-specific formats, or custom structures built for their toolchain.
 
-You can't make Specs guess your format. You need a way to say: _"For this Figma variable, output **this exact object** instead."_
+You can't make Spectacular guess your format. You need a way to say: _"For this Figma variable, output **this exact object** instead."_
 
 ## The Solution
 
-`applyCustomTokens` lets you inject a `$custom` object onto each variable and style in your fetched data files. When you set `spec.tokens: CUSTOM` in `config/settings.yaml`, Specs uses those objects **verbatim** as the token reference value in generated output — no transformation, no reformatting. Your object becomes the property value.
+`applyCustomTokens` lets you inject a `$custom` object onto each variable and style in your fetched data files. When you set `spec.tokens: CUSTOM` in `config/settings.yaml`, Spectacular uses those objects **verbatim** as the token reference value in generated output — no transformation, no reformatting. Your object becomes the property value.
 
 ### Where It Fits in the Pipeline
 
@@ -80,7 +80,7 @@ The mapping file is a JSON file you create and maintain. Each key is a Figma ID 
 }
 ```
 
-The `$custom` value can be **any JSON object** — Specs doesn't validate its contents beyond requiring it to be a non-null object. Your downstream consumers define the shape.
+The `$custom` value can be **any JSON object** — Spectacular does not validate its contents beyond requiring it to be a non-null object. Your downstream consumers define the shape.
 
 > **Where do the Figma IDs come from?** Inspect your fetched `*.variables.json` or `*.styles.json` files — the IDs are the keys in the `meta.variables` and `meta.styles` objects.
 

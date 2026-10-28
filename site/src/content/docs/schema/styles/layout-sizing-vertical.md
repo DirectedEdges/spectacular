@@ -1,6 +1,7 @@
 ---
 title: "layoutSizingVertical"
 description: "Vertical sizing mode within an auto-layout parent"
+tableOfContents: false
 ---
 
 Vertical sizing mode.
@@ -11,6 +12,10 @@ Vertical sizing mode.
 |---|---|
 | `string` | `"FIXED"`, `"HUG"`, `"FILL"` |
 | [`TokenReference`](/schema/token-reference/) | `$token: ...`<br>`$type: string` |
+
+#### Default
+
+`"FIXED"`
 
 #### Supported on
 

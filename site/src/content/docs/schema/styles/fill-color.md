@@ -1,6 +1,7 @@
 ---
 title: "fillColor"
 description: "Fill color for glyph, vector, and line elements"
+tableOfContents: false
 ---
 
 Glyph/vector fill color, read from Figma's `fills` ([ADR 013](https://github.com/DirectedEdges/specs/blob/main/adr/013-icon-fillColor.md) explains why the name diverges).
@@ -14,6 +15,10 @@ Glyph/vector fill color, read from Figma's `fills` ([ADR 013](https://github.com
 | [`TokenReference`](/schema/token-reference/) | `$token: DS.Color.Surface.Muted`<br>`$type: color` | [`config.format.token`](/settings/tokens/) |
 | [`GradientValue`](/schema/gradient-value/) | `type: LINEAR`<br>`angle: 180`<br>`stops: [...]` | — |
 | `null` | `null` | — |
+
+#### Default
+
+`null`
 
 #### Supported on
 

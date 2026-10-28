@@ -26,7 +26,7 @@ export class PayloadTooLargeError extends Error {
 
   constructor(file: string, bytes: number) {
     const remedies = [
-      `Re-fetch without geometry data: specs fetch --no-geometry (roughly halves the payload)`,
+      `Re-fetch without geometry data: specs fetch --no-geometry (around a third smaller)`,
       `Remove or split pages in Figma that this workspace does not need`,
     ];
     super(

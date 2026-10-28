@@ -1,0 +1,251 @@
+---
+title: "Overview"
+description: "How the parts of the Spectacular schema relate — components and compositions, the files a spec is written as, variants and styles, slots, content, references, conventions, and the reports derived from them"
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+`specs-schema` organizes **[components](/schema/component/)** and **[compositions](/schema/composition/)** specs. Each spec is written as two or three files: `api`, `variants` and `examples` into a [`components/<component name>/`](/schema/component/) or [`composition/<composition name>/`](/schema/composition/) directory, respectively. Other generated files like `styling` are stored alongside but are not part of the formal spec.
+
+<Tabs>
+<TabItem label="Component">
+## Component
+A component describes the instances wherever needed, including nested as an element inside another component, composed into another component's slot, or arranged inside a composition. When a component is only allowed to be nested inside one specific parent, it's a [subcomponent](/schema/subcomponents/) shipped with the parent rather than independently resuable.
+
+| File | Holds | Command | Contract |
+|---|---|---|---|
+| [`api.yaml`](/schema/documents/component-api) | [`anatomy`](/schema/anatomy/), [`props`](/schema/props/), `invalidPropCombinations` | [`generate`](/cli/generate/) | [`ComponentApiDocument`](/schema/documents/component-api/) |
+| [`variants.yaml`](/schema/documents/component-variants) | [`layout`](/schema/layout/), [`styles`](/schema/styles/), [`content`](/schema/content/) | [`generate`](/cli/generate/) | [`ComponentVariantsDocument`](/schema/documents/component-variants/) |
+| [`examples.yaml`](/schema/documents/component-examples) | [`instances`](/schema/instances/), [`slot content examples`](/schema/slot-content-examples/) | [`generate`](/cli/generate/) | [`ComponentExamplesDocument`](/schema/documents/component-examples/) |
+| `styling.yaml` | Component specific styling report | [`analyze`](/cli/analyze/) | — |
+| `analysis/` files | Catalogue-wide summaries derived from the specs above | [`analyze`](/cli/analyze/) | — |
+
+### [`api`](/schema/documents/component-api) file
+
+[`api`](/schema/documents/component-api) holds the [anatomy](/schema/anatomy/), [props](/schema/props/), and the prop combinations that are invalid
+
+```yaml
+anatomy:
+  root:
+    type: container
+  <element name>:
+    type: # text, glyph, container, nested instance, ...
+    instanceOf: # reference to another component
+props:
+  <prop name>:
+    type: # boolean, string, slot, ...
+    ...
+invalidPropCombinations:
+  ...
+```
+
+### [`variants`](/schema/documents/component-variants) file
+
+[`variants`](/schema/documents/component-variants) holds the default and varying [`layout`](/schema/layout/) structures, [`styles`](/schema/styles/) and [`content`](/schema/content/).
+
+```yaml
+default:
+  layout: # nested layout array structure
+    - root: # top node is always `root`
+      - <element name>:
+        - <element name>
+      ...
+  elements:
+    <element name>: # every element gets an entry
+      styles:
+        width:
+        layoutSizingHorizontal:
+        backgroundColor:
+        ... # style properties vary by element type
+      content: # literal or $binding to a prop
+      children: # reference to a slot property
+      propConfigurations: # for nested instances
+variants: # zero or more layer, just like css
+  - configurations:
+      ... # key/value pairs, like disabled:true
+    layout:
+      ... # same schema as default, of a complete different tree
+    elements:
+      ... # same schema as default, for impacted elements only
+```
+
+Variants are [`layered`](/guides/variant-layering/) like CSS. The default variant is the complete baseline: every element fully described, with styles, content and layout. Every entry in `variants` layers a change based on a [`configuration`](/schema/prop-configurations/) of prop(s) that activate the layout, styles and/or content changes because of it. A component's resolved state is all layered variants merged in order onto the default.
+
+### [`examples`](/schema/documents/component-examples) file
+
+[`examples`](/schema/documents/component-examples) holds ready-made instances as well as examples of the component's slot(s) (which are actually compositions themselves)
+
+```yaml
+slotContentExamples: # fills of referenced slots in examples and defaults
+  <fill name>:
+    anatomy:
+      root:
+        type: container
+    elements:
+      root:
+        content: # literal or $binding to a prop
+    layout:
+      - root: []
+instanceExamples: # ready-made instances of the component
+  <example name>:
+    componentId: # this component's own id — a ready-made instance of itself
+    propConfigurations:
+      ...
+images:
+  <image key>:
+    ...
+```
+
+**Slots cross all three files.** A slot prop is declared in [`api.yaml`](/schema/documents/component-api), example content lives in [`examples.yaml`](/schema/documents/component-examples), and bindings fill it in [`variants.yaml`](/schema/documents/component-variants).
+
+</TabItem>
+<TabItem label="Composition">
+## Composition
+
+A composition is a page type, template, pattern, or other scaffold arranging component instances into a fixed structure. It has no `props` and isn't reusable, since no other component or composition references it.
+
+| File | Holds | Command | Contract |
+|---|---|---|---|
+| `api.yaml` | [`anatomy`](/schema/anatomy/), `title`, `description` | [`generate`](/cli/generate/) | [`CompositionApiDocument`](/schema/documents/composition-api/) |
+| `variants.yaml` | [`elements`](/schema/elements/), [`layout`](/schema/layout/) | [`generate`](/cli/generate/) | [`CompositionVariantsDocument`](/schema/documents/composition-variants/) |
+| `examples.yaml` | `slotContent` fills | [`generate`](/cli/generate/) | [`CompositionExamplesDocument`](/schema/documents/composition-examples/) |
+
+### [`api`](/schema/documents/composition-api) file
+
+[`api.yaml`](/schema/documents/composition-api) holds the composition's [anatomy](/schema/anatomy/), plus the `title` and `description` a component's `api.yaml` has no field for.
+
+```yaml
+title: # optional, human-readable label
+description: # optional, purpose and usage notes
+anatomy:
+  root:
+    type: container
+  <element name>:
+    type: # text, glyph, container, nested instance, ...
+```
+
+### [`variants`](/schema/documents/composition-variants) file
+
+[`variants.yaml`](/schema/documents/composition-variants) holds `elements` and `layout` — the composition's one, unvarying appearance.
+
+```yaml
+elements:
+  <element name>: # every element gets an entry
+    styles:
+      width:
+      layoutSizingHorizontal:
+      backgroundColor:
+      ... # style properties vary by element type
+    content: # literal or $binding to a prop
+    children: # reference to a slot property
+    propConfigurations: # for nested instances
+layout: # nested layout array structure
+  - root: # top node is always `root`
+    - <element name>:
+      - <element name>
+    ...
+```
+
+A composition does not vary by prop configuration — it has no props — so there is no `default`/`variants` split here the way a component has one. `elements` and `layout` are the whole of it.
+
+### [`examples.yaml`](/schema/documents/composition-examples) file
+
+[`examples.yaml`](/schema/documents/composition-examples) holds the composition's named `slotContent` fills — content bundled alongside the primary content, each one its own `anatomy`+`elements`+`layout` triplet.
+
+```yaml
+slotContent:
+  <fill name>:
+    anatomy:
+      root:
+        type: container
+    elements:
+      root:
+        content: # literal or $binding to a prop
+    layout:
+      - root: []
+images:
+  <image key>:
+    ...
+```
+
+**Following a slot content fill crosses two files, not three.** A composition has no prop to declare a slot. Named fills live in [`examples.yaml`](/schema/documents/composition-examples) and bindings in [`variants.yaml`](/schema/documents/composition-variants) — pointing at `#/compositions/<name>/slotContent/<fill>` rather than a component's `#/components/<name>/slotContentExamples/<fill>`.
+
+</TabItem>
+</Tabs>
+
+## `styles` and content
+
+Styles and content work the same way for an element in either kind — [`Elements`](/schema/elements/) is the same type whether it belongs to a component's `default`/`variants` or a composition's flat `elements`.
+
+[Styles](/schema/styles/) are organized per [element](/schema/elements/) and take different shapes:
+
+- **Flat and wide** — dozens like [`width`](/schema/styles/width/), [`layoutSizingHorizontal`](/schema/styles/layout-sizing-horizontal/), [`textColor`](/schema/styles/text-color/) and [`backgroundColor`](/schema/styles/background-color/).
+- **Deep** — [`typography`](/schema/typography/) gathers the text properties under one node that corresponds to a text style, while [`effects`](/schema/effects/) and [`GradientValue`](/schema/gradient-value/) also have deep, sophisticated shapes.
+- **Side- and corner-shaped** — [`padding`](/schema/styles/padding/) and [`strokeWeight`](/schema/styles/stroke-weight/) as [`Sides`](/schema/sides/); [`cornerRadius`](/schema/styles/corner-radius/) is [`Corners`](/schema/corners/) that can be single value or several addressable parts (like `{ start:, end:, top:, bottom: }`).
+
+Style values can be a literal, a [`TokenReference`](/schema/token-reference/), a [`PropBinding`](/schema/prop-binding/), or a [`Conditional`](/schema/conditional/). A composite token can be bound to [`typography`](/schema/typography/) and [`effects`](/schema/effects/) (Figma's text and effect styles, respectively).
+
+Content surfaces directly through primitives as well as nested components that wrap primitives in an API. Content is mostly two things: [text](/schema/anatomy/#elementtype) strings and [glyph](/schema/anatomy/#elementtype) by name, reaching an element through [`content`](/schema/elements/) as a literal or a [`$binding`](/schema/prop-binding/) to a prop. Image content flows through as both [`backgroundImage`](/schema/styles/background-image/) properties on elements and source properties on components. References to image files are declared in [`examples.yaml`](/schema/documents/component-examples).
+
+All three content types — and the containers that scaffold layout — are frequently offered as components themselves too. An `Icon` component that wraps a glyph element (the simple vector) with props for size and color; a text primitive element or a `Text` component with props for style, size and color.
+
+## Layout
+
+[`layout`](/schema/layout/) is a tree, and there is one per component, per composition, and per instance.
+
+## Slots
+
+A slot is a prop a component exposes for content it does not define and is filled in one of either a:
+
+- **[Default slot](/guides/default-slot-content/)** — often nested as [children](/schema/children/). Since many slots are default slots, their fills merge into **consolidated layout trees** of a composition merged into place.
+- **Named slot** — bound explicitly through a [`SlotContentRef`](/schema/slot-content-ref/) into the host component's slot. 
+
+Slot references are recorded as `slotContentExamples` for a component or "actual" `slotContent` of a composition.
+
+## References
+
+A spec points at things rather than repeating them, with five references. Each is stored as a value in one file and resolved somewhere else — so these are the paths to follow when reading a catalogue. `<property>` in the Found in column is most often `children`, `content`, `visible` or `value`.
+
+| Reference | Found in | Value |
+|---|---|---|
+| `instanceOf` | `api.yaml` at `anatomy.<element>.instanceOf` | A component key, as a plain string |
+| [`$ref`](/schema/subcomponents/) | `api.yaml` and `variants.yaml` at `anatomy.<element>.instanceOf` | `"#/subcomponents/<name>"` |
+| [`$binding`](/schema/prop-binding/) | `variants.yaml` at `default.elements.<element>.<property>`, and the same path under each entry of `variants` | `"#/props/<prop>"` |
+| [`$slotContent`](/schema/slot-content-ref/) | `variants.yaml` at `...elements.<element>.examples` | `"#/components/<component>/slotContentExamples/<name>"` |
+| [`$slotContent`](/schema/slot-content-ref/) | `examples.yaml` at `instanceExamples.<name>.propConfigurations.<slotProp>` | `"#/components/<component>/slotContentExamples/<name>"` |
+| [`$token`](/schema/token-reference/) | `...elements.<element>.styles.<property>` | A token name, alongside a `$type` |
+
+## Conventions
+
+[Conventions](/schema/conventions/) change the *shape* of the spec, not its formatting — the same Figma file produces different specs under different conventions. For a schema reader, the question each convention answers is which part of the spec looks different, not what a convention is in general (see [Settings](/schema/settings/) for that distinction):
+
+| Convention | What it changes |
+|---|---|
+| [`glyphs`](/settings/glyphs/) | whether a component is typed `glyph` with a resolved name, or an ordinary element |
+| [`subcomponents`](/settings/subcomponents/) | whether one component becomes a parent with nested subcomponents, or stays flat |
+| [`codeOnlyProps`](/settings/code-only-props-pattern/) | whether a prop reaches the spec at all |
+| [`naming`](/settings/figma-keys/) | whether a key can be reversed back to its original layer name |
+| [`states`](/settings/states/) | whether a variant prop emits a CSS pseudo-class or a `data-*` attribute |
+
+`DEFAULT_CONVENTIONS` is an empty object, and that is deliberate: a default can supply a missing *member* of a declared convention, but never a convention block — their absence is a statement about the library, and inventing one would fabricate a fact nobody declared. The full per-platform treatment is at [Conventions](/schema/conventions/).
+
+## Package Exports
+
+The package exports TypeScript types for every node in the schema, plus two runtime values:
+
+```ts
+import type { Component } from '@directededges/specs-schema';
+import { DEFAULT_SETTINGS, DEFAULT_PIPELINE } from '@directededges/specs-schema';
+```
+
+`DEFAULT_SETTINGS` and `DEFAULT_PIPELINE` are the only runtime exports. All other exports are type-only. There is no defaults export for [Conventions](/schema/conventions/): a convention's absence means the library declares no such convention, and nothing can supply that.
+
+## Analysis reports
+
+The schema affords analysis because it's a declared graph, not loose prose — typed props, styled elements, and `instanceOf`/`$binding`/`$token` references that resolve the same way everywhere. [`specs analyze`](/cli/analyze/) walks that graph catalogue-wide and writes the result into `analysis/`, answering questions no single spec can, such as which components share a prop (`props.yaml`) or a change's blast radius before it's made (`dependencies.graph.yaml`). The full report list and what each one summarizes is at [Analyze](/cli/analyze/).
+
+## See Also
+
+- [Component](/schema/component/) and [Composition](/schema/composition/) — the two spec kinds
+- [Conventions](/schema/conventions/) and [Settings](/schema/settings/) — the declarations that shape a run
+- The guides — how to express a particular thing correctly in data, a page per topic: [variant layering](/guides/variant-layering/), [slot constraints](/guides/slot-constraints/), [consolidating props](/guides/consolidating-props/), [data layout](/guides/data-layout/), [render to Figma](/guides/render-to-figma/), and more

@@ -1,20 +1,27 @@
 ---
-title: "Keys"
+title: "keys"
 description: "Transform property and element key names to a consistent naming convention"
 ---
 
-Key name transformation strategy. A run choice in `config/settings.yaml` — any value produces a correct spec, just with differently formatted keys.
+Key name transformation strategy. Any value produces a correct spec, just with differently formatted keys.
+
+| | |
+|---|---|
+| **File** | `config/settings.yaml` |
+| **Path** | `spec.keys` |
+| **Type** | enum |
+| **Default** | `CAMEL` |
 
 ## Options
 
-- **Default**: `SAFE`
-- **Values**:
-  - `SAFE` - Preserve structure without corrupting special characters
-  - `CAMEL` - camelCase
-  - `SNAKE` - snake_case
-  - `KEBAB` - kebab-case
-  - `PASCAL` - PascalCase
-  - `TRAIN` - Train-Case
+| Value | Description |
+|---|---|
+| `CAMEL` | camelCase. Default — the casing every code consumer of a spec already uses |
+| `SAFE` | Preserve structure without corrupting special characters, at the cost of keys code cannot address directly |
+| `SNAKE` | snake_case |
+| `KEBAB` | kebab-case |
+| `PASCAL` | PascalCase |
+| `TRAIN` | Train-Case |
 
 ### Comparison
 
@@ -29,20 +36,16 @@ Input: `Background color` or `background-color`
 | `PASCAL` | `BackgroundColor` |
 | `TRAIN` | `Background-Color` |
 
-## Path
-
-`spec.keys` in `config/settings.yaml`
-
-### Example
+## Example
 
 ```yaml
 spec:
-  keys: CAMEL  # Transform keys to camelCase
+  keys: SAFE  # Preserve Figma names instead
 ```
 
-Every value other than `SAFE` is a lossy projection of the Figma name. Names that cannot be reconstructed from the formatted key are preserved in `$extensions.com.figma.name` on the definition, so the spec stays reversible into Figma.
+## Transformation losses
 
-## What the transformation can break
+Every value other than `SAFE` is a lossy projection of the Figma name — including the default, `CAMEL`. Names that cannot be reconstructed from the formatted key are preserved in `$extensions.com.figma.name` on the definition, so the spec stays reversible into Figma.
 
 The projection is lossy in one way that bites downstream: **a word boundary
 before a digit does not survive `CAMEL`**. `Brightness 1` becomes
@@ -65,7 +68,7 @@ The exact value is also enforced: an unrecognized value (including a
 case variant like `camel`) is not silently corrected. The run warns, names the
 valid values, and uses the default.
 
-## See Also
+## Further reading
 
-- [Figma Keys](/settings/figma-keys/) - The convention your Figma file uses, and the target keys reverse into
-- [Key Formatting guide](/guides/key-formatting/) - Detailed formatting behavior and edge cases
+- [Figma Keys](/settings/figma-keys/) for the convention your Figma file uses, and the target keys reverse into.
+- [Key Formatting guide](/guides/key-formatting/) for detailed formatting behavior and edge cases.

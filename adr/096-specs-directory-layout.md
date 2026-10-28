@@ -162,6 +162,21 @@ and the same under `webcomponents/`. A transformer's `outputTree` declaration is
 unchanged; what changes is that the segment between `src` and the component directory is
 now derived from the spec's kind rather than hardcoded to `components`.
 
+### Folder naming is one derivation, not two
+
+The kind directory is the only thing this ADR adds to a path. How the folder *inside* it
+is named is unchanged, and it is the same for both kinds:
+
+| Tree | Folder name | Example |
+|---|---|---|
+| `specs/components/`, `specs/compositions/` | the camelCase spec key | `specs/compositions/checkoutSmall/` |
+| `react/src/components/`, `react/src/compositions/` | the PascalCase component name | `react/src/compositions/CheckoutSmall/` |
+
+Both lines already held for components, and a composition takes them verbatim — the
+authored hub is keyed, the emitted tree is named for the symbol a consumer imports. A
+kind-specific casing rule would mean a reader has to know which kind a folder holds before
+they can predict its name, which is the cost this layout exists to remove.
+
 ### One resolver, and the end of path climbing
 
 A single module owns every fact in this ADR: where each kind lives, how a spec folder is

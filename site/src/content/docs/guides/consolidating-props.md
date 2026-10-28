@@ -1,9 +1,9 @@
 ---
 title: "Consolidating Props"
-description: "How Specs merges a boolean visibility toggle with its content prop into a single nullable prop"
+description: "How Spectacular merges a boolean visibility toggle with its content prop into a single nullable prop"
 ---
 
-Figma often requires two component properties to control what a single element does: one to show or hide it, and another to set its content. Specs detects this pattern and merges the two into one nullable prop in the spec output, producing a cleaner API that matches how developers think about components.
+Figma often requires two component properties to control what a single element does: one to show or hide it, and another to set its content. Spectacular detects this pattern and merges the two into one nullable prop in the spec output, producing a cleaner API that matches how developers think about components.
 
 ## The Problem
 
@@ -25,13 +25,13 @@ The same pattern appears with icons. An icon element needs:
 1. **Show Icon** (boolean) — toggles the instance layer's visibility
 2. **Icon** (instance swap) — selects which icon to display
 
-Developers think of this as one thing: an icon is either provided or it isn't. When the icon is an instance swap that matches a [glyph name pattern](/guides/glyph-name-pattern/), Specs classifies it as a `glyph` content type — but the two-prop problem remains the same.
+Developers think of this as one thing: an icon is either provided or it isn't. When the icon is an instance swap that matches a [glyph name pattern](/guides/glyph-name-pattern/), Spectacular classifies it as a `glyph` content type — but the two-prop problem remains the same.
 
-When these prop pairs aren't consolidated, consumers of the spec must manually understand which booleans correspond to which content props and how they interact — duplicating logic that Specs can infer automatically.
+When these prop pairs aren't consolidated, consumers of the spec must manually understand which booleans correspond to which content props and how they interact — duplicating logic that Spectacular can infer automatically.
 
 ## What It Does
 
-Specs scans every element in every variant looking for **binding pairs**: an element that has both a `visible` binding (to a boolean prop) and a content binding (to a text, instance swap, or slot prop) on the same element. When a consistent pair is found across all variants, Specs:
+Spectacular scans every element in every variant looking for **binding pairs**: an element that has both a `visible` binding (to a boolean prop) and a content binding (to a text, instance swap, or slot prop) on the same element. When a consistent pair is found across all variants, Spectacular:
 
 1. **Merges the two props into one** — the content prop becomes `nullable: true`, meaning it accepts its normal values *or* `null`
 2. **Sets the default** — if the boolean defaults to `false` (element hidden), the merged prop defaults to `null`

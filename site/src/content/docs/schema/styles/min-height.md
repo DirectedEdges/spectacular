@@ -1,6 +1,7 @@
 ---
 title: "minHeight"
 description: "Minimum height constraint for an element"
+tableOfContents: false
 ---
 
 Minimum height constraint.
@@ -11,6 +12,10 @@ Minimum height constraint.
 |---|---|
 | `number` | `24` |
 | [`TokenReference`](/schema/token-reference/) | `$token: DS.Size.400`<br>`$type: dimension` |
+
+#### Default
+
+`0`
 
 #### Supported on
 

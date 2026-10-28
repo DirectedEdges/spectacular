@@ -1,6 +1,7 @@
 ---
 title: "strokeDashPattern"
 description: "Dash geometry for a dashed stroke"
+tableOfContents: false
 ---
 
 Dash geometry for a dashed stroke. Presence signals a dashed stroke; null or absent signals solid.
@@ -13,6 +14,10 @@ Dash geometry for a dashed stroke. Presence signals a dashed stroke; null or abs
 | `null` | `null` (solid) |
 
 Not token-bindable — structural property, not a design value.
+
+#### Default
+
+`null`
 
 #### Supported on
 

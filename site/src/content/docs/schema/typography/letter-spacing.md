@@ -1,6 +1,7 @@
 ---
 title: "letterSpacing"
 description: "Letter spacing for a text node"
+tableOfContents: false
 ---
 
 Letter spacing in pixels. Part of [`Typography`](/schema/typography/).
@@ -11,6 +12,10 @@ Letter spacing in pixels. Part of [`Typography`](/schema/typography/).
 |---|---|
 | `number` | `0.5` |
 | [`TokenReference`](/schema/token-reference/) | `$token: DS.Font.Tracking.Wide`<br>`$type: dimension` |
+
+#### Default
+
+`0`
 
 #### Source
 

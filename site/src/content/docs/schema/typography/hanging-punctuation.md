@@ -1,6 +1,7 @@
 ---
 title: "hangingPunctuation"
 description: "Whether hanging punctuation is enabled for a text node"
+tableOfContents: false
 ---
 
 Whether hanging punctuation is enabled. Part of [`Typography`](/schema/typography/).
@@ -10,6 +11,10 @@ Whether hanging punctuation is enabled. Part of [`Typography`](/schema/typograph
 | Type | Example |
 |---|---|
 | `boolean` | `true` |
+
+#### Default
+
+`false`
 
 #### Source
 

@@ -1,6 +1,7 @@
 ---
 title: "crossAxisAlignment"
 description: "Cross-axis alignment for an auto-layout container"
+tableOfContents: false
 ---
 
 Alignment along the cross axis (perpendicular to `layoutMode`).
@@ -13,6 +14,10 @@ Alignment along the cross axis (perpendicular to `layoutMode`).
 | `null` | `null` |
 
 Not token-bindable — structural property, not a design value.
+
+#### Default
+
+`"START"`
 
 #### Supported on
 

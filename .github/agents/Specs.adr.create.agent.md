@@ -105,7 +105,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **Options Considered**: At least two options with pros/cons relative to the drivers
    - **Decision**: Precise list of type and schema changes (file, field, modification type)
    - **Type ↔ Schema Impact**: Confirm symmetry or document justified asymmetry
-   - **Downstream Impact**: All affected consumers (`specs-cli`, `specs-from-figma`, `specs-plugin-2`) — see Key rules below
+   - **Downstream Impact**: All affected consumers — see Key rules below for the full candidate list and how to evaluate it
    - **Semver Decision**: the **target version** read from the affected package's `package.json` on the active `release/next` branch — the branch name carries no version, by design — plus the **change class** (MAJOR / MINOR / PATCH) with justification citing the constitution. Never propose a version bump — an ADR ships *inside* a release that already has a version, so `0.30.0 → 0.31.0` invents a version the release process never asked for and conflicts with the branch it merges into.
    - **Consequences**: What becomes true after acceptance
 
@@ -125,7 +125,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 - **Examples over prose**: Wherever a type shape, schema property, or field change is described, include a YAML example showing the before/after or the new structure. Prefer this over sentences explaining the same idea in abstract terms.
 - **Bullets over enumeration**: Use bullet lists for Decision Drivers, Consequences, and any list of more than two items. Do not write "X, Y, and Z" as a sentence when a list would be clearer.
 - **Backticks for terms**: All type names, field names, file names, and schema property paths MUST be in backtick format (e.g., `Config`, `license`, `types/Config.ts`, `#/properties/license`).
-- **Types and schema only**: The ADR MUST describe only changes to `types/` and `schema/` within this package. Do NOT reference implementation classes, internal files, or processing logic from downstream packages (`specs-from-figma`, `specs-plugin-2`, `specs-cli`). Downstream impact is described in terms of the observable API surface — what types or schema keys change — not how those packages implement consumption.
+- **Types and schema only**: The ADR MUST describe only changes to `types/` and `schema/` within this package. Do NOT reference implementation classes, internal files, or processing logic from downstream packages (`specs-cli`, `specs-plugin-2`, or any `specs-transforms` package — see Key rules for the full list). Downstream impact is described in terms of the observable API surface — what types or schema keys change — not how those packages implement consumption.
 
 ## Key rules
 
@@ -133,6 +133,6 @@ You **MUST** consider the user input before proceeding (if not empty).
 - The Semver section states the release branch's version and the change class. It MUST NOT contain a bump arrow.
 - One decision per Options section. The **Decision** section only records what the option sets above already resolved — if a choice appears there for the first time, it needs its own Options section.
 - The ADR describes *what* will change and *why*. It does not contain type or schema file content — those changes are applied directly by `/specs.adr.implement`.
-- **Downstream Impact table**: Include rows for all consumers affected by the change: `specs-cli`, `specs-from-figma`, and `specs-plugin-2`. Describe impact and required action in general terms (e.g., "Update value mapping", "Recompile") — do not reference internal classes, methods, or implementation details of those packages.
+- **Downstream Impact table**: `specs-transforms` is a monorepo of several packages, not one — evaluate each as its own consumer rather than defaulting to whichever were historically listed here. The full candidate list: `specs-cli`; the `specs-transforms` packages `specs-from-figma`, `figma-from-specs`, `react-from-specs`, `webcomponents-from-specs`, and the shared `from-specs` core they build on; and `specs-plugin-2`. Not every ADR touches every consumer — mark a row `None` when it genuinely doesn't apply, but check each rather than assuming. Describe impact and required action in general terms (e.g., "Update value mapping", "Recompile") — do not reference internal classes, methods, or implementation details of those packages.
 - If the change clearly violates a constitution gate (e.g., adds runtime logic), state the violation explicitly in the ADR and halt rather than proceeding without justification.
 - Use absolute paths for all file operations.

@@ -16,6 +16,7 @@ import type { Workspace } from '../storybook/workspace.js';
 export const STEP_IDS = [
   'scan',
   'generate',
+  'analyze',
   'react',
   'webcomponents',
   'storybook',
@@ -78,6 +79,16 @@ export interface Step {
   label: string;
   /** False when the workspace has nothing for this step to do. */
   active(workspace: Workspace): boolean;
+  /**
+   * Why `active` is false, in a few words, for the startup line that names the
+   * steps this workspace does not have.
+   *
+   * An inactive step used to be dropped before anything could report it, so a
+   * chain missing half its steps read as a broken run rather than as a workspace
+   * that has not got there yet. Written as the condition, not the remedy —
+   * "nothing scaffolded", not "run storybook init".
+   */
+  inactiveBecause(workspace: Workspace): string;
   /** Paths that, when changed, mean this step should run. */
   inputs(workspace: Workspace): StepInput[];
   /**

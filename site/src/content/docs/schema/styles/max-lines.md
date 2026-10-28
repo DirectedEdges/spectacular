@@ -1,6 +1,7 @@
 ---
 title: "maxLines"
 description: "Line limit before text truncates with ellipsis"
+tableOfContents: false
 ---
 
 Maximum number of lines before `textOverflow: "ELLIPSIS"` applies.
@@ -12,6 +13,10 @@ Maximum number of lines before `textOverflow: "ELLIPSIS"` applies.
 | `number` | `3` |
 | [`TokenReference`](/schema/token-reference/) | `$token: ...`<br>`$type: number` |
 | `null` | `null` (no limit) |
+
+#### Default
+
+`null`
 
 #### Supported on
 

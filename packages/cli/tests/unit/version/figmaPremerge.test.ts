@@ -14,9 +14,9 @@ import {
   runFigmaPremerge,
   type PremergeSteps,
 } from '../../../src/version/figmaPremerge.js';
-import { buildPremergeDataset, loadManifest } from '../../../src/version/datasets.js';
-import { renderReport } from '../../../src/version/report.js';
-import { loadRules } from '../../../src/version/rules.js';
+import { buildPremergeDataset, loadManifest } from '../../../src/version/report/dataset.js';
+import { renderReport } from '../../../src/version/report/render.js';
+import { loadRules } from '../../../src/version/rules/grade.js';
 import { makeWorkspace, removeWorkspace, editYaml } from './helpers.js';
 
 const ruleSet = loadRules();

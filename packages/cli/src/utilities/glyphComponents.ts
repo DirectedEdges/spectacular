@@ -3,27 +3,34 @@
  *
  * Shared by `fetch` (which downloads an SVG per glyph) and the cache builder
  * (which records each glyph's node id and published key), so both read the
- * same names out of the same pattern.
+ * same names out of the same conventions.
  *
  * @packageDocumentation
  */
 
+import { glyphConventionName, type GlyphsConvention, type RawNodeLike } from './glyphConvention.js';
+
 /**
- * Walk the file document for COMPONENT nodes whose name matches the
- * glyphNamePattern ("DS Icon asset / {i}" — {i} captures the icon name).
- * Duplicate slugs keep the first occurrence and suffix later ones with the
- * node id so nothing is silently dropped.
+ * Walk the file document for components the `glyphs` convention identifies (ADR-103) —
+ * by name pattern (`match`, `{i}` captures the icon name) and/or by child structure
+ * (`structure`, named from the component name). A glyph cannot have properties, so a
+ * component set — property-bearing by construction — is never a glyph and is not
+ * descended into; a matched component's internals are not descended into either.
+ * Duplicate slugs keep the first occurrence and suffix later ones with the node id so
+ * nothing is silently dropped.
  */
-export function collectGlyphComponents(document: unknown, pattern: string): Array<{ id: string; name: string; slug: string }> {
-  const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\{i\\\}/g, '(.+)');
-  const regex = new RegExp(`^${escaped}$`);
+export function collectGlyphComponents(document: unknown, glyphs: GlyphsConvention | undefined): Array<{ id: string; name: string; slug: string }> {
   const found: Array<{ id: string; name: string; slug: string }> = [];
   const walk = (node: unknown): void => {
     if (!node || typeof node !== 'object') return;
-    const n = node as { id?: string; name?: string; type?: string; children?: unknown[] };
+    const n = node as RawNodeLike & { id?: string };
     if (n.type === 'COMPONENT' && typeof n.name === 'string' && typeof n.id === 'string') {
-      const match = n.name.match(regex);
-      if (match) found.push({ id: n.id, name: match[1] ?? n.name, slug: '' });
+      const glyphName = glyphConventionName(n.name, n, glyphs);
+      if (glyphName) found.push({ id: n.id, name: glyphName, slug: '' });
+      return; // a component's internals hold no further glyph components
+    }
+    if (n.type === 'COMPONENT_SET') {
+      return; // a glyph cannot have properties; a set's variants are not independent glyphs
     }
     for (const child of n.children ?? []) walk(child);
   };

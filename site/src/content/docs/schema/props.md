@@ -7,7 +7,7 @@ Props define the configurable inputs of a component. Each prop has a type, a def
 
 ```ts
 type Props = Record<string, AnyProp>;
-type AnyProp = BooleanProp | StringProp | EnumProp | NumberProp | SlotProp | ImageProp;
+type AnyProp = BooleanProp | StringProp | EnumProp | NumberProp | SlotProp | ImageProp | ObjectProp;
 ```
 
 ## Prop Kinds
@@ -141,6 +141,35 @@ props:
       - $image: "#/components/dsImage/images/dsImage__image"
 ```
 
+### ObjectProp
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `type` | `'object'` | Yes | |
+| `members` | `Record<string, ObjectPropMember>` | Yes | Named members, each a scalar prop definition. At least one member |
+| `$extensions` | `PropExtensions` | No | Vendor extensions |
+
+A prop whose value is an object of named, individually typed members (since 0.39.0, ADR-111). `ObjectPropMember` is `BooleanProp | StringProp | EnumProp | NumberProp` — members are one level deep: no slots, images, or nested objects. Member names carry no schema semantics (a breakpoint vocabulary is the library's choice), must not begin with `$`, and must not contain the declared separator.
+
+There is no top-level `default` or `nullable`: defaults live per member, and the object's value always exists as the composition of its members' states.
+
+```yaml
+props:
+  margin:
+    type: object
+    members:
+      compact:
+        type: string
+        default: none
+        enum: [none, small, large]
+      expanded:
+        type: string
+        default: none
+        enum: [none, small, large]
+```
+
+Figma authors members as separator-delimited flat property names (`margin.compact`, `margin.expanded`), folded into one `ObjectProp` when [`conventions.platforms.figma.objectProps`](/schema/conventions/#platform-members) is declared. Each member's `$extensions['com.figma'].name` records the flat source name, so unfolding back to Figma is reversal, not re-derivation. Configurations set an object prop with a member-keyed value — see [Prop Configurations](/schema/prop-configurations/).
+
 ## Nullability
 
 `nullable` is optional on every prop kind that carries it. Its absence is meaningful, and what it means depends on whether the prop's value set is open or closed:
@@ -197,3 +226,4 @@ The `$extensions` object holds vendor-specific metadata. Currently only the `com
 - [ADR 063 — Image Content](https://github.com/DirectedEdges/specs/blob/main/adr/063-image-content.md) — adds the `ImageProp` type and image fills/registry
 - [ADR 088 — Authoring-default images on `ImageProp`](https://github.com/DirectedEdges/specs/blob/main/adr/088-image-prop-examples.md) — adds `ImageProp.examples`
 - [ADR 066 — Lossless Key Formatting](https://github.com/DirectedEdges/specs/blob/main/adr/066-lossless-key-formatting.md) — adds `name` to `FigmaPropExtension` so lossy key formats stay reversible
+- [ADR 111 — Object-Typed Props](https://github.com/DirectedEdges/specs/blob/main/adr/111-object-props.md) — adds `ObjectProp` with named scalar members, folded from separator-named Figma properties

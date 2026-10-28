@@ -1,9 +1,9 @@
 ---
-title: "Specs 2 Figma Plugin"
+title: "Spectacular Figma Plugin"
 description: "Generate a complete, visual component specification directly on the Figma canvas — no CLI, no setup, no leaving the file."
 template: splash
 hero:
-  title: Specs 2 Figma Plugin
+  title: Spectacular Figma Plugin
   tagline: Select a component. Click Generate. Get a complete, structured specification — anatomy, props, layout, modes, styling, and raw data — drawn directly in Figma.
   actions:
     - text: Open in Figma
@@ -34,7 +34,7 @@ import homeHero from '../../../assets/plugin/HomeHero.png';
 import pluginDataCopy from '../../../assets/plugin/PluginDataCopy.png';
 import pluginSettings from '../../../assets/plugin/PluginSettings.png';
 
-<Figure src={homeHero} alt="The Specs plugin in Figma, showing the Components and Ready-made examples panels alongside a generated DE Alert spec with Anatomy and Props sections" maxWidth="none" />
+<Figure src={homeHero} alt="The Spectacular plugin in Figma, showing the Components and Ready-made examples panels alongside a generated DE Alert spec with Anatomy and Props sections" maxWidth="none" />
 
 ## One click, six sections
 
@@ -68,13 +68,13 @@ Reshape the spec styling — not just what it contains, but how it looks
 
 Set specs to match how you name and model components and systems in Figma
 
-<Figure src={pluginSettings} alt="The Specs plugin's Data settings, showing Elements options like Icon glyphs and Subcomponents with their asset naming patterns and search scope, alongside a DE Alert component's artwork" maxWidth="none" />
+<Figure src={pluginSettings} alt="The Spectacular plugin's Data settings, showing Elements options like Icon glyphs and Subcomponents with their asset naming patterns and search scope, alongside a DE Alert component's artwork" maxWidth="none" />
 
 Settings go beyond how elements are detected — they cover every stage, from what counts as a match to how the resulting data itself is formatted.
 
 - **Format**: [Tokens](/settings/tokens/), [color values](/settings/color/), [data format](/settings/output-format/), [key values](/settings/keys/)
 - **Variants**: [variant depth](/settings/variant-depth/), [empty variants](/settings/empty-variants/), [invalid variants](/settings/invalid-variants/), [invalid combinations](/settings/invalid-combinations/)
-- **Elements**: [icon glyphs](/settings/glyph-name-pattern/), [subcomponents](/settings/subcomponents/), [collapsed wrappers](/settings/collapse-primitive-wrapper/), [default slot content](/settings/default-slot-content/), [instance examples](/settings/instance-examples/)
+- **Elements**: [icon glyphs](/settings/glyphs/), [subcomponents](/settings/subcomponents/), [collapsed wrappers](/settings/collapse-primitive-wrapper/), [default slot content](/settings/default-slot-content/), [instance examples](/settings/instance-examples/)
 - **Props**: [code-only props](/settings/code-only-props-pattern/), [slot constraints](/settings/slot-constraints/), [inferred number props](/settings/infer-number-props/)
 - **Layout**: [layout representation](/settings/layout/)
 
@@ -82,12 +82,12 @@ Settings go beyond how elements are detected — they cover every stage, from wh
 
 Copy specs into LLMs chats as components change
 
-<Figure src={pluginDataCopy} alt="The Specs plugin's Data tab open for a DE Badge component, showing the Copy button next to the generated YAML, with the component's Figma artwork and generated Data spec visible behind it" maxWidth="none" />
+<Figure src={pluginDataCopy} alt="The Spectacular plugin's Data tab open for a DE Badge component, showing the Copy button next to the generated YAML, with the component's Figma artwork and generated Data spec visible behind it" maxWidth="none" />
 
 {/*
 ## Automate specs at scale
 
 Generate and regenerate deterministic specs for an entire library in seconds
 
-This is the fast path for one component at a time. For bulk generation, CI pipelines, or feeding many specs to an agent at once, the Specs CLI produces the exact same schema — just at scale.
+This is the fast path for one component at a time. For bulk generation, CI pipelines, or feeding many specs to an agent at once, the Spectacular CLI produces the exact same schema — just at scale.
 */}

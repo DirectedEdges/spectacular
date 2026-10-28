@@ -1,6 +1,7 @@
 ---
 title: "layoutSizingHorizontal"
 description: "Horizontal sizing mode within an auto-layout parent"
+tableOfContents: false
 ---
 
 Horizontal sizing mode.
@@ -11,6 +12,10 @@ Horizontal sizing mode.
 |---|---|
 | `string` | `"FIXED"`, `"HUG"`, `"FILL"` |
 | [`TokenReference`](/schema/token-reference/) | `$token: ...`<br>`$type: string` |
+
+#### Default
+
+`"FIXED"`
 
 #### Supported on
 

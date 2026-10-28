@@ -11,7 +11,7 @@ An `InstanceExample` is a pre-configured usage of a *whole* component — a docu
 ```ts
 type InstanceExample = {
   title?: string;
-  propConfigurations?: Record<string, string | number | boolean | null | SlotContentRef>;
+  propConfigurations?: Record<string, string | number | boolean | null | SlotContentRef | ObjectPropValue>;
 };
 
 type InstanceExamples = Record<string, InstanceExample>;
@@ -22,7 +22,7 @@ type InstanceExamples = Record<string, InstanceExample>;
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | `title` | `string` | No | Human-readable label for this example |
-| `propConfigurations` | `Record<string, string \| number \| boolean \| null \| `[`SlotContentRef`](/schema/slot-content-ref/)`>` | No | Prop values — scalars for scalar props, a `SlotContentRef` for slot props, `null` for a prop this example leaves unset |
+| `propConfigurations` | `Record<string, string \| number \| boolean \| null \| `[`SlotContentRef`](/schema/slot-content-ref/)` \| ObjectPropValue>` | No | Prop values — scalars for scalar props, a `SlotContentRef` for slot props, a member-keyed [`ObjectPropValue`](/schema/prop-configurations/) for object props (since 0.39.0), `null` for a prop this example leaves unset |
 
 A [`PropBinding`](/schema/prop-binding/) is **not** permitted in `propConfigurations` — an instance example is a static configuration, not a binding.
 

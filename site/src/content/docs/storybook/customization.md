@@ -83,14 +83,40 @@ Everything `init` wrote — the Storybook config, the theme, the port in
 `init` refuses so it cannot clobber your edits; `init --force` rewrites the
 host files deliberately, and still never touches `content-overrides/`.
 
+The port is the exception worth knowing, because `package.json` is one of the
+files `--force` rewrites. Declare it under the `host` concern below and it
+survives the rewrite; otherwise `--force` keeps whatever port the scaffold is
+already serving.
+
 When a CLI upgrade ships newer host files, the next `specs storybook` run tells
 you — the host is stamped at `init`, and a stale stamp prints the one command
 that upgrades it. Nothing upgrades silently.
 
-## Declaring presentation: `config/conventions/storybook.yaml`
+## Declaring conventions: `config/conventions/storybook.yaml`
 
 Choices that are taste rather than library data, declared under the concern
-they belong to. For colour:
+they belong to.
+
+### `host` — where this workspace serves
+
+```yaml
+host:
+  port: 6101
+```
+
+One port per workspace, so each has a localhost you can remember and bookmark.
+Every command that needs the address reads it: `init` writes it into the
+generated npm script, `dev` and [`specs run`](/cli/commands/run/) serve on it,
+and [`specs testing visual shoot`](/cli/commands/testing/) points the browser
+at it. A `--port` flag still wins for a single run.
+
+If you add the declaration to a workspace that is already scaffolded, `dev`
+says so and names the command that moves the host onto it — the running server
+listens on whatever the npm script says, not on what you just declared.
+
+### `color` and `modes` — what the pages show
+
+For colour:
 
 ```yaml
 color:

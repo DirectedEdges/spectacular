@@ -24,13 +24,45 @@ command reads it, and a single-file `{alias}.file.json` from an earlier CLI
 keeps working everywhere until your next fetch replaces it. Only scripts of your
 own that open `{alias}.file.json` directly need to read the directory instead.
 
+## Stages and timing
+
+A fetch is two stages, and on a large library the first one dominates. Figma
+builds the whole file payload before sending any of it, and repeats that work
+only when the file changed since your last fetch.
+
+| Stage | What is happening | A 700MB library |
+|---|---|---|
+| Preparing | Figma serializes the file. Nothing is transferring and the connection sits idle | ~100 seconds after an edit, under a second without one |
+| Downloading | The payload transfers and splits to disk | ~10 seconds |
+
+Each stage reports its own elapsed time, and the preparing stage estimates itself
+from the size of your previous fetch of that source — as a range, since the rate
+varies too much to quote a figure:
+
+```
+Figma is preparing core file for download. Last fetch was 704MB,
+so this may take more than 90 seconds. CTRL-C to abort.
+⠹ Waiting for core file (1m 24s)
+✓ Ready: core file — Figma took 1m 24s to prepare it
+⠼ Downloading: core file (9s)
+✓ Downloaded: core file (9s)
+```
+
+A first fetch of a source has no previous size to work from and says so instead
+of guessing.
+
+`fetch` waits up to **4 minutes** for Figma to start sending, then fails that
+source. The deadline covers the wait only — a download already underway is never
+cut off, however slow it runs. Figma discards its preparation when a request
+gives up, so a retry starts that work over rather than picking it up.
+
 ## Requirements
 
 - `FIGMA_TOKEN` must be set in your environment (not needed with `--from-bridge`).
 - `config/settings.yaml` must include `data.directory` and `data.sources`.
-- Fetching `variables` over REST requires your Figma organization to be on an **Enterprise** plan — Figma restricts the variables REST endpoints regardless of your Specs license. On any other plan, fetch variables through the plugin instead with [`--from-bridge`](#fetching-variables-via-the-bridge). `file`, `styles`, and `icons` data work over REST on any plan. See [CLI Requirements](/cli/#requirements).
+- Fetching `variables` over REST requires your Figma organization to be on an **Enterprise** plan — Figma restricts the variables REST endpoints regardless of your Spectacular license. On any other plan, fetch variables through the plugin instead with [`--from-bridge`](#fetching-variables-via-the-bridge). `file`, `styles`, and `icons` data work over REST on any plan. See [CLI Requirements](/cli/#requirements).
 - Fetching `icons` additionally requires:
-  - `figma.glyphs.match` set in `config/conventions/figma.yaml` (see [Glyph Name Pattern](/guides/glyph-name-pattern/))
+  - a `figma.glyphs` convention — `match` and/or `structure` — in `config/conventions/figma.yaml` (see [Glyph Name Pattern](/guides/glyph-name-pattern/))
   - `spec.directory` set in `config/settings.yaml` — icon assets are written to the spec workspace, not the data directory
   - the source's `file` payload — listed before `icons` in the same `fetch` array, or fetched in a previous run
 
@@ -54,7 +86,7 @@ Narrow the fetch by source alias, by data kind, or both, comma-separated. Aliase
 ### `--source <[alias=]url|key>`
 Fetch a file or branch that is not in `data.sources` — see [Fetching Figma Branches](#fetching-figma-branches). Repeatable.
 
-Takes a Figma URL pasted straight from the browser, or a bare file key. Given a branch URL — which names both the main file and the branch — it uses the **branch** key, so you never have to pick the right one out of the URL yourself. This is the one place a URL is accepted; the `key` field in [`data.sources`](/settings/data-sources/#key) needs the bare key.
+Takes a Figma URL pasted straight from the browser, or a bare file key. Given a branch URL — which names both the main file and the branch — it uses the **branch** key, so you never have to pick the right one out of the URL yourself. The `key` field in [`data.sources`](/settings/data-sources/#key) accepts the same two forms.
 
 ### `--from-bridge`
 Fetch variables from the connected Figma file through the [CLI bridge](/cli/commands/bridge/) instead of the REST API — see [Fetching Variables via the Bridge](#fetching-variables-via-the-bridge). Requires `--only variables`; no `FIGMA_TOKEN` or Enterprise plan needed.
@@ -63,7 +95,7 @@ Fetch variables from the connected Figma file through the [CLI bridge](/cli/comm
 Target a specific connected Figma file with `--from-bridge`. Prompts to choose when more than one is connected in an interactive terminal; required otherwise.
 
 ### `--no-geometry`
-Omit geometry data from file payloads. By default, `fetch` requests `?geometry=paths` from the Figma API, which includes `fillGeometry`, `strokeGeometry`, `size`, and `relativeTransform` on every node. This roughly doubles the payload size.
+Omit geometry data from file payloads. By default, `fetch` requests `?geometry=paths` from the Figma API, which includes `fillGeometry`, `strokeGeometry`, `size`, and `relativeTransform` on every node. Geometry adds roughly 60% to the payload — measured at 685MB with it against 426MB without, on the same library.
 
 Use `--no-geometry` when you don't need vector path data. Width and height will fall back to `absoluteBoundingBox` during processing, which is accurate for non-rotated nodes.
 
@@ -111,12 +143,12 @@ data:
 
 How it works:
 
-- Glyph components are **derived from the file payload** — every `COMPONENT` node whose name matches the `figma.glyphs.match` convention (with `{i}` capturing the icon name). No `scan` step is involved.
+- Glyph components are **derived from the file payload** — every component the `figma.glyphs` convention identifies, by name pattern (`match`, with `{i}` capturing the icon name) and/or by child structure (`structure`, named from the component name). A component set is evaluated through its set name and first variant. No `scan` step is involved.
 - SVGs are exported through the Figma images API in batches and written to `assets/icons/` — a sibling of `specs/`, beside `assets/images/`, not into the regenerable data cache. An icon is consumed by every target and produced by none, so it sits outside the spec tree rather than inside it.
 - Filenames are stable kebab-case slugs of the captured icon name, including camelCase splitting: `expandMore` → `expand-more.svg`, `Arrow Left` → `arrow-left.svg`.
 - Two icons that slug identically keep the first as-is; later duplicates are suffixed with their node id so nothing is silently dropped.
 
-### What gets exported
+### Glyph export limits
 
 Each glyph is exported through Figma's images API, which renders the component **as it currently appears**:
 
@@ -135,7 +167,7 @@ The downloaded assets match the slugs referenced by generated component output (
 
 ## Fetching Variables via the Bridge
 
-Figma gates the variables REST endpoints behind an Enterprise plan, but the Plugin API reads the same data on any plan. With the [bridge](/cli/commands/bridge/) running and the Specs plugin connected in your library file:
+Figma gates the variables REST endpoints behind an Enterprise plan, but the Plugin API reads the same data on any plan. With the [bridge](/cli/commands/bridge/) running and the Spectacular plugin connected in your library file:
 
 ```bash
 specs fetch --only variables --from-bridge
@@ -171,7 +203,7 @@ the branch's; you can also pass a bare key if you have one. The flag is
 repeatable, and naming any `--source` means only those sources are fetched — the
 configured library is not re-downloaded unless `--only <alias>` asks for it.
 
-### What it resolves
+### Payload names and data kinds
 
 Before downloading anything, `fetch` reads the file's name and, for a branch, the file it
 branches from — one small request that also fails on a bad key or token before the large
@@ -192,7 +224,7 @@ one starts. It reports what it found:
 A `<alias>.source.json` sidecar records the key and where it came from, since config has
 no record of them.
 
-### Using what you fetched
+### Scanning and generating from a branch
 
 The alias behaves like any other from here:
 
@@ -208,7 +240,7 @@ Ad-hoc payloads contribute to the render cache only where the configured sources
 nothing, so fetching a branch never changes how the library itself resolves. Icons, if
 inherited, are written to `assets/icons-<alias>/` rather than over `assets/icons/`.
 
-### Cleaning up
+### Removing a fetched branch
 
 Everything an ad-hoc source wrote is named after its alias, so a finished branch is
 removed with:
@@ -218,7 +250,7 @@ rm data/library-new-nav-tokens.*
 specs cache --force
 ```
 
-### How to find a branch key
+### Finding a branch key
 
 Easiest is not to: open the branch in Figma, copy the URL, and pass it whole to
 `--source`. A branch URL names two files and `fetch` takes the right one.

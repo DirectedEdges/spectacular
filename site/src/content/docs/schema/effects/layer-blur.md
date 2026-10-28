@@ -1,6 +1,7 @@
 ---
 title: "layerBlur"
 description: "Blur applied to the layer itself"
+tableOfContents: false
 ---
 
 Layer blur (`filter: blur()`). Part of [`Effects`](/schema/effects/).

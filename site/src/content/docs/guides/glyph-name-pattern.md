@@ -24,7 +24,7 @@ This is technically accurate but unhelpful. The consumer doesn't need to know th
 
 ## What It Does
 
-When the `glyphs` convention is declared, the processing engine tests every `INSTANCE` node against its `match` pattern during element detection. If the instance's **main component name** matches, the element is created as a `glyph` instead of an `instance`:
+When the `glyphs` convention is declared, the processing engine tests every `INSTANCE` node against it during element detection — the `match` pattern against the instance's **main component name**, and/or the `structure` form against the instance's child shapes ([glyphs](/settings/glyphs/)). A component either form identifies is created as a `glyph` instead of an `instance`:
 
 ```yaml
 elements:

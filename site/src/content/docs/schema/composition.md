@@ -34,6 +34,18 @@ type Compositions = Record<string, Composition>;
 
 `slotContent` is an authoring convenience, not a scope boundary — fills there may reference entries in other compositions via [`SlotContentRef`](/schema/slot-content-ref/).
 
+## Concern documents
+
+A run with [`spec.splitConcerns`](/schema/settings/) writes one file per concern rather than a single composition file. Each file has its own type, requiring what its concern carries and permitting nothing else — a `variants.yaml` cannot hold an anatomy, and an `api.yaml` cannot hold elements or layout.
+
+| Document | File |
+|---|---|
+| [`CompositionApiDocument`](/schema/documents/composition-api/) | `api.yaml` |
+| [`CompositionVariantsDocument`](/schema/documents/composition-variants/) | `variants.yaml` |
+| [`CompositionExamplesDocument`](/schema/documents/composition-examples/) | `examples.yaml` |
+
+These are not a loosened form of [`ComponentApiDocument`](/schema/documents/component-api/)/[`ComponentVariantsDocument`](/schema/documents/component-variants/)/[`ComponentExamplesDocument`](/schema/documents/component-examples/) — a composition has no `props`, so it has nothing for a `default`/`variants` layering to be a delta of. Each document is its own exact shape (ADR-109).
+
 ## Nested instance hierarchies
 
 A composition is usually a hierarchy of layout components nested in one another, each filling the next one's slot. When those slots are marked [`defaultSlot: true`](/schema/props/#slotprop), the hierarchy lives in the composition's **own** triplet as nested [children](/schema/children/) — the instances are anatomy elements of the composition, and the layout is the tree:

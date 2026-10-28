@@ -1,6 +1,7 @@
 ---
 title: "fontFamily"
 description: "Font family for a text node"
+tableOfContents: false
 ---
 
 Font family name. Part of [`Typography`](/schema/typography/).
@@ -11,6 +12,10 @@ Font family name. Part of [`Typography`](/schema/typography/).
 |---|---|
 | `string` | `"Inter"` |
 | [`TokenReference`](/schema/token-reference/) | `$token: DS.Font.Family.Base`<br>`$type: string` |
+
+#### Default
+
+`null`
 
 #### Source
 

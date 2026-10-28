@@ -572,3 +572,34 @@ html[data-has-hero] .hero .tagline {
 		gap: 0.1rem;
 	}
 }
+
+/* ── TOC-less pages ── */
+
+/* Pages that disable the right "On this page" nav (tableOfContents: false —
+   the deep schema styles/typography/effects pages, ADR index, roles
+   inventory) get the freed column back as content width instead of a blank
+   reserved gutter. 60rem matches the collapsed-sidebar content width above. */
+@media (min-width: 72rem) {
+	html[data-has-sidebar]:not([data-has-toc]):not([data-has-hero]) {
+		--sl-content-width: 60rem;
+	}
+}
+
+/* ── Key–value tables ── */
+
+/* Markdown tables need a header row, but a key–value table (settings pages:
+   File / Path / Type / Default rows) carries its headers in the first column.
+   Authored with an empty header row — hide it when every cell is empty. */
+.sl-markdown-content thead:not(:has(th:not(:empty))) {
+	display: none;
+}
+
+/* ── Table cell code spans ── */
+
+/* Starlight sets `overflow-wrap: anywhere` on all `code`, which force-breaks
+   identifiers mid-word in narrow table columns. Tables already scroll
+   horizontally (`overflow: auto` from Starlight), so cell code can wrap only
+   at normal word boundaries and let the column widen or scroll instead. */
+.sl-markdown-content :is(th, td) code {
+	overflow-wrap: normal;
+}

@@ -26,7 +26,7 @@ syntax** — the developer-facing token name a designer assigns for `WEB`,
 ([CodeSyntaxPlatform](https://developers.figma.com/docs/plugins/api/CodeSyntaxPlatform/#code-syntax-platform)).
 
 Specs Classic already offered platform code-syntax selection as its
-`CODE_SYNTAX` property. Specs 2 has no equivalent, so the plugin cannot reach
+`CODE_SYNTAX` property. Spectacular has no equivalent, so the plugin cannot reach
 parity (tracked in [issue #103](https://github.com/DirectedEdges/specs/issues/103)).
 This ADR records the **contract** change needed to close that gap: new
 serialization profiles selecting a platform's code syntax, with a graceful
@@ -200,7 +200,7 @@ contributes to it rather than opening a new version.
 ## Consequences
 
 - Consumers can select platform-specific code-syntax token serialization
-  (`WEB`, `iOS`, `ANDROID`), bringing Specs 2 to parity with Specs Classic's
+  (`WEB`, `iOS`, `ANDROID`), bringing Spectacular to parity with Specs Classic's
   `CODE_SYNTAX` feature.
 - Tokens without a defined code syntax for the chosen platform degrade gracefully
   to the existing `TOKEN` output, so the profiles are always safe to select.

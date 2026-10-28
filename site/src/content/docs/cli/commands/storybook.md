@@ -39,7 +39,16 @@ Rewrite the host files deliberately — the upgrade path when a newer CLI ships 
 
 ### `--port <port>`
 
-The dev-server port written into the scaffolded `package.json` (default `6006`).
+The dev-server port written into the scaffolded `package.json`.
+
+Normally you declare it instead, once, in [`conventions/storybook.yaml`](/schema/conventions/#host):
+
+```yaml
+host:
+  port: 6101
+```
+
+A declared port gives the workspace a localhost that stays put, and survives a `--force` rewrite. Without one, `init` keeps whatever port the existing scaffold already serves, falling back to `6006` for a fresh workspace. The flag overrides both, for that one run.
 
 ## `specs storybook dev`
 
@@ -53,8 +62,8 @@ Publishes once, then starts everything that reacts and keeps running until Ctrl-
 
 `fetch`, `generate`, and `render` stay yours to run; everything downstream of them follows. One interrupt stops all children.
 
-:::note[Or watch the whole workspace]
-`dev` starts at `specs/` — you generate your specs yourself. [`specs run`](/cli/commands/run/) *(experimental)* watches the same things **and** `data/` and the curation manifest, so a fresh fetch or a ticked checkbox flows all the way through to Storybook without a second command. `dev` is unchanged and still the right choice when Storybook is what you are working on.
+:::note[Or run the whole workspace]
+`dev` starts at `specs/` — you generate your specs yourself. [`specs run`](/cli/commands/run/) *(experimental)* starts at `data/` and serves Storybook as well, so a fresh fetch or a ticked checkbox flows all the way through without a second command. Both share one implementation of the server and its index recovery. `dev` is unchanged and still the right choice when Storybook is what you're working on.
 :::
 
 `dev` also watches the instance's health. Storybook caches a per-file parse

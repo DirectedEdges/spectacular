@@ -1,6 +1,7 @@
 ---
 title: "itemReverseZIndex"
 description: "Whether stacking order is reversed for auto-layout children"
+tableOfContents: false
 ---
 
 Whether children stack in reverse z-index order.
@@ -11,6 +12,10 @@ Whether children stack in reverse z-index order.
 |---|---|
 | `boolean` | `true` |
 | [`TokenReference`](/schema/token-reference/) | `$token: ...`<br>`$type: boolean` |
+
+#### Default
+
+`false`
 
 #### Supported on
 

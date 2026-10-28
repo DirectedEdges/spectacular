@@ -1,4 +1,4 @@
-import type { Transformer } from '../Types/Transformer.js';
+import type { Transformer } from '../transforms/transformer.js';
 import { CssTransformer } from './Css.js';
 import { CssvarsTransformer } from './Cssvars.js';
 // React/stories and webcomponents transforms live in closed implementation

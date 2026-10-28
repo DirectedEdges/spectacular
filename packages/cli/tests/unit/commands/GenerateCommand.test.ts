@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from 'vitest';
 import { Command } from 'commander';
-import { Generate } from '../../../src/commands/GenerateCommand.js';
-import { ManifestParser } from '../../../src/utilities/ManifestParser.js';
-import { ManifestParserV2 } from '../../../src/utilities/ManifestParserV2.js';
-import { LicenseStatus } from '../../../src/utilities/LicenseStatus.js';
+import { Generate } from '../../../src/commands/generate.js';
+import { ManifestParser } from '../../../src/generate/manifestParser.js';
+import { ManifestParserV2 } from '../../../src/utilities/manifestParserV2.js';
+import { LicenseStatus } from '../../../src/generate/licenseStatus.js';
 import type { ComponentsData } from '@directededges/specs-from-figma';
 
 // ============================================================================

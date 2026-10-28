@@ -2,9 +2,9 @@
 // every concern. Detection only — nothing here writes.
 import fs from 'fs-extra';
 import path from 'path';
-import { ConfigLoader } from '../Config/ConfigLoader.js';
+import { ConfigLoader } from '../config/ConfigLoader.js';
 import { resolveSpecsLayout } from '../utilities/specsLayout.js';
-import type { CLIConfig } from '../Types/CLIConfig.js';
+import type { CLIConfig } from '../config/types.js';
 
 export interface DataSource {
   /** The alias data files are named by: `<alias>.variables.json`, `<alias>.file/`. */
@@ -17,6 +17,16 @@ export interface Workspace {
   /** Workspace root: the directory holding config/, data/, specs/, storybook/. */
   root: string;
   config: CLIConfig;
+  /**
+   * The `config/` directory itself, or null when the workspace has none.
+   *
+   * Not the same thing as `config.configDir`, which holds the directory
+   * *containing* config/ — that is, the workspace root — because it exists to
+   * resolve relative settings paths against. Reading it as the config
+   * directory makes anything derived from it a workspace-wide path, which is
+   * how `specs run` came to watch the whole tree, emitted output included.
+   */
+  configDir: string | null;
   specsDir: string;
   dataDir: string;
   assetsDir: string;
@@ -65,6 +75,7 @@ export function resolveWorkspace(configPath?: string): Workspace {
   return {
     root,
     config,
+    configDir,
     specsDir,
     dataDir,
     assetsDir,

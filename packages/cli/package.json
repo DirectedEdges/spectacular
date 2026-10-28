@@ -1,7 +1,7 @@
 {
   "name": "@directededges/specs-cli",
-  "version": "0.32.0",
-  "description": "Command-line interface for Specs design system operations",
+  "version": "0.36.0",
+  "description": "Command-line interface for Spectacular design system operations",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,20 +11,19 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE",
-    "docs"
+    "LICENSE"
   ],
   "scripts": {
-    "build": "esbuild src/bin/specs.ts --bundle --platform=node --target=node18 --format=esm --packages=external --define:__SPECS_CLI_VERSION__=\\\"$npm_package_version\\\" --outfile=dist/specs.js --banner:js='#!/usr/bin/env node' && chmod +x dist/specs.js && rm -rf dist/storybook-templates && cp -R src/storybook/templates dist/storybook-templates && npm run build:bridge-server",
+    "build": "esbuild src/bin/specs.ts --bundle --platform=node --target=node18 --format=esm --packages=external --define:__SPECS_CLI_VERSION__=\\\"$npm_package_version\\\" --loader:.md=text --loader:.yaml=text --outfile=dist/specs.js --banner:js='#!/usr/bin/env node' && chmod +x dist/specs.js && rm -rf dist/storybook-templates && cp -R src/storybook/templates dist/storybook-templates && cp ../../README.md README.md && npm run build:bridge-server",
     "build:bridge-server": "esbuild src/bridge/server.ts --bundle --platform=node --target=node18 --format=esm --packages=external --outfile=dist/bridge-server.js && chmod +x dist/bridge-server.js",
-    "watch": "esbuild src/bin/specs.ts --bundle --platform=node --target=node18 --format=esm --packages=external --define:__SPECS_CLI_VERSION__=\\\"$npm_package_version\\\" --outfile=dist/specs.js --watch",
+    "watch": "esbuild src/bin/specs.ts --bundle --platform=node --target=node18 --format=esm --packages=external --define:__SPECS_CLI_VERSION__=\\\"$npm_package_version\\\" --loader:.md=text --loader:.yaml=text --banner:js='#!/usr/bin/env node' --outfile=dist/specs.js --watch=forever",
     "test": "cd ../.. && vitest -c vitest.config.ts packages/cli/tests"
   },
   "dependencies": {
-    "@directededges/react-from-specs": "^0.3.0",
-    "@directededges/webcomponents-from-specs": "^0.3.0",
-    "@directededges/specs-schema": "file:../../../specs/packages/schema",
-    "@directededges/specs-from-figma": "file:../../../specs-from-figma/packages/specs-from-figma",
+    "@directededges/react-from-specs": "^0.5.0",
+    "@directededges/webcomponents-from-specs": "^0.5.0",
+    "@directededges/specs-schema": "file:../../../spectacular/packages/schema",
+    "@directededges/specs-from-figma": "file:../../../specs-transforms/packages/specs-from-figma",
     "commander": "^11.1.0",
     "fs-extra": "^11.2.0",
     "tslib": "^2.6.2",
@@ -41,7 +40,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/directededges/specs.git",
+    "url": "https://github.com/DirectedEdges/spectacular.git",
     "directory": "packages/cli"
   },
   "keywords": [

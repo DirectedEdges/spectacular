@@ -1,20 +1,24 @@
 ---
-title: "Collapse Primitive Wrapper"
+title: "collapsePrimitiveWrapper"
 description: "Strip a root container that only wraps one child — a text or glyph leaf, or a slot — and promote the child to spec root"
 ---
 
-A run choice in `config/settings.yaml`. When enabled, a component whose root is a container holding exactly one child is collapsed: the wrapper is stripped and the child becomes the spec root.
+When enabled, a component whose root is a container holding exactly one child is collapsed: the wrapper is stripped and the child becomes the spec root. When disabled, the container is emitted as root regardless of structure.
 
-Two shapes qualify, and they are tested differently because they lose different things:
+| | |
+|---|---|
+| **File** | `config/settings.yaml` |
+| **Path** | `spec.collapsePrimitiveWrapper` |
+| **Type** | boolean |
+| **Default** | `true` |
 
-- **A `text` or `glyph` leaf.** A container merges into a leaf, where container styles have nowhere to go, so the wrapper must carry none that matter. This eliminates structural noise for typographic and icon primitives — Heading, Paragraph, Body, Label, Icon — where the container adds no design-system meaning.
-- **A slot.** Both nodes are containers with the same style signature, so the merge discards nothing and no style is tested. This applies to layout primitives — a frame whose only content is the slot its children fill.
+The eligibility rules below are what make this safe as a default: a wrapper that carries a style the leaf cannot hold is not collapsed, so the setting never silently discards design intent. Turn it off when you want the Figma layer structure preserved exactly — most often to keep a role annotated on a collapsing component's child, as the last section explains.
 
-## Configuration
+## Example
 
 ```yaml
 spec:
-  collapsePrimitiveWrapper: true
+  collapsePrimitiveWrapper: false
 ```
 
 ## Result
@@ -41,6 +45,13 @@ anatomy:
 ```
 
 The `$extensions.com.figma.name` field on the anatomy root carries the Figma layer name so the source layer remains traceable.
+
+## Qualifying shapes
+
+Two shapes qualify, and they are tested differently because they lose different things:
+
+- **A `text` or `glyph` leaf.** A container merges into a leaf, where container styles have nowhere to go, so the wrapper must carry none that matter. This eliminates structural noise for typographic and icon primitives — Heading, Paragraph, Body, Label, Icon — where the container adds no design-system meaning.
+- **A slot.** Both nodes are containers with the same style signature, so the merge discards nothing and no style is tested. This applies to layout primitives — a frame whose only content is the slot its children fill.
 
 ## Eligibility
 
@@ -94,14 +105,22 @@ elements:
 
 As with a leaf, `$extensions.com.figma.name` carries the surviving layer's Figma name so the source layer remains traceable.
 
-## Options
+## Roles on a collapsed root
 
-- **Type**: boolean
-- **Default**: `false`
-- **Effect**: When `true`, eligible wrapper-only components are collapsed so the child — a leaf or a slot — becomes the spec root. When `false`, the container is emitted as root regardless of structure.
+A collapse turns two Figma layers into one anatomy element, and either layer may carry a `role:` annotation. The element records which one did, because render has to put each annotation back on the layer it came from:
 
-## Path
+- `role` — the **component node** was annotated.
+- `$extensions.com.figma.childRole` — the **collapsed child** was annotated.
 
-`spec.collapsePrimitiveWrapper` in `config/settings.yaml`
+Four cases, and the pair distinguishes all four:
 
-Stripping the wrapper is a normalization choice, not a fact about the library — keeping it is faithful to Figma and equally correct. That is why this option lives in `settings.yaml` while its neighbors from the old `processing` block moved to `conventions.yaml`.
+| `role` | `childRole` | Annotated in Figma | Render writes back to |
+|---|---|---|---|
+| present | absent | the component node | the component node |
+| absent | present | the collapsed child | the recreated child |
+| present | present | both layers | both layers |
+| absent | absent | neither | neither |
+
+`childRole` is recorded whenever the child was annotated, **even when both layers name the same concept**. Omitting it in that case would make "both were annotated" indistinguishable from "only the root was", and render would drop the child's annotation.
+
+The child's role is deliberately **not** merged into `role`, for the same reason: merging makes the child-only case look like the two-role case. The cost is that **a role annotated on a collapsing component's child emits no code** — only `role` reaches React and Web Components. To make a role affect generated output on a component that collapses, annotate the component node, or set `collapsePrimitiveWrapper: false` for that library.

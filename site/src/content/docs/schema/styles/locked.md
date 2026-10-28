@@ -1,6 +1,7 @@
 ---
 title: "locked"
 description: "Whether an element is locked from editing in Figma"
+tableOfContents: false
 ---
 
 Whether the element is locked from editing in Figma.
@@ -11,6 +12,10 @@ Whether the element is locked from editing in Figma.
 |---|---|
 | `boolean` | `true` |
 | [`TokenReference`](/schema/token-reference/) | `$token: ...`<br>`$type: boolean` |
+
+#### Default
+
+`false`
 
 #### Supported on
 

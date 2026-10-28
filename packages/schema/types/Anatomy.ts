@@ -39,12 +39,30 @@ export interface FigmaAnatomyElementExtension {
    * - the name was already written in the destination format and passed through
    *   unformatted, making reversal identity rather than re-derivation (ADR-066).
    *
-   * The latter two apply only when `format.figmaKeys` is not NONE. Under NONE no
-   * source convention is declared, so format divergence is not evaluated and this
-   * field is absent however the key was derived.
+   * Under NONE no source convention is declared, so nothing can be re-derived from
+   * a key — reversal hands the key back as the name. The key therefore reconstructs
+   * the name only where the two are already identical, and this field is recorded
+   * wherever formatting changed the name at all.
    * @since 0.30.0 — renamed from `originalName`
    */
   name?: string;
+  /**
+   * A role annotated on the layer that primitive-wrapper collapse folded into this
+   * element, rather than on the element itself.
+   *
+   * Collapse leaves one anatomy element where Figma has two layers, so a role has to
+   * say which layer carried it. `role` means the root did, this means the collapsed
+   * child did, and both present means both did. Render reads the pair to put each
+   * annotation back on the layer it came from; without the distinction a round trip
+   * silently moves it to the other layer.
+   *
+   * It is deliberately not merged into `role`. Merging would make the two-role case
+   * indistinguishable from the child-only case, which is exactly the pair render has
+   * to tell apart. The cost is that a role annotated on a collapsing component's child
+   * reaches no emitted code — to affect code, annotate the component node.
+   * @since 0.36.0
+   */
+  childRole?: RoleConceptName | RoleConceptName[];
 }
 
 /**

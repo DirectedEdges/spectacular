@@ -1,6 +1,7 @@
 ---
 title: "shadows"
 description: "Drop and inner shadow definitions"
+tableOfContents: false
 ---
 
 Array of shadow definitions. Part of [`Effects`](/schema/effects/).

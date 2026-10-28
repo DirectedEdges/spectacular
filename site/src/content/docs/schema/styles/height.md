@@ -1,6 +1,7 @@
 ---
 title: "height"
 description: "Fixed or resolved height of an element"
+tableOfContents: false
 ---
 
 Height.
@@ -11,6 +12,10 @@ Height.
 |---|---|
 | `number` | `48` |
 | [`TokenReference`](/schema/token-reference/) | `$token: DS.Size.400`<br>`$type: dimension` |
+
+#### Default
+
+`0`
 
 #### Supported on
 

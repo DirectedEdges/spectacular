@@ -5,7 +5,7 @@
  * These files are intentionally never executed — they are compiled with tsc
  * to assert that the type shape is correct.
  */
-import type { StringProp, BooleanProp, EnumProp, SlotProp, PrimitiveSlotContent, NumberProp, AnyProp, FigmaCodeOnlySource, FigmaPropExtension, PropExtensions } from '../types/index.js';
+import type { StringProp, BooleanProp, EnumProp, SlotProp, PrimitiveSlotContent, NumberProp, ObjectProp, ObjectPropMember, AnyProp, FigmaCodeOnlySource, FigmaPropExtension, PropExtensions } from '../types/index.js';
 
 // ─── StringProp — examples field ──────────────────────────────────────────────
 
@@ -312,3 +312,72 @@ const slotFromMarkerConst: SlotProp = { type: 'slot', anyOf: [markerText, 'badge
 
 // Still assignable to AnyProp
 const anyFromMarkers: AnyProp = slotGlyphTextOrComponent;
+
+// ─── ObjectProp (ADR-111) ─────────────────────────────────────────────────────
+
+// the motivating case: a responsive margin with enumerated members
+const objectMargin: ObjectProp = {
+  type: 'object',
+  members: {
+    compact: { type: 'string', default: 'none', enum: ['none', 'small', 'large'] },
+    expanded: { type: 'string', default: 'none', enum: ['none', 'small', 'large'] },
+  },
+};
+
+// members may mix scalar shapes
+const objectMixed: ObjectProp = {
+  type: 'object',
+  members: {
+    visible: { type: 'boolean', default: true },
+    label: { type: 'string' },
+    count: { type: 'number', default: 1 },
+  },
+};
+
+// each member is an ObjectPropMember
+const memberEnum: ObjectPropMember = { type: 'string', default: 'sm', enum: ['sm', 'lg'] };
+const memberBool: ObjectPropMember = { type: 'boolean', default: false };
+
+// members carry per-member provenance — the flat Figma source name (ADR-066)
+const objectWithProvenance: ObjectProp = {
+  type: 'object',
+  members: {
+    compact: {
+      type: 'string',
+      default: 'none',
+      enum: ['none', 'small', 'large'],
+      $extensions: { 'com.figma': { type: 'VARIANT', name: 'margin.compact' } },
+    },
+  },
+};
+
+// $extensions is optional at the object level too
+const objectWithExt: ObjectProp = {
+  type: 'object',
+  members: { compact: { type: 'boolean', default: false } },
+  $extensions: { 'com.figma': {} },
+};
+
+// ObjectProp is assignable to AnyProp
+const anyFromObject: AnyProp = objectMargin;
+
+// @ts-expect-error: members is required
+const _objectNoMembers: ObjectProp = { type: 'object' };
+
+// @ts-expect-error: a SlotProp is not a valid member — members are one level deep, scalars only
+const _objectSlotMember: ObjectProp = { type: 'object', members: { content: { type: 'slot' } } };
+
+const _objectNestedMember: ObjectProp = {
+  type: 'object',
+  members: {
+    // @ts-expect-error: a nested ObjectProp is not a valid member — members are one level deep
+    horizontal: { type: 'object', members: { compact: { type: 'boolean', default: false } } },
+  },
+};
+
+const _objectTopDefault: ObjectProp = {
+  type: 'object',
+  // @ts-expect-error: ObjectProp carries no top-level default — defaults live per member
+  default: {},
+  members: { compact: { type: 'boolean', default: false } },
+};

@@ -34,7 +34,13 @@ try {
 const workspaceRoot = path.resolve(here, '../..');
 const contentDir = path.resolve(here, '../content');
 const overridesDir = path.resolve(here, '../content-overrides');
-const baselinesDir = path.resolve(here, '../visualtesting/baselines');
+// Visual-testing state lives in the workspace's own testing/visual/ (the
+// retired storybook/visualtesting/baselines spelling still serves for
+// workspaces not yet moved).
+const baselinesDir = [
+  path.resolve(here, '../../testing/visual'),
+  path.resolve(here, '../visualtesting/baselines'),
+].find((d) => fs.existsSync(d)) ?? path.resolve(here, '../../testing/visual');
 
 // Generated elements under ../../webcomponents/ import 'lit' from outside this
 // project root, where node resolution finds no node_modules — pin it here.
@@ -145,7 +151,7 @@ const config: StorybookConfig = {
     ...(fs.existsSync(path.join(workspaceRoot, 'assets/icons')) ? [{ from: '../../assets/icons', to: '/assets/icons' }] : []),
     ...(fs.existsSync(path.join(workspaceRoot, 'assets/images')) ? [{ from: '../../assets/images', to: '/assets/images' }] : []),
     ...(fs.existsSync(path.join(workspaceRoot, 'assets/fonts')) ? [{ from: '../../assets/fonts', to: '/assets/fonts' }] : []),
-    ...(fs.existsSync(baselinesDir) ? [{ from: '../visualtesting/baselines', to: '/baselines' }] : []),
+    ...(fs.existsSync(baselinesDir) ? [{ from: baselinesDir, to: '/baselines' }] : []),
     // The Specs tab reads authored spec YAML over HTTP.
     ...(fs.existsSync(path.join(workspaceRoot, 'specs')) ? [{ from: '../../specs', to: '/specs' }] : []),
   ],

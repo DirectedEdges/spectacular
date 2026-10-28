@@ -1,7 +1,7 @@
 ---
 title: "migrate"
 ---
-Run a versioned migration over the workspace — converting artifacts written for an older version of Specs into the current layout.
+Run a versioned migration over the workspace — converting artifacts written for an older version of Spectacular into the current layout.
 
 ## Usage
 

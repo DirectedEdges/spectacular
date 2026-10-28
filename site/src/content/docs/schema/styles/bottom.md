@@ -1,6 +1,7 @@
 ---
 title: "bottom"
 description: "Offset from the block-end edge of a positioned child"
+tableOfContents: false
 ---
 
 Offset from the block-end (bottom) edge. Present when the vertical constraint is `MAX` or `STRETCH`.
@@ -13,6 +14,10 @@ Offset from the block-end (bottom) edge. Present when the vertical constraint is
 | `null` | `null` |
 
 Not token-bindable — structural property computed from Figma layout constraints, not a design value.
+
+#### Default
+
+`null`
 
 #### Supported on
 

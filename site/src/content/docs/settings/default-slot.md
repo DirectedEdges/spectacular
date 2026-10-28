@@ -3,13 +3,18 @@ title: "slots.default"
 description: "Naming patterns identifying the one slot a layout component composes through"
 ---
 
-Naming patterns identifying a component's **default slot** — the one slot it always composes further content through. A library fact, declared in `config/conventions/specs.yaml`. Absence means the library designates no default slot, and every slot fill binds explicitly.
+<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge pro-badge">Pro</span>')</script>
 
-It sits with the spec conventions rather than under a platform because what it names is a slot prop the spec declares, not a Figma layer. There is one answer per library, and every platform reads it.
+Naming patterns identifying a component's **default slot** — the one slot it always composes further content through. A library fact: absence means the library designates no default slot, and every slot fill binds explicitly. When declared, the matching slot prop is marked `defaultSlot: true`, and fills into that slot on a nested instance capture as children rather than as a reference.
 
-Declaring it changes how composed content is captured. Content a host places in a nested instance's default slot becomes that instance's **children** — anatomy, elements and layout together — instead of a `slotContentExamples` entry addressed by a `$slotContent` reference. A hierarchy of layout components then reads as one tree rather than a chain of one-level-deep registry entries.
+| | |
+|---|---|
+| **File** | `config/conventions/specs.yaml` |
+| **Path** | `slots.default.match` |
+| **Type** | block with a single `match` array of strings |
+| **Default** | absent (no default slot designated) |
 
-## Configuration
+## Example
 
 ```yaml
 slots:
@@ -52,6 +57,12 @@ elements:
 
 A **non**-default slot is untouched and still binds explicitly — that reference is the only shape that can say *which* of several slots a fill belongs to. Both shapes coexist in one spec: a card whose `children` nest as a tree still carries `header: { $slotContent: … }`.
 
+## Convention placement
+
+It sits with the spec conventions rather than under a platform because what it names is a slot prop the spec declares, not a Figma layer. There is one answer per library, and every platform reads it.
+
+Declaring it changes how composed content is captured. Content a host places in a nested instance's default slot becomes that instance's **children** — anatomy, elements and layout together — instead of a `slotContentExamples` entry addressed by a `$slotContent` reference. A hierarchy of layout components then reads as one tree rather than a chain of one-level-deep registry entries.
+
 ## The spec-side marker
 
 The convention is read once, at generation time. The slot prop it matches carries `defaultSlot: true` in the generated spec:
@@ -67,21 +78,13 @@ Every later reader — the transforms, `specs render`, any other tool — reads 
 
 The patterns themselves are also recorded, under `metadata.conventions.specs`, for the one question the marker cannot answer. When `specs render` meets nested children under an instance, the slot it has to fill belongs to *that instance's* component — a different component, whose spec and marker the render does not hold — so it matches the patterns against the instance's slot names instead.
 
-## Options
-
-- **Type**: block with a single `match` array of strings
-- **Default**: absent (no default slot designated)
-- **Effect**: When declared, the matching slot prop is marked `defaultSlot: true`, and fills into that slot on a nested instance capture as children rather than as a reference. When absent, every slot binds explicitly.
+## Licensing
 
 Composed content is a Pro feature, so flattened nesting follows the same gates as the reference shape: a Pro license, and — for a component rather than a composition — [`defaultSlotContent`](/settings/default-slot-content/).
 
-## Path
+## Further reading
 
-`slots.default.match` in `config/conventions/specs.yaml`
-
-## See Also
-
-- [`defaultSlotContent`](/settings/default-slot-content/) — the run choice that decides whether composed slot content is recorded at all; the two names are close and mean different things
-- [Schema: Conventions](/schema/conventions/#slots) — the `slots` member's shape
-- [Schema: Props](/schema/props/#slotprop) — the `defaultSlot` marker this convention produces
-- [Schema: Children](/schema/children/) — the nested shape it permits
+- [`defaultSlotContent`](/settings/default-slot-content/) — the run choice that decides whether composed slot content is recorded at all; the two names are close and mean different things.
+- [Schema: Conventions](/schema/conventions/#slots) for the `slots` member's shape.
+- [Schema: Props](/schema/props/#slotprop) for the `defaultSlot` marker this convention produces.
+- [Schema: Children](/schema/children/) for the nested shape it permits.

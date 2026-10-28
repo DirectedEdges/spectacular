@@ -87,7 +87,7 @@ tableOfContents: false
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-Version history for both Specs packages. Each release follows [Semantic Versioning](https://semver.org/).
+Version history for both Spectacular packages. Each release follows [Semantic Versioning](https://semver.org/).
 
 <Tabs>
 <TabItem label="@specs-schema">

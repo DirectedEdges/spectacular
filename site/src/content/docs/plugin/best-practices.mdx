@@ -5,7 +5,7 @@ description: "How to author components in Figma so the specs they generate are a
 
 import { Badge } from '@astrojs/starlight/components';
 
-Specs reads any Figma file and generates a spec from whatever it finds. It works best on files authored the way a mature design system is authored anyway — tokens bound, layers named for their role, properties modeling one concern each. Nothing here is a Specs-specific convention; these are common design system practices that happen to be exactly what makes a generated spec accurate, complete, and ready for code without manual cleanup.
+Spectacular reads any Figma file and generates a spec from whatever it finds. It works best on files authored the way a mature design system is authored anyway — tokens bound, layers named for their role, properties modeling one concern each. Nothing here is a Spectacular-specific convention; these are common design system practices that happen to be exactly what makes a generated spec accurate, complete, and ready for code without manual cleanup.
 
 Each practice below is marked by how much it matters:
 
@@ -20,7 +20,7 @@ Each practice below is marked by how much it matters:
 
 ### Component pages
 
-<Badge text="Should" variant="caution" size="medium" /> give each component its own page alongside its subcomponents, since page scope is what Specs searches for subcomponents and ready-made examples.
+<Badge text="Should" variant="caution" size="medium" /> give each component its own page alongside its subcomponents, since page scope is what Spectacular searches for subcomponents and ready-made examples.
 
 - **Do** — put `DS Table` on its own page alongside `DS Table / Row` and `DS Table / Cell`
 - **Don't** — pile a dozen unrelated components onto one page
@@ -45,7 +45,7 @@ Each practice below is marked by how much it matters:
 - **Do** — name glyphs `Icon/check`, or publish them from a dedicated icon library
 - **Don't** — name a glyph `check`, `Vector`, or `icon`
 
-**Learn more:** [Glyph Name Pattern](/guides/glyph-name-pattern/) · [glyphs setting](/settings/glyph-name-pattern/)
+**Learn more:** [Glyph Name Pattern](/guides/glyph-name-pattern/) · [glyphs setting](/settings/glyphs/)
 
 ### Variable binding
 
@@ -69,7 +69,7 @@ Each practice below is marked by how much it matters:
 
 ### Layer naming
 
-<Badge text="Must" variant="danger" size="medium" /> give every layer inside a component a unique, role-based name — Specs identifies elements by name and path, so duplicates are ambiguous.
+<Badge text="Must" variant="danger" size="medium" /> give every layer inside a component a unique, role-based name — Spectacular identifies elements by name and path, so duplicates are ambiguous.
 
 - **Do** — name each layer for its role: `Label`, `Supporting text`, `Leading icon`, `Trailing icon`
 - **Don't** — leave `Text`, `Text 1`, `Frame 427`, or use `Label` twice at any depth
@@ -105,7 +105,7 @@ Each practice below is marked by how much it matters:
 
 ### Optional elements
 
-<Badge text="Should" variant="caution" size="medium" /> pair every optional element's content prop with a visibility boolean so Specs collapses the two into one nullable prop.
+<Badge text="Should" variant="caution" size="medium" /> pair every optional element's content prop with a visibility boolean so Spectacular collapses the two into one nullable prop.
 
 - **Do** — pair `Icon` (instance swap) with `Show icon` (boolean) bound to visibility
 - **Don't** — ship a `TEXT`, `INSTANCE_SWAP`, or `SLOT` prop whose element has no visibility toggle
@@ -168,7 +168,7 @@ Each practice below is marked by how much it matters:
 
 ### Icon components
 
-<Badge text="Nice to have" variant="tip" size="medium" /> flow glyphs through an Icon component exposing `size` and `color`, giving Specs a single instance-swap target.
+<Badge text="Nice to have" variant="tip" size="medium" /> flow glyphs through an Icon component exposing `size` and `color`, giving Spectacular a single instance-swap target.
 
 - **Do** — expose `size` and `color` props on an `Icon` component that swaps the glyph
 - **Don't** — resize and recolor raw glyphs per instance

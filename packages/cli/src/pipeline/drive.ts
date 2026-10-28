@@ -11,7 +11,8 @@
 // process per step throws that away every time.
 import fs from 'fs-extra';
 import path from 'path';
-import type { Workspace } from '../storybook/workspace.js';
+import { resolveWorkspace, type Workspace } from '../storybook/workspace.js';
+import { serveStorybook } from '../storybook/serve.js';
 import type { Step, StepContext } from './types.js';
 import { StepError } from './types.js';
 import { entryFor, fromEntry, resolvePlan, watchPaths, writtenBy, type PlanOptions } from './plan.js';
@@ -23,6 +24,24 @@ import { entryFor, fromEntry, resolvePlan, watchPaths, writtenBy, type PlanOptio
  * Matches the existing transform watcher so the two cannot feel different.
  */
 const DEBOUNCE_MS = 800;
+
+/**
+ * Name the steps this workspace has nothing for, and why.
+ *
+ * Without this an inactive step is simply absent, and a chain missing half its
+ * steps reads as a broken run rather than as a workspace that has not got there
+ * yet. A fresh workspace ran three of six steps and said nothing about the
+ * other three; the only way to learn the truth was `--dry-run`.
+ *
+ * `render` is left out: it is opt-in, so its absence is already the default and
+ * saying so every run would be noise.
+ */
+function reportInactive(plan: { inactive: Array<{ step: { id: string }; reason: string }> }, who: string): void {
+  const worth = plan.inactive.filter(entry => entry.step.id !== 'render');
+  if (worth.length === 0) return;
+  const named = worth.map(entry => `${entry.step.id} (${entry.reason})`).join(', ');
+  console.log(`[${who}] not in this workspace: ${named}`);
+}
 
 export interface DriveOptions extends PlanOptions {
   configPath?: string;
@@ -91,6 +110,7 @@ export async function build(workspace: Workspace, options: DriveOptions = {}): P
 
   console.log(`[specs build] ${describe(plan.steps)}`);
   if (components.length > 0) console.log(`[specs build] limited to: ${components.join(', ')}`);
+  reportInactive(plan, 'specs build');
   if (plan.excluded.length > 0) {
     console.log(`[specs build] not running: ${plan.excluded.map(s => s.id).join(', ')}`);
   }
@@ -133,6 +153,7 @@ export async function run(workspace: Workspace, options: DriveOptions = {}): Pro
   };
 
   console.log(`[specs run] ${describe(plan.steps)}`);
+  reportInactive(plan, 'specs run');
   if (plan.excluded.length > 0) {
     console.log(`[specs run] not running: ${plan.excluded.map(s => s.id).join(', ')}`);
   }
@@ -155,72 +176,188 @@ export async function run(workspace: Workspace, options: DriveOptions = {}): Pro
   console.log('');
   await runSteps(plan.steps, context, '');
 
+  // Storybook comes up once the content it serves is current, so it never
+  // starts against a half-written tree. Skipping the storybook step skips the
+  // server with it — asking not to publish and getting a server anyway would be
+  // a server showing content nothing is maintaining.
+  const storybookChild = plan.steps.some(step => step.id === 'storybook')
+    ? serveStorybook(workspace, 'specs run')
+    : null;
+  if (storybookChild) {
+    const stop = () => {
+      storybookChild.kill('SIGINT');
+      process.exit(0);
+    };
+    process.on('SIGINT', stop);
+    process.on('SIGTERM', stop);
+  }
+
   const watched = watchPaths(plan, workspace);
   console.log('');
   console.log(`[specs run] watching ${watched.map(p => path.relative(workspace.root, p) || '.').join(', ')} — Ctrl-C to stop`);
 
   // One pass at a time. A change arriving mid-pass is remembered and folded
   // into the next, rather than starting a second pass over the same files.
+  //
+  // The paths are what is remembered, not the step they resolved to. A
+  // workspace changes shape while a session is open — a platform tree deleted,
+  // a Storybook scaffolded — and a plan fixed at startup keeps running steps
+  // the workspace no longer has. It did exactly that: with `react/` renamed
+  // away mid-session, the next pass emitted into it and recreated the whole
+  // tree, `package.json` and all. So the plan is re-derived per pass, and the
+  // entry step is decided against the plan that is true now.
+  let currentWorkspace = workspace;
+  let currentPlan = plan;
   let runningSteps: Step[] | null = null;
-  let pendingEntry: { step: Step; components: Set<string> } | null = null;
+  let pendingPaths = new Set<string>();
   let timer: NodeJS.Timeout | undefined;
 
   const drain = async () => {
-    if (runningSteps || !pendingEntry) return;
-    const { step, components: keys } = pendingEntry;
-    pendingEntry = null;
+    if (runningSteps || pendingPaths.size === 0) return;
+    const changed = [...pendingPaths];
+    pendingPaths = new Set();
 
-    const steps = fromEntry(plan, { step, components: [...keys] });
+    // Re-read the workspace, then the plan. A step whose tree has gone is gone
+    // with it; one whose tree has appeared joins in.
+    const before = currentPlan.steps.map(s => s.id).join(',');
+    try {
+      currentWorkspace = resolveWorkspace(options.configPath);
+      currentPlan = resolvePlan(currentWorkspace, options);
+    } catch (error) {
+      // The workspace stopped being one — config deleted, specs directory
+      // gone. Say so and keep watching; the next save may put it back.
+      console.error(`[specs run] ${error instanceof Error ? error.message : String(error)}`);
+      return;
+    }
+    // Name what joined or left, not the whole new list. Printing the full chain
+    // here reads as though those steps just ran — it is the line directly above
+    // the one that says what *is* running, in the same format.
+    const afterIds: string[] = currentPlan.steps.map(s => s.id);
+    const beforeIds: string[] = before ? before.split(',') : [];
+    const dropped = beforeIds.filter(id => !afterIds.includes(id));
+    const added = afterIds.filter(id => !beforeIds.includes(id));
+    if (dropped.length > 0 || added.length > 0) {
+      console.log('');
+      if (dropped.length > 0) {
+        console.log(`[specs run] ${dropped.join(' and ')} ${dropped.length === 1 ? 'is' : 'are'} no longer in this workspace — dropped from the chain`);
+      }
+      if (added.length > 0) {
+        console.log(`[specs run] ${added.join(' and ')} ${added.length === 1 ? 'is' : 'are'} back — added to the chain`);
+      }
+
+      // Storybook decides which platform trees to glob when it boots, and never
+      // again — `main.ts` runs `existsSync` once. So a tree that appears while
+      // the server is up gets emitted by the chain and shown by nobody, which
+      // reads as the emit having silently failed. The chain cannot fix that from
+      // here; say what will.
+      const platformChanged = [...added, ...dropped].some(id => id === 'react' || id === 'webcomponents');
+      if (platformChanged && storybookChild) {
+        console.log('[specs run] Storybook reads which platform trees to show once, at startup — restart `specs run` for this to appear in it');
+      }
+    }
+
+    // Earliest entry among everything that changed, and the union of what it
+    // scopes to. An unscoped change widens the pass to every component, which
+    // is what an empty set means.
+    let entryStep: Step | null = null;
+    let scope: Set<string> | null = new Set();
+    for (const file of changed) {
+      const entry = entryFor(currentPlan, currentWorkspace, file);
+      if (!entry) continue;
+      if (!entryStep || currentPlan.steps.indexOf(entry.step) < currentPlan.steps.indexOf(entryStep)) {
+        entryStep = entry.step;
+      }
+      if (entry.components.length === 0) scope = null;
+      else if (scope) for (const key of entry.components) scope.add(key);
+    }
+    if (!entryStep) return;
+
+    const steps = fromEntry(currentPlan, { step: entryStep, components: [] });
     runningSteps = steps;
-    const scope = [...keys];
-    const scopeLabel = scope.length > 0 ? ` (${scope.join(', ')})` : '';
+    const keys = scope ? [...scope] : [];
+    const scopeLabel = keys.length > 0 ? ` (${keys.join(', ')})` : '';
     console.log('');
     console.log(`[specs run] ${describe(steps)}${scopeLabel}`);
     try {
-      await runSteps(steps, { ...context, components: scope }, '');
+      await runSteps(steps, { ...context, workspace: currentWorkspace, components: keys }, '');
     } finally {
       runningSteps = null;
-      if (pendingEntry) void drain();
+      if (pendingPaths.size > 0) void drain();
     }
   };
 
+  // One save, several events. macOS reports a single write more than once, and
+  // the copies arrive far enough apart to land either side of the debounce —
+  // one `touch` of the manifest produced two full passes. Modification time
+  // tells them apart: duplicates of one write carry the same stamp, while a
+  // genuine second edit carries a later one.
+  const lastSeen = new Map<string, number>();
+  const isRepeat = (file: string): boolean => {
+    let mtime: number;
+    try {
+      mtime = fs.statSync(file).mtimeMs;
+    } catch {
+      return false; // deleted, or gone before we looked — treat as real
+    }
+    if (lastSeen.get(file) === mtime) return true;
+    lastSeen.set(file, mtime);
+    return false;
+  };
+
   const onChange = (changed: string) => {
+    if (isRepeat(changed)) return;
+
     // A step writing its own output mid-pass is the pass talking to itself —
     // `generate` rewrites `specs/`, which the targets watch. Queueing that would
     // run the targets a second time for one change. Only the steps actually
     // running are consulted, so a spec someone edits while an unrelated pass is
     // in flight is still picked up.
-    if (runningSteps && writtenBy(runningSteps, workspace, changed)) return;
+    if (runningSteps && writtenBy(runningSteps, currentWorkspace, changed)) return;
 
-    const entry = entryFor(plan, workspace, changed);
-    if (!entry) return;
-
-    if (!pendingEntry) {
-      pendingEntry = { step: entry.step, components: new Set(entry.components) };
-    } else {
-      // Two changes in one burst: start at whichever is earlier in the chain,
-      // and run the union of what they touched. An unscoped change widens the
-      // pass to everything, which is what an empty set means.
-      const earlier =
-        plan.steps.indexOf(entry.step) < plan.steps.indexOf(pendingEntry.step)
-          ? entry.step
-          : pendingEntry.step;
-      const widened =
-        entry.components.length === 0 || pendingEntry.components.size === 0
-          ? new Set<string>()
-          : new Set([...pendingEntry.components, ...entry.components]);
-      pendingEntry = { step: earlier, components: widened };
-    }
+    // Which step this becomes is decided at drain time, against the plan that
+    // is true then — not here, against the one that was true at startup.
+    pendingPaths.add(changed);
 
     clearTimeout(timer);
     timer = setTimeout(() => void drain(), DEBOUNCE_MS);
   };
 
+  // Never watch a file directly, even when a file is what a step declares.
+  //
+  // `fs.watch` on a file follows the inode, and a great many editors save by
+  // writing a temp file and renaming it over the target — VS Code among them.
+  // That replaces the inode, so the watch fires once and is then attached to
+  // something nothing will ever write again. The manifest proved it: ticking a
+  // checkbox worked, and every edit after it was invisible.
+  //
+  // So a file input is watched through its directory, filtered to that one
+  // name. Directory watches survive the rename.
+  const directories = watched.filter(p => fs.existsSync(p) && fs.statSync(p).isDirectory());
+  const fileNamesByDirectory = new Map<string, Set<string>>();
   for (const target of watched) {
-    if (!fs.existsSync(target)) continue;
-    const recursive = fs.statSync(target).isDirectory();
-    fs.watch(target, { recursive }, (_event, filename) => {
-      onChange(filename ? path.join(target, filename.toString()) : target);
+    if (directories.includes(target)) continue;
+    const parent = path.dirname(target);
+    // A recursive watch above it already sees this file.
+    if (directories.some(dir => parent === dir || parent.startsWith(dir + path.sep))) continue;
+    const names = fileNamesByDirectory.get(parent) ?? new Set<string>();
+    names.add(path.basename(target));
+    fileNamesByDirectory.set(parent, names);
+  }
+
+  for (const dir of directories) {
+    fs.watch(dir, { recursive: true }, (_event, filename) => {
+      if (filename) onChange(path.join(dir, filename.toString()));
+    });
+  }
+
+  for (const [dir, names] of fileNamesByDirectory) {
+    if (!fs.existsSync(dir)) continue;
+    fs.watch(dir, { recursive: false }, (_event, filename) => {
+      // Only the declared files. The directory holds other things — fetched
+      // payloads, caches — and a change to one of those is not this input's.
+      if (filename && names.has(path.basename(filename.toString()))) {
+        onChange(path.join(dir, path.basename(filename.toString())));
+      }
     });
   }
 

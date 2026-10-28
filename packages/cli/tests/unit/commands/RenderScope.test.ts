@@ -11,7 +11,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
-import { runRender, bridgeTarget } from '../../../src/commands/RenderCommand.js';
+import { runRender, bridgeTarget } from '../../../src/commands/render.js';
 import { StepError } from '../../../src/pipeline/StepError.js';
 
 let root: string;
@@ -41,31 +41,44 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+/**
+ * Every call here passes an explicit `file`, which `bridgeTarget` lets through
+ * without asking the bridge anything.
+ *
+ * That is not incidental. Without it these tests consult whatever bridge
+ * happens to be running on this machine, and their result depends on how many
+ * Figma files someone has open — they passed with one connected and failed
+ * with two. A test that changes answer when you open a second tab is not
+ * testing the thing it names.
+ */
+const PINNED = 'test-file-key';
+
 describe('runRender — scoping by component', () => {
   it('fails when none of the named components exist, rather than rendering nothing and passing', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
-    await expect(runRender({ components: ['nope', 'alsoNope'] })).rejects.toThrow(StepError);
-    await expect(runRender({ components: ['nope'] })).rejects.toThrow(/none of the named components exist/);
+    await expect(runRender({ components: ['nope', 'alsoNope'], file: PINNED })).rejects.toThrow(StepError);
+    await expect(runRender({ components: ['nope'], file: PINNED })).rejects.toThrow(/none of the named components exist/);
   });
 
   it('names every component it could not find, so a typo is identifiable', async () => {
     const warnings: string[] = [];
     vi.spyOn(console, 'warn').mockImplementation((...args: unknown[]) => void warnings.push(args.join(' ')));
-    await expect(runRender({ components: ['nope', 'alsoNope'] })).rejects.toThrow(StepError);
+    await expect(runRender({ components: ['nope', 'alsoNope'], file: PINNED })).rejects.toThrow(StepError);
     expect(warnings.join('\n')).toContain('nope');
     expect(warnings.join('\n')).toContain('alsoNope');
   });
 
   it('refuses before contacting the bridge — a wrong name is not a network problem', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
-    // No bridge is running in this test, and the thrown error says what is
-    // actually wrong rather than reporting a connection failure.
-    await expect(runRender({ components: ['nope'] })).rejects.toThrow(/none of the named components exist/);
+    // Nothing here can reach Figma: the scope check runs before the first
+    // render, so the error says what is actually wrong rather than reporting
+    // a connection failure.
+    await expect(runRender({ components: ['nope'], file: PINNED })).rejects.toThrow(/none of the named components exist/);
   });
 
   it('stops when there is no specs directory to render from', async () => {
     fs.removeSync(path.join(root, 'specs'));
-    await expect(runRender({ components: ['dsButton'] })).rejects.toThrow(/specs directory not found/);
+    await expect(runRender({ components: ['dsButton'], file: PINNED })).rejects.toThrow(/specs directory not found/);
   });
 });
 

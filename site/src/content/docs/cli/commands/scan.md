@@ -45,7 +45,7 @@ _Frames marked `READY_FOR_DEV` in Figma — a frame with no marking gets no row.
 
 ## Glyphs
 
-_Detected via `glyphNamePattern`. Excluded from `specs generate`._
+_Detected via the `glyphs` convention in `config/conventions/figma.yaml`. Excluded from `specs generate`._
 
 | Name | ID | Type |
 |------|------|------|
@@ -108,12 +108,17 @@ A summary line is printed after each merge, e.g. `Merge: 2 added, 1 removed, 5 u
 
 ### Glyph partitioning
 
-When `figma.glyphs.match` is declared in `config/conventions/figma.yaml`, top-level components whose names match the pattern are routed to a separate `## Glyphs` section in the manifest instead of `## Components`. The pattern uses `{i}` as the glyph-name placeholder — for example, `'DS Icon Glyph / {i}'` matches `DS Icon Glyph / arrow-down` and extracts `arrow-down`. This is the same pattern syntax the processing engine uses for glyph detection inside component instances, so what `scan` partitions matches what `generate` treats as a glyph at processing time.
+When a `figma.glyphs` convention is declared in `config/conventions/figma.yaml`, top-level components it identifies are routed to a separate `## Glyphs` section in the manifest instead of `## Components`. Both forms partition: `match` uses `{i}` as the glyph-name placeholder — `'DS Icon Glyph / {i}'` matches `DS Icon Glyph / arrow-down` and extracts `arrow-down` — and `structure` identifies plainly named glyph components by their child shapes ([glyphs](/settings/glyphs/)). These are the same conventions the processing engine evaluates for glyph detection inside component instances, so what `scan` partitions matches what `generate` treats as a glyph at processing time.
 
 ```yaml
 # config/conventions/figma.yaml
 glyphs:
   match: 'DS Icon Glyph / {i}'
+  # and/or
+  structure:
+    children:
+      - type: VECTOR
+        name: 'Vector'
 ```
 
 Glyphs in the partitioned section are:
@@ -295,5 +300,5 @@ Manifests produced by older versions of `scan` (checkbox-list format like `- [x]
 **See Also:**
 - [Generate Command](/cli/commands/generate/) - Generate specs from manifest or single component
 - [Render Command](/cli/commands/render/) - Uses scan data to bind glyphs, styles, and variables when rendering in Figma
-- [figma.glyphs.match](/settings/glyph-name-pattern/) - Pattern syntax that drives Glyphs-section partitioning
+- [figma.glyphs](/settings/glyphs/) - The conventions (name pattern and structure) that drive Glyphs-section partitioning
 - [Configuration Reference](/settings/) - Format and config options

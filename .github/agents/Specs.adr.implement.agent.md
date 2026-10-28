@@ -1,6 +1,10 @@
 ---
 description: Applies the changes described in an ADR to the specs-schema package only — types, schema, tests, docs, and changelog. Runs all validation gates. Author reviews the result as a normal code diff before merging.
 handoffs:
+  - label: Analyze downstream impact
+    agent: Specs.adr.analyze
+    prompt: Gates passed — assess downstream impact package by package and file the adoption issue
+    send: true
   - label: Accept ADR
     agent: Specs.adr.accept
     prompt: All gates passed — mark the ADR as ACCEPTED
@@ -23,15 +27,14 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 An ADR's Decision section names types and schema; its Downstream Impact table names consumers. This command implements the first and *records* the second. Implementing a consumer is separate work, in its own commit, against that consumer's own tests.
 
-Consumers are updated in dependency order, because each depends on the one before it:
+`specs-transforms` is a monorepo of several packages, not one — each is its own consumer with its own dependency position, confirmed against their actual `package.json`/source imports (not assumed from the package name alone):
 
 1. **`specs-schema`** — types and schema. This command.
-2. **`specs-from-figma`** — the processing engine, which compiles against the new types.
-3. **`specs-cli`** — depends on `specs-from-figma`, so it comes last.
+2. **The `specs-transforms` packages**, all of which depend on `specs-schema` directly at the source level: `specs-from-figma`, `figma-from-specs`, and `from-specs` (the shared core `react-from-specs`/`webcomponents-from-specs` build on). `react-from-specs` and `webcomponents-from-specs` depend on `from-specs`, not on each other or on `specs-from-figma`/`figma-from-specs` — so within this tier, `from-specs` goes first and the rest can follow in any order.
+3. **`specs-cli`** — depends on `specs-schema`, `specs-from-figma`, `react-from-specs`, and `webcomponents-from-specs` (confirmed in its `package.json`), so it comes last. It does **not** depend on `figma-from-specs`.
+4. **`specs-plugin-2`** compiles `specs-from-figma` and `figma-from-specs` from source — it moves with tier 2, not after `specs-cli`.
 
-`specs-plugin-2` compiles `specs-from-figma` from source and follows step 2.
-
-Do not reorder these, and do not fold two steps into one pass. The CLI cannot be verified against types that `specs-from-figma` has not yet adopted.
+Do not reorder these, and do not fold two steps into one pass. A tier-3 or tier-4 package cannot be verified against types a tier-2 package has not yet adopted.
 
 **When an ADR has no schema-package surface at all** — its Type changes table reads *(none)* and its changes are entirely a consumer's — implement whatever schema-side artifact it does name (a definition, a doc comment), then report the ADR as *not implemented here* and name the consumer that owns it. Do not follow it into that consumer.
 
@@ -124,7 +127,7 @@ Do not reorder these, and do not fold two steps into one pass. The CLI cannot be
 ## Key rules
 
 - Apply changes directly — do not produce a description document.
-- **Never edit `packages/cli`, `specs-from-figma`, or `specs-plugin-2` from this command**, even when the ADR's Downstream Impact table names them and even when the schema change breaks their build. Those are separate passes, in the order given under Scope.
+- **Never edit `packages/cli`, any `specs-transforms` package, or `specs-plugin-2` from this command**, even when the ADR's Downstream Impact table names them and even when the schema change breaks their build. Those are separate passes, in the order given under Scope.
 - Halt and revert on any gate failure. Do not partially apply a change set.
 - Never modify type or schema files not listed in the ADR Decision section. Doc files (`docs/schema/`) corresponding to changed types are always in scope.
 - If the actual change required is a higher semver bump than the ADR states, halt and report before touching any file.

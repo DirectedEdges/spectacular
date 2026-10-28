@@ -4,7 +4,7 @@ title: "Licensing"
 
 <script>document.querySelector('#_top').insertAdjacentHTML('afterbegin','<span class="sl-badge pro-badge pro-badge-hero">Pro</span>')</script>
 
-Specs works at two tiers: **Free** and **Pro**. Both read the same Figma files, honour the same configuration, and produce the same structure. The difference is how much of that structure is filled in — free output describes each component, Pro output connects it to your token system, its other components, and every state it can be in.
+Spectacular works at two tiers: **Free** and **Pro**. Both read the same Figma files, honour the same configuration, and produce the same structure. The difference is how much of that structure is filled in — free output describes each component, Pro output connects it to your token system, its other components, and every state it can be in.
 
 Everything is usable at the free tier. Nothing is time-limited, watermarked, or withheld until you pay; a free spec is a complete, valid spec, and a free React component renders.
 
@@ -16,7 +16,7 @@ A Pro subscription is **$10/month**.
 
 ## What You Get
 
-Specs makes three things. Each has a free tier and a Pro tier, and they are gated separately.
+Spectacular makes three things. Each has a free tier and a Pro tier, and they are gated separately.
 
 | What you get | Free | Pro adds |
 |---|---|---|
@@ -36,10 +36,12 @@ Enter your license key in the plugin's **Account** pane.
 
 This activates the Pro tiers above when you work in Figma. Each key is meant for an individual user and can be activated on up to two machines (e.g. a work laptop and a personal machine).
 
-:::caution[Specs 2 vs Specs (Classic)]
-This page covers licensing for [**Specs 2**](https://www.figma.com/community/plugin/1549454283615386215/anova) — first published on the Figma community in 2025 as "Anova" — and the **Specs CLI**. Subscriptions are purchased through Polar and managed from your Polar customer portal.
+:::caution[Spectacular, formerly Specs 2]
+This page covers licensing for [**Spectacular**](https://www.figma.com/community/plugin/1549454283615386215/anova) and the **Spectacular CLI**. Subscriptions are purchased through Polar and managed from your Polar customer portal.
 
-[**Specs (Classic)**](https://www.figma.com/community/plugin/1205622541257680763/specs) is the original Figma plugin launched in 2023. Classic subscriptions are managed entirely by the Figma payment platform and cannot be transferred, converted, or applied to Specs 2 or the CLI. If you have an active Classic subscription and want to use Specs 2, you'll need a separate Pro subscription through Polar.
+Spectacular is the plugin published on the Figma Community in 2025 as "Anova" and renamed "Specs 2" shortly after. It became Spectacular in 2026, when Figma shipped a feature of its own called Specs. Nothing changed but the name — the same plugin, the same license, the same subscription.
+
+[**Specs (Classic)**](https://www.figma.com/community/plugin/1205622541257680763/specs) is a different, older plugin, launched in 2023. Its subscriptions are managed entirely by the Figma payment platform and cannot be transferred, converted, or applied to Spectacular or the CLI. If you have an active Classic subscription and want to use Spectacular, you'll need a separate Pro subscription through Polar.
 :::
 
 ### CLI
@@ -82,7 +84,7 @@ To avoid spending generations unnecessarily, omit your license key during trial 
 
 ### Subscription and Billing
 
-Pro subscriptions are purchased and managed through [Polar](https://polar.sh), the merchant of record for Specs. Polar is a platform built for developers selling digital products — they handle payment processing, subscription management, and invoicing so you can manage your plan from a single portal.
+Pro subscriptions are purchased and managed through [Polar](https://polar.sh), the merchant of record for Spectacular. Polar is a platform built for developers selling digital products — they handle payment processing, subscription management, and invoicing so you can manage your plan from a single portal.
 
 From your Polar dashboard you can:
 

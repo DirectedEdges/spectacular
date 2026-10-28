@@ -105,6 +105,21 @@ const divergentKey: AnatomyElement = {
 // name is optional — safe keys emit no extension at all
 const safeKey: AnatomyElement = { type: 'text' };
 
+// A collapsed root records which of its two Figma layers each role came from
+const childRoleOnly: AnatomyElement = {
+  type: 'text',
+  $extensions: { 'com.figma': { name: 'Link', childRole: 'link' } },
+};
+const bothRoles: AnatomyElement = {
+  type: 'text',
+  role: 'link',
+  $extensions: { 'com.figma': { name: 'Link', childRole: 'link' } },
+};
+const childRoleArray: AnatomyElement = {
+  type: 'text',
+  $extensions: { 'com.figma': { childRole: ['label', 'description'] } },
+};
+
 const badExtension: AnatomyElement = {
   type: 'text',
   // @ts-expect-error — unknown extension members are rejected

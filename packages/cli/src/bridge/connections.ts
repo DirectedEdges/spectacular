@@ -43,7 +43,7 @@ export class ConnectionRegistry<TSocket extends ConnectionLike> {
     }
 
     if (this.connections.size === 0) {
-      throw new Error('No plugin connected. Enable the CLI Bridge in Specs 2 first.');
+      throw new Error('No plugin connected. Enable the CLI Bridge in the Figma plugin first.');
     }
 
     if (this.connections.size > 1) {

@@ -1,5 +1,5 @@
 ---
-description: Release @directededges/specs-schema to npm. Verifies version, CHANGELOG, builds, and publishes with confirmation gates.
+description: Release @directededges/specs-schema to npm. Verifies by script, builds, and publishes with one ship gate.
 ---
 
 ## User Input
@@ -13,6 +13,8 @@ The argument is the version to release (e.g., `0.16.0`). You **MUST** have a ver
 ## Working Directory
 
 All commands in this agent run from the **schema package directory**: `packages/schema` (relative to repo root). Use absolute paths for file reads, but run shell commands from `packages/schema`.
+
+`$WORKSPACE_ROOT` below is the specs-local-workspace directory (typically `../specs-local-workspace` relative to this repo). **Running this agent directly, outside the orchestrator?** Run the workspace preflight first — it carries the npm-auth and scope checks the orchestrator normally provides: `bash "$WORKSPACE_ROOT/.claude/scripts/release-preflight.sh" specs-schema`.
 
 ## Outline
 
@@ -31,64 +33,36 @@ All commands in this agent run from the **schema package directory**: `packages/
       ```
    4. Report the PR URL and continue.
 
-1. **Verify version**: Read `packages/schema/package.json`. Confirm the `version` field matches the argument. If not, STOP and ask whether to update it or abort.
-
-2. **Verify CHANGELOG**: Read `packages/schema/CHANGELOG.md`. Confirm:
-   - An entry exists for this version (e.g., `## [0.16.0]`)
-   - The entry has an appended **date** (e.g., `## [0.16.0] - 2026-04-05`). A heading reading `- Unreleased` counts as undated — replace it with today's date; "Unreleased" left in place ships verbatim to the docs site's Releases page (it did on 2026-09-12).
-   - **No other entry in the file still reads `- Unreleased`.** Run `grep -n ' - Unreleased' packages/schema/CHANGELOG.md`: after this entry is dated, the grep must return nothing. A hit on a published version is a prior cycle's miss — date it from that version's GitHub release (`gh release view <tag> --json publishedAt`) in this release's commit. A hit on a version never published anywhere: STOP and report.
-   - A **Summary paragraph** exists at the top of the version entry (immediately after the heading). This is written last, after all bullets are done. It must:
-     - Open with the most important user-facing capability in this release
-     - Answer "So what?" — what can consumers of this schema now express or do that they couldn't before?
-     - Avoid implementation vocabulary (type aliases, discriminated unions, internal identifiers) in favor of plain language about what the types *enable*
-     - Be 2–4 sentences; every sentence should carry meaning a user cares about
-     - If missing or too technical, draft a replacement and update the file before continuing
-   - Individual bullets lead with a **bold plain sentence** that describes what the property or type *enables* — not just what was added. If bullets read like type declaration docs, rewrite them before continuing.
-   - **Empty sections are removed** — if `### Changed`, `### Removed`, or `### Fixed` has no bullets, delete that section heading entirely.
-   - The entry groups content under at least one of Added/Changed/Removed/Fixed
-
-   If incomplete, STOP and report what's missing.
-
-3. **Verify clean working tree**:
+1. **Mechanical verification** — version match, CHANGELOG mechanics (entry exists, dated, sections non-empty, no stale `- Unreleased`), and working-tree state, in one script call:
    ```bash
-   git status --porcelain
+   bash "$WORKSPACE_ROOT/.claude/scripts/release-repo-verify.sh" specs-schema [version]
    ```
-   If dirty, STOP and report. Exception: changes made by this agent (e.g., CHANGELOG date added) are expected.
+   - Relay the output. **Any FAIL stops the release** — fix it or ask, don't work around it.
+   - A WARN that the entry is undated is expected: replace its `- Unreleased` with today's date now.
+   - CHANGELOG **prose quality is not checked here** — entries, the Summary paragraph, and the ADRs section are authored and reviewed during the cycle (the `changelog` skill owns the voice rules). If the entry is missing entirely, STOP: that is a cycle gap to fix via `/changelog`, not something to improvise at release time.
 
-4. **Verify npm auth** (use the same `--userconfig` as publish):
+2. **Build** — the build-posture hook denies `npm run build*` here; run the script's underlying command directly:
    ```bash
-   npm whoami --registry https://registry.npmjs.org/ --userconfig "$WORKSPACE_ROOT/.npmrc.public"
-   ```
-   where `$WORKSPACE_ROOT` is the specs-local-workspace directory (typically `../specs-local-workspace` relative to this repo).
-   If this fails with 401, STOP and report. The token in `.npmrc.public` is likely expired. The user should:
-   1. Generate a new access token at https://www.npmjs.com/settings/tokens
-   2. Update `$WORKSPACE_ROOT/.npmrc.public` with the new token
-
-5. **Build**:
-   ```bash
-   cd packages/schema && npm run build
+   cd packages/schema && npx tsc -p tsconfig.build.json
    ```
    If build fails, STOP.
 
-6. **Run type-level tests**:
+3. **Run type-level tests**:
    ```bash
    cd packages/schema && npx tsc --noEmit --strict tests/*.test-d.ts
    ```
    If tests fail, report errors and ask the user whether to proceed or abort.
 
-7. **Present setup summary**:
+4. **Present setup summary**:
    ```
    @directededges/specs-schema v[version] — Setup Summary
-     ✓ Version: [version]
-     ✓ CHANGELOG: [version] — [date]
-     ✓ Working tree: clean
-     ✓ Auth: [username]
+     ✓ Mechanical checks: passed (release-repo-verify.sh)
      ✓ Build: passed
      ✓ Type tests: passed (or ⚠ with note)
    ```
 
-8. **Ship gate**: Use `AskUserQuestion` with Yes/No options: **"Ready to commit, tag, and publish @directededges/specs-schema v[version]?"**
-   On Yes:
+5. **Ship gate** — the one gate. Use `AskUserQuestion` with Yes/No options: **"Ready to commit, tag, publish, and finalize @directededges/specs-schema v[version]?"**
+   On Yes, run the whole sequence below without further gates; stop only on a failure.
    1. Commit (if there are uncommitted changes):
       ```bash
       git add -A && git commit -m "release: @directededges/specs-schema v[version]"
@@ -97,31 +71,28 @@ All commands in this agent run from the **schema package directory**: `packages/
       ```bash
       git tag -a "specs-schema@[version]" -m "release: @directededges/specs-schema v[version]"
       ```
-   3. Publish from the package directory (uses workspace `.npmrc.public` token to target npmjs.org):
+   3. Publish from the package directory, passing the automation token by env var (never `--userconfig` — the workspace has no `package.json`, so npm loads `~/.npmrc` as the *project* config and it outranks `--userconfig`):
       ```bash
-      cd packages/schema && npm publish --access public --userconfig "$WORKSPACE_ROOT/.npmrc.public"
+      TOK=$(grep -oE '_authToken=.*' "$WORKSPACE_ROOT/.npmrc.public" | cut -d= -f2-)
+      cd packages/schema && env "npm_config_//registry.npmjs.org/:_authToken=$TOK" npm publish --access public
       ```
-      where `$WORKSPACE_ROOT` is the specs-local-workspace directory (typically `../specs-local-workspace` relative to this repo).
       If publish fails with "previously published version", report and ask the user whether to bump the patch version or skip.
-      If publish fails **403 "Two-factor authentication is required ... automation token was specified"**, this package has been locked to 2FA like `specs-cli`. Switch to the go-forward local-2FA flow: the user runs it themselves (`npm whoami || npm login`, then `cd packages/schema && npm publish --access public` — **no** `--userconfig`, npm prompts for the OTP); you then verify with `npm view @directededges/specs-schema version`. See `CLI.release.agent.md` step 9.3.
-
-9. **Finalize gate**: Use `AskUserQuestion` with Yes/No options: **"Ready to push, create PR, and GitHub Release for @directededges/specs-schema v[version]?"**
-   On Yes:
-   1. Push to remote (including the tag):
+      If publish fails **403 "Two-factor authentication is required ... automation token was specified"**, this package has been locked to 2FA like `specs-cli`. Switch to the local-2FA flow: the user runs it themselves (`npm whoami || npm login`, then `cd packages/schema && npm publish --access public` — npm prompts for the OTP); you then verify from the registry. See `CLI.release.agent.md`.
+   4. Verify the publish from the registry: `npm view @directededges/specs-schema version` must report `[version]`. **Only a verified publish continues.**
+   5. Push, including the tag:
       ```bash
       git push --follow-tags
       ```
-   2. **Collect issue references** from both PR bodies and commit messages on this release branch since it diverged from main. Capture cross-repo refs (e.g. `DirectedEdges/specs-plugin-2#42`) as well as bare `#N` refs — required because closing trailers can live on commits that touch upstream issues in sibling repos, not just on PRs in this repo:
+   6. Post-commit check — no undated heading survived:
       ```bash
-      BRANCH=$(git branch --show-current)
-      {
-        gh pr list --repo DirectedEdges/specs --base "$BRANCH" --state merged --json body --jq '.[].body'
-        git log main.."$BRANCH" --pretty=%B
-      } | grep -oiE '(closes|fixes|resolves)[[:space:]]+([A-Za-z0-9._-]+/[A-Za-z0-9._-]+)?#[0-9]+' | sort -fu
+      bash "$WORKSPACE_ROOT/.claude/scripts/release-repo-verify.sh" specs-schema [version] --post-commit
       ```
-      Normalize each match to `Closes <ref>` (preserving any `owner/repo` prefix) and append one per line to the PR body so issues auto-close when this PR merges to main. Cross-repo refs require `owner/repo#N` — without that prefix GitHub won't reach the sibling repo's issue.
-
-   3. Finalize the tracking PR. Step 0 opened a draft PR at the start; now mark it ready and update title/body:
+   7. Collect issue references for the PR body:
+      ```bash
+      bash "$WORKSPACE_ROOT/.claude/scripts/release-collect-closes.sh" . DirectedEdges/specs
+      ```
+      Append the printed `Closes <ref>` lines to the PR body, one per line, so issues auto-close when this PR merges to main.
+   8. Finalize the tracking PR — mark it ready and update title/body:
       ```bash
       PR_NUM=$(gh pr list --repo DirectedEdges/specs --head "$(git branch --show-current)" --state open --json number --jq '.[0].number')
       gh pr ready "$PR_NUM"
@@ -135,26 +106,20 @@ All commands in this agent run from the **schema package directory**: `packages/
       )"
       ```
       If no PR exists at this point (step 0 was skipped), create one with `gh pr create --base main --head <branch> --title "release: @directededges/specs-schema v[version]" --body "..."`.
-   4. Create the GitHub Release (scoped tag):
-      - Extract the release notes from `packages/schema/CHANGELOG.md` for this version: the **Summary** paragraph and all content under the `## [version]` heading, up to (but not including) the next `##` heading.
+   9. Create the GitHub Release (scoped tag), with notes extracted by script:
       ```bash
-      gh release create "specs-schema@[version]" --title "@directededges/specs-schema v[version]" --notes "$(cat <<'EOF'
-      [extracted CHANGELOG content for this version]
-      EOF
-      )"
-      ```
-      - Verify the release was created:
-      ```bash
+      node "$WORKSPACE_ROOT/.claude/scripts/release-notes-extract.mjs" packages/schema/CHANGELOG.md "[version]" > /tmp/notes-specs-schema.md
+      gh release create "specs-schema@[version]" --title "@directededges/specs-schema v[version]" --notes-file /tmp/notes-specs-schema.md
       gh release view "specs-schema@[version]" --json url --jq '.url'
       ```
-   4. Report the PR URL and release URL.
+   10. Report the PR URL and release URL. The PR itself is handed over after the CLI finishes — it is shared with the CLI release in this repo.
 
 ## Key rules
 
 - Use absolute paths for all file operations.
 - All shell commands run from `packages/schema` unless they are git or gh commands (which run from repo root).
 - **Tag format**: `specs-schema@[version]` — scoped to distinguish from CLI releases in the same repo.
-- Two gates only: **ship** (commit + tag + publish) and **finalize** (push + PR + GitHub release).
+- **One gate: ship.** Everything after a verified publish (push, PR ready, GitHub release) runs automatically — a publish is already public, so there is nothing left to decide.
 - If any verification step fails, halt immediately — do not skip to later steps. For test failures, ask the user whether to proceed.
 - This package has no @directededges dependencies, so no reference swapping is needed.
 - Cleanup (branch deletion after PR merge) is handled by the release orchestrator, not this agent.

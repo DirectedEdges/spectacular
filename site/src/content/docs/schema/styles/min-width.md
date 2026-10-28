@@ -1,6 +1,7 @@
 ---
 title: "minWidth"
 description: "Minimum width constraint for an element"
+tableOfContents: false
 ---
 
 Minimum width constraint.
@@ -11,6 +12,10 @@ Minimum width constraint.
 |---|---|
 | `number` | `24` |
 | [`TokenReference`](/schema/token-reference/) | `$token: DS.Size.400`<br>`$type: dimension` |
+
+#### Default
+
+`0`
 
 #### Supported on
 

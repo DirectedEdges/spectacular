@@ -3,18 +3,16 @@ title: "Output"
 description: "Control where and how generated specifications are written"
 ---
 
-Controls where and how to write generated specifications. Run choices, configured via the `spec` block in `config/settings.yaml` or CLI flags — any split arrangement carries the same spec data.
+Controls where and how to write generated specifications. Run choices — any split arrangement carries the same spec data. The split layout is the default: one folder per component, holding one file per concern; downstream commands — `transform`, `analyze`, `render` — read that layout, so most workspaces never set these at all.
 
-The split layout is the default: one folder per component, holding one file per concern. Downstream commands — `transform`, `analyze`, `render` — read that layout, so most workspaces never set these at all.
+| | |
+|---|---|
+| **File** | `config/settings.yaml` |
+| **Path** | `spec.splitComponents`, `spec.splitConcerns`, `spec.useSubfolders` |
+| **Type** | boolean (each) |
+| **Default** | `true` (each) |
 
-```yaml
-spec:
-  splitComponents: true    # One file per component (default)
-  splitConcerns: true      # Separate API, variants, and examples (default)
-  useSubfolders: true      # Nest each component in its own folder (default)
-```
-
-## Output Modes
+## Options
 
 Four output modes, reached by turning parts of the default split off:
 
@@ -25,13 +23,18 @@ Four output modes, reached by turning parts of the default split off:
 | **Per-concern** | false | true | `api.yaml` + `variants.yaml` (+ `examples.yaml` if any examples) |
 | **Single-file** | false | false | `library.yaml` (all components) |
 
+## Example
+
+```yaml
+spec:
+  splitComponents: true    # One file per component (default)
+  splitConcerns: true      # Separate API, variants, and examples (default)
+  useSubfolders: true      # Nest each component in its own folder (default)
+```
+
 ## `splitComponents`
 
-Write one file per component rather than a single combined library file.
-
-- **Type**: boolean
-- **Default**: `true`
-- **CLI Flag**: `--combine-as-library` turns it off
+Write one file per component rather than a single combined library file. The CLI flag `--combine-as-library` turns it off.
 
 ```yaml
 spec:
@@ -49,11 +52,7 @@ File naming converts display names to camelCase (e.g., `"DS Alert"` → `dsAlert
 
 ## `splitConcerns`
 
-Separate API specification, variant configuration, and examples.
-
-- **Type**: boolean
-- **Default**: `true`
-- **CLI Flag**: `--combine-concerns` turns it off
+Separate API specification, variant configuration, and examples. The CLI flag `--combine-concerns` turns it off.
 
 ```yaml
 spec:
@@ -92,12 +91,7 @@ Example output is a [Pro feature](/settings/default-slot-content/) — on the fr
 
 ## `useSubfolders`
 
-Nest each component's files in a subfolder named for the component.
-
-- **Type**: boolean
-- **Default**: `true`
-- **Effect**: Only applies when `splitComponents: true`
-- **CLI Flag**: `--no-subfolders` turns it off
+Nest each component's files in a subfolder named for the component. Only applies when `splitComponents: true`. The CLI flag `--no-subfolders` turns it off.
 
 **With subfolders** (default):
 ```
@@ -118,30 +112,6 @@ specs/
 └── card.yaml
 ```
 
-## Combined Mode
-
-The default. Both `splitComponents` and `splitConcerns` on gives component directories of concern files:
-
-```yaml
-spec:
-  splitComponents: true
-  splitConcerns: true
-```
-
-```
-specs/
-├── button/
-│   ├── api.yaml       # Anatomy + props
-│   └── variants.yaml  # Default + variants
-├── alert/
-│   ├── api.yaml
-│   ├── variants.yaml
-│   └── examples.yaml  # slotContentExamples + instanceExamples (only if present)
-└── card/
-    ├── api.yaml
-    └── variants.yaml
-```
-
 ## CLI Flag Priority
 
 Output configuration follows the standard [priority system](/settings/#priority-system):
@@ -157,5 +127,7 @@ Each flag only ever turns a split off, so an absent flag defers to the configure
 # CLI overrides to false for this run
 specs generate --combine-concerns
 ```
+
+## Legacy names
 
 In the pre-split `specs.config.yaml`, these flags lived in a root-level `output` block and defaulted to `false`. That file is no longer read — [`specs migrate config`](/cli/commands/migrate/) converts it, moving them to `spec`. Because the defaults inverted, the migration writes all three out explicitly so a migrated workspace keeps emitting what it emits today; delete those three lines to adopt the new default.

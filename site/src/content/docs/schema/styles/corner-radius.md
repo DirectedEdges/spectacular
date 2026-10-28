@@ -1,6 +1,7 @@
 ---
 title: "cornerRadius"
 description: "Corner radius for a container element"
+tableOfContents: false
 ---
 
 Corner radius. Scalar when uniform; [`Corners`](/schema/corners/) object when per-corner values differ.
@@ -13,6 +14,10 @@ Corner radius. Scalar when uniform; [`Corners`](/schema/corners/) object when pe
 | [`TokenReference`](/schema/token-reference/) | `$token: DS.Radius.400`<br>`$type: dimension` |
 | [`Corners`](/schema/corners/) | `topStart: 4`<br>`topEnd: 4`<br>`bottomEnd: 0`<br>`bottomStart: 0` |
 | `null` | `null` |
+
+#### Default
+
+`0`
 
 #### Supported on
 

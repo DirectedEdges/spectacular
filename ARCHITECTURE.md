@@ -13,8 +13,8 @@ the site at `site/ARCHITECTURE.md`.
 |---|---|
 | `packages/schema/` | `@directededges/specs-schema` — the contract (detail below) |
 | `packages/cli/` | `@directededges/specs-cli` — see its own ARCHITECTURE.md |
-| `adr/` | 87 numbered decision records + `INDEX.md`; the only front door for schema changes |
-| `rfc/` | Broader-than-ADR proposals (one so far) |
+| `adr/` | Numbered decision records + `INDEX.md`; the only front door for schema changes |
+| `rfc/` | Broader-than-ADR proposals |
 | `site/` | Astro docs site, port 4323 — own package, **not** a workspace member |
 | `scripts/validate-schema.sh` | JSON-parse gate over `schema/*.schema.json` (metaschema pass only if `check-jsonschema` is installed — full validation is optional in practice) |
 | `vitest.config.ts` | Single root config for all package tests — run from repo root |
@@ -46,18 +46,20 @@ There is no `Config.ts` anymore — older links to "Config" mean these three.
 |---|---|
 | `packages/schema/types/index.ts` | Barrel; the public API surface |
 | `packages/schema/types/Component.ts` | Top-level spec shape |
-| `packages/schema/types/ConcernDocument.ts` | The three per-concern documents a `splitConcerns` run writes |
+| `packages/schema/types/ComponentConcernDocument.ts` | The three per-concern documents a component `splitConcerns` run writes (renamed from `ConcernDocument.ts`, ADR-110) |
+| `packages/schema/types/CompositionConcernDocument.ts` | The three per-concern documents a composition `splitConcerns` run writes — its own exact shape, not a loosened form of the component one (ADR-109) |
 | `packages/schema/types/Conventions.ts` | Largest type file; platform-keyed library facts + `DEFAULT_CONVENTIONS` |
 | `packages/schema/types/Styles.ts` | Style values, token/prop/conditional binding, style enums |
 | `packages/schema/types/Settings.ts` | Run choices + `DEFAULT_SETTINGS` |
 | `packages/schema/types/Anatomy.ts` | Element tree; `role`/`action` concepts (open string sets, docs-governed) |
 | `packages/schema/types/Props.ts` | `AnyProp` union |
 | `packages/schema/schema/component.schema.json` | Primary JSON Schema — must mirror the `Component` tree |
-| `packages/schema/schema/concern.schema.json` | The three per-concern documents; references `component.schema.json` for shared definitions |
+| `packages/schema/schema/component-concern.schema.json` | The three component per-concern documents; references `component.schema.json` for shared definitions (renamed from `concern.schema.json`, ADR-110) |
+| `packages/schema/schema/composition-concern.schema.json` | The three composition per-concern documents (ADR-109) |
 | `packages/schema/schema/styles.schema.json` | Pairs with `types/Styles.ts` |
 | `packages/schema/CONSTITUTION.md` | Governance: semver policy, 6-gate check |
 | `packages/schema/CHANGELOG.md` | Mandatory per publish; bullets cite ADRs |
-| `packages/schema/tests/` | 15 type-level `*.test-d.ts` + 1 runtime test |
+| `packages/schema/tests/` | Type-level `*.test-d.ts` files + runtime tests |
 
 Enums have no separate file: closed sets are string-literal unions inside the
 owning type file, mirrored as `enum` arrays in the matching `*.schema.json`.
@@ -74,8 +76,26 @@ the reason `/specs.consistency-check` exists:
 - `tests/*.test-d.ts`
 - `CHANGELOG.md`
 - `adr/NNN-*.md` + `adr/INDEX.md`
-- `site/src/content/docs/schema/*.md` (hand-written; `docs/adr/` mirrors
-  automatically at site build)
+- `site/src/content/docs/schema/**` (hand-written, `.md`/`.mdx`, including
+  `schema/documents/`; `docs/adr/` mirrors automatically at site build)
+
+### The stylesheet sync set
+
+A second, smaller one, and the reason it is written down: it has no ADR to
+anchor it. A refactor that changes what the CSS transformer emits is not a
+schema change, so nothing above fires — which is how the published style mapping
+came to describe a gradient-stroke mechanism, a `FILL` translation and a
+`text-align` vocabulary the transformer had all stopped using (specs#691).
+
+- `packages/cli/src/transforms/css/**` — a module's emitted declarations
+- `site/src/content/docs/code/style-mapping.md` — the appendix section that
+  **names that module**, which is what makes the pair checkable
+- `site/src/content/docs/code/styles.mdx` — the *Mapping Specs to CSS* table,
+  when a style key is added or removed
+
+Changing a module's output without the appendix is drift. The appendix names its
+owning module in every section, so the changed file identifies the section to
+re-verify.
 
 ## Consumers
 
@@ -132,8 +152,8 @@ tracks nothing and is never deleted from.
 - `root.schema.json` / `components.schema.json` carry a non-standard
   `"version": "0.12.0"` while the package is at 0.31.0 — unmaintained key.
 - Constitution cites `reference/styles.yaml`, which doesn't exist; says "no
-  test framework required" (15 tests exist); consumer list omits the three
-  newer packages.
+  test framework required" (tests exist); consumer list omits the newer
+  packages.
 - No CI runs tests or schema validation (workflows: auto-label, deploy-docs,
   release-cli only). Schema release is manual by design.
 - `tests/tmp/` at repo root holds committed CLI test scratch dirs.

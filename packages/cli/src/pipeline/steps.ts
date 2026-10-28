@@ -56,25 +56,64 @@ function filePayloads(ws: Workspace): Array<{ alias: string; input: string; mani
     .filter(entry => fs.existsSync(entry.input));
 }
 
-/** `config/`, watched by every step that reads conventions or settings. */
+/**
+ * `config/`, watched by every step that reads conventions or settings.
+ *
+ * `ws.configDir`, never `ws.config.configDir` — the latter is the directory
+ * *containing* config/, which is the workspace root. Watching that put every
+ * emitted tree under the watcher, so hand-editing a generated file kicked off
+ * a full re-emit that overwrote it.
+ */
 function configInput(ws: Workspace): StepInput[] {
-  const dir = ws.config.configDir;
+  const dir = ws.configDir;
   // A config change decides the shape of every component's output, so it is
   // never scoped to one of them.
   return dir && fs.existsSync(dir) ? [{ path: dir, scope: () => null }] : [];
+}
+
+/**
+ * The glyph SVGs `specs fetch --only <alias>,icons` writes, which the targets read to
+ * emit icon components.
+ *
+ * A fetch that adds or changes an icon changes what the targets should emit, with no
+ * spec having changed — so without this a newly declared `glyphs` convention lands the
+ * SVGs and nothing re-emits. The symptom is a Storybook showing the icons it had before.
+ *
+ * Matched by directory name rather than built from `ws.sources`, because an ad-hoc
+ * source writes to `icons-<alias>` and the library to `icons`.
+ *
+ * Scoped to the icons directories, never `assets/` itself: the targets write
+ * `assets/cssvars/`, so watching the parent would make each pass start the next one.
+ */
+function glyphAssetInputs(ws: Workspace): StepInput[] {
+  if (!fs.existsSync(ws.assetsDir)) return [];
+  return fs
+    .readdirSync(ws.assetsDir)
+    .filter(entry => entry === 'icons' || entry.startsWith('icons-'))
+    .map(entry => path.join(ws.assetsDir, entry))
+    .filter(dir => fs.statSync(dir).isDirectory())
+    // A glyph is referenced by any component, so a change here is never one component's.
+    .map(dir => ({ path: dir, scope: () => null }));
 }
 
 const scan: Step = {
   id: 'scan',
   label: 'scan',
   active: ws => filePayloads(ws).length > 0,
-  inputs: ws => filePayloads(ws).map(p => ({ path: p.input, scope: () => null })),
+  inactiveBecause: () => 'no fetched Figma payload in data/',
+  // `config/` is an input because the `glyphs` convention decides what this step
+  // excludes. Declaring a convention has to re-scan, or the manifest keeps counting
+  // glyphs as components.
+  inputs: ws => [
+    ...filePayloads(ws).map(p => ({ path: p.input, scope: () => null as string[] | null })),
+    ...configInput(ws),
+  ],
   // The manifest is this step's output, so writing it must not start it again.
   // It is also `generate`'s input, which is what makes ticking a checkbox
   // regenerate what it selected.
   outputs: ws => filePayloads(ws).map(p => p.manifest),
   async run(context) {
-    const { runScan } = await import('../commands/ScanCommand.js');
+    const { runScan } = await import('../commands/scan.js');
     const payloads = filePayloads(context.workspace);
     for (const payload of payloads) {
       await runScan(undefined, {
@@ -94,14 +133,86 @@ const generate: Step = {
   id: 'generate',
   label: 'generate',
   active: ws => filePayloads(ws).some(p => fs.existsSync(p.manifest)),
-  inputs: ws => filePayloads(ws).map(p => ({ path: p.manifest, scope: () => null })),
+  inactiveBecause: ws => filePayloads(ws).length === 0
+    ? 'no fetched Figma payload in data/'
+    : 'no manifest yet — scan writes it',
+  // `config/` decides the shape of everything this step writes — keys, naming, slots,
+  // glyphs. Without it here, a convention change re-ran `analyze` and both platform
+  // trees while the specs they read stayed as they were, so the pass printed a clean
+  // run over stale input. That is how a newly declared `glyphs` convention left glyph
+  // names out of the specs until someone ran `specs generate` by hand.
+  inputs: ws => [
+    ...filePayloads(ws).map(p => ({ path: p.manifest, scope: () => null as string[] | null })),
+    ...configInput(ws),
+  ],
   outputs: ws => [ws.specsDir],
   async run(context) {
-    const { runGenerate } = await import('../commands/GenerateCommand.js');
+    const { runGenerate } = await import('../commands/generate.js');
     const result = await runGenerate(undefined, {
       config: context.configPath,
       verbose: context.verbose,
       component: context.components.length === 1 ? context.components[0] : undefined,
+    });
+    return { detail: result.detail };
+  },
+};
+
+/**
+ * The analyzers, writing their reports into `specs/analysis/`.
+ *
+ * Sits between `generate` and the target stages, which is where both its edges
+ * put it: it reads `specs/`, so it cannot precede `generate`, and
+ * `storybook publish` publishes a page per report, so it cannot follow the step
+ * that consumes what it writes. That makes it the only edge in the chain between
+ * two local steps — everything else reads `specs/` or `data/` directly.
+ *
+ * Being ahead of `react` and `webcomponents` is not a dependency — neither reads
+ * an analysis — but it is not arbitrary either. The styling analyzer writes a
+ * `styling.*` document into each spec folder, and the spec folder is what the
+ * targets watch. Running first means everything this pass will write into a spec
+ * folder is already there by the time a target reads it, so one change settles in
+ * one pass.
+ */
+const analyze: Step = {
+  id: 'analyze',
+  label: 'analyze',
+  active: ws => ws.hasSpecs,
+  inactiveBecause: () => 'no specs/ yet — generate writes them',
+  inputs: ws => [
+    // Scoped the same way the targets are, even though this step ignores the
+    // scope. `analyze` is now the earliest step a spec change enters, and the
+    // entry is where the pass learns which component changed — declaring this
+    // unscoped would widen every spec edit to a full re-emit of both platform
+    // trees. So the keys are resolved here and passed down; what this step does
+    // with them is its own business, and what it does is ignore them.
+    { path: ws.specsDir, scope: changed => specScope(ws.specsDir, changed) },
+    ...configInput(ws),
+    // Variables and styles are the token universe the unused-token report needs.
+    // A fetch that refreshes them changes what the report should say, with no
+    // spec having changed at all.
+    ...ws.sources.flatMap(source =>
+      (['variables', 'styles'] as const)
+        .filter(kind => source.fetch.includes(kind))
+        .map(kind => path.join(ws.dataDir, `${source.alias}.${kind}.json`))
+        .filter(file => fs.existsSync(file))
+        .map(file => ({ path: file, scope: () => null })),
+    ),
+  ],
+  // Both of its writes land under `specs/`: the reports in `analysis/`, and a
+  // `styling.*` document in each spec folder. Declaring the specs directory
+  // covers both, and is what stops the pass from re-triggering itself on its own
+  // output mid-flight.
+  outputs: ws => [ws.specsDir],
+  async run(context) {
+    const { runAnalyze } = await import('../commands/analyze.js');
+    // `context.components` is deliberately not passed on. Each analyzer's
+    // `finalize()` aggregates only the specs it visited, so a scoped analyze
+    // would overwrite a catalogue-wide report with a one-component one and
+    // report success. The reports are shared output even though the input is read
+    // per spec, which is the same reason `config/` never scopes a target.
+    const result = await runAnalyze([], {
+      config: context.configPath,
+      verbose: context.verbose,
     });
     return { detail: result.detail };
   },
@@ -113,13 +224,15 @@ function targetStep(id: 'react' | 'webcomponents', tree: string): Step {
     id,
     label: id,
     active: ws => (id === 'react' ? ws.hasReact : ws.hasWebComponents),
+    inactiveBecause: () => `no ${tree}/ tree`,
     inputs: ws => [
       { path: ws.specsDir, scope: changed => specScope(ws.specsDir, changed) },
       ...configInput(ws),
+      ...glyphAssetInputs(ws),
     ],
     outputs: ws => [path.join(ws.root, tree, 'src')],
     async run(context) {
-      const { emitTarget } = await import('../commands/TargetCommands.js');
+      const { emitTarget } = await import('../emit/targets.js');
       const result = await emitTarget(id, {
         config: context.configPath,
         components: context.components.length > 0 ? context.components : undefined,
@@ -137,11 +250,21 @@ const storybook: Step = {
   id: 'storybook',
   label: 'storybook publish',
   active: ws => ws.scaffolded,
-  inputs: ws => [
-    { path: ws.specsDir, scope: () => null },
-    ...configInput(ws),
-    ...(fs.existsSync(ws.assetsDir) ? [{ path: ws.assetsDir, scope: () => null }] : []),
-  ],
+  inactiveBecause: () => 'no Storybook host scaffolded',
+  inputs: ws => {
+    // `content-overrides/` is an input, not just somewhere a person keeps
+    // files. Publish decides whether to write a generated page by whether an
+    // override shadows it, so adding one has to re-run publish — otherwise the
+    // page it replaces sits there stale until something else happens to
+    // trigger a pass.
+    const overrides = path.join(ws.storybookDir, 'content-overrides');
+    return [
+      { path: ws.specsDir, scope: () => null },
+      ...configInput(ws),
+      ...(fs.existsSync(ws.assetsDir) ? [{ path: ws.assetsDir, scope: () => null }] : []),
+      ...(fs.existsSync(overrides) ? [{ path: overrides, scope: () => null }] : []),
+    ];
+  },
   outputs: ws => [path.join(ws.storybookDir, 'content')],
   async run(context) {
     const { publish } = await import('../storybook/publish.js');
@@ -168,11 +291,12 @@ const render: Step = {
   id: 'render',
   label: 'render',
   active: ws => ws.hasSpecs,
+  inactiveBecause: () => 'no specs/ to render',
   inputs: ws => [{ path: ws.specsDir, scope: changed => specScope(ws.specsDir, changed) }],
   // Writes to Figma, not to disk. Nothing local to suppress.
   outputs: () => [],
   async run(context) {
-    const { runRender } = await import('../commands/RenderCommand.js');
+    const { runRender } = await import('../commands/render.js');
     const result = await runRender({
       config: context.configPath,
       components: context.components.length > 0 ? context.components : undefined,
@@ -188,6 +312,7 @@ const render: Step = {
 export const STEPS: readonly Step[] = [
   scan,
   generate,
+  analyze,
   targetStep('react', 'react'),
   targetStep('webcomponents', 'webcomponents'),
   storybook,

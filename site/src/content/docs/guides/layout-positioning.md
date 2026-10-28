@@ -3,7 +3,7 @@ title: "Layout Positioning"
 description: "How Figma constraints map to semantic positioning properties in the spec output"
 ---
 
-Figma stores element position as raw `x`/`y` pixel coordinates plus a `constraints` object that describes how the element is anchored within its parent. Specs transforms these into semantic positioning properties that tell consumers *where* the element is anchored — not just the pixel offset.
+Figma stores element position as raw `x`/`y` pixel coordinates plus a `constraints` object that describes how the element is anchored within its parent. Spectacular transforms these into semantic positioning properties that tell consumers *where* the element is anchored — not just the pixel offset.
 
 ## The Problem
 
@@ -11,7 +11,7 @@ A raw `x: 24` tells you nothing about intent. Is the element pinned 24 px from t
 
 ## What It Does
 
-Specs reads the Figma `constraints` object (one constraint per axis) and emits the appropriate directional property instead of raw `x`/`y`. The `position` property replaces Figma's `layoutPositioning`.
+Spectacular reads the Figma `constraints` object (one constraint per axis) and emits the appropriate directional property instead of raw `x`/`y`. The `position` property replaces Figma's `layoutPositioning`.
 
 ### Constraint → Property Mapping
 
@@ -63,7 +63,7 @@ end: 12
 top: 12
 ```
 
-Figma stores `x` as the distance from the left, but the constraint says "pin to the right." Specs converts this to `end: 12` — the offset from the inline-end edge.
+Figma stores `x` as the distance from the left, but the constraint says "pin to the right." Spectacular converts this to `end: 12` — the offset from the inline-end edge.
 
 ### CENTER — Offset from Center
 

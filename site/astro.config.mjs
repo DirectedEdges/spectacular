@@ -5,14 +5,28 @@ const pro = { text: 'Pro', variant: 'tip' };
 const experimental = { text: 'Experimental', variant: 'default' };
 
 export default defineConfig({
-  site: 'https://www.specsplugin.com',
+  site: 'https://spectacular.systems',
   server: { port: 4323 },
+  redirects: {
+    // Page renamed when the glyphs convention outgrew the single name pattern (ADR-103)
+    '/settings/glyph-name-pattern/': '/settings/glyphs/',
+    // Retired — content merged into the schema overview
+    '/schema/document-map/': '/schema/',
+  },
   integrations: [
     starlight({
-      title: 'Specs',
+      title: 'Spectacular',
       description: 'Generate structured, machine-readable UI component specifications from Figma.',
+      // Outlined paths, no webfont. Two files because Starlight renders the logo
+      // as an <img>, which cannot inherit the page's text color: `light` carries
+      // Starlight's light-theme ink, `dark` carries white.
+      logo: {
+        light: './src/assets/spectacular-light.svg',
+        dark: './src/assets/spectacular-dark.svg',
+        replacesTitle: true,
+      },
       social: {
-        github: 'https://github.com/DirectedEdges/specs',
+        github: 'https://github.com/DirectedEdges/spectacular',
       },
       components: {
         SocialIcons: './src/components/SocialIcons.astro',
@@ -102,6 +116,18 @@ export default defineConfig({
                 { label: 'Variants', slug: 'schema/variants' },
               ],
             },
+            {
+              label: 'Documents',
+              collapsed: true,
+              items: [
+                { label: 'Component API', slug: 'schema/documents/component-api' },
+                { label: 'Component Variants', slug: 'schema/documents/component-variants' },
+                { label: 'Component Examples', slug: 'schema/documents/component-examples' },
+                { label: 'Composition API', slug: 'schema/documents/composition-api' },
+                { label: 'Composition Variants', slug: 'schema/documents/composition-variants' },
+                { label: 'Composition Examples', slug: 'schema/documents/composition-examples' },
+              ],
+            },
           ],
         },
         {
@@ -134,37 +160,46 @@ export default defineConfig({
           ],
         },
         {
-          label: 'Command line',
+          label: 'Commands',
           collapsed: true,
           items: [
             { label: 'Overview', slug: 'cli' },
             { label: 'Workflows', slug: 'cli/workflows' },
-            // The whole-workspace commands lead: they are what most people
-            // want, and the rest are the steps they run.
-            { label: 'build', slug: 'cli/commands/build', badge: experimental },
-            { label: 'run', slug: 'cli/commands/run', badge: experimental },
             { label: 'init', slug: 'cli/commands/init' },
             { label: 'fetch', slug: 'cli/commands/fetch' },
             { label: 'scan', slug: 'cli/commands/scan' },
             { label: 'applyCustomTokens', slug: 'cli/commands/apply-custom-tokens' },
             { label: 'generate', slug: 'cli/commands/generate' },
-            { label: 'bridge', slug: 'cli/commands/bridge', badge: experimental },
-            { label: 'cache', slug: 'cli/commands/cache', badge: experimental },
-            { label: 'render', slug: 'cli/commands/render', badge: experimental },
+            { label: 'build', slug: 'cli/commands/build' },
+            { label: 'run', slug: 'cli/commands/run' },
+            { label: 'cache', slug: 'cli/commands/cache' },
+            { label: 'bridge', slug: 'cli/commands/bridge' },
+            { label: 'render', slug: 'cli/commands/render' },
             { label: 'migrate', slug: 'cli/commands/migrate' },
-            { label: 'version', slug: 'cli/commands/version' },
-            { label: 'skills', slug: 'cli/commands/skills' },
-            { label: 'storybook', slug: 'cli/commands/storybook', badge: experimental },
             {
-              label: 'Analyze',
+              // `analyze` is the command entry; the rest of this group is
+              // one page per report it writes.
+              label: 'Analyze reports',
               collapsed: true,
               badge: experimental,
               items: [
+                { label: 'analyze', slug: 'cli/commands/analyze' },
                 { label: 'Overview', slug: 'cli/analyze' },
                 { label: 'props', slug: 'cli/analyze/props' },
                 { label: 'styling', slug: 'cli/analyze/styling' },
                 { label: 'dependencies', slug: 'cli/analyze/dependencies' },
                 { label: 'keys', slug: 'cli/analyze/keys' },
+                { label: 'roles', slug: 'cli/analyze/roles' },
+              ],
+            },
+            {
+              label: 'Skills',
+              collapsed: true,
+              badge: experimental,
+              items: [
+                { label: 'skills', slug: 'cli/commands/skills' },
+                { label: 'icons.setup', slug: 'cli/skills/icons-setup' },
+                { label: 'states.setup', slug: 'cli/skills/states-setup' },
               ],
             },
           ],
@@ -189,10 +224,20 @@ export default defineConfig({
               ],
             },
             {
+              label: 'Testing',
+              collapsed: true,
+              items: [
+                { label: 'Overview', slug: 'testing', badge: experimental },
+                { label: 'Getting Started', slug: 'testing/getting-started', badge: experimental },
+                { label: 'testing visual', slug: 'cli/commands/testing', badge: experimental },
+              ],
+            },
+            {
               label: 'Roles',
               collapsed: true,
               items: [
                 { label: 'Overview', slug: 'roles' },
+                { label: 'Choosing a role', slug: 'roles/choosing' },
                 { label: 'Inventory', slug: 'roles/inventory' },
                 { label: 'Precedence', slug: 'roles/precedence' },
               ],
@@ -221,6 +266,7 @@ export default defineConfig({
             { label: 'Versioning', slug: 'storybook/versioning' },
             { label: 'Customization', slug: 'storybook/customization' },
             { label: 'Technical Details', slug: 'storybook/technical-details' },
+            { label: 'Commands', slug: 'cli/commands/storybook' },
           ],
         },
         {
@@ -290,12 +336,13 @@ export default defineConfig({
               ],
             },
             {
-              label: 'Specs Conventions',
+              label: 'Specs',
               collapsed: true,
               items: [
                 { label: 'states', slug: 'settings/states' },
                 { label: 'accessibility', slug: 'settings/accessibility' },
                 { label: 'value', slug: 'settings/value' },
+                { label: 'slots.default', slug: 'settings/default-slot', badge: pro },
               ],
             },
             {
@@ -303,14 +350,14 @@ export default defineConfig({
               collapsed: true,
               items: [
                 { label: 'naming', slug: 'settings/figma-keys' },
-                { label: 'glyphs', slug: 'settings/glyph-name-pattern' },
+                { label: 'glyphs', slug: 'settings/glyphs' },
                 { label: 'codeOnlyProps', slug: 'settings/code-only-props-pattern' },
                 { label: 'subcomponents', slug: 'settings/subcomponents' },
                 { label: 'instanceExamples', slug: 'settings/instance-examples', badge: pro },
                 { label: 'images', slug: 'settings/images' },
-                { label: 'slots.default', slug: 'settings/default-slot', badge: pro },
                 { label: 'slotConstraints', slug: 'settings/slot-constraints', badge: pro },
                 { label: 'inferNumberProps', slug: 'settings/infer-number-props' },
+                { label: 'objectProps', slug: 'settings/object-props' },
                 { label: 'Promotion table', slug: 'settings/figma-primitives' },
               ],
             },
@@ -319,7 +366,7 @@ export default defineConfig({
           ],
         },
         { label: 'Releases', slug: 'overview/releases' },
-        { label: 'About Specs', slug: 'overview/aboutspecs' },
+        { label: 'About Spectacular', slug: 'overview/aboutspecs' },
         { label: 'License (Legal)', slug: 'overview/license' },
         { label: 'Terms of Service', slug: 'overview/terms-of-service' },
       ],

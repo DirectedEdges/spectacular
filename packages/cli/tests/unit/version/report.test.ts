@@ -2,10 +2,10 @@ import { describe, it, expect, afterEach } from 'vitest';
 import fsx from 'fs-extra';
 import path from 'path';
 import { assemble, resolveWorkspace } from '../../../src/version/assemble.js';
-import { planCut, commitCut } from '../../../src/version/cut.js';
-import { buildCutChangelog, buildCutDataset, buildLedgerReport, buildPremergeDataset } from '../../../src/version/datasets.js';
-import { renderChangelog, renderReport, valueText, configText } from '../../../src/version/report.js';
-import { loadRules } from '../../../src/version/rules.js';
+import { planCut, commitCut } from '../../../src/version/ledger/cut.js';
+import { buildCutChangelog, buildCutDataset, buildLedgerReport, buildPremergeDataset } from '../../../src/version/report/dataset.js';
+import { renderChangelog, renderReport, valueText, configText } from '../../../src/version/report/render.js';
+import { loadRules } from '../../../src/version/rules/grade.js';
 import { makeWorkspace, removeWorkspace, editYaml, writeYaml } from './helpers.js';
 
 const ruleSet = loadRules();

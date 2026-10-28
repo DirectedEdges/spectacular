@@ -1,0 +1,36 @@
+# Conventions about the spec itself — not about Figma or any code platform.
+# Every member here names a prop (or an enum value) the spec declares, so a
+# transform reading only the spec can apply it.
+# Each block is off until uncommented.
+# Reference: https://spectacular.systems/schema/conventions/
+
+# The slot every layout component composes through; a matching slot prop is marked
+# defaultSlot in the spec, and content filling it nests as plain children
+# https://spectacular.systems/settings/default-slot/
+# slots:
+#   default:
+#     match:
+#       - children
+#       - items
+
+# Variant props that are state concepts; absence emits them as data-* selectors
+# https://spectacular.systems/settings/states/
+# states:
+#   hover:
+#     prop: state
+#     value: hover
+#   disabled:
+#     prop: disabled   # boolean prop — value defaults to "true"
+
+# The prop naming a control with no text of its own; an element carrying the
+# name wins over the prop — https://spectacular.systems/settings/accessibility/
+# accessibility:
+#   label:
+#     prop: a11yLabel
+
+# The prop carrying a control's value where no element represents it
+# https://spectacular.systems/settings/value/
+# value:
+#   prop: progress
+#   # Boolean prop forcing the indeterminate presentation
+#   indeterminate: isLoading

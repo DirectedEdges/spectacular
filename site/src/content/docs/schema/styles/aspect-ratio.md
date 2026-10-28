@@ -1,6 +1,7 @@
 ---
 title: "aspectRatio"
 description: "Locked width-to-height ratio for an element"
+tableOfContents: false
 ---
 
 Locked aspect ratio. Present only when the node has a locked ratio.
@@ -13,6 +14,10 @@ Locked aspect ratio. Present only when the node has a locked ratio.
 | `null` | `null` (unconstrained) |
 
 `TokenReference` is intentionally excluded — aspect ratio is a structural lock of literal numbers in the Figma API, not a token-driven value.
+
+#### Default
+
+`null`
 
 #### Supported on
 

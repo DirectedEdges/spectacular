@@ -53,6 +53,8 @@ Counts for the library as a whole, and the distribution of causes.
 
 ```yaml
 summary:
+  namingConvention: SENTENCE
+  measured: true
   totalComponents: 69
   componentsWithDivergence: 52
   totalNames: 948
@@ -65,6 +67,19 @@ summary:
     digit-initial: 1
     already-a-key: 1
 ```
+
+**Read `measured` before any of the counts.** Without a declared `naming` convention there is nothing to measure names against, so every name passes and `divergentNames` is `0` however the library is named — which is indistinguishable from a library that round-trips perfectly. `measured: false` and `namingConvention: null` say which it is, in the file rather than only in the terminal that produced it:
+
+```yaml
+summary:
+  namingConvention: null
+  measured: false
+  totalNames: 490
+  divergentNames: 0
+  causeDistribution: {}
+```
+
+Declare `naming` in `config/conventions/figma.yaml` to make the check run.
 
 ### byComponent
 

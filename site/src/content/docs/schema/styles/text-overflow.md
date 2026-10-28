@@ -1,6 +1,7 @@
 ---
 title: "textOverflow"
 description: "How overflowing text is handled"
+tableOfContents: false
 ---
 
 How overflowing text is handled — cut off or trailing ellipsis.
@@ -13,6 +14,10 @@ How overflowing text is handled — cut off or trailing ellipsis.
 | `null` | `null` |
 
 Not token-bindable — structural property, not a design value.
+
+#### Default
+
+`"CLIP"`
 
 #### Supported on
 

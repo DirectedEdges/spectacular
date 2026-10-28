@@ -1,6 +1,7 @@
 ---
 title: "backgroundColor"
 description: "Background fill color for a container or vector element"
+tableOfContents: false
 ---
 
 Background fill color, read from Figma's `fills` ([ADR 009](https://github.com/DirectedEdges/specs/blob/main/adr/009-color-values.md) explains why the name diverges).
@@ -14,6 +15,10 @@ Background fill color, read from Figma's `fills` ([ADR 009](https://github.com/D
 | [`TokenReference`](/schema/token-reference/) | `$token: DS.Color.Surface.Muted`<br>`$type: color` | [`config.format.token`](/settings/tokens/) |
 | [`GradientValue`](/schema/gradient-value/) | `type: LINEAR`<br>`angle: 180`<br>`stops: [...]` | — |
 | `null` | `null` | — |
+
+#### Default
+
+`null`
 
 #### Supported on
 

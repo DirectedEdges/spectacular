@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Bridge server — persistent WebSocket server for the Specs 2 CLI bridge.
+// Bridge server — persistent WebSocket server for the Spectacular CLI bridge.
 // Stays running until Ctrl+C (or SIGTERM from `specs bridge stop`). Accepts
 // multiple renderComponent/generateFromSelection commands per session, and
 // multiple simultaneously connected Figma files (each with its own plugin
@@ -25,6 +25,25 @@
 //   Reads the connected file's variables via the Plugin API, shaped like the REST
 //   variables/local response's meta — no REST call, no Enterprise plan needed.
 //   Response: { "success": true, "fileKey": "...", "meta": { "variableCollections": {...}, "variables": {...} } }
+//   POST http://localhost:9002/inspect
+//   Body: { "pageId": "42:2", "nodeId": "43:2", "fileKey": "...", "conventions": {...}, "settings": {...} }
+//   Describes a live component's anatomy elements, keyed the way the spec keys them, with
+//   the annotations already standing on each. Read-only. pageId and nodeId come from the
+//   spec's metadata.source; conventions/settings are needed for key derivation.
+//   Response: { "success": true, "name": "Checkbox", "elements": [
+//     { "key": "fieldLabel", "figmaName": "Field.Label", "type": "TEXT",
+//       "nodes": [{ "variant": "checked=false, …", "nodeId": "42:6", "annotations": ["role:label"] }],
+//       "signals": { "role": ["label"] } } ] }
+//   POST http://localhost:9002/annotate
+//   Body: { "pageId": "42:2", "components": [{ "nodeId": "43:2", "title": "checkbox",
+//            "elements": [{ "key": "control", "lines": ["role:checkbox"] }] }],
+//          "conventions": {...}, "settings": {...} }
+//   Adds role annotations to components on one page. Elements are named by anatomy key,
+//   never by node id — the plugin resolves each key against the live component at write
+//   time. Appends; never assigns over an existing annotation, and refuses an element that
+//   already carries a role on any variant.
+//   Response: { "success": true, "components": [{ "title": "checkbox", "elements": [
+//     { "key": "control", "nodeId": "42:4", "status": "applied" } ] }] }
 //   GET  http://localhost:9002/status
 //   Response: { "connections": [{ "fileKey": "...", "fileName": "...", "connected": true }] }
 //
@@ -49,61 +68,24 @@
 
 import type { ResolvedConventions, ResolvedSettings } from '@directededges/specs-schema';
 import { WebSocketServer, type WebSocket } from 'ws';
-import { createServer } from 'http';
-import { readFileSync, readdirSync, statSync } from 'fs';
-import { resolve as pathResolve, isAbsolute, basename } from 'path';
+import { createServer, type IncomingMessage, type ServerResponse } from 'http';
+import { readFileSync } from 'fs';
+import { isAbsolute } from 'path';
 import { parse } from 'yaml';
-import { WS_PORT, HTTP_PORT, DEFAULT_PAGE_ID, resolveWorkspaceDir } from './config.js';
-import { ConnectionRegistry, type Connection } from './connections.js';
+import { WS_PORT, HTTP_PORT, DEFAULT_PAGE_ID } from './config.js';
+import { ConnectionRegistry } from './connections.js';
 import { RequestTracker } from './requestTracker.js';
-import type { RenderRequestBody } from './client.js';
-import { countUnpublished, type VariablesIndex } from '../utilities/variablesIndex.js';
-import { formatKey } from '../utilities/formatKey.js';
 import {
-  readCacheFile, validateCache, describeProblems,
-  type ComponentsEntry, type StylesEntry, type VariablesEntry, type IconsEntry,
-} from '../Cache/Cache.js';
+  resolveDirs as resolveWorkspaceDirs,
+  type WorkspaceOverrides,
+} from './workspace.js';
+import {
+  BridgeOperations,
+  type TrackedResult, type DevStatusRequest,
+  type RenderResult, type GenerateResult, type VariablesResult,
+  type InspectResult, type AnnotateResult,
+} from './operations.js';
 
-/** The Dev Mode status a render request may carry — the bridge relays it, it does not
- *  derive it. `RenderCommand` reads it from the workspace scan manifest. */
-type DevStatusRequest = RenderRequestBody['devStatus'];
-
-/** id = same-file node id (fast path); key = published cross-file key (fallback import). */
-type ComponentEntry = { id: string; key?: string };
-type Manifest = Record<string, ComponentEntry>;
-type GlyphManifest = Record<string, ComponentEntry>;
-/** Token name → the handles that name resolves to. A spec references a variable by name only,
- *  so this is what gives the name meaning on the render side. */
-type VariablesManifest = VariablesIndex;
-
-interface RenderResult {
-  success: boolean;
-  nodeId?: string;
-  error?: string;
-  /** Phase durations reported by the plugin render (see figma-from-specs Timings.ts). */
-  timings?: { total: number; phases: Array<{ label: string; ms: number; count: number }> };
-  /** Phase durations measured here, before and around the plugin round-trip. */
-  bridgeTimings?: Array<{ label: string; ms: number }>;
-  /** Size of the render payload sent over the socket, in KB. */
-  payloadKB?: number;
-}
-
-interface GenerateResult {
-  success: boolean;
-  nodeId?: string;
-  name?: string;
-  specData?: unknown;
-  error?: string;
-}
-
-/** The connected file's variables, read by the plugin and shaped like the REST
- *  variables/local response's `meta` — see bridge/client.ts GetVariablesResponse. */
-interface VariablesResult {
-  success: boolean;
-  fileKey?: string;
-  meta?: { variableCollections: Record<string, unknown>; variables: Record<string, unknown> };
-  error?: string;
-}
 
 // ── Startup workspace (optional) ──────────────────────────────────────────────
 // If set, all requests use this workspace. If not set, workspace is derived per-request.
@@ -119,34 +101,24 @@ if (startupWorkspaceDir) {
   console.log(`  Workspace : (derived per-request from spec path)`);
 }
 
-// SPECS_DIR / DATA_DIR env vars override workspace derivation for non-standard layouts.
-const envSpecsDir = process.env.SPECS_DIR ?? null;
-const envDataDir = process.env.DATA_DIR ?? null;
-
 /**
- * Resolve the specs and data directories for a given spec or manifest path.
- * Precedence: explicit env overrides → startup workspace → per-request derivation.
+ * The startup answers every request resolves against: the pinned workspace above, and
+ * the SPECS_DIR / DATA_DIR overrides for a layout that does not put `specs/` and `data/`
+ * side by side. Read once here, because they are a property of how this process was
+ * started rather than of any one request.
  */
-function resolveDirs(fromPath: string): { specsDir: string; dataDir: string; aliases: string[]; glyphNamePattern?: string } {
-  const workspaceDir = startupWorkspaceDir ?? resolveWorkspaceDir(fromPath);
-  if (!workspaceDir && (!envSpecsDir || !envDataDir)) {
-    throw new Error(
-      `Cannot determine workspace for "${fromPath}". ` +
-      `Pass --workspace <dir>, set WORKSPACE_DIR, or ensure the path is inside a directory containing specs/ and data/.`
-    );
-  }
-  const specsDir = envSpecsDir ?? pathResolve(workspaceDir as string, 'specs');
-  const dataDir = envDataDir ?? pathResolve(workspaceDir as string, 'data');
-  // Data files are named {sourceAlias}.manifest.md, {sourceAlias}.file.json, etc.
-  // The source alias comes from the first key under `data.sources` in the workspace settings.
-  const { aliases, glyphNamePattern } = resolveSources(workspaceDir as string);
-  return { specsDir, dataDir, aliases, glyphNamePattern };
-}
+const workspaceOverrides: WorkspaceOverrides = {
+  startupWorkspaceDir,
+  envSpecsDir: process.env.SPECS_DIR ?? null,
+  envDataDir: process.env.DATA_DIR ?? null,
+};
 
-console.log(`\nSpecs 2 — CLI bridge`);
+const resolveDirs = (fromPath: string) => resolveWorkspaceDirs(fromPath, workspaceOverrides);
+
+console.log(`\nSpectacular — CLI bridge`);
 console.log(`  WebSocket : ws://localhost:${WS_PORT}  (plugin)`);
 console.log(`  HTTP      : http://localhost:${HTTP_PORT}/render  (control)`);
-console.log(`  Enable the CLI Bridge in the Specs 2 plugin to connect.`);
+console.log(`  Enable the CLI Bridge in the Figma plugin to connect.`);
 console.log(`  Ctrl+C to stop.\n`);
 
 // ── WebSocket server (plugin connections) ─────────────────────────────────────
@@ -158,7 +130,12 @@ const registry = new ConnectionRegistry<WebSocket>();
 
 // Pending requests keyed by a generated requestId, so responses route to the
 // right caller regardless of which connection they came from.
-const requests = new RequestTracker<string | RenderResult | GenerateResult | VariablesResult>();
+const requests = new RequestTracker<TrackedResult>();
+
+// What this server can ask a plugin to do. The registry, the tracker and the bound
+// workspace resolver are handed over rather than reached for, so the operations can be
+// exercised against a fake socket — see operations.ts.
+const ops = new BridgeOperations<WebSocket>({ registry, requests, resolveDirs });
 
 wss.on('connection', (ws: WebSocket) => {
   // This connection's fileKey isn't known until its 'hello' message arrives.
@@ -177,12 +154,42 @@ wss.on('connection', (ws: WebSocket) => {
       return;
     }
 
-    if (msg.type === 'pageId-result' || msg.type === 'renderComponent-result' || msg.type === 'generateFromSelection-result' || msg.type === 'removeNode-result' || msg.type === 'getVariables-result') {
+    if (msg.type === 'pageId-result' || msg.type === 'renderComponent-result' || msg.type === 'generateFromSelection-result' || msg.type === 'removeNode-result' || msg.type === 'getVariables-result' || msg.type === 'inspectComponent-result' || msg.type === 'annotateElements-result') {
       const requestId = msg.requestId as string | undefined;
       if (!requestId) return; // no way to route this response
 
       if (msg.type === 'pageId-result') {
         requests.resolve(requestId, msg.pageId as string);
+        return;
+      }
+
+      if (msg.type === 'annotateElements-result') {
+        if (msg.success) {
+          const components = msg.components as AnnotateResult['components'];
+          const tally = { applied: 0, conflict: 0, unresolved: 0, unsupported: 0 } as Record<string, number>;
+          for (const component of components ?? []) {
+            for (const element of component.elements) tally[element.status] = (tally[element.status] ?? 0) + 1;
+          }
+          const parts = Object.entries(tally).filter(([, n]) => n > 0).map(([k, n]) => `${n} ${k}`);
+          console.log(`✓ Annotated ${components?.length ?? 0} component(s) — ${parts.join(', ') || 'nothing to do'}`);
+          requests.resolve(requestId, { success: true, components });
+        } else {
+          console.error(`✗ Annotate failed: ${msg.error}`);
+          requests.resolve(requestId, { success: false, error: msg.error as string });
+        }
+        return;
+      }
+
+      if (msg.type === 'inspectComponent-result') {
+        if (msg.success) {
+          const elements = msg.elements as InspectResult['elements'];
+          const annotated = (elements ?? []).filter((e) => (e.signals.role?.length ?? 0) > 0).length;
+          console.log(`✓ Inspected ${msg.name ?? 'component'} — ${elements?.length ?? 0} elements, ${annotated} already carrying a role`);
+          requests.resolve(requestId, { success: true, name: msg.name as string, elements });
+        } else {
+          console.error(`✗ Inspect failed: ${msg.error}`);
+          requests.resolve(requestId, { success: false, error: msg.error as string });
+        }
         return;
       }
 
@@ -251,108 +258,122 @@ function errorMessage(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
+/**
+ * A request this server will not act on, as opposed to one that failed while it tried.
+ * `withJsonBody` answers it 400; anything else is a 500.
+ */
+class BadRequest extends Error {}
+
+/**
+ * Read a JSON body, hand it to one operation, and answer with whatever comes back.
+ *
+ * Every endpoint below used to carry its own copy of this: an accumulator, a parse
+ * guarded by try/catch, and the two response branches — five near-identical blocks whose
+ * only differences were the variable name and which operation ran. The envelope is the
+ * same for all of them, so it lives here and each endpoint is left saying what it needs
+ * and what it calls.
+ *
+ * A handler reports a bad request by throwing `BadRequest`, which is the one thing the
+ * previous shape did inline with an early `return` — and the reason it could not be
+ * factored out before.
+ */
+function withJsonBody<P>(
+  req: IncomingMessage,
+  res: ServerResponse,
+  handle: (params: P) => Promise<unknown>,
+): void {
+  let body = '';
+  req.on('data', (chunk) => { body += chunk; });
+  req.on('end', () => {
+    let params: P;
+    try {
+      params = (body ? JSON.parse(body) : {}) as P;
+    } catch {
+      respond(res, 400, { success: false, error: 'Invalid JSON body.' });
+      return;
+    }
+    // `Promise.resolve().then(…)` rather than calling `handle` directly: a validator that
+    // throws does so synchronously, and a synchronous throw inside this listener escapes
+    // before any `.catch` is attached — which takes the whole server down with it rather
+    // than answering 400. Wrapping turns it into a rejection, so a handler is free to
+    // throw or to reject and neither can kill the process.
+    Promise.resolve()
+      .then(() => handle(params))
+      .then((result) => respond(res, 200, result))
+      .catch((err) => respond(
+        res,
+        err instanceof BadRequest ? 400 : 500,
+        { success: false, error: errorMessage(err) },
+      ));
+  });
+}
+
+function respond(res: ServerResponse, status: number, body: unknown): void {
+  res.writeHead(status, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(body));
+}
+
 const http = createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/status') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ connections: registry.list() }));
+    respond(res, 200, { connections: registry.list() });
     return;
   }
 
   if (req.method === 'POST' && req.url === '/generate') {
-    let genBody = '';
-    req.on('data', (chunk) => { genBody += chunk; });
-    req.on('end', () => {
-      let params: { fileKey?: string; nodeId?: string; conventions?: ResolvedConventions; settings?: ResolvedSettings; remove?: boolean };
-      try { params = genBody ? JSON.parse(genBody) : {}; } catch {
-        res.writeHead(400);
-        res.end(JSON.stringify({ error: 'Invalid JSON body.' }));
-        return;
+    type P = { fileKey?: string; nodeId?: string; conventions?: ResolvedConventions; settings?: ResolvedSettings; remove?: boolean };
+    withJsonBody<P>(req, res, async (p) => {
+      const result = await ops.sendGenerateFromSelection(p.fileKey, p.nodeId, p.conventions, p.settings);
+      // The spec is in hand before the node goes, so a failed removal cannot cost the read.
+      if (p.remove && result.success && result.nodeId) {
+        try { await ops.sendRemoveNode(result.nodeId, p.fileKey); } catch { /* reported by the caller's next read */ }
       }
-
-      sendGenerateFromSelection(params.fileKey, params.nodeId, params.conventions, params.settings)
-        // The spec is in hand before the node goes, so a failed removal cannot cost the read.
-        .then(async (result) => {
-          if (params.remove && result.success && result.nodeId) {
-            try { await sendRemoveNode(result.nodeId, params.fileKey); } catch { /* reported by the caller's next read */ }
-          }
-          return result;
-        })
-        .then((result) => {
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify(result));
-        })
-        .catch((err) => {
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: false, error: errorMessage(err) }));
-        });
+      return result;
     });
     return;
   }
 
   if (req.method === 'POST' && req.url === '/variables') {
-    let varsBody = '';
-    req.on('data', (chunk) => { varsBody += chunk; });
-    req.on('end', () => {
-      let params: { fileKey?: string };
-      try { params = varsBody ? JSON.parse(varsBody) : {}; } catch {
-        res.writeHead(400);
-        res.end(JSON.stringify({ error: 'Invalid JSON body.' }));
-        return;
-      }
+    withJsonBody<{ fileKey?: string }>(req, res, (p) => ops.sendGetVariables(p.fileKey));
+    return;
+  }
 
-      sendGetVariables(params.fileKey)
-        .then((result) => {
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify(result));
-        })
-        .catch((err) => {
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: false, error: errorMessage(err) }));
-        });
+  if (req.method === 'POST' && req.url === '/inspect') {
+    type P = { fileKey?: string; pageId?: string; nodeId?: string; conventions?: ResolvedConventions; settings?: ResolvedSettings };
+    withJsonBody<P>(req, res, (p) => {
+      if (!p.pageId || !p.nodeId) {
+        throw new BadRequest("pageId and nodeId are required — both come from the spec's metadata.source.");
+      }
+      return ops.sendInspectComponent(p.fileKey, p.pageId, p.nodeId, p.conventions, p.settings);
+    });
+    return;
+  }
+
+  if (req.method === 'POST' && req.url === '/annotate') {
+    type P = { fileKey?: string; pageId?: string; components?: unknown; conventions?: ResolvedConventions; settings?: ResolvedSettings };
+    withJsonBody<P>(req, res, (p) => {
+      if (!p.pageId || !Array.isArray(p.components) || p.components.length === 0) {
+        throw new BadRequest('pageId and a non-empty components array are required.');
+      }
+      return ops.sendAnnotateElements(p.fileKey, p.pageId, p.components, p.conventions, p.settings);
     });
     return;
   }
 
   if (req.method !== 'POST' || req.url !== '/render') {
-    res.writeHead(405);
-    res.end(JSON.stringify({ error: 'Only POST /render, POST /generate, POST /variables, or GET /status is supported.' }));
+    respond(res, 405, { error: 'Only POST /render, POST /generate, POST /variables, POST /inspect, POST /annotate, or GET /status is supported.' });
     return;
   }
 
-  let body = '';
-  req.on('data', (chunk) => { body += chunk; });
-  req.on('end', () => {
-    let params: { specPath?: string; spec?: Record<string, unknown>; pageId?: string | null; fileKey?: string; overwrite?: boolean; conventions?: ResolvedConventions; settings?: ResolvedSettings; devStatus?: DevStatusRequest };
-    try { params = JSON.parse(body); } catch {
-      res.writeHead(400);
-      res.end(JSON.stringify({ error: 'Invalid JSON body.' }));
-      return;
+  type RenderParams = { specPath?: string; spec?: Record<string, unknown>; pageId?: string | null; fileKey?: string; overwrite?: boolean; conventions?: ResolvedConventions; settings?: ResolvedSettings; devStatus?: DevStatusRequest };
+  withJsonBody<RenderParams>(req, res, (p) => {
+    const { specPath: specArg, spec: preParsedSpec, pageId = null, fileKey, overwrite, conventions, settings, devStatus } = p;
+    // Absolute, because workspace derivation walks up from a real path. The previous
+    // shape tested `!specArg` twice, the second time unreachably.
+    if (!specArg) throw new BadRequest('specPath is required.');
+    if (!isAbsolute(specArg)) {
+      throw new BadRequest('specPath must be absolute when no startup workspace is configured.');
     }
-
-    const { specPath: specArg, spec: preParsedSpec, pageId = null, fileKey, overwrite, conventions, settings, devStatus } = params;
-
-    if (!specArg) {
-      res.writeHead(400);
-      res.end(JSON.stringify({ error: 'specPath is required.' }));
-      return;
-    }
-
-    // Single spec path: must be absolute (workspace derivation requires a real path)
-    if (!specArg || !isAbsolute(specArg)) {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'specPath must be absolute when no startup workspace is configured.' }));
-      return;
-    }
-
-    sendRender(specArg, pageId, fileKey, preParsedSpec, overwrite, conventions, settings, devStatus)
-      .then((result) => {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(result));
-      })
-      .catch((err) => {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: false, error: errorMessage(err) }));
-      });
+    return ops.sendRender(specArg, pageId, fileKey, preParsedSpec, overwrite, conventions, settings, devStatus);
   });
 });
 
@@ -362,405 +383,6 @@ http.on('error', (e: NodeJS.ErrnoException) => {
   if (e.code === 'EADDRINUSE') console.error(`Port ${HTTP_PORT} already in use.`);
   process.exit(1);
 });
-
-// ── Shared utilities ──────────────────────────────────────────────────────────
-
-// ── Manifest builders ─────────────────────────────────────────────────────────
-//
-// Every library-side lookup a render needs is read from the caches under
-// {dataDir}/cache/ (see src/Cache/Cache.ts). They are built by `specs fetch` and
-// `specs cache` from the fetched payloads, so no payload is parsed here — a file
-// payload can be hundreds of megabytes and used to be parsed three times per render.
-// Only the spec-side half of the instance manifest is derived at render time, since
-// it reflects the workspace's specs rather than the library.
-
-/**
- * Build a flat manifest of spec key → component entry by scanning specsDir.
- * Also layers in subcomponent ref aliases from the current spec. Published
- * cross-file keys come from the components cache, which records them per node id
- * across every fetched library.
- */
-function buildManifest(spec: Record<string, unknown>, specsDir: string, dataDir: string, keyFormat?: string): Manifest {
-  const manifest: Manifest = {};
-
-  const cache = readCacheFile<ComponentsEntry>(dataDir, 'components');
-  const entryFor = (id: string): ComponentEntry => {
-    const key = cache?.entries[id]?.key;
-    return key ? { id, key } : { id };
-  };
-
-  const specFiles = collectSpecFiles(specsDir);
-  // Deduplicate by key: first nodeId found wins (variants.yaml before api.yaml, etc.)
-  for (const { key, path } of specFiles) {
-    if (manifest[key]) continue; // already have a nodeId for this key
-    try {
-      const s = parse(readFileSync(path, 'utf8')) as { metadata?: { source?: { nodeId?: string } } };
-      const nodeId = s.metadata?.source?.nodeId;
-      if (nodeId) manifest[key] = entryFor(nodeId);
-    } catch {
-      // Skip unreadable or non-spec files silently
-    }
-  }
-
-  // Layer 2: alias subcomponent ref keys from the current spec.
-  const specTyped = spec as {
-    subcomponents?: Record<string, { source?: { nodeId?: string }; title?: string }>;
-    components?: Record<string, { subcomponents?: Record<string, { source?: { nodeId?: string }; title?: string }> }>;
-  };
-  const subcomponents = specTyped.subcomponents ?? Object.values(specTyped.components ?? {})[0]?.subcomponents;
-  if (subcomponents) {
-    for (const [refKey, sub] of Object.entries(subcomponents)) {
-      if (sub.source?.nodeId) {
-        manifest[refKey] = entryFor(sub.source.nodeId);
-      } else if (sub.title) {
-        const titleKey = toCamelCase(sub.title);
-        if (manifest[titleKey]) manifest[refKey] = manifest[titleKey];
-      }
-    }
-  }
-
-  // Layer 3: the components the workspace has no spec for.
-  //
-  // A spec names an instance's component with a formatted key, and that transform is lossy
-  // — "DS Link/On overlay/M/False/Rest/Start" formats to "dsLinkOnOverlayMFalseRestStart"
-  // with the separators gone — so the name cannot be reconstructed from the key. It can be
-  // recognised, though: format the library's own component names the same way and compare.
-  // These resolve by published key on the render side, which is what makes a component from
-  // another file placeable at all.
-  //
-  // Only names this spec actually references are added, so the payload does not grow by the
-  // library's entire component list. Spec-derived entries always win — a workspace component
-  // is the more specific answer, and its node id is local to the file being rendered into.
-  const referenced = collectComponentNames(spec);
-  if (referenced.size > 0 && cache) {
-    const byFormattedName = new Map<string, ComponentEntry>();
-    for (const [id, entry] of Object.entries(cache.entries)) {
-      if (!entry.name) continue;
-      const formatted = formatKey(entry.name, keyFormat);
-      // First occurrence wins. Distinct components can format to the same key (the transform
-      // is lossy), and nothing in the payload says which one a spec meant.
-      if (!byFormattedName.has(formatted)) byFormattedName.set(formatted, { id, key: entry.key });
-    }
-    let added = 0;
-    for (const name of referenced) {
-      if (manifest[name]) continue;
-      const found = byFormattedName.get(name);
-      if (found) { manifest[name] = found; added++; }
-    }
-    if (added > 0) console.log(`  Manifest: +${added} from library components with no spec`);
-  }
-
-  console.log(`  Manifest: ${Object.keys(manifest).length} entries`);
-  return manifest;
-}
-
-/**
- * Every component name a spec references, at any depth — variants, examples, slot content,
- * subcomponents. `$ref` forms are skipped: those already resolve within the spec.
- *
- * Two surfaces name components. `instanceOf` names the component an element instantiates.
- * A `propConfigurations` value names one too when the property behind it is an instance
- * swap — an icon on an avatar, say — and the spec gives no clue which of its values those
- * are, since it records the property's value, not its Figma type. So every string value is
- * offered up: a name that matches no library component simply finds nothing, and one that
- * does is only ever used by a swap that asked for it.
- */
-function collectComponentNames(node: unknown, acc = new Set<string>()): Set<string> {
-  if (!node || typeof node !== 'object') return acc;
-  if (Array.isArray(node)) { for (const item of node) collectComponentNames(item, acc); return acc; }
-  for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
-    if (key === 'instanceOf' && typeof value === 'string') acc.add(value);
-    else if (key === 'propConfigurations' && value && typeof value === 'object') {
-      for (const configured of Object.values(value as Record<string, unknown>)) {
-        if (typeof configured === 'string') acc.add(configured);
-      }
-      collectComponentNames(value, acc); // $nested configs carry their own values
-    }
-    else collectComponentNames(value, acc);
-  }
-  return acc;
-}
-
-/**
- * Glyph name → component entry, straight from the icons cache. The cache is built by
- * matching the configured glyphNamePattern against the fetched file, so render depends
- * on no scan output: a scan manifest is generated and then authored, which makes it a
- * poor thing to resolve against.
- */
-function buildGlyphManifest(dataDir: string): GlyphManifest {
-  const cache = readCacheFile<IconsEntry>(dataDir, 'icons');
-  const result: GlyphManifest = {};
-  for (const [name, entry] of Object.entries(cache?.entries ?? {})) {
-    result[name] = entry.key ? { id: entry.id, key: entry.key } : { id: entry.id };
-  }
-  console.log(`  Glyph manifest: ${Object.keys(result).length} glyphs`);
-  return result;
-}
-
-/** Style name → published key, for the style types a spec can reference. */
-function buildStylesManifest(dataDir: string): Record<string, string> {
-  const cache = readCacheFile<StylesEntry>(dataDir, 'styles');
-  const result: Record<string, string> = {};
-  for (const [name, entry] of Object.entries(cache?.entries ?? {})) {
-    result[name] = entry.key;
-  }
-  console.log(`  Styles manifest: ${Object.keys(result).length} entries`);
-  return result;
-}
-
-/** Token name → the handles it resolves to. */
-function buildVariablesManifest(dataDir: string): VariablesManifest {
-  const cache = readCacheFile<VariablesEntry>(dataDir, 'variables');
-  const index: VariablesManifest = {};
-  for (const [name, entry] of Object.entries(cache?.entries ?? {})) {
-    index[name] = { key: entry.key, id: entry.id, published: entry.published };
-  }
-
-  const names = Object.keys(index).length;
-  if (names === 0) {
-    console.warn(`  Variables manifest: no named variables cached — variable binding disabled`);
-    return index;
-  }
-
-  const unpublished = countUnpublished(index);
-  const suffix = unpublished > 0 ? ` (${unpublished} not importable from the library — id fallback only)` : '';
-  console.log(`  Variables manifest: ${names} token names${suffix}`);
-  return index;
-}
-
-/**
- * Collect all spec YAML files from a specs directory.
- * Handles both flat layouts (specsDir/foo.yaml) and subdirectory layouts
- * (specsDir/foo/variants.yaml, specsDir/foo/api.yaml, etc.).
- * Returns an array of { key, path } where key is the camelCase component name.
- */
-function collectSpecFiles(specsDir: string): Array<{ key: string; path: string }> {
-  let entries: string[];
-  try {
-    entries = readdirSync(specsDir);
-  } catch (e) {
-    throw new Error(`Cannot read specs directory "${specsDir}": ${(e as Error).message}`);
-  }
-
-  const files: Array<{ key: string; path: string }> = [];
-  for (const entry of entries) {
-    const entryPath = pathResolve(specsDir, entry);
-    let stat;
-    try { stat = statSync(entryPath); } catch { continue; }
-
-    if (stat.isFile() && entry.endsWith('.yaml')) {
-      // Flat layout: specsDir/foo.yaml → key "foo"
-      files.push({ key: basename(entry, '.yaml'), path: entryPath });
-    } else if (stat.isDirectory()) {
-      // Subdirectory layout: specsDir/foo/variants.yaml → key "foo"
-      // Prefer variants.yaml; also collect api.yaml and others for nodeId scanning.
-      let subEntries: string[];
-      try { subEntries = readdirSync(entryPath); } catch { continue; }
-      for (const sub of subEntries) {
-        if (sub.endsWith('.yaml')) {
-          files.push({ key: entry, path: pathResolve(entryPath, sub) });
-        }
-      }
-    }
-  }
-
-  return files;
-}
-
-
-function toCamelCase(str: string): string {
-  return str
-    .replace(/[^a-zA-Z0-9 ]/g, '')
-    .split(' ')
-    .filter(Boolean)
-    .map((w, i) => i === 0 ? w.toLowerCase() : w[0].toUpperCase() + w.slice(1).toLowerCase())
-    .join('');
-}
-
-// ── Workspace config resolution ───────────────────────────────────────────────
-
-/**
- * Every source alias declared in the workspace config, in declaration order, plus the
- * glyph naming pattern. Render resolves against all of them: a component can instance a
- * component, bind a token, or place a glyph from any library the workspace declares.
- *
- * The workspace authors config/settings.yaml and config/conventions.yaml (ADR-071);
- * a pre-split workspace still carries a single specs.config.yaml, so that shape is
- * read as a fallback to keep older workspaces rendering.
- */
-/**
- * The glyph name pattern this workspace declares, from whichever conventions layout it uses.
- *
- * `config/conventions/figma.yaml` is the only layout ADR-078 leaves standing, and its
- * contents are that platform's conventions directly — the filename is the platform id, so
- * there is no `figma:` wrapper inside. The single-file `config/conventions.yaml` is read
- * second, for a workspace that has not been migrated.
- *
- * This value is part of the icons cache signature, and `specs cache` derives it from the
- * loaded config. Reading it from a different place than the cache writer does not fail
- * loudly: the pattern comes back undefined, the two signatures disagree forever, and every
- * render refuses on a permanently "stale" icons.yaml.
- */
-function readGlyphNamePattern(workspaceDir: string): string | undefined {
-  try {
-    const figma = parse(readFileSync(pathResolve(workspaceDir, 'config', 'conventions', 'figma.yaml'), 'utf8')) as {
-      glyphs?: { match?: string };
-    };
-    if (figma?.glyphs?.match) return figma.glyphs.match;
-  } catch {
-    // No per-platform conventions file — try the single-file layout below.
-  }
-  try {
-    const conventions = parse(readFileSync(pathResolve(workspaceDir, 'config', 'conventions.yaml'), 'utf8')) as {
-      figma?: { glyphs?: { match?: string } };
-    };
-    return conventions?.figma?.glyphs?.match;
-  } catch {
-    return undefined; // No conventions file — no glyph pattern.
-  }
-}
-
-function resolveSources(workspaceDir: string): { aliases: string[]; glyphNamePattern?: string } {
-  try {
-    const settings = parse(readFileSync(pathResolve(workspaceDir, 'config', 'settings.yaml'), 'utf8')) as {
-      data?: { sources?: Record<string, unknown> };
-    };
-    const sources = settings?.data?.sources;
-    const aliases = sources && typeof sources === 'object' ? Object.keys(sources) : [];
-    return { aliases, glyphNamePattern: readGlyphNamePattern(workspaceDir) };
-  } catch {
-    // No split config — fall through to the legacy single-file shape.
-  }
-  const configPath = pathResolve(workspaceDir, 'specs.config.yaml');
-  try {
-    const config = parse(readFileSync(configPath, 'utf8')) as {
-      sources?: Record<string, unknown>;
-      config?: { processing?: { glyphNamePattern?: string } };
-    };
-    const sources = config?.sources;
-    const aliases = sources && typeof sources === 'object' ? Object.keys(sources) : [];
-    return { aliases, glyphNamePattern: config?.config?.processing?.glyphNamePattern };
-  } catch {
-    // No config or unreadable — no aliases, which render reports as an unusable cache
-    return { aliases: [] };
-  }
-}
-
-// ── Shared render logic ───────────────────────────────────────────────────────
-
-/**
- * Ask a specific connection's plugin for the current Figma page ID.
- */
-function getCurrentPageId(conn: Connection<WebSocket>): Promise<string> {
-  const { requestId, promise } = requests.create(5000, 'Timed out waiting for pageId-result.');
-  conn.ws.send(JSON.stringify({ type: 'getPageId', requestId }));
-  return promise as Promise<string>;
-}
-
-/**
- * Ask a specific connection's plugin to generate a spec from its current Figma
- * selection, or from an explicit nodeId (the plugin selects that node first).
- */
-/** Testing utility: delete a rendered node so a catalogue sweep leaves the page as it found it. */
-async function sendRemoveNode(nodeId: string, fileKey?: string): Promise<{ success: boolean; error?: string }> {
-  const conn = registry.resolve(fileKey);
-  const { requestId, promise } = requests.create(30000, 'Timed out waiting for removeNode-result.');
-  conn.ws.send(JSON.stringify({ type: 'removeNode', requestId, nodeId }));
-  return promise as Promise<{ success: boolean; error?: string }>;
-}
-
-/** Ask a connection's plugin for the file's variables, shaped like the REST payload's meta. */
-async function sendGetVariables(fileKey?: string): Promise<VariablesResult> {
-  const conn = registry.resolve(fileKey);
-  const { requestId, promise } = requests.create(60000, 'Timed out waiting for getVariables-result.');
-  conn.ws.send(JSON.stringify({ type: 'getVariables', requestId }));
-  const result = await (promise as Promise<VariablesResult>);
-  // The answering connection names the file — the caller maps it to a source alias.
-  return { ...result, fileKey: conn.fileKey };
-}
-
-async function sendGenerateFromSelection(fileKey?: string, nodeId?: string, conventions?: ResolvedConventions, settings?: ResolvedSettings): Promise<GenerateResult> {
-  const conn = registry.resolve(fileKey);
-  const { requestId, promise } = requests.create(60000, 'Timed out waiting for generateFromSelection-result.');
-  // `conventions`/`settings` travel with the request and govern how the plugin builds
-  // this one spec. The plugin must not adopt them as its own settings.
-  conn.ws.send(JSON.stringify({ type: 'generateFromSelection', requestId, nodeId, conventions, settings }));
-  return promise as Promise<GenerateResult>;
-}
-
-/**
- * Send a single renderComponent message over the WebSocket and wait for the result.
- */
-async function sendRender(specPath: string, rawPageId: string | null, fileKey?: string, preParsedSpec?: Record<string, unknown>, overwrite?: boolean, conventions?: ResolvedConventions, settings?: ResolvedSettings, devStatus?: DevStatusRequest): Promise<RenderResult> {
-  const conn = registry.resolve(fileKey);
-
-  let spec: Record<string, unknown>;
-  if (preParsedSpec) {
-    spec = preParsedSpec;
-  } else {
-    try {
-      spec = parse(readFileSync(specPath, 'utf8'));
-    } catch (e) {
-      throw new Error(`Error reading spec: ${(e as Error).message}`);
-    }
-  }
-
-  const dirs = resolveDirs(specPath);
-  const { specsDir, dataDir, aliases, glyphNamePattern } = dirs;
-
-  // Render resolves against the caches only. A missing or stale cache is fatal rather
-  // than rebuilt here: rebuilding parses every fetched payload, which is exactly the
-  // per-render cost the caches exist to remove — and silently rendering against data
-  // that no longer matches what was fetched binds specs to the wrong variables.
-  const problems = validateCache({ dataDir, aliases, glyphNamePattern });
-  if (problems.length > 0) throw new Error(describeProblems(problems));
-
-  const bridgeTimings: Array<{ label: string; ms: number }> = [];
-  const timed = <T>(label: string, fn: () => T): T => {
-    const start = Date.now();
-    try { return fn(); } finally { bridgeTimings.push({ label, ms: Date.now() - start }); }
-  };
-
-  // A spec generated since the conventions/settings split (ADR-071) records its key
-  // format at `metadata.settings.spec.keys`; older specs carry `metadata.config.format.keys`.
-  // Read the new key first and fall back so pre-split specs still render.
-  type SpecMeta = { settings?: { spec?: { keys?: string } }; config?: { format?: { keys?: string } } };
-  const keysOf = (m?: SpecMeta): string | undefined => m?.settings?.spec?.keys ?? m?.config?.format?.keys;
-  const componentsOf = (spec as { components?: Record<string, { metadata?: SpecMeta }> })?.components;
-  const keyFormat = keysOf((spec as { metadata?: SpecMeta })?.metadata)
-    ?? keysOf(componentsOf?.[Object.keys(componentsOf ?? {})[0]]?.metadata);
-  const manifest = timed('instance manifest', () => buildManifest(spec, specsDir, dataDir, keyFormat));
-  const glyphIdManifest = timed('glyph manifest', () => buildGlyphManifest(dataDir));
-  const stylesManifest = timed('styles manifest', () => buildStylesManifest(dataDir));
-  const variablesManifest = timed('variables manifest', () => buildVariablesManifest(dataDir));
-
-  // Resolve page ID: use provided value, or ask this connection's plugin for its current page.
-  let pageId: string;
-  if (rawPageId) {
-    pageId = rawPageId.replace(/-/g, ':');
-  } else {
-    pageId = await getCurrentPageId(conn);
-    console.log(`  Page ID: ${pageId} (from plugin current page, ${conn.fileKey})`);
-  }
-
-  const specTyped = spec as { components?: Record<string, { title?: string }> };
-  const componentName = Object.values(specTyped.components ?? {})[0]?.title
-    ?? Object.keys(specTyped.components ?? {})[0]
-    ?? specPath;
-
-  console.log(`Rendering: ${componentName} → page ${pageId} (${conn.fileKey})`);
-
-  // A large component set against a big library can take minutes today; a timeout
-  // shorter than the render discards a result the plugin actually produced.
-  const { requestId, promise } = requests.create(300000, 'Timed out waiting for renderComponent-result.');
-  const payload = JSON.stringify({ type: 'renderComponent', requestId, spec, pageId, instanceIdManifest: manifest, glyphIdManifest, stylesManifest, variablesManifest, overwrite, conventions, settings, devStatus });
-
-  const sentAt = Date.now();
-  conn.ws.send(payload);
-  const result = await (promise as Promise<RenderResult>);
-  bridgeTimings.push({ label: 'plugin round-trip', ms: Date.now() - sentAt });
-  return { ...result, bridgeTimings, payloadKB: Math.round(payload.length / 1024) };
-}
 
 // ── CLI: --render flag ────────────────────────────────────────────────────────
 //
@@ -778,7 +400,7 @@ if (renderIdx !== -1) {
 
   const tryRender = (): void => {
     if (registry.size > 0) {
-      sendRender(specArg, rawPageId)
+      ops.sendRender(specArg, rawPageId)
         .catch((e) => console.error((e as Error).message));
     } else {
       console.log('Waiting for plugin to connect…');

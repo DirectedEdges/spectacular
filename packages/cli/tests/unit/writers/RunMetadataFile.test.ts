@@ -4,7 +4,7 @@ import os from 'os';
 import path from 'path';
 import yaml from 'yaml';
 import { DEFAULT_SETTINGS, type RunMetadata as SchemaRunMetadata } from '@directededges/specs-schema';
-import { RunMetadataFile, RunMetadataReader, RUN_METADATA_BASENAME } from '../../../src/Writers/RunMetadataFile.js';
+import { RunMetadataFile, RunMetadataReader, RUN_METADATA_BASENAME } from '../../../src/writers/RunMetadataFile.js';
 
 const run = (): SchemaRunMetadata => ({
   author: 'Design Systems Team',

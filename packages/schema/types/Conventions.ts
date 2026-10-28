@@ -194,15 +194,32 @@ export interface PlatformConventions {
    * the reversal target for `Settings.spec.keys`. A renderer reconstructs a name by
    * re-formatting the spec key into this convention.
    *
-   * NONE declares no convention: the safe key grammar is not evaluated, no
-   * `$extensions['com.figma'].name` is emitted for format divergence, and reversal is
-   * undefined. Optional; defaults to NONE inside a declared platform entry.
+   * NONE declares no convention: the safe key grammar is not evaluated and reversal is
+   * undefined, so a key is handed back unchanged as the name. `$extensions['com.figma'].name`
+   * is therefore recorded wherever formatting changed the name, since nothing can
+   * re-derive it. Optional; defaults to NONE inside a declared platform entry.
    */
   naming?: 'NONE' | 'SENTENCE' | 'TITLE';
-  /** Glyph content assets. Optional; absence means no glyph naming convention and glyphs are not detected. */
+  /**
+   * Glyph content assets. Optional; absence means no glyph convention and glyphs are not
+   * detected. A declared block must carry at least one form — `match`, `structure`, or
+   * both; membership is the union (a component matching either form is a glyph).
+   */
   glyphs?: {
-    /** Naming pattern identifying glyph assets, using the `{i}` icon-name placeholder (e.g. `"DS Icon Glyph / {i}"`). */
-    match: string;
+    /**
+     * Name form — membership and naming in one pattern over the component name, using the
+     * `{i}` icon-name placeholder (e.g. `"DS Icon Glyph / {i}"`). Optional since 0.35.0;
+     * a library may declare `structure` alone (ADR-103).
+     */
+    match?: string;
+    /**
+     * Structural form — membership from the component's child structure, naming from the
+     * component name (ADR-103). For libraries whose glyph components are plainly named
+     * and carry no name pattern.
+     *
+     * @since 0.35.0
+     */
+    structure?: GlyphStructure;
   };
   /** The code-only props container layer. Optional; absence means no such convention and code-only props are not extracted. */
   codeOnlyProps?: {
@@ -273,6 +290,17 @@ export interface PlatformConventions {
    */
   inferComposableSlots?: boolean;
   /**
+   * Encoding. This platform authors object-prop members as separator-delimited flat
+   * property names (e.g. `margin.compact`, `margin.expanded`), to be folded into one
+   * `ObjectProp` (ADR-111). Optional; absence means no folding — a property name
+   * containing the separator stays a flat prop.
+   * @since 0.39.0
+   */
+  objectProps?: {
+    /** The member-name separator in flat property names. Optional; defaults to `"."`. */
+    separator?: string;
+  };
+  /**
    * Prop that receives styling no promotion mapped, for every promoted component on this
    * platform (e.g. `sx`, `style`, `modifier`). A **name only** — what is placed in it is
    * the generator's decision (Constitution II).
@@ -297,6 +325,64 @@ export interface PlatformConventions {
    * @since 0.32.0
    */
   defaultFillWidth?: number;
+}
+
+/**
+ * The structural form of the `glyphs` convention (ADR-103).
+ *
+ * Declares the child structure a glyph component has in this library, splitting
+ * membership (the structure) from naming (the component name). A component is a glyph
+ * under this form when every one of its children matches some entry in `children` —
+ * set-cover, exhaustive: a component containing anything besides the declared shapes
+ * is not a glyph. When `fill` is declared, every leaf node matched by the structure
+ * must carry a solid fill that is one of the listed values.
+ *
+ * ```yaml
+ * glyphs:
+ *   structure:
+ *     fill: ['#161616']
+ *     children:
+ *       - type: VECTOR
+ *         name: 'Vector'
+ * ```
+ *
+ * @since 0.35.0
+ */
+export interface GlyphStructure {
+  /**
+   * Naming rule applied to the component name, using the `{i}` placeholder
+   * (e.g. `"{i}Icon"`). Optional; defaults to `"{i}"` — the whole component name is
+   * the glyph name.
+   */
+  name?: string;
+  /**
+   * Accepted leaf fills: a raw color (`"#RRGGBB"`) or a token/variable/style name.
+   * Describes how the library **stores** its glyphs, so it is tested only on a
+   * component's own structure — a placed instance is recolored by its context, and
+   * membership read from an instance mirror skips the fill test. Optional; absence
+   * means fills are not tested.
+   */
+  fill?: string[];
+  /** Node matchers covering the component's children. */
+  children: GlyphStructureNode[];
+}
+
+/**
+ * One node matcher within a {@link GlyphStructure}.
+ *
+ * `type` is an open string carrying a Figma node type (e.g. `'VECTOR'`,
+ * `'BOOLEAN_OPERATION'`), not a closed enum — an unknown type never matches, and the
+ * schema does not chase Figma's node-type catalog (Constitution VI rule 3).
+ *
+ * @since 0.35.0
+ */
+export interface GlyphStructureNode {
+  /** Figma node type this entry matches. */
+  type: string;
+  /** Layer name, literal with `*` wildcard. Optional; absence means any name. */
+  name?: string;
+  /** Matchers covering this node's own children, same set-cover semantics. Optional; absence means children are not tested. */
+  children?: GlyphStructureNode[];
 }
 
 /**
@@ -402,15 +488,17 @@ export interface ValueConvention {
 }
 
 /**
- * Presentation conventions for the workspace Storybook (`specs storybook publish`),
- * keyed by publish concern (`color`, `typography`, `icons`, …), each holding
- * per-feature settings.
+ * Conventions for the workspace Storybook, keyed by concern, each holding
+ * per-feature settings. Most concerns are publish concerns — `color`,
+ * `typography`, `icons`, … — naming how a page presents. `host` is the
+ * exception, and names where the Storybook serves rather than what it shows.
  *
- * Both levels are deliberately open (ADR-098): storybook page presentation
- * vocabulary is unstable while concerns gain pages, so this contract fixes only
- * the file, the concern keying, and the openness. A concern implementation
- * validates its own feature values, and ignores an unknown concern or feature
- * only with a warning naming it — never silently.
+ * Both levels are deliberately open (ADR-098): the vocabulary is unstable while
+ * concerns gain pages, so this contract fixes only the file, the concern
+ * keying, and the openness. A concern implementation validates its own feature
+ * values, and ignores an unknown concern or feature only with a warning naming
+ * it — never silently. Adding a concern therefore needs no change here, which
+ * is what the openness is for.
  *
  * @since 0.35.0
  */
@@ -458,7 +546,7 @@ export interface Conventions {
    */
   specs?: SpecsConventions;
   /**
-   * Workspace Storybook presentation conventions.
+   * Workspace Storybook conventions — how its pages present, and where it serves.
    * Loaded from `conventions/storybook.yaml` — the third reserved basename,
    * after `figma.primitives` and `specs`; no platform may take the id.
    * Optional; absence means none are declared. @since 0.35.0
@@ -486,9 +574,12 @@ export interface Conventions {
 export interface ResolvedPlatformConventions {
   /** Naming convention this platform uses. Defaulted to NONE inside a declared entry. */
   naming: 'NONE' | 'SENTENCE' | 'TITLE';
-  /** Glyph content assets. Optional; absence means no glyph convention. */
+  /** Glyph content assets. Optional; absence means no glyph convention. At least one of `match` / `structure` is declared. */
   glyphs?: {
-    match: string;
+    /** Name form — membership and `{i}` naming capture. Optional since 0.35.0 (ADR-103). */
+    match?: string;
+    /** Structural form — membership from child structure, naming from the component name. @since 0.35.0 */
+    structure?: GlyphStructure;
   };
   /** The code-only props container layer. Optional; absence means no such convention. */
   codeOnlyProps?: {
@@ -520,6 +611,10 @@ export interface ResolvedPlatformConventions {
   inferNumberProps: boolean;
   /** Composable content is authored as a slot holding primitives in its default content. @since 0.35.0 */
   inferComposableSlots: boolean;
+  /** Object-prop members are authored as separator-delimited flat property names. Optional; absence means no folding. `separator` is defaulted inside a declared block. @since 0.39.0 */
+  objectProps?: {
+    separator: string;
+  };
   /** Prop that receives styling no promotion mapped. Optional; absence means unmapped styling is dropped. */
   stylesProp?: string;
   /** Width of the container a fill-width root is placed in. Optional; no default — absence means the tool falls back to its own value. */
@@ -540,7 +635,7 @@ export interface ResolvedConventions {
   specs?: SpecsConventions;
   /** Component-keyed promotion entries. Optional; absence means nothing is promoted. @since 0.32.0 */
   primitives?: Record<string, PrimitiveEntry>;
-  /** Workspace Storybook presentation conventions. Optional; absence means none are declared. @since 0.35.0 */
+  /** Workspace Storybook conventions — how its pages present, and where it serves. Optional; absence means none are declared. @since 0.35.0 */
   storybook?: StorybookConventions;
 }
 

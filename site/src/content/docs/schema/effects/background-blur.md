@@ -1,6 +1,7 @@
 ---
 title: "backgroundBlur"
 description: "Blur applied to content behind the layer"
+tableOfContents: false
 ---
 
 Background blur (`backdrop-filter: blur()`). Part of [`Effects`](/schema/effects/).

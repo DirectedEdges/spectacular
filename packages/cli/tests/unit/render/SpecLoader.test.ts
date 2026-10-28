@@ -4,8 +4,8 @@ import os from 'os';
 import path from 'path';
 import { stringify } from 'yaml';
 import * as yaml from 'yaml';
-import { findComponentFolders, loadSpec } from '../../../src/Render/SpecLoader';
-import { splitComponentByConcern } from '../../../src/Writers/DataTransformers';
+import { findComponentFolders, loadSpec } from '../../../src/render/SpecLoader';
+import { splitComponentByConcern } from '../../../src/writers/DataTransformers';
 
 const tmpDirs: string[] = [];
 

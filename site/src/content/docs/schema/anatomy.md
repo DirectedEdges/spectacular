@@ -27,6 +27,7 @@ Only the `com.figma` extension is defined.
 | Property | Type | Description |
 |----------|------|-------------|
 | `name` | `string` | The element's Figma layer name, present only when the anatomy key cannot reconstruct it — either after [wrapper collapse](/settings/collapse-primitive-wrapper/) or when the name falls outside the safe key grammar (see [Key Formatting](/guides/key-formatting/)) |
+| `childRole` | `RoleConceptName \| RoleConceptName[]` | A role annotated on the layer [wrapper collapse](/settings/collapse-primitive-wrapper/) folded into this element, rather than on the element itself. `role` means the component node carried it, `childRole` the collapsed child, both present means both did. Only `role` reaches generated code |
 
 ### ElementType
 

@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import path from 'path';
 import { assemble } from '../../../src/version/assemble.js';
-import { diffComponent, diffRun, findOrphans } from '../../../src/version/diff.js';
-import { buildRenameMap, emptyRenameMap } from '../../../src/version/renames.js';
-import { loadRules, bumpOf } from '../../../src/version/rules.js';
+import { diffComponent, diffRun, findOrphans } from '../../../src/version/diff/compare.js';
+import { buildRenameMap, emptyRenameMap } from '../../../src/version/diff/renames.js';
+import { loadRules, bumpOf } from '../../../src/version/rules/grade.js';
 import { makeWorkspace, removeWorkspace, editYaml } from './helpers.js';
 import type { DiffEntry } from '../../../src/version/types.js';
 
@@ -332,6 +332,96 @@ describe('diff engine — rename-aware matching', () => {
       const { entries } = diffComponent(base, current, { ruleSet, renames: untracked });
       expect(entries.find(e => e.operation === 'removed' && e.path === 'props.size')).toBeDefined();
       expect(entries.find(e => e.operation === 'added' && e.path === 'props.magnitude')).toBeDefined();
+    } finally {
+      removeWorkspace(scratch);
+    }
+  });
+});
+
+describe('diff engine — object-prop members (ADR-111)', () => {
+  const MARGIN = {
+    type: 'object',
+    members: {
+      compact: { type: 'string', default: 'None', enum: ['None', 'Tight'], nullable: false },
+      expanded: { type: 'string', default: 'Loose', enum: ['None', 'Loose'], nullable: false },
+    },
+  };
+
+  /** Diff two scratch workspaces whose api.yaml both carry the object prop, then diverge. */
+  function diffMembers(currentEdit: (doc: any) => void): { entries: DiffEntry[] } { // eslint-disable-line @typescript-eslint/no-explicit-any
+    const baseScratch = makeWorkspace('diff-member-base');
+    const currentScratch = makeWorkspace('diff-member-current');
+    try {
+      editYaml(baseScratch, 'specs/deButton/api.yaml', doc => { doc.props.margin = structuredClone(MARGIN); });
+      editYaml(currentScratch, 'specs/deButton/api.yaml', doc => {
+        doc.props.margin = structuredClone(MARGIN);
+        currentEdit(doc);
+      });
+      const base = assemble(path.join(baseScratch, 'specs'), 'deButton');
+      const current = assemble(path.join(currentScratch, 'specs'), 'deButton');
+      return diffComponent(base, current, { ruleSet, renames: noRenames });
+    } finally {
+      removeWorkspace(baseScratch);
+      removeWorkspace(currentScratch);
+    }
+  }
+
+  it('grades a member removal MAJOR, not documentation', () => {
+    const { entries } = diffMembers(doc => { delete doc.props.margin.members.expanded; });
+    const entry = entries.find(e => e.path === 'props.margin.members.expanded' && e.operation === 'removed');
+    expect(entry?.impact).toBe('major');
+    expect(bumpOf(entries)).toBe('major');
+  });
+
+  it('grades a member addition MINOR', () => {
+    const { entries } = diffMembers(doc => {
+      doc.props.margin.members.emphasized = { type: 'boolean', default: false };
+    });
+    const entry = entries.find(e => e.path === 'props.margin.members.emphasized' && e.operation === 'added');
+    expect(entry?.impact).toBe('minor');
+  });
+
+  it('grades a member type change MAJOR', () => {
+    const { entries } = diffMembers(doc => {
+      doc.props.margin.members.compact = { type: 'boolean', default: false };
+    });
+    const entry = entries.find(e => e.path === 'props.margin.members.compact.type');
+    expect(entry?.impact).toBe('major');
+  });
+
+  it('grades a member enum value removal MAJOR', () => {
+    const { entries } = diffMembers(doc => {
+      doc.props.margin.members.compact.enum = ['None'];
+    });
+    const entry = entries.find(e => e.path === 'props.margin.members.compact.enum' && e.operation === 'removed');
+    expect(entry?.impact).toBe('major');
+  });
+
+  it('validates configured member keys and member enum values against the declaration', () => {
+    const scratch = makeWorkspace('diff-member-orphan');
+    try {
+      editYaml(scratch, 'specs/deButton/api.yaml', doc => { doc.props.margin = structuredClone(MARGIN); });
+      editYaml(scratch, 'specs/deButton/variants.yaml', doc => {
+        doc.variants.push({ configuration: { margin: { compact: 'Tight', vanished: 'x' } }, elements: {} });
+        doc.variants.push({ configuration: { margin: { expanded: 'NotAValue' } }, elements: {} });
+      });
+      const orphans = findOrphans(assemble(path.join(scratch, 'specs'), 'deButton'));
+      expect(orphans.some(o => o.includes('margin.vanished'))).toBe(true);
+      expect(orphans.some(o => o.includes('expanded: NotAValue'))).toBe(true);
+    } finally {
+      removeWorkspace(scratch);
+    }
+  });
+
+  it('finds a dangling member binding pointer', () => {
+    const scratch = makeWorkspace('diff-member-binding');
+    try {
+      editYaml(scratch, 'specs/deButton/api.yaml', doc => { doc.props.margin = structuredClone(MARGIN); });
+      editYaml(scratch, 'specs/deButton/variants.yaml', doc => {
+        doc.default.elements.label = { content: { $binding: '#/props/margin/members/vanished' } };
+      });
+      const orphans = findOrphans(assemble(path.join(scratch, 'specs'), 'deButton'));
+      expect(orphans.some(o => o.includes('props.margin.members.vanished'))).toBe(true);
     } finally {
       removeWorkspace(scratch);
     }

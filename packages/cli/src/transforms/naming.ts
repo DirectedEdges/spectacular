@@ -16,6 +16,25 @@ export function toPascalCase(str: string): string {
     .replace(/^(.)/, c => c.toUpperCase());
 }
 
+/** `dsButton` → `ds-button`. */
+export function toKebab(str: string): string {
+  return str.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
+}
+
+/**
+ * First character upper-cased, and nothing else.
+ *
+ * Deliberately not {@link toPascalCase}, which also splits on separators. This
+ * operates on keys that are already camelCase, and routing them through the
+ * fuller conversion would change the directory and file names the stylesheets
+ * are written to. It sat inside `Css.ts` under the name `toPascalCase` for a
+ * long time while doing something different — the names are side by side here so
+ * the difference is visible rather than surprising.
+ */
+export function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 /**
  * The composite key a subcomponent is named by: the parent's key with the
  * subcomponent's key appended ("deCard" + "reviews" → "deCardReviews").

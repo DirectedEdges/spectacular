@@ -1,6 +1,6 @@
 ---
 title: Terms of Service
-description: Terms of Service for Specs software, packages, and services.
+description: Terms of Service for Spectacular software, packages, and services.
 ---
 
 **Directed Edges**
@@ -11,13 +11,13 @@ description: Terms of Service for Specs software, packages, and services.
 
 ## 1. Acceptance of Terms
 
-By accessing, downloading, installing, or using any Specs software, packages, or services ("Services") provided by Directed Edges ("Company," "we," "us," or "our"), you ("User," "you," or "your") agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not use the Services.
+By accessing, downloading, installing, or using any Spectacular software, packages, or services ("Services") provided by Directed Edges ("Company," "we," "us," or "our"), you ("User," "you," or "your") agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not use the Services.
 
 If you are using the Services on behalf of an organization, you represent that you have the authority to bind that organization to these Terms.
 
 ## 2. Description of Services
 
-Specs is a design-system schema and tooling ecosystem. The Services include:
+Spectacular is a design-system schema and tooling ecosystem. The Services include:
 
 - **@directededges/specs-schema** — Shared TypeScript types and JSON schema definitions (licensed under CC BY 4.0)
 - **@directededges/specs-cli** — A command-line interface and MCP server for design system operations (licensed under MIT)

@@ -1,6 +1,7 @@
 ---
 title: "rotation"
 description: "Rotation angle of an element"
+tableOfContents: false
 ---
 
 Rotation in degrees.
@@ -11,6 +12,10 @@ Rotation in degrees.
 |---|---|
 | `number` | `45` |
 | [`TokenReference`](/schema/token-reference/) | `$token: ...`<br>`$type: number` |
+
+#### Default
+
+`0`
 
 #### Supported on
 

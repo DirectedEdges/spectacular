@@ -1,6 +1,7 @@
 ---
 title: "backgroundImage"
 description: "Image fill painted on a container or vector layer"
+tableOfContents: false
 ---
 
 Image fill. Fallback representation used when no image component is configured.
@@ -12,6 +13,10 @@ Image fill. Fallback representation used when no image component is configured.
 | `ImageValue` | `$image: "#/images/hero"`<br>`objectFit: COVER` |
 | [`TokenReference`](/schema/token-reference/) | `$token: DS.Image.Hero`<br>`$type: image` |
 | `null` | `null` (no image fill) |
+
+#### Default
+
+`null`
 
 #### Supported on
 

@@ -23,6 +23,11 @@ The four areas and their relationships:
 - **CLI** (`packages/cli/`) — must expose or handle every schema change the ADR says the CLI is affected by. Commands, flags, output shape, help text.
 - **Docs** (`site/`) — must document every user-facing change: new config values, command flags, behavioral changes, examples.
 
+One coupling runs outside that frame and is checked separately in step 5: the CSS
+transformer and the published style mapping appendix. It has no ADR to anchor it —
+a refactor changing emitted CSS is not a schema change — so the ADR-driven checks
+above never fire on it.
+
 ## Outline
 
 ### 1. Setup
@@ -75,6 +80,7 @@ For each area that has changed files (or that the ADR says should be affected), 
 - Every user-facing change (new config value, new command flag, behavioral change) has a corresponding doc update
 - Examples in docs match the new schema shape (no stale field names, no removed fields still shown)
 - If the ADR declares a breaking change, a migration note or callout exists in the docs
+- The stylesheet sync set holds — see the dedicated check in step 5, which runs whether or not an ADR exists
 
 ### 5. Cross-area drift check
 
@@ -82,6 +88,34 @@ Even without an ADR, check for drift between areas:
 - A new type field in schema but no CLI handling and no docs update → flag
 - A new CLI flag not reflected in docs → flag
 - A doc example referencing a field name not present in the current types → flag
+
+#### The stylesheet sync set
+
+Run this whenever the diff touches `packages/cli/src/transforms/css/`, **with or
+without an ADR**. A refactor that changes emitted CSS is not a schema change, so
+nothing else in this check fires on it — which is exactly how the published style
+mapping came to document three mechanisms the transformer had stopped using
+(specs#691).
+
+1. List the changed modules under `packages/cli/src/transforms/css/`.
+2. For each, read the section of
+   `site/src/content/docs/code/style-mapping.md` that **names that module** —
+   every section names its owner, so the mapping is mechanical, not a judgement.
+3. Compare the declarations the module now emits against what the section says.
+
+Report as:
+
+- **Gap** — the section states an output the module no longer produces, or omits
+  one it now does. This is published, user-facing, and wrong.
+- **Warning** — the module changed but you cannot tell from the diff whether its
+  output did (a rename, a comment, a moved helper). Name the section to re-read
+  rather than guessing.
+- **Not flagged** — the change provably cannot alter output.
+
+Also check the inventory: if a style key was added or removed, the *Mapping Specs
+to CSS* table in `site/src/content/docs/code/styles.mdx` lists the keys per
+family and must match. It carries keys only, never declarations, so it changes
+far less often than the appendix — a key-level change that misses it is a gap.
 
 ### 6. Report
 

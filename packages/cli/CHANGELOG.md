@@ -5,142 +5,252 @@ All notable changes to `@directededges/specs-cli` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.32.0] - Unreleased
-
-**The CLI now specs compositions — the frames your library marks ready for dev** — so a screen or a pattern becomes a spec and working code the same way a component does. Two other themes come with it:
-
-- **`specs/` names what each folder holds**, with `components/`, `compositions/` and `analysis/` replacing a flat directory.
-- **`specs fetch` splits each payload by page**, so a file of any size flows through the pipeline.
+## [0.36.0] - Unreleased
 
 ### Breaking
 
-- **`specs/` now names what each folder holds: `components/`, `compositions/` and `analysis/`.** A spec run writes `specs/components/<key>/` and `specs/compositions/<key>/`, and the analysis reports lose the underscore that used to keep them from being read as a component. A component and a composition may now share a name with no consequence. One resolver owns the layout, replacing two divergent filters that answered the same question differently. The emitted trees mirror it: `<tree>/src/compositions/<Name>/` beside the existing components directory (ADR-096).
-
-- **`--combine-as-library` and `--combine-concerns` now collapse a catalogue per kind**, writing `components/` and `compositions/` each their own set of documents instead of one shared set at the specs root. A composition and a component of the same name can no longer overwrite each other.
-
-- **A specs directory written before this release is read as legacy, and says so once per run.** Spec folders at its root are read as components, and nothing writes that shape again. Re-run `specs generate` to write the current layout — after which the root folders are leftovers the run names rather than deletes, since they are spec files it did not write. A directory holding both is not merged: `components/` wins outright, so a stale root folder cannot resurrect a component a rename retired.
-
-- **`specs/_analysis/` is retired outright: `specs analyze` reads and writes only `specs/analysis/`**, in a legacy directory too. Nothing migrates or falls back — reports in an existing `_analysis/` folder are leftovers to delete, and the next `specs analyze` run recreates the full set in `analysis/`.
-
-- **`-o` names a directory, and a path ending in `.yaml`, `.yml` or `.json` is refused** unless both splits are off. A split run writes a folder per component, so a filename was never what you meant — it used to be honoured literally, creating a *directory* named `button.yaml` with the tree inside it. The refusal lands before anything is generated and names both ways forward: pass the directory, or add `--combine-as-library --combine-concerns` to write one document. Every run now also reports where each kind landed (`✓ Wrote 12 component spec(s) to specs/components/`), since the path you pass is the specs root and the kind directory is appended to it.
-
-- **`specs scan` matches subcomponent patterns exactly**, every character outside `{C}` and `{S}` included — spaces and slashes among them. A library spelling the hidden-folder separator two ways (`/ _ /` and `/_ /`) now declares a pattern for each; scan previously dropped `_` segments before matching, so one pattern silently covered both spellings and a pattern containing `_` could never match. Patterns now mean the same thing here as they do when specs are generated (ADR-094).
-
-- **`specs fetch` writes each file payload as a page-split `<alias>.file/` directory** — `root.json` plus one JSON per Figma page — instead of a single `<alias>.file.json`. Payloads of any size now flow through the pipeline (a real 916MB community file previously could not be read at all), and `generate` loads only the pages your selected components need. Every command reads the new layout and still reads existing single-file payloads, so nothing breaks until you re-fetch; only your own scripts that open `<alias>.file.json` directly need to read the directory instead.
+- **A workspace that leaves a setting unset now resolves it to a new value** for `spec.format`, `spec.keys`, `spec.color`, `curation.preserveManualSelections` and `spec.collapsePrimitiveWrapper`. Every workspace `specs init` scaffolded already writes four of the five, so only a hand-written `settings.yaml` that omitted them sees a change (ADR-112)
 
 ### Added
 
-- **`specs build` and `specs run` — two experimental commands that run your whole workspace, in order.** A workspace is a chain: data produces a manifest, the manifest produces specs, specs produce each platform's code, and that code is what Storybook shows. Until now that order lived in the order you typed the commands, and skipping one left Storybook showing the previous emission with nothing to say so. `specs build` performs the whole chain once and exits non-zero at the first failure, which is what makes it usable in CI. `specs run` performs it once and then watches, redoing only the part a change affects — a spec edit re-emits that one component, and does not re-scan your Figma data. Which steps a workspace has is read from what is on disk, so there is nothing to configure (ADR-101).
-
-- **`--render` adds rendering back into Figma as the last step of either command.** Off by default, because it is the only step that writes somewhere other than disk, and it needs a running bridge. `specs run --render` overwrites the existing same-titled page component, since re-rendering what you just edited is the point of a watch loop; `specs build --render` does not, so a title collision is an error rather than a deletion you did not ask for. `specs render --overwrite` is still how you overwrite on purpose in a one-shot run. A `--components` name matching no spec folder is reported and skipped; if none of them match, the run fails rather than reporting a success that rendered nothing.
-
-- **Having nowhere to render to is reported and skipped, not treated as a failure.** No bridge running, no Figma file connected, or more than one connected with nothing saying which — each says so in one line and the run carries on. Closing Figma therefore does not end a `specs run` session or fail a `specs build` whose every other step did its job, and a skip never decides an exit code. A render that was actually attempted and failed still fails. The chain also never prompts: `specs render` asks you to choose when several files are connected, but a watch loop stopping on a keystroke — possibly mid-pass, with nobody there — would simply look hung, so both commands take `--file <fileKey>` instead.
-
-- **Editing the curation manifest now regenerates what you selected.** `data/<alias>.manifest.md` is written by `scan` and read by `generate`, which makes it an ordinary link in the chain: under `specs run`, ticking a checkbox runs generate and everything downstream of it, with no rescan. `specs run` also says once at startup when `settings.curation.preserveManualSelections` is off, since new data can then re-tick the boxes from Figma's dev status. The setting behaves exactly as before; it is no longer silent.
-
-- **`specs scan` lists compositions in a third manifest section, curated exactly as components are.** A frame earns a row by being marked ready for dev in Figma — an unmarked frame gets no row, which is what keeps the section readable in a library holding tens of thousands of frames. Within that set the checkbox decides what a run specs, and a row you uncheck stays unchecked across rescans without a flag. A marked frame qualifies wherever it sits, except inside another marked frame, where the outermost wins so one arrangement is never specced twice (ADR-095).
-- **`specs generate` writes checked composition specs** to `specs/compositions/<key>/`, carrying `metadata.source.nodeType: FRAME` as the marker for what the spec describes. `-c` narrows to one by name, id or key, as it does for a component.
-- **`specs react` and `specs webcomponents` emit a composition as one story in a `Compositions` nav group**, at `<tree>/src/compositions/<Name>/`, so screens browse separately from the component list. Compositions are Pro; the free tier skips them with a note and emits components as normal (ADR-097).
-- **`specs analyze dependencies` and `specs analyze styling` read compositions**, so which components a screen is built from now shows in the blast radius. `props` and `keys` stay component-only — a composition declares no props.
-- **`specs version` tracks compositions, and every change to one is a patch.** A composition declares no contract, so nothing about it is breaking and it carries no version of its own; the cut report names what moved.
-- **A frame that cannot be named is skipped and reported with its node id.** A name with no letters or digits — whitespace alone, which real libraries contain — yields no spec key.
-
-- **`conventions/specs.yaml` can name your library's default slot, and a nested hierarchy then reads as one tree.** Declare `slots.default.match` — an array, because one library may call it `children` on a page row and `items` on a list — and the slot prop it names carries `defaultSlot: true` in the generated spec. It lives with the spec conventions, not under a platform: the thing it names is a slot prop your spec declares, so there is one answer per library and every platform reads it. Content you place in a nested instance's default slot is then captured as that instance's **children**, in the spec's own anatomy, elements and layout, instead of a `slotContentExamples` entry pointed at from a `$slotContent` reference. A screen built from four nested layout components used to read as a chain of one-level-deep registry entries; it now reads as the tree it is, and the emitted React and Web Components nest the same way. A **non**-default slot is unchanged — an explicit reference is the only shape that can say which of several slots a fill belongs to, and both shapes sit side by side in one spec. Absence means your library designates no default slot and nothing changes (ADR-099).
-
-- **A workspace that splits concerns without subfolders now gets the leftover-specs note.** The note naming spec folders a run did not write was gated on `useSubfolders` alone, which excluded every workspace that splits concerns without it — even though those workspaces do get a folder per spec, because splitting concerns creates one. It is now gated on the shape the note actually needs, which is the same condition the image prefix derives its depth from. That layout is what a legacy directory migrates into, so its leftovers were exactly the ones going unnamed.
-
-- **A composition captured through the bridge is written as a composition.** A bridge run has no manifest row to classify a node by, so one given an explicit node wrote every spec as a component — which put a composition in `components/` and lost the kind at the reading end of a round trip. The spec's own `metadata.source.nodeType` now answers when the manifest cannot, which is the marker that states what a spec describes regardless of where its file sits.
-
-- **`SPECS_RENDER_WARNINGS=1` prints the render warnings a run withholds.** They stay hidden by default, because they are dominated by known defects and by degradations you cannot act on. But a render that silently did nothing is otherwise indistinguishable from one that worked, so confirming a render-side fix meant editing a constant and rebuilding.
-
-- **`--compositions` and `--no-compositions` scope a run to one kind**, on `specs generate`, `specs react` and `specs webcomponents`. Compositions are the slow, large things in a run — a screen composes dozens of components and carries far more anatomy than any one of them — so iterating on component output used to mean paying for composition output every time, and reaching one composition meant regenerating a catalogue. `--component` narrows to one spec of either kind and `--components` matches keys across both; neither could say "just the compositions" or "everything except them". Passing both is refused before anything is read, naming both ways forward. A scoped run never prunes the kind it excluded, and says which kinds it covered so it cannot be mistaken for a full one.
-
-- **A composition gets a real page in the scaffolded Storybook, leading with what it is built from.** The stories always rendered, but nothing around them knew compositions existed: the navigation contract was built from components alone, and the Specs tab fetched from the components directory whatever kind it was looking at — so a screen's spec silently resolved to nothing. Publishing now writes `content/components/compositions.json` beside `tabs.json`, keeping one nav contract rather than two, and the page reads which kind it is from the section the story sits in instead of assuming. A composition's page opens with the components it instances, each linking to its own page, so the sidebar's two sections navigate to one another. Read from the spec's own `instanceOf` references; a reference to a component the workspace does not hold is left out rather than rendered as a dead link. A workspace with no compositions writes an empty list and is otherwise unchanged.
-
-- **`specs storybook` scaffolds and publishes a workspace Storybook.** `specs storybook init` writes the host once — `storybook/{package.json, tsconfig.json, .storybook/}` — and prints the one install you run yourself; the CLI never ships or vendors Storybook, and takes on no Storybook, Vite, or browser-automation dependency. A bare `specs storybook` (or `publish [concern]`) rewrites the generated content under `storybook/content/`, a folder per concern: `overview`, `foundations`, `components`, `analysis`, `versions`. Publishing is deterministic and idempotent — unchanged input writes nothing and says so.
-- **Foundations pages are generated from your library's data, joined at publish time.** Color reads the variables payload in its declared order, resolves alias chains, shows fill styles as their own section, and names a reason for every unresolved entry. Typography joins the file's style map with sampled node properties, so letter spacing, line-height unit, case and decoration survive. Icons diffs the glyphs your specs reference against what `specs fetch` wrote, and renders what is missing as the failure it is.
-- **One navigation entry per component, with React · Web Components · Specs tabs** derived from the trees your workspace actually emitted (`content/components/tabs.json`). Specs is always present; a platform you did not emit gets no tab. Every Storybook-internal API the host uses is confined to the scaffolded `manager.tsx` and feature-detected, so a Storybook major degrades navigation instead of breaking the instance.
-- **Your pages win.** Copy any generated page to the same path under `storybook/content-overrides/` and it is used instead, forever — no command writes there, and publish reports which overrides are in effect and when the data beneath one changed.
-
-- **Glyph slugs agree everywhere a digit follows a word.** `specs fetch` named a glyph from its raw Figma name ("Brightness 1" → `brightness-1.svg`) while specs and emitted code carry the camel key (`brightness1`), where that boundary no longer exists — so the scaffold requested a file fetch never wrote. A separator now never survives before a digit run, in fetch, in both emitters, and in the emitted runtime helper, so every derivation lands on the same file name. Existing workspaces rename affected files on their next `specs fetch`.
-
-- **`color.groupLeaves` accepts a list.** Collapse values into folder rows for just the named collections instead of everywhere; a layout key that names no collection or Collection/Group on the page now warns by name instead of silently doing nothing.
-
-- **Shipping polish:** analysis pages land on the Specs tab while their Report is a placeholder, and the Versions section exists only when `versions/` does — a shipped navigation carries no permanent "coming soon". A publish that removes a section's folder reports the removal rather than claiming nothing changed.
-
-- **Overrides take effect live, both directions.** Both content trees glob statically, so Storybook's own watcher indexes a new override (or drops a deleted one) without a restart; publish withholds and prunes a generated page whose path is overridden, and writes it back when the override goes. Override resolution is a data decision publish makes, no longer a startup-time glob trick.
-
-- **`dev` watches Storybook's own health.** A half-saved story file can poison Storybook's per-file index cache — index.json 500s and stays 500 after the file is fine, which reads as the server dying. `dev` detects the 500, names the failing file, re-triggers its parse, and when the file has a real error says so in one sentence instead of letting the UI fail mutely. Publish also writes atomically now, so its own output can never be the torn file.
-
-- **`specs storybook dev` is the one process a designer runs.** It publishes once, then owns everything that reacts: `specs react --watch` and `specs webcomponents --watch` re-emit components as specs change, the Storybook server hot-reloads their output, and its host plugin republishes pages when config or assets move. Fetch, generate, and render stay yours; one Ctrl-C stops it all.
-
-- **A stale host announces itself.** `init` stamps the scaffold with a hash of the templates that built it; when a newer CLI's `publish` sees an older stamp it says so and names the upgrade (`specs storybook init --force` — host files only, `content-overrides/` never touched). Publish still never rewrites host files.
-
-- **A running Storybook republishes itself.** The scaffolded host watches `config/`, `specs/`, and `assets/` and re-runs `specs storybook publish` when anything changes — edit the conventions file and the open page follows, no commands. Publish being idempotent and diff-writing is what makes it a safe watch target.
-
-- **The component framework tabs are in-page.** React / Web Components / Specs render as ordinary tabs inside the docs page — same treatment as the Analysis pages — and the Foundations colour swatches bind to the stylesheet's custom properties, so switching a mode restyles them live with live value captions. The scaffolded manager shrinks to one job (hiding the Web Components tree from the sidebar), feature-detected; no unstable tab APIs remain.
-
-- **Variable modes are switchable from the Storybook toolbar.** List collections under `modes.collections` in `conventions/storybook.yaml` and each becomes a toolbar dropdown driving the attribute the generated stylesheet switches on; the default mode clears it.
-
-- **Analyses get pages.** When `specs analyze` output exists in `specs/analysis/`, publish adds an Analysis section with one page per analysis — a Report tab (dashboard to come) and a Specs tab reading the analysis YAML in place. No analyses, no section.
-
-- **The Storybook Color page shows only a library's own variable collections** — the payload's imported copies of subscribed collections (including earlier versions of the file's own) no longer render as duplicates. `color.collections` in `conventions/storybook.yaml` — an ordered list of names — narrows and orders what renders.
-
-- **The Storybook Color page lists every colour on its own row until you declare otherwise.** `config/conventions/storybook.yaml` (ADR-098) is the declaration surface: `color.rowGroup` names variable hierarchies that render as one shared row, `color.groupLeaves` groups every folder's values side by side. Unknown concerns, features, or wrong value shapes warn by name — never silently. Oversized rows wrap instead of compressing into slivers.
-
-- **settings.yaml rejects what the schema does not declare, out loud.** An unknown top-level key warns by name and is ignored; an invalid enum value — including a case variant like `camel` — warns with the valid list and uses the default. Nothing is silently transformed or substituted on a governed surface.
-
-- **`settings.curation` decides which components a scan selects**, with `defaultSelection` (`READY_FOR_DEV` or `ALL`), `preserveManualSelections` for whether your manifest edits outrank a changed Figma dev status, and `includeDependencies` for whether the components a selected one is built from are selected too. `--include-all` and `--keep-checks` override the first two for one run. Every default matches previous behaviour (ADR-093).
-
-- **Regenerating an unchanged design produces unchanged files**: each spec's `metadata.lastUpdated` now carries the Figma file's `lastModified` instead of the run's wall clock, so spec diffs show real changes only.
-- Transport-level fetch failures (connection reset, DNS) now name the source, the data kind, the underlying cause chain, and the exact `--only` retry command — previously a bare "fetch failed".
-
-- **No ingest failure is silent.** The cache reports what every source contributed and fails loudly when a payload cannot be read (previously a zero-entry source still reported success); payload-size failures name the file, the ~512MB single-string limit, and remedies; fetch warns at download time when a kept payload exceeds that limit.
-- **Fetch validates config before downloading** (icons ↔ `glyphs.match`, `spec.directory`), and one source's failure no longer aborts the remaining sources — the run reports per-source results and exits non-zero on partial failure.
-- `specs scan` and `specs generate` accept a `<alias>.file` directory anywhere a payload path is accepted.
-- **`specs analyze` runs every analyzer when you name none**, and names the per-component `styling.yaml` it writes into each component folder alongside the aggregate reports.
-- **The props analysis flags a prop whose components disagree on its type**, with a `typeDiscordance` section naming which components hold which — so a name that means two things is not configured as one prop.
-- **`enumDiscordance` now also reports a name some components close with an `enum` while others leave open**, marked `openAndClosed`. Both declare the same type, so nothing flagged this before, yet one promises a fixed set of values and the other promises nothing.
-- **A full `specs generate` run names spec folders it found but did not write**, so a deselected component or a reverted convention leaves nothing for you to discover later. Nothing is deleted — the note says so.
-- **`match` in `conventions/figma.primitives.yaml` names the layers that promote to a component**, for a layout family whose members share one set of styles and so cannot be told apart by them. An entry declaring none is chosen by its styles, as before, and a misspelled `match` is now reported rather than ignored (ADR-100).
+- **Declaring `objectProps` in your figma conventions folds separator-named properties into one prop with named members** — `Margin.compact` and `Margin.expanded` become a single `margin` (ADR-111). `specs init` scaffolds the block commented out. Dependency and prop analysis, visual manifests, version grading and generated CSS all read members rather than skipping them
 
 ### Changed
 
-- **`specs scan` and `specs generate` stop the run by returning rather than by exiting the process.** Every message, exit code and behaviour is unchanged when you run them yourself. The difference is that `specs build` and `specs run` can now call them as one step of a chain and carry on, or say which step stopped it — and that the two of them are directly testable for the first time.
-
-- **`specs fetch` says "glyphs" wherever it used to say "icons"**, matching `scan` and the `glyphs.match` convention. The `icons` fetch kind and the `assets/icons/` directory are unchanged.
-
-- **`specs init` scaffolds a settings file you can run**, with a Figma source to fill your file key into, YAML output, camelCase keys, HEXA colors, and an assets directory. Every setting exists in it, and each commented line is the opposite of its default, so uncommenting one always changes something — in the conventions files too.
+- **`specs init` writes every setting with a comment saying what that setting decides**, rather than a comment describing the value you would get by changing it. Three settings are scaffolded on while the schema defaults them off, and the file says which three and why
 
 ### Fixed
 
-- **A mode toolbar entry whose name is camelCased or contains a `/` now actually switches the mode.** The toolbar's attribute value and the stylesheet's attribute selector are one contract, and two different kebabizations were producing it: the storybook concern split camelCase and kept `/` (`darkMode` → `dark-mode`, `Brand/Alt` → `brand/alt`) where the emitted CSS strips the case boundary and converts the slash (`darkmode`, `brand-alt`). The control set an attribute no `:root[data-…]` rule matched, so choosing that mode changed nothing on screen and reported no error. The concern now calls the emitter's own `kebabizePath` instead of restating it, and both sides are pinned together by test. Mode names made only of spaces, underscores or a single word were unaffected.
+- **An invalid `spec.collapsePrimitiveWrapper` now warns and falls back to the default** instead of silently turning the setting off
 
-- **A concern a run stops generating is renamed rather than left to contradict the files beside it.** Which concerns a component produces depends on what its spec holds — declaring a default-slot convention moves slot content into the component's own anatomy, so there is no examples concern left to write — and the previous file used to stay on disk with nothing saying it was out of date. It is renamed to `examples.yaml.stale`, which stops it matching a `*.yaml` glob so nothing walking the folder can load it, and the run names every file it renamed. Nothing is deleted. A later run that generates the concern again writes it and clears the renamed file, so reverting a convention cannot leave both forms in one folder.
+- **`specs analyze styling` lists tokens alphabetically** in every set of the by-token report — variables, color styles, text styles and effect styles — instead of in the order the catalogue happened to reach them
 
-- **`specs generate <alias>.file/ -c "Button"` works against a page-split payload.** Naming one component with a payload argument failed outright once `fetch` started writing a directory — the source was read as text to tell a manifest from a payload. A directory is now recognised as a payload, the component resolves by name or node id, and only the pages it needs are assembled.
+- **`specs analyze styling` now reads the token references a name-shaped `spec.tokens` emits.** Under `TOKEN_NAME` and `FIGMA_NAME` a reference serializes to the token's name alone, which the analysis skipped — so every styling report came out empty while the run reported success. Names are now matched against the fetched variables and styles, so these two profiles report what `TOKEN` reports
 
-- **A batch `specs render` reaches a grouped component again.** The scan looks through two levels of your own folders, and `components/` had started consuming one of them — so a run pointed at the specs root rendered `components/deButton/` but silently skipped `components/forms/deInput/`. The kind directory no longer counts against that depth, so the specs root reaches as deep as `components/` does.
+- **`specs analyze styling` says so when `spec.tokens` is a profile it cannot fully read.** `CUSTOM` and the three `FIGMA_SYNTAX_*` profiles serialize references into shapes the analysis cannot recognise without reproducing the generator, and `FIGMA_SYNTAX_*` falls back to `TOKEN` for tokens with no code syntax — so the reports were quietly partial rather than obviously empty. A warning now names the setting and what it costs. A name-shaped profile with no fetched data files warns too, and points at `specs fetch`
 
-- **A spec's run metadata is found again from a deeper spec folder.** The reader searched a spec's own directory and one level up, which stopped short once specs moved into `components/` — so `specs render` silently lost the run's author, generator and schema version. It now climbs to the specs root, nearest document winning, bounded so it cannot adopt an unrelated one from above the workspace.
 
-- **Composition stories appear in Storybook.** The workspace Storybook configurations indexed `components/` only, so an emitted composition was never picked up.
+## [0.35.0] - 2026-10-21
 
-- **A spec whose Figma name has no letters or digits is refused rather than written to a folder named `component`**, where the next such spec would overwrite it. The check that rejects the name and the writer that names the folder now share one derivation, so a name that passes is a name the writer can use.
+### Fixed
 
-- **A run that skips a kind no longer deletes that kind's emitted output.** Orphan pruning judges each kind's emitted directory only against that kind's specs, and only when the run actually emitted it — so a free-tier run following a Pro one leaves the composition output alone instead of removing it and reporting it as having no matching spec, when the spec was there and only the entitlement was missing. The same reasoning already covered `--components` and license-aborted runs.
+- **A composition's split-concern files now carry only what a composition has.** `api.yaml` drops the meaningless `props` key, `variants.yaml` holds `elements`/`layout` instead of `default`/`variants`, and `examples.yaml` uses `slotContent` (ADR-109)
 
+### Dependency updates
+
+- **A composition's generated output is correct end to end now.** Via `@directededges/specs-from-figma` 0.37.0, the engine itself emits a composition's flat shape — no `props`, no `default` — matching this release's file-writer fix, so neither layer reintroduces the old component-shaped output
+- **Composition contract types got names and fields to match.** Via `@directededges/specs-schema` 0.38.0: new `CompositionApiDocument`/`CompositionVariantsDocument`/`CompositionExamplesDocument` types; the component-side equivalents renamed from `Spec*Document` to `Component*Document`
+
+
+## [0.34.0] - 2026-10-20
+
+**The CLI's documentation and repository links follow the repo's rename to DirectedEdges/spectacular.** No command behaves differently — this release repoints the README that npm renders and the package's repository link at the renamed home, and picks up the companion releases of the schema and the Figma transform. Every old `DirectedEdges/specs` link keeps resolving through GitHub's rename redirect.
+
+### Changed
+
+- **The README npm renders and the package's repository link point at `DirectedEdges/spectacular`**, the renamed home of the CLI and schema. Old links keep resolving via GitHub's redirect
+
+### Dependency updates
+
+- **Specs now name their schema's renamed home.** Via `@directededges/specs-from-figma` 0.36.0, every spec the CLI generates points its `$schema` URL at `DirectedEdges/spectacular`; specs you already generated keep validating through GitHub's redirect
+- **`@directededges/specs-schema` 0.37.0** carries the same rename in its package metadata — no change to the types or the JSON Schema
+
+
+## [0.33.0] - 2026-10-20
+
+**Specs is now Spectacular, and the documentation lives at spectacular.systems.** Figma shipped a feature of its own called Specs, so the product takes a new name — but nothing you type changes. The command is still `specs`, and every package keeps its name on npm.
+
+**Editing a convention regenerates your specs, not just what was built from them.** A convention change used to re-run the analysis and both platform trees against specs written under the old convention, producing a pass that looked clean and emitted from stale input. Declaring a glyphs convention no longer needs a manual `specs generate` to take effect. Alongside that, a chain now names the steps your workspace has nothing for and why, so three skipped steps of six read as a workspace that has not got there yet rather than a broken run.
+
+### Changed
+
+- **The product is Spectacular; the command is still `specs`.** Printed output and scaffolded config comments say Spectacular, and every documentation link now points at `spectacular.systems`. The old `specsplugin.com` links redirect, so nothing you have saved breaks. Package names are unchanged — `@directededges/specs-cli`, `@directededges/specs-schema` and the rest keep their names permanently, because npm has no rename
+
+- **The bridge names the Figma plugin by role rather than by brand.** "Enable the CLI Bridge in the Figma plugin to connect" reads the same whether the plugin is listed as Specs 2 or Spectacular, so the guidance stays correct while the Figma Community listing catches up
+
+- **`specs init` and `specs storybook init` print the chain the docs teach**, ending at `specs run` rather than at `specs generate`, and no longer offering a way of starting Storybook that the setup flow forbids.
+
+- **The role-adoption skills say which page answers which question**, so a first sweep reads the two that carry the judgment and fetches precedence only when a role, a states classification and an action land on the same element. The apply step now names `conceptsInertInUse` as the way to tell a role that could not emit from one that failed to land, and the proposal step's parts checklist covers the slider, progressbar and live-region families.
+
+### Fixed
+
+- **Editing a convention now regenerates your specs, not just the reports and the code built from them.** `scan` and `generate` did not watch `config/`, so a convention change re-ran the analysis and both platform trees against specs written under the old convention — a pass that looked clean and emitted from stale input. Declaring a glyphs convention needed a manual `specs generate` to take effect; it no longer does. A convention edit re-derives the manifest from Figma's dev status, the same as new data arriving, so `settings.curation.preserveManualSelections` applies to it too.
+
+- **`specs run` and `specs build` name the steps your workspace has nothing for, and why**, so a chain with three of its six steps reads as a workspace that has not got there yet rather than as a broken run: `not in this workspace: storybook (no Storybook host scaffolded)`.
+
+- **`analyze keys` records in `keys.yaml` whether it measured anything.** Without a `naming` convention there is nothing to measure names against, so every name passes and zero divergence means "not checked" — indistinguishable in the file from a library that round-trips perfectly. `measured` and `namingConvention` now say which, where a reader opening the committed file will see them.
+
+- **`specs generate` no longer warns that it overwrote files.** Overwriting is what it does on every run after the first, and warning about the expected case taught readers to skim the warnings that matter.
+
+
+
+## [0.32.0] - 2026-10-14
+
+A workspace is now a documented, tested library, and screens are first-class in it. Three themes:
+
+- **The CLI specs compositions — the frames your library marks ready for dev** — so a screen or a pattern becomes a spec and working code the same way a component does.
+- **`specs storybook` scaffolds and publishes a workspace Storybook**, with generated pages for your foundations, components, analyses and visual test results.
+- **`specs testing visual` measures your emitted code against your designs**, and against the renders you last accepted.
+
+### Breaking
+
+- **`specs/` now names what each folder holds: `components/`, `compositions/` and `analysis/`.** A directory written before this release is read as legacy and says so once per run; re-run `specs generate` to write the current layout. Nothing migrates out of `_analysis/` (ADR-096).
+
+- **`--combine-as-library` and `--combine-concerns` collapse a catalogue per kind**, writing `components/` and `compositions/` each their own set of documents, so a composition and a component of the same name can no longer overwrite each other.
+
+- **`-o` names a directory, and a path ending in `.yaml`, `.yml` or `.json` is refused** unless both splits are off. A split run writes a folder per component, so a filename was never what you meant — it used to be honoured literally.
+
+- **`specs scan` matches subcomponent patterns exactly**, every character outside `{C}` and `{S}` included, spaces and slashes among them. A library spelling a separator two ways now declares a pattern for each (ADR-094).
+
+- **`specs fetch` writes each file payload as a page-split `<alias>.file/` directory** — `root.json` plus one JSON per Figma page — so a file of any size flows through the pipeline. Existing single-file payloads still read; only scripts opening `<alias>.file.json` directly need changing.
+
+### Added
+
+#### Compositions
+
+- **`specs scan` lists compositions in a third manifest section, curated exactly as components are.** A frame earns a row by being marked ready for dev in Figma, and inside another marked frame the outermost wins, so one arrangement is never specced twice (ADR-095).
+
+- **`specs generate` writes checked composition specs** to `specs/compositions/<key>/`, carrying `metadata.source.nodeType: FRAME` as the marker for what the spec describes. `-c` narrows to one by name, id or key, as it does for a component.
+
+- **`specs react` and `specs webcomponents` emit a composition as one story in a `Compositions` nav group**, at `<tree>/src/compositions/<Name>/`, so screens browse separately from the component list. Compositions are Pro; the free tier skips them with a note (ADR-097).
+
+- **`--compositions` and `--no-compositions` scope a run to one kind**, on `specs generate`, `specs react` and `specs webcomponents`, so iterating on component output no longer pays for the slowest specs in the catalogue. A scoped run never prunes the kind it excluded.
+
+- **Compositions reach `specs analyze` and `specs version`.** `dependencies` and `styling` read them, so which components a screen is built from shows in the blast radius; `props` and `keys` stay component-only. Every change to a composition is a patch, because it declares no contract.
+
+#### Storybook
+
+- **`specs storybook` scaffolds and publishes a workspace Storybook.** `init` writes the host once and prints the one install you run yourself; a bare `specs storybook` rewrites the generated content per concern — `overview`, `foundations`, `components`, `analysis`, `versions`. The CLI ships no browser.
+
+- **`specs storybook dev` is the one process a designer runs.** It publishes, re-emits each platform as specs change, serves Storybook, republishes when config or assets move, and recovers an index poisoned by a half-saved story file. One Ctrl-C stops it all.
+
+- **Generated pages cover your foundations, components, analyses and visual test results.** Colour and typography read your library's own variables and styles, each component gets one entry with React · Web Components · Specs tabs, and a section appears only once its data exists.
+
+- **Your pages win.** Copy any generated page to the same path under `storybook/content-overrides/` and it is used instead, live and in both directions. No command ever writes there, and publish reports which overrides are in effect.
+
+- **A workspace can declare the port its Storybook serves on**, as `host.port` in `conventions/storybook.yaml`, so each workspace keeps a localhost you can bookmark. A `--port` flag outranks it, then the scaffolded npm script, then `6006` (ADR-098).
+
+- **`conventions/storybook.yaml` declares how a page presents.** `modes.collections` turns each variable collection into a toolbar dropdown, `color.collections` narrows and orders which collections render, and `color.rowGroup` and `color.groupLeaves` decide what shares a row. An unknown concern or wrong value shape warns by name (ADR-098).
+
+#### Visual testing
+
+- **`specs testing visual` measures your emitted Storybook against two baselines.** Fidelity mode diffs each variant against a Figma export of the same node; regression mode diffs against the renders you last accepted. A composition is diffed as one full-page pair and reported as advisory, never deciding the run's exit status.
+
+- **Each stage is its own subcommand, and each platform is measured separately.** `manifest` and `status` need neither browser nor network, `baseline` captures Figma exports and only ever runs when named, `shoot` screenshots, `diff` re-scores in seconds, and `accept` promotes reviewed renders. `--target <react|webcomponents>` selects the platform and keys every artifact.
+
+- **`specs testing visual init` scaffolds the browser dependencies you install, and seeds `visual-ignore.yaml`.** Playwright, pixelmatch and pngjs are declared in `testing/visual/package.json` for you to install. The ignore file is seeded only when absent, and `--force` never touches it, because every line in it is a decision.
+
+- **`specs testing visual baseline` scopes itself to what changed.** Each capture records a fingerprint of the Figma node it photographed, so `status` reports each baseline as current, changed or missing, and a recapture after a refetch covers only the designs that moved.
+
+#### The workspace chain
+
+- **`specs build` and `specs run` perform your whole workspace in order** — data, manifest, specs, each platform's code, then Storybook. `build` runs the chain once and exits non-zero at the first failure; `run` runs it once and then watches, redoing only what a change affects. Experimental (ADR-101).
+
+- **`--render` adds rendering back into Figma as the last step of either command.** Off by default, because it is the only step that writes somewhere other than disk and it needs a running bridge. `specs run --render` overwrites the existing same-titled page; `specs build --render` treats a title collision as an error.
+
+- **Having nowhere to render to is reported and skipped, not treated as a failure.** No bridge running, no Figma file connected, or several with nothing naming one — each says so in a line and the chain carries on. Both commands take `--file <fileKey>` rather than prompting.
+
+#### Conventions and settings
+
+- **`conventions/specs.yaml` can name your library's default slot, and a nested hierarchy then reads as one tree.** Declare `slots.default.match` and content you place in a nested instance's default slot is captured as that instance's children, in the spec's own anatomy, instead of a `$slotContent` reference. A non-default slot is unchanged (ADR-099).
+
+- **Glyphs are detected by structure, not only by name.** The `glyphs` convention gains a `structure` form — child node shapes plus an optional shared fill — so a library whose icons are plainly named gets glyph detection without renames. A property-bearing component is never structurally claimed (ADR-103).
+
+- **`settings.curation` decides which components a scan selects**, with `defaultSelection`, `preserveManualSelections` for whether your manifest edits outrank a changed Figma dev status, and `includeDependencies`. `--include-all` and `--keep-checks` override the first two for one run; every default matches previous behaviour (ADR-093).
+
+- **`match` in `conventions/figma.primitives.yaml` names the layers that promote to a component**, for a layout family whose members share one set of styles and so cannot be told apart by them. An entry declaring none is chosen by its styles, as before (ADR-100).
+
+- **`settings.yaml` rejects what the schema does not declare, out loud.** An unknown top-level key warns by name and is ignored; an invalid enum value warns with the valid list and uses the default. Nothing is silently transformed on a governed surface.
+
+#### Analysis
+
+- **`specs analyze` has a command reference, and runs every analyzer when you name none.** The reference covers its arguments, options and exit codes, including an unknown analyzer name as the warning that skips rather than a failure.
+
+- **The props analysis flags a name that means two things.** `typeDiscordance` names which components hold which type for a prop they disagree on, and `enumDiscordance` now also reports a name some components close with an `enum` while others leave open, marked `openAndClosed`.
+
+#### Roles
+
+- **`specs analyze roles` reports which anatomy elements declare a role and which are bare**, with the concepts your library uses, the ones it has never reached for, and the concepts in use that nothing emits for yet. An unrecognized value is reported rather than refused, because a role is an open string and a near-miss is almost always a typo.
+
+- **`specs skills install` ships two skills that carry role adoption across a library.** One proposes a role for every unannotated element as a table you mark up; the other adds the approved ones to your Figma file a page at a time, then regenerates so you can see what landed. Nothing reaches Figma before you have checked the table.
+
+- **The bridge reads a component's structure as well as its spec.** `POST /inspect` describes a live component's anatomy elements keyed the way your specs key them, and `POST /annotate` adds role annotations to one page — appending, so notes and `action:` lines already on a layer survive, and an element that already carries a role is left alone.
+
+#### Icons
+
+- **`specs skills install` ships a skill that works out how your library marks a component as an icon glyph.** It reads your scan manifest, decides which of a file's populations are icons, derives a `glyphs` convention by name pattern or by child structure, and ends by proving the icon names resolve.
+
+#### States
+
+- **`specs skills install` ships a skill that proposes your `states` block from your own prop data**, sorting every variant prop into a state concept, a visibility toggle or a presentation flag. It hands you a block to paste and never edits your config.
+
+#### Generate and render
+
+- **A full `specs generate` run names spec folders it found but did not write**, so a deselected component or a reverted convention leaves nothing for you to discover later. Nothing is deleted, and the note says so.
+
+- **`SPECS_RENDER_WARNINGS=1` prints the render warnings a run withholds.** They stay hidden by default, because they are dominated by known defects and by degradations you cannot act on.
+
+- **Regenerating an unchanged design produces unchanged files**: each spec's `metadata.lastUpdated` carries the Figma file's `lastModified` instead of the run's wall clock, so spec diffs show real changes only.
+
+#### Fetch and cache
+
+- **No ingest failure is silent.** The cache reports what every source contributed and fails loudly when a payload cannot be read; `fetch` validates config before downloading, carries on past one source's failure, and exits non-zero on partial failure.
+
+- **A transport-level fetch failure names the source, the data kind, the underlying cause chain and the exact `--only` retry command**, where it used to be a bare "fetch failed".
+
+### Changed
+
+- **The style mapping reference is published, and corrected.** Every spec style key and the declaration it produces is now an appendix page on the docs site, linked from [Styles](https://www.specsplugin.com/code/styles/). It had drifted badly: gradient strokes, logical padding sides, cross-axis fill and variant selectors were all documented wrongly.
+
+- **`specs fetch` says "glyphs" wherever it used to say "icons"**, matching `scan` and the `glyphs.match` convention. The `icons` fetch kind and the `assets/icons/` directory are unchanged.
+
+- **`specs init` scaffolds a settings file you can run**, with a Figma source to fill your file key into, YAML output, camelCase keys, HEXA colors and an assets directory. Every commented line is the opposite of its default, so uncommenting one always changes something.
+
+- **`specs fetch` reports preparing and downloading as two stages, timed as one**, and estimates the preparing wait as a range from your previous fetch of that source. Figma builds the whole payload before sending any of it, so a long silence is now accounted for.
+
+- **`specs fetch` gives up on a source after waiting 4 minutes for Figma to start sending.** The deadline covers that wait only; a download already underway is never cut off, however slow it runs.
+
+- **A source's `key` accepts a Figma URL pasted from the browser**, not only a bare file key, which is what `--source` has always accepted. A branch URL resolves to the branch.
+
+### Fixed
+
+- **Figma node ids in a written spec are quoted, so a YAML 1.1 parser reads `42:2` as an id rather than the integer 2522.** Colon-separated digits are base-60 numbers in that version of the format, and a consumer on it received a plausible wrong value with no error. Nothing on the 1.2 spec, this CLI included, was affected.
+
+- **A component swapped onto a nested instance renders.** A swap set two instances deep — an icon on a button inside a dialog's action row — was left out of what the plugin was told to look for, so the component arrived without it and nothing reported the omission.
+
+- **`specs render` works with `SPECS_DIR` and `DATA_DIR` set and no workspace around the spec.** That pairing is the documented override for a layout that keeps specs and data apart, and it failed with a type error about a path argument instead of rendering.
+
+- **Glyph slugs agree everywhere a digit follows a word.** `specs fetch` named a glyph from its raw Figma name (`brightness-1.svg`) while specs and emitted code carry the camel key (`brightness1`), so the scaffold requested a file fetch never wrote. Existing workspaces rename affected files on their next fetch.
+
+- **A spec whose Figma name has no letters or digits is refused rather than written to a folder named `component`**, where the next such spec would overwrite it. The check that rejects the name and the writer that names the folder now share one derivation.
+
+- **A concern a run stops generating is renamed to `*.yaml.stale` rather than left to contradict the files beside it.** Nothing is deleted, the run names every file it renamed, and a later run that generates the concern again clears it.
+
+- **`specs analyze keys` finds divergent names again**, reading the declared Figma naming convention from the run document and the workspace config rather than only from per-spec metadata. A run that finds no declared convention now warns instead of reporting a clean result.
+
+- **A style referencing a variable your fetch did not reach falls back to the value Figma last read for it**, instead of rendering as though the property were never declared. Requires the `TOKEN_FIGMA_EXTENSIONS` or `CUSTOM` tokens format, which is what carries that value.
+
+- **`specs fetch` no longer reports success while a configured data kind is absent from disk.** A requested kind that did not land fails the run, a kind excluded by `--only` is called out, and cache counts are labelled as cache contents so they cannot read as this run's downloads.
+
+- **A file payload that arrives incomplete fails the fetch instead of being saved as though it were whole.** Figma sends no length to check against, so a body that stopped early was written and reported as downloaded, surfacing only when another command could not read it.
+
+- **A source with no key fails immediately, naming the source and the field**, instead of asking Figma for a file called `undefined` and blaming a key for being stale. Every unusable key in your settings is reported in one run.
+
+- **A failed source's retry hint names every kind still missing**, not only the one that failed, so following it recovers the whole source in one run. A source that failed to download is no longer called "skipped" in the cache report.
+
+- **A run whose license key cannot be checked stops at the first component** instead of failing every one into the same rate limit, and a rate-limited check says to wait the window out rather than to check your network.
 
 - **The documentation links `specs init` and config errors print now reach a live page.** The domain they named stopped answering.
-- **A style referencing a variable your fetch did not reach falls back to the value Figma last read for it**, instead of rendering as though the property were never declared. Requires the `TOKEN_FIGMA_EXTENSIONS` or `CUSTOM` tokens format, which is what carries that value.
-- **A component you unchecked stays unchecked** when `curation.preserveManualSelections` is on. Dependency selection ran after prior manifest edits were merged forward and re-selected what a human had deselected, so no option preserved the edit (ADR-093).
-- **`specs analyze keys` finds divergent names again** — it looks for the declared Figma naming convention where a run now records it (the run document beside the specs) and in the workspace config, not only in the per-spec metadata that specs stopped carrying.
-- **A zero-divergence keys report says when nothing was measured** — a run that finds no declared naming convention warns, instead of reporting a clean result.
-- **A failed source's retry hint names every kind still missing**, not only the one that failed, so following it recovers the whole source in one run.
-- **`specs fetch` no longer reports success while a configured data kind is absent from disk**: a requested kind that did not land fails the run, and a kind excluded by `--only` is called out. Cache counts are labelled as cache contents, so they cannot read as this run's downloads.
-- **A run whose license key cannot be checked stops at the first component** instead of failing every one into the same rate limit, and a rate-limited check now says to wait it out rather than to check your network.
 
-### Removed
+- **A scaffolded workspace fetches on the first try**, because `specs init` no longer asks for icons in the source it writes, which made `specs fetch` refuse to start until a glyphs convention was declared.
+
+### Dependency updates
+
+- **`@directededges/specs-schema` → `^0.35.0`.** A spec can now say which slot a library's nested layouts fill through, and records the conventions its run used, so a reader holding only a spec can resolve a nested instance's default slot. Specs also carry which components of a library a run selected, and glyph membership can be declared by child structure rather than by layer name.
+
+- **`@directededges/specs-from-figma` → `^0.34.0`.** Content you place in a nested instance's default slot is captured as that instance's children instead of a separate registry entry, so a screen of nested layout components reads as one tree — one real card component drops from 56 slot-content entries to 22. Composition frames can be specced from fetched library data, and the license check now happens once per run rather than once per component, which stops a long catalogue from silently producing free-tier output when the license service throttles.
+
+- **`@directededges/react-from-specs` → `^0.4.0` and `@directededges/webcomponents-from-specs` → `^0.4.0`.** Nested content emits inside the component that holds it rather than beside an empty element, compositions emit as a single story in their own nav group, and every generated file now names the command that rewrites it. A token reference in an emitted inline style carries the spec's captured value as a `var()` fallback.
 
 
 ## [0.31.0] - 2026-09-23

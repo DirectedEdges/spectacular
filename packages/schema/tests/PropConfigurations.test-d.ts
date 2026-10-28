@@ -9,6 +9,7 @@ import type {
   PropConfigurationValue,
   PropConfigurations,
   NestedPropConfiguration,
+  ObjectPropValue,
   Element,
   InstanceExample,
   Variant,
@@ -77,5 +78,38 @@ const overridesWithUnset: PropConfigurations = { header: null };
 
 // A layer that omits it — inherits whatever the base carried.
 const inherits: PropConfigurations = { bordered: 'Solid' };
+
+// ─── ObjectPropValue — member-keyed object values (ADR-111) ──────────────────
+
+// a member-keyed object is a PropConfigurationValue
+const objectValue: PropConfigurationValue = { compact: 'none', expanded: 'large' };
+
+// member values are scalars, or null to unset a member (ADR-080, per member)
+const objectPartial: ObjectPropValue = { compact: 'small' };
+const objectUnsetsMember: ObjectPropValue = { compact: null };
+const objectMixedScalars: ObjectPropValue = { visible: true, count: 2, label: 'Hi' };
+
+// object values flow through every configuration surface
+const variantWithObject: Variant = {
+  configuration: { margin: { compact: 'none', expanded: 'large' } },
+};
+const elementWithObject: Element = {
+  instanceOf: 'header',
+  propConfigurations: { margin: { compact: 'small' } },
+};
+const nestedWithObject: NestedPropConfiguration = {
+  path: ['header'],
+  margin: { compact: 'small' },
+};
+const exampleWithObject: InstanceExample = {
+  title: 'Compact margins',
+  propConfigurations: { margin: { compact: 'none', expanded: 'large' } },
+};
+
+// @ts-expect-error: member values are scalars or null — no nested objects (one level deep)
+const _objectNestedValue: ObjectPropValue = { horizontal: { compact: 'none' } };
+
+// @ts-expect-error: undefined is not a member value — omit the key to inherit
+const _objectUndefinedMember: ObjectPropValue = { compact: undefined };
 
 export type {};

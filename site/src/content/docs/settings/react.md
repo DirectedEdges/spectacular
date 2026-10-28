@@ -3,13 +3,14 @@ title: "React"
 description: "What the React platform calls the components a promoted primitive becomes, and which prop receives unmapped styling"
 ---
 
-`config/conventions/react.yaml` states facts about the React platform: how it spells the
-things a spec names. One file per platform (ADR-078) — the filename *is* the platform
-key, and its body sits at the root.
+`config/conventions/react.yaml` states facts about the React platform: how it spells the things a spec names. One file per platform (ADR-078) — the filename *is* the platform key, and the body sits at the file root. Nothing here changes what a spec contains — it is read when a spec is converted into React and when React is read back into a spec, which is why it is a convention rather than a setting: a wrong value produces incorrect output, not different output.
 
-Nothing here changes what a spec contains. It is read when a spec is converted into
-React and when React is read back into a spec, which is why it is a convention rather
-than a setting: a wrong value produces incorrect output, not different output.
+| | |
+|---|---|
+| **File** | `config/conventions/react.yaml` |
+| **Path** | file root |
+| **Type** | block (`stylesProp`, `primitives`, `defaultFillWidth`) |
+| **Default** | absent |
 
 ## `stylesProp`
 
@@ -75,8 +76,8 @@ width already states its width and is unaffected, so this can never override wha
 design declares. No default at any level: absence means the platform declares no width
 and the rendering tool falls back to its own.
 
-## See Also
+## Further reading
 
-- [Web Components](/settings/web-components/) — the same three keys for custom elements
-- [`specs react`](/cli/commands/react/) — the command that reads this
-- [Conventions schema reference](/schema/conventions/) — the full shape
+- [Web Components](/settings/web-components/) — the same three keys for custom elements.
+- [`specs react`](/cli/commands/react/) — the command that reads this.
+- [Conventions schema reference](/schema/conventions/) for the full shape.

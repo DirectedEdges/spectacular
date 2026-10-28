@@ -1,15 +1,35 @@
 import { describe, it, expect } from 'vitest';
 import yaml from 'yaml';
+import fs from 'fs';
+import path from 'path';
 import { DEFAULT_SETTINGS } from '@directededges/specs-schema';
+import { CONFIG_DEFAULTS } from '../../../src/config/ConfigDefaults.js';
 import {
   generateFigmaConventionsTemplate,
   generateSpecsConventionsTemplate,
   generateSettingsTemplate,
   generateConfigTemplates,
-} from '../../../src/Config/ConfigTemplates.js';
+} from '../../../src/config/ConfigTemplates.js';
 
 describe('ConfigTemplates', () => {
   describe('generateConfigTemplates', () => {
+    /**
+     * The one failure the move to `templates/*.yaml` introduced.
+     *
+     * A template used to be a function, so adding one meant writing it and wiring it
+     * in the same edit. A file can now be dropped into `templates/` and referenced by
+     * nothing: unused files do not fail a build, so it would simply never scaffold.
+     * The inverse is already caught — a map entry naming a missing file fails the
+     * import.
+     */
+    it('wires every file in templates/ into the scaffold', () => {
+      const dir = path.resolve(__dirname, '../../../src/config/templates');
+      const onDisk = fs.readdirSync(dir).filter(f => f.endsWith('.yaml'));
+      const scaffolded = Object.keys(generateConfigTemplates()).map(p => path.basename(p));
+      const orphaned = onDisk.filter(f => !scaffolded.includes(f));
+      expect(orphaned, `present in templates/ but scaffolded by nothing: ${orphaned.join(', ')}`).toEqual([]);
+    });
+
     it('scaffolds one conventions file per platform, the specs file, plus settings', () => {
       const templates = generateConfigTemplates();
       expect(Object.keys(templates).sort()).toEqual([
@@ -42,8 +62,8 @@ describe('ConfigTemplates', () => {
       for (const block of ['instanceExamples:', 'images:', 'sourceProps:']) {
         expect(template).toContain(block);
       }
-      expect(template).toContain('www.specsplugin.com/guides/images/');
-      expect(template).toContain('www.specsplugin.com/guides/instance-examples/');
+      expect(template).toContain('spectacular.systems/guides/images/');
+      expect(template).toContain('spectacular.systems/guides/instance-examples/');
       // states describes the spec's own props, so it lives in specs.yaml (ADR-073 Decision 4)
       expect(template).not.toContain('states:');
     });
@@ -92,7 +112,7 @@ describe('ConfigTemplates', () => {
       for (const block of ['# states:', '# accessibility:', '# value:', 'indeterminate:']) {
         expect(template).toContain(block);
       }
-      expect(template).toContain('www.specsplugin.com/settings/states/');
+      expect(template).toContain('spectacular.systems/settings/states/');
     });
 
     it('is inert until uncommented', () => {
@@ -105,19 +125,19 @@ describe('ConfigTemplates', () => {
     it('should include data.directory with default value', () => {
       const template = generateSettingsTemplate();
       expect(template).toContain('directory: ./data');
-      expect(template).toContain('www.specsplugin.com/settings/data-sources/');
+      expect(template).toContain('spectacular.systems/settings/data-sources/');
     });
 
     it('should include spec.directory with default value', () => {
       const template = generateSettingsTemplate();
       expect(template).toContain('directory: ./specs');
-      expect(template).toContain('www.specsplugin.com/settings/folders/');
+      expect(template).toContain('spectacular.systems/settings/folders/');
     });
 
     it('should include inline documentation comments', () => {
       const template = generateSettingsTemplate();
       expect(template).toContain('#');
-      expect(template).toContain('www.specsplugin.com/settings/');
+      expect(template).toContain('spectacular.systems/settings/');
     });
 
     it('should include Figma sources section', () => {
@@ -141,7 +161,7 @@ describe('ConfigTemplates', () => {
       expect(template).toContain('defaultSlotContent');
     });
 
-    it('declares the scaffolded serialization defaults', () => {
+    it('declares the scaffolded serialization settings', () => {
       const parsed = yaml.parse(generateSettingsTemplate());
       expect(parsed.spec.format).toBe('YAML');
       expect(parsed.spec.keys).toBe('CAMEL');
@@ -155,7 +175,7 @@ describe('ConfigTemplates', () => {
       expect(Object.keys(parsed)).toContain('spec');
       expect(Object.keys(parsed)).toContain('assets');
       expect(parsed.data.sources).toEqual({
-        library: { key: 'YOUR_FIGMA_FILE_KEY', fetch: ['file', 'variables', 'styles', 'icons'] },
+        library: { key: 'YOUR_FIGMA_FILE_KEY', fetch: ['file', 'variables', 'styles'] },
       });
       expect(parsed.assets.directory).toBe('./assets');
       // curation is a mapping of commented members, so it parses to null rather
@@ -163,9 +183,44 @@ describe('ConfigTemplates', () => {
       expect(Object.keys(parsed)).toContain('curation');
     });
 
-    it('states the commenting contract rather than annotating each default', () => {
+    it('states the writing contract rather than annotating each setting', () => {
       const template = generateSettingsTemplate();
-      expect(template).toContain('Every commented line is the opposite of the default');
+      expect(template).toContain('Every setting is written out at the value this workspace');
+      expect(template).toContain("All but three are the schema's own default; those three are marked.");
+    });
+
+    /**
+     * The scaffold and `DEFAULT_SETTINGS` are two statements of what a fresh workspace
+     * produces, and for five members they disagreed for several releases because
+     * nothing compared them (ADR-112). A scaffolded value that silently departs from
+     * the schema means the published docs and a reader's own file give different
+     * answers, so every departure has to be deliberate and listed here.
+     *
+     * The three listed are on while the schema defaults them off. Each reads a
+     * convention a fresh workspace has not declared, so each finds nothing — on is
+     * free, and it makes declaring the convention the only later step.
+     */
+    const DECLARED_DEPARTURES = ['roles', 'promotePrimitives', 'defaultSlotContent'];
+
+    it('scaffolds the schema default for every setting but the declared departures', () => {
+      const parsed = yaml.parse(generateSettingsTemplate());
+      for (const [key, value] of Object.entries(DEFAULT_SETTINGS.spec)) {
+        if (typeof value === 'object' || DECLARED_DEPARTURES.includes(key)) continue;
+        expect(parsed.spec[key], `spec.${key} departs from the schema default`).toEqual(value);
+      }
+      for (const [key, value] of Object.entries(DEFAULT_SETTINGS.curation)) {
+        expect(parsed.curation[key], `curation.${key} departs from the schema default`).toEqual(value);
+      }
+    });
+
+    it('scaffolds each declared departure on, and says why in the file', () => {
+      const parsed = yaml.parse(generateSettingsTemplate());
+      const template = generateSettingsTemplate();
+      for (const key of DECLARED_DEPARTURES) {
+        expect(parsed.spec[key]).toBe(true);
+        expect(DEFAULT_SETTINGS.spec[key as 'roles']).toBe(false);
+      }
+      expect(template).toContain('on while the schema defaults them off');
     });
 
     /**
@@ -193,6 +248,18 @@ describe('ConfigTemplates', () => {
       for (const key of Object.keys(DEFAULT_SETTINGS.curation)) {
         expect(template).toContain(`${key}:`);
       }
+    });
+
+    /**
+     * The template is authored as YAML, so the directories are literals rather than
+     * interpolated from `CONFIG_DEFAULTS`. That is the trade for a readable scaffold,
+     * and this is what pays for it: changing a default without changing the template
+     * fails here instead of scaffolding the old path into every new workspace.
+     */
+    it('scaffolds the same directories the CLI defaults to', () => {
+      const template = generateSettingsTemplate();
+      expect(template).toContain(`directory: ${CONFIG_DEFAULTS.dataDirectory}`);
+      expect(template).toContain(`directory: ${CONFIG_DEFAULTS.outputDirectory}`);
     });
   });
 

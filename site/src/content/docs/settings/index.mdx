@@ -4,7 +4,7 @@ title: "Configuration"
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 import Figure from '../../../components/Figure.astro';
-import pluginSettingsFormat from '../../../assets/plugin-settings-format.png';
+import pluginSettings from '../../../assets/plugin-settings.png';
 
 Configuration gives you technical control over how specs are created — the same options drive both the Figma plugin and the CLI, so a component produces the same structured output no matter which one generates it.
 
@@ -26,9 +26,9 @@ There is no separate on-switch.
 The plugin's **Settings** tab exposes the same options as the CLI's config files, right next to the canvas where you're generating specs.
 
 <Figure
-  src={pluginSettingsFormat}
-  alt="The plugin's Settings tab, showing the Format section with File, Key case and delimiter, Token, and Color options"
-  caption="The Format section of the plugin's Settings tab."
+  src={pluginSettings}
+  alt="The plugin's Settings tab, showing the Foundations section with Token format, Color format, Icon glyphs, and Images options"
+  caption="The Foundations section of the plugin's Settings tab."
 />
 
 ### Format
@@ -54,7 +54,7 @@ The **Variants** section controls how variant property combinations are compared
 
 The **Elements** section controls which layers are detected as special-purpose content:
 
-- [Glyphs](/settings/glyph-name-pattern/) — Matches names like `DS Icon Glyph / check`
+- [Glyphs](/settings/glyphs/) — Matches names like `DS Icon Glyph / check`
 - [Subcomponents](/settings/subcomponents/) — Matches names like `Card / _ / Header` within `NESTED` or `PAGE`
 - [Collapse Primitive Wrapper](/settings/collapse-primitive-wrapper/) — Collapses a wrapper around a lone `text` or `glyph` child
 - [Default Slot Content](/settings/default-slot-content/) — Emits authored defaults as `slotContentExamples`
@@ -68,6 +68,7 @@ The **Props** section controls how code-only and inferred props are detected:
 - [Code-Only Props](/settings/code-only-props-pattern/) — Detects a layer like `Code only props`
 - [Slot Constraints](/settings/slot-constraints/) — Merges `anyOf`, `minChildren`, `maxChildren` into the slot prop
 - [Infer Number Props](/settings/infer-number-props/) — Emits `minRows: 2` as `NumberProp` instead of `StringProp`
+- [Object Props](/settings/object-props/) — Folds `margin.compact` + `margin.expanded` into one `margin` object prop
 
 ### Layout
 
@@ -136,7 +137,7 @@ data:
 spec:
   directory: ./specs
   format: YAML
-  keys: SAFE
+  keys: CAMEL
   layout: LAYOUT
   tokens: TOKEN
   variantDepth: 2
@@ -212,7 +213,7 @@ with a warning so builds continue:
 
 ```bash
 $ specs generate data/library.file -c Button
-Warning: Invalid spec.keys: 'invalid'. Using default: SAFE.
+Warning: Invalid spec.keys: 'invalid'. Using default: CAMEL.
 Valid values: SAFE, CAMEL, SNAKE, KEBAB, PASCAL, TRAIN
 ```
 

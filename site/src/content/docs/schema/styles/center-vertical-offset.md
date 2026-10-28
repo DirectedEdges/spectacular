@@ -1,6 +1,7 @@
 ---
 title: "centerVerticalOffset"
 description: "Vertical offset from center for a positioned child"
+tableOfContents: false
 ---
 
 Vertical offset from center. Present when the vertical constraint is `CENTER`.
@@ -13,6 +14,10 @@ Vertical offset from center. Present when the vertical constraint is `CENTER`.
 | `null` | `null` |
 
 Not token-bindable — structural property computed from Figma layout constraints, not a design value.
+
+#### Default
+
+`null`
 
 #### Supported on
 

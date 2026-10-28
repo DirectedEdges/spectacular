@@ -9,16 +9,16 @@
 // Core component types
 export type { Component } from './Component.js';
 export type {
-  SpecConcernDocument,
-  SpecApiDocument,
-  SpecVariantsDocument,
-  SpecExamplesDocument,
-  SpecApiSubcomponent,
-  SpecVariantsSubcomponent,
-  SpecExamplesSubcomponent,
-} from './ConcernDocument.js';
+  ComponentConcernDocument,
+  ComponentApiDocument,
+  ComponentVariantsDocument,
+  ComponentExamplesDocument,
+  ComponentApiSubcomponent,
+  ComponentVariantsSubcomponent,
+  ComponentExamplesSubcomponent,
+} from './ComponentConcernDocument.js';
 export type { Anatomy, AnatomyElement, ElementTypeRef, SubcomponentRef, RoleConceptName, ActionConceptName, ActionEntry } from './Anatomy.js';
-export type { Props, AnyProp, BooleanProp, StringProp, EnumProp, SlotProp, PrimitiveSlotContent, NumberProp, FigmaCodeOnlySource, FigmaPropExtension, PropExtensions } from './Props.js';
+export type { Props, AnyProp, BooleanProp, StringProp, EnumProp, SlotProp, PrimitiveSlotContent, NumberProp, ObjectProp, ObjectPropMember, FigmaCodeOnlySource, FigmaPropExtension, PropExtensions } from './Props.js';
 export type { Variant, Variants } from './Variant.js';
 export type { Metadata, RunMetadata, Concern } from './Metadata.js';
 export type { Subcomponent, Subcomponents, SubcomponentSource } from './Subcomponent.js';
@@ -30,9 +30,15 @@ export type { Layout, LayoutNode } from './Layout.js';
 export type { Children, SlotBinding } from './Children.js';
 export type { SlotContent } from './SlotContent.js';
 export type { Composition, Compositions } from './Composition.js';
+export type {
+  CompositionConcernDocument,
+  CompositionApiDocument,
+  CompositionVariantsDocument,
+  CompositionExamplesDocument,
+} from './CompositionConcernDocument.js';
 
 // Configuration types
-export type { PropConfigurations, PropConfigurationValue, NestedPropConfiguration } from './PropConfigurations.js';
+export type { PropConfigurations, PropConfigurationValue, NestedPropConfiguration, ObjectPropValue } from './PropConfigurations.js';
 export type {
   Conventions,
   ResolvedConventions,
@@ -40,6 +46,8 @@ export type {
   MetadataConventions,
   PlatformConventions,
   ResolvedPlatformConventions,
+  GlyphStructure,
+  GlyphStructureNode,
   PrimitiveKind,
   PrimitiveEntry,
   PrimitiveRule,

@@ -53,7 +53,7 @@ glyphs:
 
 Because the filename is the platform id, two files cannot declare the same key and there is no merge rule. Absence of a member means that platform declares no such convention, and the capability it enables does not apply — there is no separate on-switch.
 
-Three basenames in the directory are reserved and are not platforms: `specs.yaml` (conventions about [the spec itself](#specs)), `figma.primitives.yaml` (the [promotion table](#primitives)), and `storybook.yaml` ([workspace Storybook presentation](#storybook)).
+Three basenames in the directory are reserved and are not platforms: `specs.yaml` (conventions about [the spec itself](#specs)), `figma.primitives.yaml` (the [promotion table](#primitives)), and `storybook.yaml` ([the workspace Storybook's presentation and host](#storybook)).
 
 ## Platform members
 
@@ -67,7 +67,7 @@ The shape is deliberately permissive: nothing stops a code platform declaring `i
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | [`naming`](/settings/figma-keys/) | `'NONE' \| 'SENTENCE' \| 'TITLE'` | `'NONE'` | Naming convention the Figma file uses — the reversal target for [`settings.spec.keys`](/schema/settings/) |
-| [`glyphs`](/guides/glyph-name-pattern/) | `object` | — | Glyph asset naming. Absent = no glyph convention |
+| [`glyphs`](/guides/glyph-name-pattern/) | `object` | — | Glyph asset detection, by name pattern or child structure. Absent = no glyph convention |
 | [`codeOnlyProps`](/guides/code-only-props/) | `object` | — | Code-only props container naming. Absent = no such convention |
 | [`subcomponents`](/guides/subcomponent-scoping/) | `object` | — | Subcomponent organization and naming. Absent = no subcomponent convention |
 | [`instanceExamples`](/guides/instance-examples/) | `object` | — | **Pro.** Instance example organization and naming. Absent = no such convention |
@@ -75,14 +75,18 @@ The shape is deliberately permissive: nothing stops a code platform declaring `i
 | [`slotConstraints`](/guides/slot-constraints/) | `boolean` | `false` | The library authors slot constraints as code-only props |
 | [`inferNumberProps`](/guides/number-inference/) | `boolean` | `false` | The library authors numeric props as Figma `TEXT` props with numeric defaults |
 | [`inferComposableSlots`](/settings/infer-composable-slots/) | `boolean` | `false` | The library authors composable content as a slot holding primitives in its default content |
+| [`objectProps`](#objectprops) | `object` | — | The library authors object-prop members as separator-named flat props. Absent = no folding |
 | [`stylesProp`](#stylesprop) | `string` | — | *Vocabulary.* Prop receiving styling no promotion mapped. Absent = unmapped styling is dropped |
 | [`defaultFillWidth`](#defaultfillwidth) | `number` | — | Container width for a fill-width root. Absent = the rendering tool uses its own fallback |
 
 ### `glyphs`
 
+At least one of the two forms is declared; a component matching either is a glyph (ADR-103).
+
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
-| `match` | `string` | *(required)* | Naming pattern identifying glyph assets. `{i}` = icon name (e.g. `'DS Icon Glyph / {i}'`) |
+| `match` | `string` | — | Naming pattern identifying glyph assets. `{i}` = icon name (e.g. `'DS Icon Glyph / {i}'`) |
+| `structure` | `object` | — | Structural membership: `children` (required node matchers — `type`, optional `name` with `*` wildcard, optional nested `children`; every actual child must match some entry), `name` (`{i}` rule over the component name, default `'{i}'`), `fill` (accepted leaf fills — raw color or token/style name) |
 
 ### `codeOnlyProps`
 
@@ -115,6 +119,14 @@ The shape is deliberately permissive: nothing stops a code platform declaring `i
 | `match` | `string` | — | *Vocabulary.* Figma name of the designated image component (e.g. `DS Image`). Requires a non-empty `sourceProps` |
 | `component` | `string` | — | *Vocabulary.* The same component's name on this platform (e.g. `DsImage`) — the translation target for a `match` declared by whichever platform produced the spec |
 | `sourceProps` | `string[]` | — | Code-only prop names carrying image sources; the first is the designated component's own source prop |
+
+### `objectProps`
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `separator` | `string` | `'.'` | The member-name separator in flat property names |
+
+The library authors [object-prop](/schema/props/#objectprop) members as separator-delimited flat property names — `margin.compact` and `margin.expanded` fold into one `margin` object prop (since 0.39.0, ADR-111; declared via the [objectProps setting](/settings/object-props/)). Absent means no folding: a property name containing the separator stays a flat prop. Each folded member records its flat source name in `$extensions['com.figma'].name`, so writing back to Figma reverses the fold without re-deriving names.
 
 ### `stylesProp`
 
@@ -313,13 +325,16 @@ Neither failure raises an error. Where the constraint does not hold, declare no 
 
 ## `storybook`
 
-Presentation conventions for the workspace Storybook (`specs storybook`).
-Authored at `config/conventions/storybook.yaml` — a reserved basename beside
-the platform files. Top-level keys are publish concerns (`color`, `typography`,
-`icons`, …), each holding that concern's feature settings:
+Conventions for the workspace Storybook (`specs storybook`) — how its pages
+present, and where it serves. Authored at `config/conventions/storybook.yaml` —
+a reserved basename beside the platform files. Top-level keys are concerns,
+mostly publish concerns (`color`, `typography`, `icons`, …), each holding that
+concern's feature settings:
 
 ```yaml
 # config/conventions/storybook.yaml
+host:
+  port: 6101          # the address this workspace's Storybook answers at
 color:
   rowGroup: []        # names of variable hierarchy levels to collapse into one row
   groupLeaves: false  # group all the leaves
@@ -332,6 +347,29 @@ concern or feature **only with a warning naming it**. The concern
 implementation validates its own feature values under the same rule, and the
 feature vocabulary is documented with the [Storybook pages](/storybook/) rather
 than here.
+
+### `host`
+
+The one concern about serving the Storybook rather than about what a page
+shows. `host.port` is the port this workspace's Storybook runs on, and the
+reason to declare it is that it stops moving: someone maintaining several
+workspaces gets a localhost per workspace that is the same every day and can
+be bookmarked.
+
+It is read by every command that needs the address — `specs storybook init`
+writes it into the generated npm script, `specs storybook dev` and `specs run`
+serve on it, and [`specs testing visual shoot`](/cli/commands/testing/) points
+the browser at it. Resolution runs most-explicit-first:
+
+1. a `--port` flag, which answers for that one run
+2. `host.port` here — the workspace's own answer
+3. the port already in the scaffolded `storybook/package.json` script
+4. `6006`
+
+The declaration outranks the scaffolded script deliberately. The script is a
+generated file that `specs storybook init --force` rewrites, so before the port
+could be declared, a rewrite silently moved a workspace off its address — and
+took the screenshot runner with it, since that read the same script.
 
 ## Resolution
 

@@ -1,6 +1,7 @@
 ---
 title: "textCase"
 description: "Text transform for a text node"
+tableOfContents: false
 ---
 
 Text transform. Part of [`Typography`](/schema/typography/).
@@ -10,6 +11,10 @@ Text transform. Part of [`Typography`](/schema/typography/).
 | Type | Example |
 |---|---|
 | `string` | `"UPPER"`, `"LOWER"`, `"TITLE"`, `"ORIGINAL"` |
+
+#### Default
+
+`"ORIGINAL"`
 
 #### Source
 

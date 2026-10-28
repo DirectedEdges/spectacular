@@ -251,9 +251,21 @@ also re-introduces exactly the blend Option 3A avoids.
 #### Option 4A: Longest matching prefix wins *(Selected)*
 
 Among the entries whose `match` resolves, the one whose matching string is longest is
-selected. `Section Header` beats `Section` for a layer named `Section Header 2`. An exact
-tie — two entries declaring the same string — is a table defect and resolves to the first in
-authored order, with a warning naming both components.
+selected. `Section Header` beats `Section` for a layer named `Section Header 2`.
+
+**Equal-length matches can only be the same string.** Both matching strings are prefixes
+of one layer name, so two of equal length are character-for-character identical — there is
+no case where two entries match equally well by declaring *different* names. A tie
+therefore means two entries declared the same string, which is an authoring error in the
+table: one component's name is being claimed by two entries, and no rule can know which
+was meant. The table is wrong, and the fix is to edit it.
+
+Selection still has to do something, so: **the first entry in authored order wins, with a
+warning naming both components and the duplicated string.** This is the one place the
+contract reads authored order, which is what Option 4B is rejected for below — accepted
+here because the input is already a defect being reported. A re-serialisation that reorders
+the keys can change which of the two is selected, and both selections are equally wrong;
+the warning is the output that matters.
 
 **Pros**:
 - Deterministic without depending on map ordering. `primitives` is a keyed object; key order
@@ -425,7 +437,9 @@ match:
     name starts with one of these strings — exact, case-sensitive, no normalisation.
     A resolved match selects the entry immediately, within the entries whose elementType
     matches: no score is computed and no rule need resolve. Where several entries match,
-    the longest matching prefix wins. Absence means this entry is selected by score.
+    the longest matching prefix wins; two entries declaring the same string is an
+    authoring error in the table, reported as a warning naming both, with the first in
+    authored order selected. Absence means this entry is selected by score.
 ```
 
 `minItems: 1` because an empty array declares nothing and is only ever a mistake —
@@ -445,9 +459,13 @@ the member's absence is how an entry says it has no names.
   an array (`subcomponents.match`, `instanceExamples.match`, `slots.default.match`); only the
   two that name exactly one asset (`glyphs.match`, `codeOnlyProps.match`) are scalars. This
   identifies a set.
-- **No matcher is exported.** The prefix rule, case-sensitivity, longest-wins and the
-  short-circuit are stated in the doc comment and the schema description. Implementation lives
-  in whoever performs promotion (constitution II).
+- **A duplicated string is an authoring error, not a selection rule.** Two entries can only
+  match a layer equally well by declaring the identical string, since both matches are
+  prefixes of one name. The contract reports it and picks the first in authored order so a
+  run continues; it does not pretend either pick is correct (Decision 4).
+- **No matcher is exported.** The prefix rule, case-sensitivity, longest-wins, the
+  duplicate warning and the short-circuit are stated in the doc comment and the schema
+  description. Implementation lives in whoever performs promotion (constitution II).
 
 ---
 
@@ -503,5 +521,7 @@ required; `map` stays required. Selection behaviour changes only for a table tha
 - Every consumer must apply the same selection order. A consumer that scores first and treats
   `match` as a tiebreak produces different components from the same table — the incorrect-output
   failure `Conventions` warns about, not merely different output.
-- Authored key order in `primitives` stays insignificant, so merging or re-emitting a
-  conventions file cannot change which component a layer promotes to.
+- Authored key order in `primitives` stays insignificant for every well-formed table, so
+  merging or re-emitting a conventions file cannot change which component a layer promotes
+  to. The single exception is two entries declaring the same `match` string — an authoring
+  error the run warns about, where order decides between two answers that are both wrong.

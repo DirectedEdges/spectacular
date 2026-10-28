@@ -4,7 +4,7 @@ import path from 'path';
 import os from 'os';
 import yaml from 'yaml';
 import { CssTransformer } from '../../../src/transforms/Css.js';
-import { drainNameWarnings } from '../../../src/transforms/css/values.js';
+import { drainNameWarnings } from '../../../src/transforms/css/values/nameWarnings.js';
 
 const transformer = new CssTransformer();
 
@@ -116,6 +116,95 @@ describe('CssTransformer', () => {
       },
     });
     expect(out).toContain('flex-direction: column;');
+  });
+
+  describe('main-axis shrink', () => {
+    // A size the spec states is not a starting point for CSS to negotiate down.
+    const row = (childStyles: Record<string, unknown>) => ({
+      default: {
+        layout: [{ root: ['card'] }],
+        elements: {
+          root: { styles: { layoutMode: 'HORIZONTAL', layoutSizingHorizontal: 'FILL' } },
+          card: { styles: childStyles },
+        },
+      },
+    });
+
+    it('pins a stated width against a horizontal parent', async () => {
+      const out = await run(tmpDir, row({ width: 320 }));
+      expect(out).toContain('flex-shrink: 0;');
+    });
+
+    it('pins a HUG child against a horizontal parent', async () => {
+      const out = await run(tmpDir, row({ layoutSizingHorizontal: 'HUG' }));
+      expect(out).toContain('flex-shrink: 0;');
+    });
+
+    it('leaves a main-axis FILL child alone — `flex: 1 0 0` already says shrink 0', async () => {
+      const out = await run(tmpDir, row({ layoutSizingHorizontal: 'FILL' }));
+      expect(out).toContain('flex: 1 0 0;');
+      expect(out).not.toContain('flex-shrink: 0;');
+    });
+
+    it('pins a child that says nothing about the main axis — unstated is FIXED', async () => {
+      const out = await run(tmpDir, row({ height: 97 }));
+      expect(out).toContain('flex-shrink: 0;');
+    });
+
+    it('says nothing in a variant rule that does not touch main-axis sizing', async () => {
+      const out = await run(tmpDir, {
+        ...row({ width: 320 }),
+        variants: [
+          {
+            configuration: { state: 'hover' },
+            elements: { card: { styles: { backgroundColor: tokenRef('Color/Surface/Primary') } } },
+          },
+        ],
+      });
+      // Once for the default rule, and not again for a rule whose job is a colour.
+      expect(out.match(/flex-shrink: 0;/g)).toHaveLength(1);
+    });
+  });
+
+  describe('sizing a flex child already does untold', () => {
+    // A child of a column parent stretches across and hugs along by default, so
+    // restating either buries the declarations that carry information.
+    const inParent = (parentStyles: Record<string, unknown>, childStyles: Record<string, unknown>) => ({
+      default: {
+        layout: [{ root: ['child'] }],
+        elements: { root: { styles: parentStyles }, child: { styles: childStyles } },
+      },
+    });
+    const COLUMN = { layoutMode: 'VERTICAL' };
+    const ROW = { layoutMode: 'HORIZONTAL' };
+
+    it('says nothing for cross-axis FILL under a stretching parent', async () => {
+      const out = await run(tmpDir, inParent(COLUMN, { layoutSizingHorizontal: 'FILL' }));
+      expect(out).not.toContain('width: 100%;');
+    });
+
+    it('says nothing for main-axis HUG', async () => {
+      const out = await run(tmpDir, inParent(COLUMN, { layoutSizingVertical: 'HUG' }));
+      expect(out).not.toContain('height: fit-content;');
+    });
+
+    it('keeps cross-axis FILL when the parent does not stretch its children', async () => {
+      const out = await run(tmpDir, inParent(
+        { ...COLUMN, crossAxisAlignment: 'CENTER' },
+        { layoutSizingHorizontal: 'FILL' },
+      ));
+      expect(out).toContain('width: 100%;');
+    });
+
+    it('keeps cross-axis HUG — it is what stops the child stretching', async () => {
+      const out = await run(tmpDir, inParent(ROW, { layoutSizingVertical: 'HUG' }));
+      expect(out).toContain('height: fit-content;');
+    });
+
+    it('keeps main-axis FILL, which grows rather than stretches', async () => {
+      const out = await run(tmpDir, inParent(COLUMN, { layoutSizingVertical: 'FILL' }));
+      expect(out).toContain('flex: 1 0 0;');
+    });
   });
 
   it('resolves TOKEN format token references to kebab var(--)', async () => {

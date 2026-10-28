@@ -1,6 +1,7 @@
 ---
 title: "strokes"
 description: "Stroke color for a container, vector, or line element"
+tableOfContents: false
 ---
 
 Stroke color.
@@ -14,6 +15,10 @@ Stroke color.
 | [`TokenReference`](/schema/token-reference/) | `$token: DS.Color.Border.Default`<br>`$type: color` |
 | [`GradientValue`](/schema/gradient-value/) | `type: LINEAR`<br>`angle: 180`<br>`stops: [...]` |
 | `null` | `null` |
+
+#### Default
+
+`null`
 
 #### Supported on
 

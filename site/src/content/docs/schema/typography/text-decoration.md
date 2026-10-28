@@ -1,6 +1,7 @@
 ---
 title: "textDecoration"
 description: "Text decoration for a text node"
+tableOfContents: false
 ---
 
 Text decoration. Part of [`Typography`](/schema/typography/).
@@ -10,6 +11,10 @@ Text decoration. Part of [`Typography`](/schema/typography/).
 | Type | Example |
 |---|---|
 | `string` | `"UNDERLINE"`, `"STRIKETHROUGH"`, `"NONE"` |
+
+#### Default
+
+`"NONE"`
 
 #### Source
 

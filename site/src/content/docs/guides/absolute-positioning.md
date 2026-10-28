@@ -27,7 +27,7 @@ When a designer pins an element 12 px from the right edge, every platform wants 
 
 ## The Solution
 
-Specs reads both the raw geometry and the `constraints` object, computes the correct edge-relative value, and emits a named property that matches what platforms expect. The constraint types map to `start`, `end`, `centerHorizontalOffset`, `width`, and their vertical equivalents. The vertical axis works identically to horizontal — `top` and `bottom` follow the same formulas as `start` and `end`. The five sections below cover the horizontal axis.
+Spectacular reads both the raw geometry and the `constraints` object, computes the correct edge-relative value, and emits a named property that matches what platforms expect. The constraint types map to `start`, `end`, `centerHorizontalOffset`, `width`, and their vertical equivalents. The vertical axis works identically to horizontal — `top` and `bottom` follow the same formulas as `start` and `end`. The five sections below cover the horizontal axis.
 
 For the full design rationale, see [ADR-041](https://github.com/DirectedEdges/specs/blob/main/adr/041-layout-positioning.md).
 
@@ -47,7 +47,7 @@ parent width: 400
 constraints.horizontal: MIN
 ```
 
-**Specs data**
+**Spec data**
 
 ```yaml
 position: ABSOLUTE
@@ -58,7 +58,7 @@ start: 24
 
 ### MAX to `end`
 
-Figma stores `x` as the distance from the left edge. For MAX constraints, Specs inverts this to produce the distance from the right edge.
+Figma stores `x` as the distance from the left edge. For MAX constraints, Spectacular inverts this to produce the distance from the right edge.
 
 **Formula**
 
@@ -75,7 +75,7 @@ parent width: 400
 constraints.horizontal: MAX
 ```
 
-**Specs data**
+**Spec data**
 
 ```yaml
 position: ABSOLUTE
@@ -104,7 +104,7 @@ parent width: 400
 constraints.horizontal: STRETCH
 ```
 
-**Specs data**
+**Spec data**
 
 ```yaml
 position: ABSOLUTE
@@ -134,7 +134,7 @@ parent width: 400
 constraints.horizontal: CENTER
 ```
 
-**Specs data**
+**Spec data**
 
 ```yaml
 position: ABSOLUTE
@@ -165,7 +165,7 @@ parent width: 400
 constraints.horizontal: SCALE
 ```
 
-**Specs data**
+**Spec data**
 
 ```yaml
 position: ABSOLUTE
@@ -178,7 +178,7 @@ width: null
 
 ## Variant-by-variant differences
 
-Specs emits all positioning properties on every variant — active keys carry their computed value, inactive keys carry `null`. This ensures [variant layering](/guides/variant-layering) can detect any constraint change between variants: a key that's absent can't be compared.
+Spectacular emits all positioning properties on every variant — active keys carry their computed value, inactive keys carry `null`. This ensures [variant layering](/guides/variant-layering) can detect any constraint change between variants: a key that's absent can't be compared.
 
 ### Constraint type change: MIN → STRETCH
 

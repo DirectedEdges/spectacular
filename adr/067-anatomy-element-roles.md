@@ -551,7 +551,7 @@ one, is what a transform author plans against.
 | ARIA attributes | `errormessage`, `description` |
 | ARIA Authoring Practices patterns | `togglebutton`, `disclosure` |
 | HTML elements | `textarea`, `password`, `label` |
-| Specs-native, no external counterpart | `value`, `placeholder`, `indicator`, `panel`, `increment`, `decrement` |
+| Spectacular-native, no external counterpart | `value`, `placeholder`, `indicator`, `panel`, `increment`, `decrement` |
 
 **The one consequence, and it is a web-transform rule.** Never emit `role="<concept>"` by
 pattern. Only the first row contains legal ARIA role values — `role="disclosure"`,

@@ -4,7 +4,9 @@ import {
   extractApiFromSubcomponents,
   extractExamplesFromSubcomponents,
   hasExampleData,
-} from '../../../src/Writers/DataTransformers';
+  splitCompositionByConcern,
+  hasCompositionExampleData,
+} from '../../../src/writers/DataTransformers';
 
 describe('splitComponentByConcern', () => {
   it('defaults missing props to {} (regression #84)', () => {
@@ -26,6 +28,79 @@ describe('splitComponentByConcern', () => {
       metadata: {},
     });
     expect(api.props).toBe(props);
+  });
+});
+
+describe('splitCompositionByConcern (ADR-109)', () => {
+  it('never writes a props key — a composition has none (regression for the bug ADR-109 named)', () => {
+    const { api } = splitCompositionByConcern({
+      title: 'Search Results',
+      anatomy: { root: { type: 'container' } },
+      elements: {},
+      layout: ['root'],
+      metadata: {},
+    });
+    expect(api).not.toHaveProperty('props');
+  });
+
+  it('routes title/description/anatomy to api, elements/layout to variants', () => {
+    const { api, variants } = splitCompositionByConcern({
+      title: 'Search Results',
+      description: 'Search results with filter sidebar',
+      anatomy: { root: { type: 'container' } },
+      elements: { root: {} },
+      layout: ['root'],
+      metadata: {},
+    });
+    expect(api.title).toBe('Search Results');
+    expect(api.description).toBe('Search results with filter sidebar');
+    expect(api.anatomy).toEqual({ root: { type: 'container' } });
+    expect((api as any).elements).toBeUndefined();
+    expect((api as any).layout).toBeUndefined();
+    expect(variants.elements).toEqual({ root: {} });
+    expect(variants.layout).toEqual(['root']);
+    expect((variants as any).anatomy).toBeUndefined();
+  });
+
+  it('omits title/description when absent, rather than writing them as undefined', () => {
+    const { api } = splitCompositionByConcern({
+      anatomy: {},
+      elements: {},
+      layout: [],
+      metadata: {},
+    });
+    expect(api).not.toHaveProperty('title');
+    expect(api).not.toHaveProperty('description');
+  });
+
+  it('routes slotContent to examples, not slotContentExamples', () => {
+    const { examples } = splitCompositionByConcern({
+      anatomy: {}, elements: {}, layout: [],
+      slotContent: { cardHeader: { anatomy: {}, elements: {}, layout: [] } },
+      metadata: {},
+    });
+    expect(examples.slotContent).toEqual({ cardHeader: { anatomy: {}, elements: {}, layout: [] } });
+    expect((examples as any).slotContentExamples).toBeUndefined();
+  });
+
+  it('hasCompositionExampleData is false when slotContent is absent or empty', () => {
+    const { examples: none } = splitCompositionByConcern({ anatomy: {}, elements: {}, layout: [], metadata: {} });
+    expect(hasCompositionExampleData(none)).toBe(false);
+
+    const { examples: empty } = splitCompositionByConcern({ anatomy: {}, elements: {}, layout: [], slotContent: {}, metadata: {} });
+    expect(hasCompositionExampleData(empty)).toBe(false);
+  });
+
+  it('routes images to examples, and counts alone as example data (ADR-109 amendment)', () => {
+    const { api, variants, examples } = splitCompositionByConcern({
+      anatomy: {}, elements: {}, layout: [],
+      images: { compositionHero__image: { src: '_images/abc123.png' } },
+      metadata: {},
+    });
+    expect(examples.images).toEqual({ compositionHero__image: { src: '_images/abc123.png' } });
+    expect(api).not.toHaveProperty('images');
+    expect(variants).not.toHaveProperty('images');
+    expect(hasCompositionExampleData(examples)).toBe(true);
   });
 });
 

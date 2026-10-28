@@ -35,14 +35,14 @@ Several optional fields document configured and composed usages of a component. 
 
 A run with [`spec.splitConcerns`](/schema/settings/) writes one file per concern rather than a single component file. Each file has its own type, requiring what its concern carries and permitting nothing else — a `variants.yaml` cannot hold an anatomy, and an `api.yaml` cannot hold a default block.
 
-| Document | File | Required | Also carries |
-|---|---|---|---|
-| `SpecApiDocument` | `api.yaml` | `metadata`, `title`, `anatomy`, `props` | `invalidPropCombinations`, `subcomponents` |
-| `SpecVariantsDocument` | `variants.yaml` | `metadata`, `default`, `variants` | `subcomponents` |
-| `SpecExamplesDocument` | `examples.yaml` | `metadata` | `slotContentExamples`, `instanceExamples`, `images`, `subcomponents` |
+| Document | File |
+|---|---|
+| [`ComponentApiDocument`](/schema/documents/component-api/) | `api.yaml` |
+| [`ComponentVariantsDocument`](/schema/documents/component-variants/) | `variants.yaml` |
+| [`ComponentExamplesDocument`](/schema/documents/component-examples/) | `examples.yaml` |
 
 Each document's `metadata` must state its [`concern`](/schema/metadata/) — `api`, `variants` or `examples`. That is what identifies the file, and what tells the three apart. A whole `Component` carries no `concern` at all.
 
-A nested subcomponent is sliced by the same concern as the document holding it, so each document's `subcomponents` uses its own subcomponent shape — `SpecApiSubcomponent`, `SpecVariantsSubcomponent`, `SpecExamplesSubcomponent`.
+A nested subcomponent is sliced by the same concern as the document holding it, so each document's `subcomponents` uses its own subcomponent shape — `ComponentApiSubcomponent`, `ComponentVariantsSubcomponent`, `ComponentExamplesSubcomponent`.
 
-`SpecConcernDocument` is the union of the three. TypeScript cannot narrow it on `metadata.concern`, since the discriminant sits one level down; narrow on a key instead (`'title' in doc`).
+`ComponentConcernDocument` is the union of the three. TypeScript cannot narrow it on `metadata.concern`, since the discriminant sits one level down; narrow on a key instead (`'title' in doc`).

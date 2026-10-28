@@ -1,0 +1,35 @@
+# What Web Components calls each thing the spec models.
+#
+# Absence means this platform declares no conventions, and generators emit their
+# host elements as before. Uncomment to bind a primitive to one of your components.
+# See: https://spectacular.systems/schema/conventions/
+
+# Prop that receives styling no concept maps to.
+# A custom element has no sx prop; the style attribute is the channel a caller has.
+# stylesProp: style
+
+# Which of your components implements each spec primitive.
+# primitives:
+#   text:
+#     component: ds-text
+#     props:
+#       # color defaults to 'color'; content has no default, and absent means the
+#       # component takes its text as children rather than as a prop.
+#       color: color
+#       content: text
+#       typography: typography
+#   glyph:
+#     component: ds-icon
+#     props:
+#       # color and content both default to their own names.
+#       color: color
+#       content: content
+#   container:
+#     component: ds-box
+#     props:
+#       # Only set where the component takes a direction; a container with no auto
+#       # layout is a positioning box and is left unbound.
+#       direction: direction
+
+# Width of the container this platform places a fill-width root in.
+# defaultFillWidth: 375

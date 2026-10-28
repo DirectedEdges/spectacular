@@ -1,7 +1,7 @@
 // Colour foundations: the variables payload plus fill styles, resolved at
 // publish time (specs#609). Everything the page shows is in colors.json;
 // the page is a view of it.
-import { kebabizePath } from '../../../transforms/css/values.js';
+import { kebabizePath } from '../../../transforms/css/values/tokens.js';
 
 interface Rgba { r: number; g: number; b: number; a: number }
 type VarValue = Rgba | { type: 'VARIABLE_ALIAS'; id: string };

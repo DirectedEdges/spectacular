@@ -1,6 +1,7 @@
 ---
 title: "layoutMode"
 description: "Auto-layout direction for a container"
+tableOfContents: false
 ---
 
 Auto-layout direction.
@@ -13,6 +14,10 @@ Auto-layout direction.
 | `null` | `null` |
 
 Not token-bindable — structural property, not a design value.
+
+#### Default
+
+`"NONE"`
 
 #### Supported on
 

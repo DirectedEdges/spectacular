@@ -5,7 +5,15 @@ All notable changes to the Specs schema will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.35.0] - Unreleased
+## [0.39.0] - Unreleased
+
+### Breaking
+
+- `Settings.spec.format` — defaults to `YAML`, previously `JSON` (ADR-112)
+- `Settings.spec.keys` — defaults to `CAMEL`, previously `SAFE` (ADR-112)
+- `Settings.spec.color` — defaults to `HEXA`, previously `HEX` (ADR-112)
+- `Settings.curation.preserveManualSelections` — defaults to `true`, previously `false` (ADR-112)
+- `Settings.spec.collapsePrimitiveWrapper` — defaults to `true`, previously `false` (ADR-112)
 
 ### Added
 
@@ -23,10 +31,116 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Element.contentStyles` — typed as `ContentStyles`; the formatting primitive content filling an element takes on, distinct from the element's own `styles`, varied per variant through `variants[].elements`. Keyed by primitive, because default content may hold a glyph and a label (ADR-102)
 - `ContentStyles`, `TextContentStyles`, `GlyphContentStyles` — a `$text`/`$glyph` map over two closed property sets: text takes `textColor`, `typography`, `textAlignHorizontal`, `textAlignVertical`, `textOverflow` and `maxLines`; a glyph takes `fillColor`, `width` and `height`. The sets overlap in nothing — a glyph carries its own dimensions because it is sized rather than laid out, where a text run's measure comes from its container (ADR-102)
 - `PlatformConventions.inferComposableSlots` — the library authors composable content as a slot holding primitives in its default content; defaults to false, also required on `ResolvedPlatformConventions` (ADR-102)
+- `ObjectProp` — a prop whose value is an object of named scalar members (ADR-111)
+- `PropConfigurationValue` — accepts a member-keyed `ObjectPropValue` under an object-prop key (ADR-111)
+- `InstanceExample.propConfigurations` — accepts `ObjectPropValue` for object props (ADR-111)
+- `platforms.<platform>.objectProps` — opt-in folding of separator-named flat props into object props (ADR-111)
 
 ### Changed
 
+- `$extensions['com.figma'].name` — documented rule corrected on props, anatomy elements and `platforms.<platform>.naming`. The field was described as absent under `naming: NONE`; NONE declares no source convention, which means nothing can be re-derived from a key, not that no name is kept. The field is recorded wherever formatting changed the name (ADR-066). Description only — no type or validation change
+
 ### Removed
+
+### Migration
+
+- `Settings.spec.format`, `Settings.spec.keys`, `Settings.spec.color`, `Settings.curation.preserveManualSelections`, `Settings.spec.collapsePrimitiveWrapper`: a workspace that sets the member explicitly is unaffected. One that left it unset now resolves to the new value — set it explicitly to keep the former output.
+- `Settings.spec.keys` carries the largest cost: a spec regenerated with `CAMEL` renames every anatomy key, prop key and reference to one, and every name derived from a key. Treat it as a migration, or set `keys: SAFE`.
+
+### ADRs
+
+#### Accepted
+
+- [ADR-111](../../adr/111-object-props.md) — Object-Typed Props
+- [ADR-112](../../adr/112-scaffolded-defaults.md) — Settings defaults adopt their scaffolded values
+
+
+## [0.38.0] - 2026-10-21
+
+### Breaking
+
+- `SpecApiDocument`, `SpecVariantsDocument`, `SpecExamplesDocument`, `SpecConcernDocument` renamed to `ComponentApiDocument`, `ComponentVariantsDocument`, `ComponentExamplesDocument`, `ComponentConcernDocument` (ADR-110)
+- `SpecApiSubcomponent`, `SpecVariantsSubcomponent`, `SpecExamplesSubcomponent` renamed to `ComponentApiSubcomponent`, `ComponentVariantsSubcomponent`, `ComponentExamplesSubcomponent` (ADR-110)
+- `schema/concern.schema.json` renamed to `schema/component-concern.schema.json`; the `./schema/concern` package export becomes `./schema/component-concern` (ADR-110)
+
+### Added
+
+- `CompositionApiDocument`, `CompositionVariantsDocument`, `CompositionExamplesDocument` — type a composition's `splitConcerns` files, each exact to what it carries (ADR-109)
+- `CompositionConcernDocument` unions the three composition concern documents, reachable from `root.schema.json` (ADR-109)
+- `Composition.images` and `CompositionExamplesDocument.images` register image data referenced by a composition's elements, matching `Component.images` (ADR-109 amendment)
+
+### Migration
+
+- `SpecApiDocument` → `ComponentApiDocument`, `SpecVariantsDocument` → `ComponentVariantsDocument`, `SpecExamplesDocument` → `ComponentExamplesDocument`, `SpecConcernDocument` → `ComponentConcernDocument`: update imports to the new names — no shape change.
+- `SpecApiSubcomponent` → `ComponentApiSubcomponent`, `SpecVariantsSubcomponent` → `ComponentVariantsSubcomponent`, `SpecExamplesSubcomponent` → `ComponentExamplesSubcomponent`: update imports to the new names — no shape change.
+- `./schema/concern` → `./schema/component-concern`: update any package export subpath resolution or direct reference to `schema/concern.schema.json`.
+
+### ADRs
+
+#### Accepted
+
+- [ADR-109](../../adr/109-composition-concern-documents.md) — Composition Concern Documents
+- [ADR-110](../../adr/110-component-concern-document-naming.md) — Rename `Spec*Document` to `Component*Document`
+
+
+## [0.37.0] - 2026-10-20
+
+**The schema's home is now the DirectedEdges/spectacular repository.** The repo that was DirectedEdges/specs was renamed alongside the plugin's rebrand to Spectacular. Nothing in the types or the JSON Schema changes — this release updates the package's repository link so npm points at the right home, and every old link keeps resolving through GitHub's rename redirect.
+
+### Changed
+
+- **The package's repository link points at `DirectedEdges/spectacular`**, the renamed home of the schema. Old `DirectedEdges/specs` links keep resolving via GitHub's redirect
+
+
+## [0.36.0] - 2026-10-20
+
+**An annotation survives a collapsed layer knowing which layer it came from.** When a wrapper is folded into the element it wraps, a role annotated on the wrapper used to be indistinguishable from one annotated on the element itself — so writing the spec back to Figma could put it on the wrong layer. A spec now records the two separately, and a round trip returns each annotation to the layer that carried it. Generated code is unaffected: it still reads only the element's own role.
+
+### Added
+
+- **`FigmaAnatomyElementExtension.childRole` records a role annotated on the layer wrapper collapse folded into an element**, so `role` keeps meaning the element itself was annotated and a round trip returns each annotation to its own layer. Only `role` reaches emitted code (ADR-104)
+
+
+## [0.35.0] - 2026-10-14
+
+**A library declares the slot its nested layouts fill through.** `SpecsConventions.slots.default.match` names it, `SlotProp.defaultSlot` marks the prop that matched, and `MetadataConventions.specs` records the conventions a run used — so a reader holding only a spec can resolve a nested instance's default slot (ADR-099).
+
+**Conventions and settings grow two open surfaces.** `Conventions.storybook` is a concern-keyed map a new Storybook concern can join without a schema change, and `Settings.curation` states which components of a library a run specs (ADR-093, ADR-098).
+
+**Glyph membership can be declared by structure rather than by name.** `PlatformConventions.glyphs.structure` derives it from child shapes and fill, which makes `glyphs.match` optional (ADR-103).
+
+### Added
+
+- **`Conventions.storybook` carries a workspace's Storybook settings**, typed as `StorybookConventions` — an open concern-keyed map loaded from `conventions/storybook.yaml`, also on `ResolvedConventions`. Adding a concern needs no change to the type or its schema (ADR-098)
+- **`Settings.curation` states which components of a library a run specs**, with `defaultSelection` (`READY_FOR_DEV` or `ALL`), `preserveManualSelections` for whether hand edits outrank a changed Figma status, and `includeDependencies`. Every default matches today's behaviour (ADR-093)
+- **`SpecsConventions.slots.default.match` names the patterns identifying a component's designated default slot**, authored in `conventions/specs.yaml`. It is a spec convention, not a platform one — what it names is a `SlotProp` the spec declares, so every platform reads the same answer (ADR-099)
+- **`MetadataConventions.specs` records the spec conventions a run was performed under**, beside the one platform entry, for the reader that cannot re-derive them: a render resolving a nested instance's default slot does not hold that instance's own component spec (ADR-099)
+- **`SlotProp.defaultSlot` marks a slot prop that matched `specs.slots.default.match`**, set at generation time and read by consumers with no dependency on `Conventions` (ADR-099)
+- **`PrimitiveEntry.match` selects a promotion entry by layer-name prefix**, ahead of style scoring; the longest prefix wins (ADR-100)
+- **`PlatformConventions.glyphs.structure` derives glyph membership from child structure and fill**, typed as `GlyphStructure`, naming the glyph from the main component's name (ADR-103)
+
+### Changed
+
+- **`PlatformConventions.glyphs.match` becomes optional**, and a declared `glyphs` block now requires at least one of `match` or `structure` (ADR-103)
+
+### Migration
+
+- `glyphs.match` → `glyphs.match` or `glyphs.structure`: existing declarations stay valid; code reading `glyphs.match` must handle its absence when only `structure` is declared
+
+### ADRs
+
+#### Accepted
+
+- [ADR-093](../../adr/093-curation-settings.md) — Curation is a settings concern
+- [ADR-094](../../adr/094-subcomponent-pattern-matching-rules.md) — Subcomponent Pattern Matching Rules
+- [ADR-095](../../adr/095-compositions-in-the-scan-manifest.md) — Compositions Are Curated Like Components, From a Smaller Eligible Set
+- [ADR-096](../../adr/096-specs-directory-layout.md) — The `specs/` Directory Names What Kind of Thing Each Folder Is
+- [ADR-097](../../adr/097-composition-emission-and-presentation.md) — A Composition Emits One Story in Its Own Nav Group, and Only Under Pro
+- [ADR-098](../../adr/098-storybook-conventions.md) — Storybook Conventions — `config/conventions/storybook.yaml`
+- [ADR-099](../../adr/099-default-slot-naming-convention.md) — `slots.default.match` — Naming the Default Slot, and Flattened Instance Nesting
+- [ADR-100](../../adr/100-primitive-layer-name-match.md) — `PrimitiveEntry.match` — Promoting a Layer by Its Name, Short-Circuiting Style Scoring
+- [ADR-101](../../adr/101-workspace-stage-graph.md) — The Workspace Stage Graph
+- [ADR-103](../../adr/103-glyph-structure.md) — Structural glyph membership — `glyphs.structure` convention
 
 
 ## [0.34.0] - 2026-09-23

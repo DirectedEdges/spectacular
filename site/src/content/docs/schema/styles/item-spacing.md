@@ -1,6 +1,7 @@
 ---
 title: "itemSpacing"
 description: "Gap between items in an auto-layout container"
+tableOfContents: false
 ---
 
 Item spacing. Scalar when uniform; [`ItemSpacing`](#itemspacing) object when horizontal and vertical gaps differ.
@@ -13,6 +14,10 @@ Item spacing. Scalar when uniform; [`ItemSpacing`](#itemspacing) object when hor
 | [`TokenReference`](/schema/token-reference/) | `$token: DS.Space.400`<br>`$type: dimension` |
 | `ItemSpacing` | `horizontal: 16`<br>`vertical: 8` |
 | `null` | `null` |
+
+#### Default
+
+`0`
 
 #### Supported on
 

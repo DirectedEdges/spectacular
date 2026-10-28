@@ -1,6 +1,7 @@
 ---
 title: "maxHeight"
 description: "Maximum height constraint for an element"
+tableOfContents: false
 ---
 
 Maximum height constraint.
@@ -11,6 +12,10 @@ Maximum height constraint.
 |---|---|
 | `number` | `120` |
 | [`TokenReference`](/schema/token-reference/) | `$token: DS.Size.400`<br>`$type: dimension` |
+
+#### Default
+
+`null`
 
 #### Supported on
 

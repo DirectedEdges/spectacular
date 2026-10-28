@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'fs-extra';
 import path from 'path';
 import os from 'os';
-import { reconcileStaleConcerns, staleWarnings, STALE_SUFFIX } from '../../../src/Writers/StaleConcerns.js';
+import { reconcileStaleConcerns, staleWarnings, STALE_SUFFIX } from '../../../src/writers/StaleConcerns.js';
 
 let dir: string;
 

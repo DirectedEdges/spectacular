@@ -1,6 +1,7 @@
 ---
 title: "padding"
 description: "Inner spacing between a container's edge and its children"
+tableOfContents: false
 ---
 
 Padding. Scalar when uniform; [`Sides`](/schema/sides/) object when per-side values differ.
@@ -13,6 +14,10 @@ Padding. Scalar when uniform; [`Sides`](/schema/sides/) object when per-side val
 | [`TokenReference`](/schema/token-reference/) | `$token: DS.Space.400`<br>`$type: dimension` |
 | [`Sides`](/schema/sides/) | `top: 8`<br>`end: 16`<br>`bottom: 8`<br>`start: 16` |
 | `null` | `null` |
+
+#### Default
+
+`0`
 
 #### Supported on
 

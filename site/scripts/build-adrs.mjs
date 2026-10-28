@@ -181,11 +181,11 @@ const rows = [...adrs]
 
 const index = `---
 title: "Decision Records (ADRs)"
-description: "Accepted architecture decisions shaping the Specs schema, CLI, and plugin."
+description: "Accepted architecture decisions shaping the Spectacular schema, CLI, and plugin."
 tableOfContents: false
 ---
 
-Every field in the Specs schema exists because of a decision about what a design system needs to express and how Figma exposes it. An **Architecture Decision Record** captures one such decision: the problem, the options weighed, the choice made, and the designs rejected along the way.
+Every field in the Spectacular schema exists because of a decision about what a design system needs to express and how Figma exposes it. An **Architecture Decision Record** captures one such decision: the problem, the options weighed, the choice made, and the designs rejected along the way.
 
 Where [Schema](/schema/) and [Settings](/settings/) tell you what a field is, an ADR tells you why it looks that way — read one when a field's shape surprises you, or when you're weighing a change. Only accepted decisions appear here, newest first, each left as written, so later records may supersede earlier ones.
 

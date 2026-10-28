@@ -135,6 +135,56 @@ describe('PayloadSplitter', () => {
     expect(readFileSync(join(dir, 'root.json'), 'utf8')).toBe(source);
   });
 
+  // Figma sends the file payload chunked with no content-length, so a body that
+  // stops early without a transport error reaches finish() looking ordinary. Each
+  // case below cuts the payload at a different kind of boundary.
+  describe('refuses a truncated payload', () => {
+    const full = payload([PAGE_A, PAGE_B, PAGE_C]);
+
+    /** Cut `source` just past `marker`. Offsets are byte offsets, not character
+     *  offsets — page names carry multi-byte characters, so the two diverge. */
+    async function cutPast(source: string, marker: string, extra = 0): Promise<unknown> {
+      const buf = Buffer.from(source, 'utf8');
+      const found = buf.indexOf(marker, 'utf8');
+      expect(found, `marker not in payload: ${marker}`).not.toBe(-1);
+      const splitter = new PayloadSplitter(dir);
+      splitter.write(buf.subarray(0, found + Buffer.byteLength(marker, 'utf8') + extra));
+      return splitter.finish();
+    }
+
+    it('cut inside a page', async () => {
+      await expect(cutPast(full, '"children":[{"id":"10')).rejects.toThrow(/ended inside a page/);
+    });
+
+    it('cut in the root prefix, before document.children opens', async () => {
+      await expect(cutPast(full, '{"document":{')).rejects.toThrow(/depth 2/);
+    });
+
+    it('cut between two pages, in the separator', async () => {
+      await expect(cutPast(full, '"children":[]},')).rejects.toThrow(/depth 3/);
+    });
+
+    it('cut in the suffix, after document.children closes', async () => {
+      await expect(cutPast(full, '"componentSets":{},')).rejects.toThrow(/depth 1/);
+    });
+
+    it('cut inside a string', async () => {
+      await expect(cutPast(full, '"name":"Colo')).rejects.toThrow(/ended inside a string/);
+    });
+
+    // An escape leaves the scanner mid-string with `escaped` set; the root-level
+    // value keeps the cut outside any page so the string check is what answers.
+    it('cut directly after a string escape', async () => {
+      const source = payload([PAGE_A], { note: 'a \\"quoted\\" root value' });
+      await expect(cutPast(source, '"note":"a ', 1)).rejects.toThrow(/ended inside a string/);
+    });
+
+    it('an empty body', async () => {
+      const splitter = new PayloadSplitter(dir);
+      await expect(splitter.finish()).rejects.toThrow(/empty/);
+    });
+  });
+
   it('abort removes the partial directory', async () => {
     const splitter = new PayloadSplitter(dir);
     splitter.write(Buffer.from(payload([PAGE_A]).slice(0, 50), 'utf8'));

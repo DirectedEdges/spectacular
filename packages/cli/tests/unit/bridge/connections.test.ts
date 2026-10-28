@@ -8,7 +8,7 @@ function fakeSocket(readyState = 1) {
 describe('ConnectionRegistry', () => {
   it('resolve() throws when nothing is connected', () => {
     const registry = new ConnectionRegistry();
-    expect(() => registry.resolve()).toThrow('No plugin connected. Enable the CLI Bridge in Specs 2 first.');
+    expect(() => registry.resolve()).toThrow('No plugin connected. Enable the CLI Bridge in the Figma plugin first.');
   });
 
   it('resolve() returns the sole connection when exactly one is registered', () => {

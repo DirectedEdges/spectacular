@@ -40,8 +40,11 @@ export async function publish(ws: Workspace, concernName?: string): Promise<Publ
   // publish concern is ignored WITH a warning — a silently ignored block is
   // indistinguishable from a working one. (Concern pages may consume blocks
   // named after foundations pages too, so those keys are also legitimate.)
+  //
+  // `host` is legitimate and deliberately not a publish concern: it says where
+  // the Storybook is served, which publish has no part in writing.
   const conventionKeys = Object.keys(ws.config.conventions.storybook ?? {});
-  const legitimate = new Set([...concernNames(), 'color', 'typography', 'icons', 'modes']);
+  const legitimate = new Set([...concernNames(), 'host', 'color', 'typography', 'icons', 'modes']);
   for (const key of conventionKeys) {
     if (!legitimate.has(key)) {
       console.warn(`⚠ conventions/storybook.yaml: unknown concern "${key}" ignored (known: ${[...legitimate].join(', ')})`);

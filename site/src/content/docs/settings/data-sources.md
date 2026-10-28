@@ -3,20 +3,32 @@ title: "sources"
 description: "Configure which Figma files to fetch and process"
 ---
 
-`data.sources` in `config/settings.yaml` tells the CLI which Figma files to fetch data from and what to download from each one. A run choice — which files a workspace reads is this workspace's business, which is why sources sit in `settings.yaml` while the conventions describing the library live in `conventions.yaml`. Each entry is a named alias you choose, mapped to a Figma file key and a `fetch` list of artifact kinds:
+`data.sources` tells the CLI which Figma files to fetch data from and what to download from each one. A run choice — which files a workspace reads is this workspace's business, which is why sources sit in `settings.yaml` while the conventions describing the library live in `conventions.yaml`. Each entry is a named alias you choose, mapped to a Figma file key and a `fetch` list of artifact kinds.
 
-- `file` — the full Figma document (components, frames, nodes). This is typically your component library file. Required for `generate`.
-- `variables` — Figma variable collections and their values. Used for token resolution during `generate`.
-- `styles` — Figma styles (color, text, effect). Used for style resolution during `generate`.
-- `icons` — the glyph assets matched by [`figma.glyphs.match`](/settings/glyph-name-pattern/), extracted as SVG files. Requires that convention to be declared and the `file` payload to be fetched.
+| | |
+|---|---|
+| **File** | `config/settings.yaml` |
+| **Path** | `data.sources` |
+| **Type** | map of alias → `{ key, fetch }` |
+| **Default** | — (required for `fetch` and `generate`) |
 
-Most projects have one source. You'd add a second when your design system spans more than one Figma file:
+## Options
 
-- A shared foundations or tokens file holds the variable collections that your component library references — variables won't resolve without it.
-- Your components are split across multiple Figma library files, and you want to generate specs from more than one in the same run.
-- A separate file owns the styles (color palettes, typography) used by components in another file.
+The artifact kinds a source's `fetch` list can name:
 
-The `generate` command resolves variables and styles across all configured sources.
+| Value | Description |
+|---|---|
+| `file` | The full Figma document (components, frames, nodes). This is typically your component library file. Required for `generate` |
+| `variables` | Figma variable collections and their values. Used for token resolution during `generate` |
+| `styles` | Figma styles (color, text, effect). Used for style resolution during `generate` |
+| `icons` | The glyph assets matched by [`figma.glyphs.match`](/settings/glyphs/), extracted as SVG files. Requires that convention to be declared and the `file` payload to be fetched |
+
+## Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `key` | `string` | Yes | The Figma file key for this source, or the file's URL pasted straight from the browser |
+| `fetch` | `string[]` | Yes | Which artifact kinds to fetch from this file — the values in Options above |
 
 ## Example
 
@@ -31,6 +43,16 @@ data:
       fetch: ['variables','styles']
 ```
 
+## Multiple sources
+
+Most projects have one source. You'd add a second when your design system spans more than one Figma file:
+
+- A shared foundations or tokens file holds the variable collections that your component library references — variables won't resolve without it.
+- Your components are split across multiple Figma library files, and you want to generate specs from more than one in the same run.
+- A separate file owns the styles (color palettes, typography) used by components in another file.
+
+The `generate` command resolves variables and styles across all configured sources.
+
 ## Alias
 
 The alias (e.g. `library`, `foundations`) is a name you assign to each source. It determines the filenames the CLI writes to `data.directory`:
@@ -41,34 +63,23 @@ The alias (e.g. `library`, `foundations`) is a name you assign to each source. I
 
 ## `key`
 
-The Figma file key for this source — the key alone, not a URL. `settings.yaml`
-does no URL parsing: whatever you write here goes straight into the Figma API
-request, so a pasted URL fails as an opaque API error rather than a config
-error. (The [`--source`](/cli/commands/fetch/#fetching-figma-branches) flag is the
-opposite — it accepts a pasted URL and pulls the key out for you.)
+A pasted URL has the key read out of it for you, the same way
+[`--source`](/cli/commands/fetch/#fetching-figma-branches) reads one. A branch
+URL resolves to the branch rather than the file it branches from.
 
-Read the key out of the URL Figma shows while the file is open:
+The key is the segment after `/design/` in the URL Figma shows while the file is
+open, if you would rather write it out:
 
 ```
 https://www.figma.com/design/PnIKd8F7Y7kaFOTcyaYGuF/Design-System?node-id=0-1
                              └──────── key ────────┘
 ```
 
-- **Type**: string
-- **Required**: yes
+A source whose key is missing or unusable fails before anything is downloaded,
+naming the source and what it found there.
 
 A branch URL names two files, and the one you want is the second — see
 [Branch Keys](#branch-keys) below.
-
-## `fetch`
-
-Which artifact kinds to fetch from this file.
-
-- **Type**: array
-- **Required**: yes
-- **Options**: `file`, `variables`, `styles`, `icons`
-
-**Legacy name**: in the pre-split `specs.config.yaml`, sources lived at the root as `sources`, and this list was named `data`. That file is no longer read — [`specs migrate config`](/cli/commands/migrate/) converts it, moving each source to `data.sources.<name>` and renaming its list to `fetch`.
 
 ## Branch Keys
 
@@ -98,3 +109,7 @@ instead, which takes the branch key out of the URL itself. Put a branch in
 `data.sources` only when you fetch it repeatedly over a long life.
 
 Branch data includes unpublished changes — variables, styles, and components that haven't been merged or published to main. See [Fetching Figma Branches](/cli/commands/fetch/#fetching-figma-branches) for implications.
+
+## Legacy name
+
+In the pre-split `specs.config.yaml`, sources lived at the root as `sources`, and this list was named `data`. That file is no longer read — [`specs migrate config`](/cli/commands/migrate/) converts it, moving each source to `data.sources.<name>` and renaming its list to `fetch`.
