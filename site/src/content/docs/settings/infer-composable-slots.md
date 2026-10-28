@@ -5,16 +5,16 @@ description: "Read a slot's primitive default content as the primitives that slo
 
 When enabled, a Figma slot's default content is inspected for primitives. Every primitive kind present as a **top-level child**, in at least one variant, is recorded as a [reserved marker](/schema/props/#primitiveslotcontent) in that slot's `anyOf` — `$text` for a text layer, `$glyph` for a glyph. The primitives themselves are not emitted as anatomy elements; their formatting is captured onto the slot element's [`contentStyles`](/schema/elements/#styles-vs-content-styles), keyed by the same markers.
 
-A library fact, declared in `config/conventions/figma.yaml`. It states that this library expresses composable content the way Figma already lets it: a designer who wants a label that can also hold a Badge authors a **slot with a primitive inside**, while a designer who wants a plain string authors a **`TEXT` property on a text layer**. Nothing names the prop and nothing annotates it — the two shapes already differ, and the difference is the intent.
-
-That is why this works per component rather than per catalogue. An Alert's `description` is composable because *that* slot has a text layer in it; a Tooltip's `message` is a plain string because it is a `TEXT` prop. Neither needs an entry anywhere.
-
 | | |
 |---|---|
 | **File** | `config/conventions/figma.yaml` |
 | **Path** | `inferComposableSlots` |
 | **Type** | boolean |
 | **Default** | `false` |
+
+A library fact, declared in `config/conventions/figma.yaml`. It states that this library expresses composable content the way Figma already lets it: a designer who wants a label that can also hold a Badge authors a **slot with a primitive inside**, while a designer who wants a plain string authors a **`TEXT` property on a text layer**. Nothing names the prop and nothing annotates it — the two shapes already differ, and the difference is the intent.
+
+That is why this works per component rather than per catalogue. An Alert's `description` is composable because *that* slot has a text layer in it; a Tooltip's `message` is a plain string because it is a `TEXT` prop. Neither needs an entry anywhere.
 
 ## Example
 
