@@ -7,6 +7,8 @@ import {
   TEXT_PROPERTIES, backgroundImageDecls, gradientRingRule, inlineBlockIfBoxed, isGlyphLike, overlapRule,
   preserveLineBreaks,
 } from './elementRules.js';
+import { defaultContentStylesLines, slotAdmitsComponents } from './contentRules.js';
+import { resolveContentStyles } from '../analysis/contentStylesRead.js';
 import type { ImagesCssContext, RootForm } from '../types.js';
 import type { SpecAnalysis } from '../analysis/analyzeSpec.js';
 
@@ -125,6 +127,20 @@ export function defaultBlockLines(input: DefaultBlockInput): DefaultBlockResult 
       lines.push('  display: none;');
       lines.push('}');
       lines.push('');
+    }
+
+    // Formatting for the slot's primitive content (ADR-102) — what the removed
+    // anatomy children used to carry. See ./contentRules.ts for where each
+    // property lands and the component-fill residuals.
+    const content = resolveContentStyles(facts.contentStylesOf(elemKey), {});
+    if (Object.keys(content).length > 0) {
+      lines.push(...defaultContentStylesLines({
+        slotSel: selector,
+        resolved: content,
+        tokensFormat,
+        admitsComponents: slotAdmitsComponents(elem as Record<string, unknown>, apiProps),
+        rootAs,
+      }));
     }
   }
 

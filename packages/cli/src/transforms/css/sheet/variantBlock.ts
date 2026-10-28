@@ -9,6 +9,7 @@ import { childOrder, collectLayoutKeys } from '../analysis/layoutQueries.js';
 import { composedSelector, elemSelector, rootSelector } from './selectors.js';
 import { expandVariantSelectors } from './variantSelectors.js';
 import { backgroundImageDecls, gradientRingRule, inlineBlockIfBoxed, overlapRule } from './elementRules.js';
+import { slotAdmitsComponents, variantContentStylesLines } from './contentRules.js';
 import { attrNameFor } from './hostAttributes.js';
 import type { ImagesCssContext, RootForm } from '../types.js';
 import type { SpecAnalysis } from '../analysis/analyzeSpec.js';
@@ -61,6 +62,8 @@ export interface VariantBlockInput {
   images: ImagesCssContext | undefined;
   context: TransformerContext;
   facts: SpecAnalysis;
+  /** api.yaml's props — a slot's `anyOf` decides where its content rules may land. */
+  apiProps: Record<string, Record<string, unknown>>;
   displayedInDefault: ReadonlySet<string>;
   /** Props the states convention routes through real CSS selectors. */
   classifiedProps: ReadonlySet<string>;
@@ -83,7 +86,7 @@ function isReversal(variantOrder: string[], defaultOrder: string[]): boolean {
 
 export function variantBlockLines(input: VariantBlockInput): string[] {
   const {
-    componentClass, rootAs, tokensFormat, elemTypes, images, context, facts,
+    componentClass, rootAs, tokensFormat, elemTypes, images, context, facts, apiProps,
     displayedInDefault, classifiedProps, stateLookup, nestedClaimedPairs, selectorFor, warnUnnamedValue,
   } = input;
   const rootSel = rootSelector(componentClass, rootAs);
@@ -214,6 +217,29 @@ export function variantBlockLines(input: VariantBlockInput): string[] {
         tokensFormat,
         ((defaultElements[elemKey]?.styles ?? {}) as Record<string, unknown>).strokeWeight,
       ));
+
+      // The variant's contentStyles overlay — formatting for the slot's
+      // primitive content (ADR-102), riding the same selectors the element's
+      // own delta uses. Matched by the configuration object's identity, which
+      // the read preserves from this same parsed document.
+      const contentRead = facts.contentStylesOf(elemKey);
+      const contentDelta = contentRead.variants.find(
+        v => v.configuration === variant.configuration,
+      )?.contentStyles;
+      if (contentDelta && Object.keys(contentDelta).length > 0) {
+        lines.push(...variantContentStylesLines({
+          slotSelectors: rootSelectors.map(s => `${s}${elemSuffix}`),
+          delta: contentDelta,
+          defaultEntry: contentRead.default,
+          tokensFormat,
+          admitsComponents: slotAdmitsComponents(
+            (defaultElements[elemKey] ?? {}) as Record<string, unknown>,
+            apiProps,
+          ),
+          rootAs,
+          label: `${variantLabel(configuration)} — ${elemKey} slot content`,
+        }));
+      }
     }
   }
 
