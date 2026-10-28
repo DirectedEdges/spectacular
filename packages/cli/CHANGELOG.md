@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **A workspace that leaves a setting unset now resolves it to a new value** for `spec.format`, `spec.keys`, `spec.color`, `curation.preserveManualSelections` and `spec.collapsePrimitiveWrapper`. Every workspace `specs init` scaffolded already writes four of the five, so only a hand-written `settings.yaml` that omitted them sees a change (ADR-112)
 
+### Added
+
+- **Declaring `objectProps` in your figma conventions folds separator-named properties into one prop with named members** — `Margin.compact` and `Margin.expanded` become a single `margin` (ADR-111). `specs init` scaffolds the block commented out. Dependency and prop analysis, visual manifests, version grading and generated CSS all read members rather than skipping them
+
 ### Changed
 
 - **`specs init` writes every setting with a comment saying what that setting decides**, rather than a comment describing the value you would get by changing it. Three settings are scaffolded on while the schema defaults them off, and the file says which three and why

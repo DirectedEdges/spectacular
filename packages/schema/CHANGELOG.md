@@ -37,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - [ADR-112](../../adr/112-scaffolded-defaults.md) — Settings defaults adopt their scaffolded values
 
+#### New drafts
+
+- [ADR-111](../../adr/111-object-props.md) — Object-Typed Props
+
 
 ## [0.38.0] - 2026-10-21
 
