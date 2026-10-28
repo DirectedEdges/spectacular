@@ -240,7 +240,7 @@ describe('loadSpec — run metadata rehydration (ADR-089)', () => {
     lastUpdated: '2026-09-15T00:00:00.000Z',
     generator: { url: 'https://example.com', version: '0.30.0', name: 'specs-cli' },
     schema: { url: 'https://example.com/schema', version: '0.33.0' },
-    conventions: { platforms: { figma: { naming: 'SENTENCE', slotConstraints: false, inferNumberProps: false } } },
+    conventions: { platforms: { figma: { naming: 'SENTENCE', slotConstraints: false, inferNumberProps: false, inferComposableSlots: false } } },
     settings: { spec: { keys: 'SAFE' } },
   };
   const source = { pageId: 'p1', nodeId: 'n1', nodeType: 'COMPONENT' };
@@ -261,7 +261,7 @@ describe('loadSpec — run metadata rehydration (ADR-089)', () => {
 
   it('leaves a spec that carries its own record untouched', () => {
     writeRun();
-    const own = { platforms: { figma: { naming: 'TITLE', slotConstraints: false, inferNumberProps: false } } };
+    const own = { platforms: { figma: { naming: 'TITLE', slotConstraints: false, inferNumberProps: false, inferComposableSlots: false } } };
     const specPath = path.join(dir, 'button.yaml');
     fs.writeFileSync(specPath, yaml.stringify({ title: 'Button', metadata: { source, conventions: own, settings: { spec: { keys: 'NONE' } } } }));
 

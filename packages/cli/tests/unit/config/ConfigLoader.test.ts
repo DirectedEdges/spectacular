@@ -96,6 +96,25 @@ spec:
       expect(config.settings.spec.format).toBe(DEFAULT_SETTINGS.spec.format);
     });
 
+    it('resolves inferComposableSlots true when declared, false when absent', () => {
+      writeSplitFile('conventions/figma.yaml', `
+naming: SENTENCE
+inferComposableSlots: true
+`);
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.inferComposableSlots).toBe(true);
+    });
+
+    it('defaults inferComposableSlots to false when the platform declares no such convention', () => {
+      writeSplitFile('conventions/figma.yaml', `
+naming: SENTENCE
+`);
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.inferComposableSlots).toBe(false);
+    });
+
     it('accepts .json split files', () => {
       writeSplitFile('conventions/figma.json', JSON.stringify({ naming: 'TITLE' }));
 

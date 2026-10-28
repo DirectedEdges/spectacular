@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Declaring `objectProps` in your figma conventions folds separator-named properties into one prop with named members** — `Margin.compact` and `Margin.expanded` become a single `margin` (ADR-111). `specs init` scaffolds the block commented out. Dependency and prop analysis, visual manifests, version grading and generated CSS all read members rather than skipping them
 
+- **Declaring `inferComposableSlots` in your figma conventions resolves to `ResolvedPlatformConventions.inferComposableSlots`** alongside `inferNumberProps` (ADR-102). `specs init` scaffolds the setting commented out, and dependency analysis skips the reserved `$text`/`$glyph` slot markers it enables — they never surface as graph nodes or external-component entries
+
 ### Changed
 
 - **`specs init` writes every setting with a comment saying what that setting decides**, rather than a comment describing the value you would get by changing it. Three settings are scaffolded on while the schema defaults them off, and the file says which three and why

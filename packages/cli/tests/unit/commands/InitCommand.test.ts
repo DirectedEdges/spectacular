@@ -181,6 +181,7 @@ describe('InitCommand', () => {
 
       expect(conventions).toContain('subcomponents:');
       expect(conventions).toContain('slotConstraints');
+      expect(conventions).toContain('inferComposableSlots');
     });
 
     it('settings template has serialization settings', () => {

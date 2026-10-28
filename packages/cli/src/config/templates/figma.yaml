@@ -74,6 +74,11 @@ subcomponents:
 # https://spectacular.systems/settings/infer-number-props/
 # inferNumberProps: true
 
+# Slot props composed of a TEXT and/or a glyph instance infer a composable
+# slot — $text and/or $glyph markers — instead of a plain content constraint
+# https://spectacular.systems/settings/infer-composable-slots/
+# inferComposableSlots: true
+
 # Separator-delimited property names (margin.compact, margin.expanded) fold into
 # one object prop; the block's presence is the on-switch
 # https://spectacular.systems/settings/object-props/
