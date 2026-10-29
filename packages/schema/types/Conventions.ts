@@ -170,7 +170,7 @@ export interface PrimitiveEntry {
  *
  * - **Encoding** — `naming`, `glyphs`, `codeOnlyProps`, `subcomponents`,
  *   `instanceExamples`, `images.backgroundImage`, `images.sourceProps`,
- *   `slotConstraints`, `inferNumberProps`, `inferComposableSlots`. These say how this platform
+ *   `slotConstraints`, `inferNumberProps`, `slotPrimitives`. These say how this platform
  *   expresses something the spec models explicitly. A Figma library has no first-class
  *   notion of a subcomponent, so it encodes one in a layer-name pattern.
  * - **Vocabulary** — `stylesProp`, `images.match`, `images.component`. These say which of
@@ -276,19 +276,31 @@ export interface PlatformConventions {
   /** This platform authors numeric props as Figma `TEXT` props whose default and examples parse as valid numbers, to be emitted as NumberProp rather than StringProp. Optional; defaults to false. */
   inferNumberProps?: boolean;
   /**
-   * This platform authors composable content as a slot holding primitives in its default
-   * content. When declared, a slot whose default content includes a top-level primitive of
-   * a given kind — in at least one variant — is emitted with the matching
-   * `PrimitiveSlotContent` marker in its `anyOf` (`'$text'`, `'$glyph'`), and the first
-   * top-level primitive of that kind supplies that kind's entry in the slot element's
-   * `contentStyles`. Those primitives are not emitted as anatomy elements.
+   * This platform's slots carry the primitives they accept in their default content. A
+   * slot whose default content includes a top-level primitive of a given kind — in at
+   * least one variant — is emitted with the matching `PrimitiveSlotContent` marker in its
+   * `anyOf` (`'$text'`, `'$glyph'`), *where that `anyOf` already names at least one
+   * component*; a slot whose detected content is primitives alone emits no `anyOf`, since
+   * `anyOf` is a constraint and a marker widens one rather than creating it. The first
+   * top-level primitive of each kind supplies that kind's entry in the slot element's
+   * `contentStyles`, which is captured either way. Those primitives are not emitted as
+   * anatomy elements.
    *
-   * Optional; defaults to false — absent, slots are emitted exactly as they are today. The
-   * distinction it reads is authored: a slot holding a primitive is the composable case, a
-   * `TEXT` prop on a text layer is the plain-string one (ADR-102).
+   * Optional; **defaults to true.** A slot containing a text layer does accept text
+   * content on every code platform, so a false default would default to describing those
+   * slots inaccurately. The failure modes are asymmetric: with the reading on, a leftover
+   * placeholder gains a marker that is visible in the spec and correctable; with it off,
+   * slots are silently under-described and nobody sees what is missing. Set `false` to
+   * turn the reading off.
+   *
+   * The distinction it reads is authored: a slot holding a primitive is the composable
+   * case, a `TEXT` prop on a text layer is the plain-string one (ADR-102).
+   *
+   * Named for its subject beside `slotConstraints`, and for the engine's
+   * `SlotPrimitives` collaborator.
    * @since 0.35.0
    */
-  inferComposableSlots?: boolean;
+  slotPrimitives?: boolean;
   /**
    * Encoding. This platform authors object-prop members as separator-delimited flat
    * property names (e.g. `margin.compact`, `margin.expanded`), to be folded into one
@@ -564,7 +576,7 @@ export interface Conventions {
  * within it.
  *
  * **A resolver produces one of these for any platform it is asked about, declared or
- * not.** `naming`, `slotConstraints`, `inferNumberProps` and `inferComposableSlots` are
+ * not.** `naming`, `slotConstraints`, `inferNumberProps` and `slotPrimitives` are
  * required here for that
  * reason: a consumer reading `figma` gets `NONE` whether or not a `figma.yaml` exists,
  * which is the guarantee ADR-071 gave when `figma` was a required key (ADR-073).
@@ -609,8 +621,8 @@ export interface ResolvedPlatformConventions {
   slotConstraints: boolean;
   /** Numeric props are authored as Figma `TEXT` props. */
   inferNumberProps: boolean;
-  /** Composable content is authored as a slot holding primitives in its default content. @since 0.35.0 */
-  inferComposableSlots: boolean;
+  /** Slots carry the primitives they accept in their default content. Defaulted to true. @since 0.35.0 */
+  slotPrimitives: boolean;
   /** Object-prop members are authored as separator-delimited flat property names. Optional; absence means no folding. `separator` is defaulted inside a declared block. @since 0.39.0 */
   objectProps?: {
     separator: string;
@@ -682,7 +694,7 @@ export interface MetadataConventions {
  *
  * This constant carries no members, because a platform-keyed map has no fixed key to
  * populate. That does **not** mean the defaults are gone: `naming`, `slotConstraints`,
- * `inferNumberProps` and `inferComposableSlots` are still defaulted, by whoever resolves a
+ * `inferNumberProps` and `slotPrimitives` are still defaulted, by whoever resolves a
  * platform, and
  * {@link ResolvedPlatformConventions} requires them for exactly that reason.
  *

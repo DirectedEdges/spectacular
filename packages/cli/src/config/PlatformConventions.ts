@@ -8,19 +8,23 @@
  * naming and no blocks, not crash.
  *
  * That is the guarantee `ResolvedPlatformConventions` encodes by requiring
- * `naming`, `slotConstraints`, `inferNumberProps` and `inferComposableSlots` —
+ * `naming`, `slotConstraints`, `inferNumberProps` and `slotPrimitives` —
  * the same guarantee the required `figma` key gave before ADR-073 made it one
  * platform among many.
  */
 
 import type { ResolvedConventions, ResolvedPlatformConventions } from '@directededges/specs-schema';
 
-/** A platform that declares nothing: the four defaultable members, no blocks. */
+/**
+ * A platform that declares nothing: the four defaultable members, no blocks.
+ * `slotPrimitives` is the one that defaults on — a slot holding a text layer accepts
+ * text content whether or not anyone said so.
+ */
 const UNDECLARED: ResolvedPlatformConventions = {
   naming: 'NONE',
   slotConstraints: false,
   inferNumberProps: false,
-  inferComposableSlots: false,
+  slotPrimitives: true,
 };
 
 /**

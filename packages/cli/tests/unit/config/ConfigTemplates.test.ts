@@ -86,7 +86,7 @@ describe('ConfigTemplates', () => {
       expect(template).toContain('match:');
       expect(template).toContain('slotConstraints:');
       expect(template).toContain('codeOnlyProps:');
-      expect(template).toContain('inferComposableSlots:');
+      expect(template).toContain('slotPrimitives:');
     });
 
     it('the body sits at the root — the filename is the platform id', () => {

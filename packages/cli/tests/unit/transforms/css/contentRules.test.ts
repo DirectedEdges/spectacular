@@ -1,6 +1,6 @@
 // Formatting a slot's primitive content from its `contentStyles` (ADR-102).
 //
-// Under `inferComposableSlots` the primitive children leave anatomy, so the
+// Under `slotPrimitives` the primitive children leave anatomy, so the
 // slot element's `contentStyles` is the only carrier of the label's typography
 // and the glyph's fill. These tests pin where each property lands per tree —
 // inherited text on the slot element, glyph box/fill on the emitters'

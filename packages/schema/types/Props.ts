@@ -154,9 +154,17 @@ export interface NumberProp {
  * key can never shadow a marker: the safe key grammar (ADR-066) admits no leading `$`.
  *
  * A marker is recorded when the slot's default content held a top-level primitive of that
- * kind in at least one variant, and the platform declared `inferComposableSlots`. The
+ * kind in at least one variant, and the platform's `slotPrimitives` reading is on. The
  * formatting applied to such a fill lives under the matching key of the slot element's
  * `contentStyles`.
+ *
+ * **A marker joins an `anyOf` that already names at least one component; it never
+ * constitutes one.** `anyOf` is a constraint, so a slot whose detected content is
+ * primitives alone carries no `anyOf` at all — `[$text]` would say that *only* a text
+ * primitive may fill the slot, which is narrower than anything the design stated. Absence
+ * keeps its meaning: unconstrained. The slot element's `contentStyles` is recorded either
+ * way, so the keys there are what tell a reader which primitives a slot carries when no
+ * `anyOf` is present (ADR-102).
  *
  * Orthogonal to `defaultSlot`: a slot may accept a primitive without being the default
  * slot — an Alert's `description` — or be the default slot and take components only.

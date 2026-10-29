@@ -11,7 +11,7 @@ const run = (): SchemaRunMetadata => ({
   lastUpdated: '2026-09-15T00:00:00.000Z',
   generator: { url: 'https://example.com', version: '0.30.0', name: 'specs-cli' },
   schema: { url: 'https://example.com/schema', version: '0.33.0' },
-  conventions: { platforms: { figma: { naming: 'SENTENCE', slotConstraints: false, inferNumberProps: false, inferComposableSlots: false } } },
+  conventions: { platforms: { figma: { naming: 'SENTENCE', slotConstraints: false, inferNumberProps: false, slotPrimitives: false } } },
   settings: structuredClone(DEFAULT_SETTINGS),
 });
 

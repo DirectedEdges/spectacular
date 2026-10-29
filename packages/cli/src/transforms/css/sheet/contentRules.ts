@@ -1,7 +1,7 @@
 // Rules that format a slot's PRIMITIVE content — the text or glyph fill its
 // `contentStyles` describes (ADR-102) — never a component fill.
 //
-// Under `inferComposableSlots` the primitive children leave anatomy, so no
+// Under `slotPrimitives` the primitive children leave anatomy, so no
 // element rule carries the label's typography or the glyph's fill any more;
 // these rules put that formatting back, against the slot element's selector.
 //

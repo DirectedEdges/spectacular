@@ -74,9 +74,10 @@ subcomponents:
 # https://spectacular.systems/settings/infer-number-props/
 # inferNumberProps: true
 
-# Slots holding a TEXT or glyph default infer $text/$glyph composable-slot markers
-# https://spectacular.systems/settings/infer-composable-slots/
-# inferComposableSlots: true
+# A slot holding a TEXT or glyph default gains the matching $text/$glyph marker in
+# its anyOf. On by default; uncomment to stop reading slot default content this way
+# https://spectacular.systems/settings/slot-primitives/
+# slotPrimitives: false
 
 # Separator-delimited property names (margin.compact, margin.expanded) fold into
 # one object prop; the block's presence is the on-switch
