@@ -5,6 +5,15 @@ All notable changes to `@directededges/specs-cli` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.0] - Unreleased
+
+### Added
+
+### Changed
+
+### Removed
+
+
 ## [0.36.0] - 2026-10-29
 
 ### Breaking
