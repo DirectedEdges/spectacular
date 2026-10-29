@@ -103,6 +103,61 @@ const glyphOnlyApi = {
   },
 };
 
+/**
+ * A slot carrying no `anyOf` at all — the shape the generator writes when the
+ * content it detected was primitives alone. `anyOf` is a CONSTRAINT, so a
+ * marker-only list would narrow a slot the design never narrowed; the element's
+ * `contentStyles` block is the only record that the slot holds primitive content
+ * (ADR-102), and the slot identifies no component to distort.
+ */
+const noAnyOfApi = {
+  anatomy: {
+    root: { type: 'container' },
+    children: { type: 'slot' },
+  },
+  props: {
+    children: { type: 'slot' },
+    emphasized: { type: 'boolean', default: false },
+  },
+};
+
+/**
+ * A text slot, its `anyOf` given as a list or omitted entirely. Shared by the
+ * `$text` cases and the primitive-only cases, which differ only in that list.
+ */
+function textSlotSpec(
+  anyOf: string[] | undefined,
+  variants: Array<Record<string, unknown>> = [],
+  defaultText: Record<string, unknown> | null = {
+    textColor: colorToken('Color/On surface'),
+    typography: { $token: 'Typography/font__200__medium', $type: 'typography' },
+    textAlignHorizontal: 'CENTER',
+  },
+) {
+  return {
+    variants: {
+      default: {
+        layout: [{ root: ['label'] }],
+        elements: {
+          root: { styles: { layoutMode: 'HORIZONTAL' } },
+          label: {
+            children: { $binding: '#/props/label' },
+            ...(defaultText ? { contentStyles: { $text: defaultText } } : {}),
+          },
+        },
+      },
+      variants,
+    },
+    api: {
+      anatomy: { root: { type: 'container' }, label: { type: 'slot' } },
+      props: {
+        label: { type: 'slot', ...(anyOf ? { anyOf } : {}) },
+        emphasized: { type: 'boolean', default: false },
+      },
+    },
+  };
+}
+
 describe('slot contentStyles (ADR-102)', () => {
   let tmpDir: string;
 
@@ -192,39 +247,6 @@ describe('slot contentStyles (ADR-102)', () => {
   });
 
   describe('$text — inherited properties on the slot element', () => {
-    function textSlotSpec(
-      anyOf: string[],
-      variants: Array<Record<string, unknown>> = [],
-      defaultText: Record<string, unknown> | null = {
-        textColor: colorToken('Color/On surface'),
-        typography: { $token: 'Typography/font__200__medium', $type: 'typography' },
-        textAlignHorizontal: 'CENTER',
-      },
-    ) {
-      return {
-        variants: {
-          default: {
-            layout: [{ root: ['label'] }],
-            elements: {
-              root: { styles: { layoutMode: 'HORIZONTAL' } },
-              label: {
-                children: { $binding: '#/props/label' },
-                ...(defaultText ? { contentStyles: { $text: defaultText } } : {}),
-              },
-            },
-          },
-          variants,
-        },
-        api: {
-          anatomy: { root: { type: 'container' }, label: { type: 'slot' } },
-          props: {
-            label: { type: 'slot', anyOf },
-            emphasized: { type: 'boolean', default: false },
-          },
-        },
-      };
-    }
-
     it('puts color, font and alignment on the slot element itself', async () => {
       const spec = textSlotSpec(['$text']);
       const { react, host } = await run(tmpDir, spec.variants, spec.api);
@@ -337,6 +359,73 @@ describe('slot contentStyles (ADR-102)', () => {
       // and a line-clamp box on the slot element would clip the component.
       expect(react).not.toContain('line-clamp');
       expect(react).not.toContain('!important');
+    });
+  });
+
+  describe('a slot with no anyOf — contentStyles is the only record', () => {
+    it('emits the glyph rule for a slot whose only record of its content is contentStyles', async () => {
+      // No `anyOf` at all: the generator detected primitives alone, and since
+      // `anyOf` is a constraint it wrote none. The slot identifies no component,
+      // so the non-inherited glyph rule has nothing to distort and must land —
+      // the emitters no longer inline this formatting, so withholding it here
+      // would leave the slot's formatting stated nowhere.
+      const { react, host } = await run(tmpDir, glyphSlotSpec(), noAnyOfApi);
+      expect(react).toContain('.ds-badge__children > [data-element][aria-hidden="true"] {');
+      expect(react).toContain('background-color: var(--color-on-surface);');
+      expect(react).toContain('width: var(--constants-sizing-4x);');
+      expect(react).toContain('height: 16px;');
+      expect(host).toContain(
+        '.ds-badge__children > slot::slotted([data-element][aria-hidden="true"]) {');
+      expect(react).not.toContain('!important');
+      expect(host).not.toContain('!important');
+    });
+
+    it('emits a variant glyph delta for such a slot too', async () => {
+      const { react } = await run(tmpDir, glyphSlotSpec([
+        {
+          configuration: { emphasized: true },
+          elements: {
+            children: {
+              contentStyles: { $glyph: { fillColor: colorToken('Color/Inverse on surface') } },
+            },
+          },
+        },
+      ]), noAnyOfApi);
+      expect(react).toContain('/* Variant: emphasized — children slot content */');
+      expect(react).toMatch(
+        /\.ds-badge\[data-emphasized[^\]]*\] \.ds-badge__children > \[data-element\]\[aria-hidden="true"\] \{\n {2}background-color: var\(--color-inverse-on-surface\);\n\}/,
+      );
+    });
+
+    it('emits the box-level text properties for such a slot', async () => {
+      const spec = textSlotSpec(undefined, [], {
+        textColor: colorToken('Color/On surface'),
+        maxLines: 1,
+        textOverflow: 'ELLIPSIS',
+        textAlignVertical: 'CENTER',
+      });
+      const { react } = await run(tmpDir, spec.variants, spec.api);
+      expect(react).toContain('color: var(--color-on-surface);');
+      expect(react).toContain('text-overflow: ellipsis;');
+      expect(react).toContain('white-space: nowrap;');
+      expect(react).toContain('justify-content: center;');
+    });
+
+    it('emits nothing for a slot with neither an anyOf nor a contentStyles block', async () => {
+      // Nothing identified either way: the slot keeps the open answer it has
+      // always had, and with no contentStyles there is no formatting to state.
+      const { react, host } = await run(tmpDir, {
+        default: {
+          layout: [{ root: ['children'] }],
+          elements: {
+            root: { styles: { layoutMode: 'HORIZONTAL' } },
+            children: { children: { $binding: '#/props/children' } },
+          },
+        },
+        variants: [],
+      }, noAnyOfApi);
+      expect(react).not.toContain('[data-element]');
+      expect(host).not.toContain('::slotted');
     });
   });
 

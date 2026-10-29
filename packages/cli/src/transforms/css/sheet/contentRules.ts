@@ -18,7 +18,9 @@
 //
 // - **Box-level text properties** (truncation, vertical alignment, gradient
 //   text paint) change the element's box, which would distort a component fill
-//   — so they are emitted only when the slot's `anyOf` admits no component.
+//   — so they are emitted only for a slot the spec identified no component
+//   content for (`slotAdmitsComponents` below, which reads the `anyOf` when the
+//   slot declares one and the element's `contentStyles` when it does not).
 //
 // - **Glyph properties** (fill color, width, height) are non-inherited and must
 //   never reach a component fill. They target the masked-span vocabulary the
@@ -75,15 +77,40 @@ import { textAlignDecls } from '../style/textAlign.js';
 import { truncationDecls } from '../style/truncation.js';
 import { sizeDecls } from '../style/size.js';
 import type { RootForm } from '../types.js';
-import type { PrimitiveContentStyles } from '../analysis/contentStylesRead.js';
+import { contentStylesIn, type PrimitiveContentStyles } from '../analysis/contentStylesRead.js';
 
 /**
- * Whether the slot the element binds may hold a component fill.
+ * Whether the slot the element binds may hold a fill a box-level rule must not
+ * distort — a COMPONENT fill, as the spec IDENTIFIES one.
  *
- * The slot prop's `anyOf` is the one list of what the slot permits: entries not
- * starting with `$` name components (ADR-102). An element whose binding or prop
- * cannot be read answers true — the conservative reading, since box-level
- * declarations on a slot that might hold a component would distort it.
+ * A local mirror of the shared core's `slotAdmitsComponents`
+ * (specs-transforms `packages/from-specs/src/slotContent.ts`), which both
+ * emitters read to decide whether to inline a slot's `contentStyles`. That
+ * package is private and bundled into each emitter at build time — the CLI's own
+ * bundle marks all packages external, so it cannot consume the module directly.
+ * Keep the two in step when either changes: the core answers from a `SlotInfo`
+ * (`components` present when the prop declared an `anyOf`, `primitives` unioned
+ * from the markers in it and the kinds in `contentStyles`); this reads the same
+ * two records off the raw spec, the `anyOf` from the api props and the primitive
+ * kinds from the element's own `contentStyles` (../analysis/contentStylesRead.ts
+ * `contentStylesIn`, the CLI's single marker list).
+ *
+ * With an `anyOf` present it is the one list of what the slot permits, and
+ * entries not starting with `$` name components (ADR-102): named components yes,
+ * a marker-only or empty list no.
+ *
+ * With no `anyOf` the slot states no constraint, so a consumer may hand it
+ * anything — but that is not the question here. The question is whether the spec
+ * identified any component content for a box-level rule to reach. A slot with no
+ * `anyOf` whose element carries a `contentStyles` block got it from the
+ * generator looking at the slot's authored default content, finding primitives,
+ * and identifying no component — since `anyOf` is a constraint, a marker-only
+ * list would wrongly narrow a slot the design never narrowed, so none is
+ * written and `contentStyles` is the only record left. Nothing is there to
+ * distort, so the full formatting treatment applies. A slot with neither has had
+ * nothing identified either way and keeps the open answer it has always had:
+ * true, the conservative reading, which is also the answer for an element whose
+ * binding or prop cannot be read.
  */
 export function slotAdmitsComponents(
   element: Record<string, unknown>,
@@ -92,8 +119,10 @@ export function slotAdmitsComponents(
   const binding = (element.children as Record<string, unknown> | undefined)?.$binding;
   const prop = typeof binding === 'string' ? binding.match(/^#\/props\/(.+)$/)?.[1] : undefined;
   const anyOf = prop ? apiProps[prop]?.anyOf : undefined;
-  if (!Array.isArray(anyOf) || anyOf.length === 0) return true;
-  return anyOf.some(entry => typeof entry === 'string' && !entry.startsWith('$'));
+  if (Array.isArray(anyOf)) {
+    return anyOf.some(entry => typeof entry === 'string' && !entry.startsWith('$'));
+  }
+  return Object.keys(contentStylesIn(element)).length === 0;
 }
 
 /** The masked glyph span the emitters write for a `$glyph` fill — see the header. */

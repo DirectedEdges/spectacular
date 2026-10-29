@@ -101,8 +101,19 @@ export function resolveContentStyles(
   return resolved;
 }
 
-/** The marker-keyed entries an element declares, ignoring anything that is not a reserved marker. */
-function contentStylesIn(element: Record<string, unknown> | undefined): PrimitiveContentStyles {
+/**
+ * The marker-keyed entries an element declares, ignoring anything that is not a
+ * reserved marker.
+ *
+ * Exported because it is also the second RECORD of what a slot holds, not only a
+ * record of formatting: a `contentStyles` entry exists exactly when the generator
+ * found a top-level primitive of that kind in the slot's authored default
+ * content, and for a slot whose content is primitives alone it is the only
+ * record (`anyOf` is a constraint, so markers only ever join a list that already
+ * names a component). `slotAdmitsComponents` in ../sheet/contentRules.ts reads it
+ * for that, through this one marker list.
+ */
+export function contentStylesIn(element: Record<string, unknown> | undefined): PrimitiveContentStyles {
   const raw = element?.contentStyles;
   if (!raw || typeof raw !== 'object') return {};
   const out: PrimitiveContentStyles = {};
