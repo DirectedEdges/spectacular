@@ -3,9 +3,6 @@ title: "Slot Content"
 description: "The anatomy + elements + layout triplet used as a named slot fill"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge pro-badge">Pro</span>')</script>
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge experimental-badge">Experimental</span>')</script>
-
 A `SlotContent` is the anonymous structural triplet — [`anatomy`](/schema/anatomy/), [`elements`](/schema/elements/), and [`layout`](/schema/layout/) — used as a named fill for a slot. It carries no metadata of its own; its identity lives at the key under which it is stored.
 
 ```ts

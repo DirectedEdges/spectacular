@@ -27,8 +27,8 @@ the site at `site/ARCHITECTURE.md`.
    describe the same structure at all times; drift is a bug. No automated
    parity test exists: enforcement is review + `/specs.consistency-check`.
 2. **No logic.** Type declarations and static JSON only. The sole runtime
-   exports are `DEFAULT_CONVENTIONS`, `DEFAULT_SETTINGS`, `DEFAULT_PIPELINE`;
-   adding a fourth requires constitutional amendment.
+   exports are `DEFAULT_CONVENTIONS` and `DEFAULT_SETTINGS`; adding a third
+   requires constitutional amendment.
 3. **`types/index.ts` is the entire public API.** Removing or renaming an
    exported type *or field* is breaking. Naming: code platforms outrank Figma;
    no downstream package's internals may drive an ADR decision.
