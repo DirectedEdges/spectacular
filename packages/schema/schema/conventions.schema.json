@@ -192,6 +192,24 @@
           "default": false,
           "description": "The library authors numeric props as Figma TEXT props whose values parse as numbers, to be emitted as NumberProp."
         },
+        "slotPrimitives": {
+          "type": "boolean",
+          "default": true,
+          "description": "The library's slots carry the primitives they accept in their default content. A slot whose default content includes a top-level primitive of a given kind — in at least one variant — is emitted with the matching PrimitiveSlotContent marker in its anyOf ($text, $glyph), where that anyOf already names at least one component; a slot whose detected content is primitives alone emits no anyOf, since anyOf is a constraint and a marker widens one rather than creating it. The first top-level primitive of each kind supplies that kind's entry in the slot element's contentStyles, which is captured either way; those primitives are not emitted as anatomy elements. Defaults to true, because a slot containing a text layer does accept text content on every code platform; set false to turn the reading off. The distinction it reads is authored: a slot holding a primitive is the composable case, a TEXT prop on a text layer is the plain-string one. (ADR-102)"
+        },
+        "objectProps": {
+          "type": "object",
+          "description": "This platform authors object-prop members as separator-delimited flat property names (e.g. margin.compact, margin.expanded), to be folded into one ObjectProp (ADR-111). Absence means no folding — a property name containing the separator stays a flat prop.",
+          "properties": {
+            "separator": {
+              "type": "string",
+              "minLength": 1,
+              "default": ".",
+              "description": "The member-name separator in flat property names."
+            }
+          },
+          "additionalProperties": false
+        },
         "stylesProp": {
           "type": "string",
           "description": "Prop that receives styling no promotion mapped, for every promoted component on this platform (e.g. sx, style, modifier). A name only \u2014 what is placed in it is the generator's decision. Absence means unmapped styling is dropped. (ADR-076)"

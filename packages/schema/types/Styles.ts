@@ -77,6 +77,81 @@ export type Styles = Partial<{
 }>;
 
 /**
+ * The formatting a **text** primitive takes on when it fills a slot (ADR-102).
+ *
+ * Deliberately narrower than {@link Styles}: only properties that format text appear, so
+ * a container's layout or surface styling cannot enter the content record. Each member is
+ * typed identically to its `Styles` counterpart, so a value valid in `styles` is valid
+ * here — token references, prop bindings and conditionals included, wherever the
+ * underlying type is `Style`.
+ *
+ * `typography` is listed once, as the composite: its own members (`fontSize`,
+ * `fontFamily`, `lineHeight`, `letterSpacing`, `textCase`, `textDecoration` and the rest)
+ * travel inside {@link Typography} rather than being enumerated again here.
+ * @since 0.39.0
+ */
+export type TextContentStyles = Partial<{
+  /** Text color of the content. */
+  textColor: ColorStyle;
+  /** Typography of the content, as a composite or a type-token reference. */
+  typography: TokenReference | Typography;
+  /** Horizontal text alignment, using logical inline-axis directions (`START`/`END`). */
+  textAlignHorizontal: TextAlignHorizontal | null;
+  /** Vertical text alignment. */
+  textAlignVertical: Style;
+  /** How overflowing content is handled — `CLIP` or `ELLIPSIS`. */
+  textOverflow: TextOverflow | null;
+  /** Maximum number of lines before `ELLIPSIS` overflow applies; `null` means no limit. */
+  maxLines: Style;
+}>;
+
+/**
+ * The formatting a **glyph** primitive takes on when it fills a slot (ADR-102).
+ *
+ * `fillColor` plus the two dimensions. A glyph is sized rather than laid out: its box is
+ * the icon's own, set on the layer and not derived from the slot's layout the way a text
+ * run's measure is. So a glyph fill that does not carry its dimensions loses them, and a
+ * render has nothing to restore — which is why `width` and `height` belong to the fill
+ * here even though no text member does.
+ * @since 0.39.0
+ */
+export type GlyphContentStyles = Partial<{
+  /** Fill color of the glyph. */
+  fillColor: ColorStyle;
+  /** Width of the glyph box, in pixels. */
+  width: Style;
+  /** Height of the glyph box, in pixels. */
+  height: Style;
+}>;
+
+/**
+ * The styles applied to primitive content filling an element, as distinct from the
+ * element's own {@link Styles} (ADR-102).
+ *
+ * Keyed by primitive, using the same reserved markers `SlotProp.anyOf` carries, because a
+ * slot's default content may hold more than one kind — a glyph and a label — and each
+ * kind is formatted by a disjoint property set. A flat block could not attribute which
+ * styles belonged to which primitive.
+ *
+ * On a slot element each entry is the formatting that kind of fill takes on, captured from
+ * the first top-level primitive of that kind in the slot's default content, per variant. It
+ * is overridden per variant through `variants[].elements` exactly as `styles` is.
+ *
+ * A component fill is formatted by the component it instantiates, so a consumer rendering
+ * one applies `styles` and discards `contentStyles`.
+ *
+ * Meaningful only on a slot element, and its keys should agree with that slot's `anyOf`
+ * markers — both authoring/generator contracts, neither schema-enforced.
+ * @since 0.39.0
+ */
+export type ContentStyles = Partial<{
+  /** Formatting for a text primitive filling this slot. */
+  $text: TextContentStyles;
+  /** Formatting for a glyph primitive filling this slot. */
+  $glyph: GlyphContentStyles;
+}>;
+
+/**
  * Platform-neutral token reference. Uses `$token` and `$type` as the
  * complete platform-facing API surface; `$extensions["com.figma"]` carries
  * Figma extraction provenance only and is not required by platform consumers.

@@ -17,6 +17,7 @@ conventions:
       naming: SENTENCE
       slotConstraints: true
       inferNumberProps: true
+      slotPrimitives: true
       glyphs:
         match: DS Icon asset / {i}
       codeOnlyProps:

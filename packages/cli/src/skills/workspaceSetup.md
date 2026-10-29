@@ -104,7 +104,7 @@ Run `specs init` (or `npx @directededges/specs-cli init`). Verify a `config/` di
 
 Tell the user:
 
-> "I've created a `config/` directory: `conventions/` holds facts about your Figma library, and `settings.yaml` holds choices about this run. The scaffold's defaults are production-ready, so the only thing we need to fill in is your Figma file."
+> "I've created a `config/` directory: `conventions/` holds facts about your Figma library, and `settings.yaml` holds choices about this run. The scaffolded values are production-ready, so the only thing we need to fill in is your Figma file."
 
 The scaffold is commented throughout — every setting names what it does and links to its documentation. Read the files rather than asking the user about a setting, and never recite the scaffold's contents back at them. They can open it themselves at any time.
 
@@ -197,7 +197,7 @@ data:
 
 Write the full `data.sources:` block to `config/settings.yaml` now, replacing the placeholder `library:` entry `specs init` wrote. **The `icons` fetch kind never appears during onboarding**, for the reason given above. Show the user what you wrote.
 
-**Change nothing else in `config/settings.yaml`.** `specs init` writes every setting live and correct. Do not read the file back to confirm the defaults, do not recite them to the user, and do not ask about any of them — every value is already what this flow wants.
+**Change nothing else in `config/settings.yaml`.** `specs init` writes every setting out, at the value this flow wants. Do not read the file back to confirm a value, do not recite the settings to the user, and do not ask about any of them.
 
 ---
 

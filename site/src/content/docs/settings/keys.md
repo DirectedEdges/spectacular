@@ -10,14 +10,14 @@ Key name transformation strategy. Any value produces a correct spec, just with d
 | **File** | `config/settings.yaml` |
 | **Path** | `spec.keys` |
 | **Type** | enum |
-| **Default** | `SAFE` |
+| **Default** | `CAMEL` |
 
 ## Options
 
 | Value | Description |
 |---|---|
-| `SAFE` | Preserve structure without corrupting special characters |
-| `CAMEL` | camelCase |
+| `CAMEL` | camelCase. Default — the casing every code consumer of a spec already uses |
+| `SAFE` | Preserve structure without corrupting special characters, at the cost of keys code cannot address directly |
 | `SNAKE` | snake_case |
 | `KEBAB` | kebab-case |
 | `PASCAL` | PascalCase |
@@ -40,12 +40,12 @@ Input: `Background color` or `background-color`
 
 ```yaml
 spec:
-  keys: CAMEL  # Transform keys to camelCase
+  keys: SAFE  # Preserve Figma names instead
 ```
 
 ## Transformation losses
 
-Every value other than `SAFE` is a lossy projection of the Figma name. Names that cannot be reconstructed from the formatted key are preserved in `$extensions.com.figma.name` on the definition, so the spec stays reversible into Figma.
+Every value other than `SAFE` is a lossy projection of the Figma name — including the default, `CAMEL`. Names that cannot be reconstructed from the formatted key are preserved in `$extensions.com.figma.name` on the definition, so the spec stays reversible into Figma.
 
 The projection is lossy in one way that bites downstream: **a word boundary
 before a digit does not survive `CAMEL`**. `Brightness 1` becomes

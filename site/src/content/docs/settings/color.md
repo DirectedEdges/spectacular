@@ -10,14 +10,14 @@ Controls how color values are serialized wherever a `Color` appears in spec outp
 | **File** | `config/settings.yaml` |
 | **Path** | `spec.color` |
 | **Type** | enum |
-| **Default** | `HEX` |
+| **Default** | `HEXA` |
 
 ## Options
 
 | Value | Description |
 |---|---|
-| `HEX` | 6-digit hex string, like `#FF6600`. Default — matches historical behaviour and maximises human readability |
-| `HEXA` | 8-digit hex string with alpha, like `#FF6600FF` |
+| `HEX` | 6-digit hex string, like `#FF6600`. Discards alpha, so a translucent color reads as opaque |
+| `HEXA` | 8-digit hex string with alpha, like `#FF6600FF`. Default — the most compact form that survives a round trip |
 | `RGB` | CSS `rgb()` functional notation, like `rgb(255, 102, 0)` |
 | `RGBA` | CSS `rgba()` functional notation with alpha, like `rgba(255, 102, 0, 1)`. This is what Figma labels "CSS" in its colour picker |
 | `HSLA` | CSS `hsla()` functional notation, like `hsla(24, 100%, 50%, 1)` |
@@ -30,7 +30,7 @@ Controls how color values are serialized wherever a `Color` appears in spec outp
 
 ```yaml
 spec:
-  color: HEX  # Default — 6-digit hex strings
+  color: HEXA  # Default — 8-digit hex strings carrying alpha
 ```
 
 ## Scope

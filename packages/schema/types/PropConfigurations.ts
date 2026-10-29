@@ -3,6 +3,18 @@ import { SlotContentRef } from "./SlotContentRef.js";
 import { ImageBinding } from "./Image.js";
 
 /**
+ * A member-keyed object value configuring an `ObjectProp` (ADR-111). Keys are the
+ * prop's member names; values are scalar member values, or `null` to unset a member.
+ *
+ * Layering is evaluated per member, reusing existing semantics: an absent member key
+ * inherits, a `null` member value unsets (ADR-080). Member names must not begin with
+ * `$` (schema-enforced), which is what keeps this form distinguishable from
+ * `PropBinding`, `SlotContentRef`, and `ImageBinding`.
+ * @since 0.39.0
+ */
+export type ObjectPropValue = Record<string, string | number | boolean | null>;
+
+/**
  * The value of a single prop configuration entry (ADR-049).
  *
  * - Scalar values (`string | number | boolean`) — static prop values.
@@ -20,6 +32,7 @@ import { ImageBinding } from "./Image.js";
  * - `ImageBinding` — a `PropBinding` under an image-prop key carrying
  *   authoring-default example images (`examples: ImageValue[]`), used to
  *   forward a parent image prop into a nested image instance's source prop.
+ * - `ObjectPropValue` — a member-keyed object under an object-prop key (ADR-111).
  */
 export type PropConfigurationValue =
   | string
@@ -28,7 +41,8 @@ export type PropConfigurationValue =
   | null
   | PropBinding
   | SlotContentRef
-  | ImageBinding;
+  | ImageBinding
+  | ObjectPropValue;
 
 /**
  * A path-addressed configuration of a nested descendant instance (ADR-052).

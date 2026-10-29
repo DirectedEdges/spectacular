@@ -48,8 +48,8 @@
             },
             "preserveManualSelections": {
               "type": "boolean",
-              "default": false,
-              "description": "Whether a hand-edited selection outranks a later change to the library signal. When false, a component whose signal changed takes the new signal, overriding an edit. A component whose signal did not change keeps its recorded selection either way."
+              "default": true,
+              "description": "Whether a hand-edited selection outranks a later change to the library signal. When false, a component whose signal changed takes the new signal, overriding an edit. A component whose signal did not change keeps its recorded selection either way. Defaults to true."
             },
             "includeDependencies": {
               "type": "boolean",
@@ -91,8 +91,8 @@
                 "JSON",
                 "YAML"
               ],
-              "default": "JSON",
-              "description": "Serialization format."
+              "default": "YAML",
+              "description": "Serialization format. Defaults to YAML."
             },
             "keys": {
               "type": "string",
@@ -104,8 +104,8 @@
                 "PASCAL",
                 "TRAIN"
               ],
-              "default": "SAFE",
-              "description": "Key naming convention applied to anatomy keys, prop keys, and references to them."
+              "default": "CAMEL",
+              "description": "Key naming convention applied to anatomy keys, prop keys, and references to them. Every value other than SAFE is a lossy projection of the Figma name. Defaults to CAMEL."
             },
             "layout": {
               "type": "string",
@@ -145,8 +145,8 @@
                 "OKLAB",
                 "OBJECT"
               ],
-              "default": "HEX",
-              "description": "Color value output format."
+              "default": "HEXA",
+              "description": "Color value output format. Defaults to HEXA, an 8-digit hex string carrying alpha."
             },
             "variantDepth": {
               "type": "integer",
@@ -170,8 +170,8 @@
             },
             "collapsePrimitiveWrapper": {
               "type": "boolean",
-              "default": false,
-              "description": "Strip a root container that only wraps one child and promote the child to spec root. A text or glyph leaf requires the wrapper to carry no meaningful container styles (ADR-058); a slot child needs no style test, because both nodes are containers, and the slot's value wins on any shared key (ADR-083)."
+              "default": true,
+              "description": "Strip a root container that only wraps one child and promote the child to spec root. A text or glyph leaf requires the wrapper to carry no meaningful container styles (ADR-058); a slot child needs no style test, because both nodes are containers, and the slot's value wins on any shared key (ADR-083). Defaults to true."
             },
             "promotePrimitives": {
               "type": "boolean",

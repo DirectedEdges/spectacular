@@ -1,6 +1,6 @@
 {
   "name": "@directededges/specs-schema",
-  "version": "0.38.0",
+  "version": "0.39.0",
   "description": "Specs UI Component Schema - TypeScript types and JSON schema definitions for component specifications",
   "license": "CC-BY-4.0",
   "author": "Nathan Curtis <nathan@directededges.com>",

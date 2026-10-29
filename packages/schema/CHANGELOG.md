@@ -5,6 +5,54 @@ All notable changes to the Specs schema will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.39.0] - 2026-10-29
+
+### Breaking
+
+- `Settings.spec.format` — defaults to `YAML`, previously `JSON` (ADR-112)
+- `Settings.spec.keys` — defaults to `CAMEL`, previously `SAFE` (ADR-112)
+- `Settings.spec.color` — defaults to `HEXA`, previously `HEX` (ADR-112)
+- `Settings.curation.preserveManualSelections` — defaults to `true`, previously `false` (ADR-112)
+- `Settings.spec.collapsePrimitiveWrapper` — defaults to `true`, previously `false` (ADR-112)
+
+### Added
+
+- `Conventions.storybook` — typed as `StorybookConventions`, an open concern-keyed map of feature settings loaded from `conventions/storybook.yaml`; also on `ResolvedConventions`
+- `Settings.curation` — which components of a library a run specs, defaulting to today's behaviour
+- `Settings.curation.defaultSelection` — `READY_FOR_DEV` or `ALL`; defaults to `READY_FOR_DEV`
+- `Settings.curation.preserveManualSelections` — hand edits outrank a changed Figma status; defaults to false
+- `Settings.curation.includeDependencies` — select what a component is built from; defaults to true
+- `SpecsConventions.slots.default.match` — naming patterns identifying a component's designated default slot, authored in `conventions/specs.yaml`. A spec convention, not a platform one: what it names is a `SlotProp` the spec declares, so every platform reads the same answer (ADR-099)
+- `MetadataConventions.specs` — the spec conventions a run was performed under, recorded beside the one platform entry. Required by a reader that cannot re-derive one from the spec it holds: a render resolving a nested instance's default slot does not hold that instance's own component spec (ADR-099)
+- `SlotProp.defaultSlot` — durable marker set at generation time when a slot prop matched `specs.slots.default.match`, read by consumers with no dependency on `Conventions` (ADR-099)
+- `PrimitiveEntry.match` — layer-name prefixes selecting a promotion entry, ahead of style scoring; longest prefix wins (ADR-100)
+- `PrimitiveSlotContent` — reserved `anyOf` values naming a primitive a slot accepts: `$text` and `$glyph` (ADR-102)
+- `SlotProp.anyOf` — carries `PrimitiveSlotContent` markers alongside component names, and only where the slot already names a component. Type and absence semantics unchanged (ADR-102)
+- `Element.contentStyles` — typed as `ContentStyles`; how primitive content filling an element is formatted, recorded and layered per variant exactly as `styles` is (ADR-102)
+- `ContentStyles`, `TextContentStyles`, `GlyphContentStyles` — a `$text`/`$glyph` map over two closed property sets: text takes colour, typography, alignment, overflow and line clamp; a glyph takes fill colour, width and height (ADR-102)
+- `PlatformConventions.slotPrimitives` — the library's slots carry the primitives they accept in their default content; defaults to `true`, and required on `ResolvedPlatformConventions` (ADR-102)
+- `ObjectProp` — a prop whose value is an object of named scalar members (ADR-111)
+- `PropConfigurationValue` — accepts a member-keyed `ObjectPropValue` under an object-prop key (ADR-111)
+- `InstanceExample.propConfigurations` — accepts `ObjectPropValue` for object props (ADR-111)
+- `platforms.<platform>.objectProps` — opt-in folding of separator-named flat props into object props (ADR-111)
+
+### Changed
+
+- `$extensions['com.figma'].name` — documented rule corrected on props, anatomy elements and `platforms.<platform>.naming`. The field was described as absent under `naming: NONE`; NONE declares no source convention, which means nothing can be re-derived from a key, not that no name is kept. The field is recorded wherever formatting changed the name (ADR-066). Description only — no type or validation change
+
+### Migration
+
+- `Settings.spec.format`, `Settings.spec.keys`, `Settings.spec.color`, `Settings.curation.preserveManualSelections`, `Settings.spec.collapsePrimitiveWrapper`: a workspace that sets the member explicitly is unaffected. One that left it unset now resolves to the new value — set it explicitly to keep the former output.
+- `Settings.spec.keys` carries the largest cost: a spec regenerated with `CAMEL` renames every anatomy key, prop key and reference to one, and every name derived from a key. Treat it as a migration, or set `keys: SAFE`.
+
+### ADRs
+
+#### Accepted
+
+- [ADR-111](../../adr/111-object-props.md) — Object-Typed Props
+- [ADR-112](../../adr/112-scaffolded-defaults.md) — Settings defaults adopt their scaffolded values
+
+
 ## [0.38.0] - 2026-10-21
 
 ### Breaking

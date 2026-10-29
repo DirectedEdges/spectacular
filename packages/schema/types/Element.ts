@@ -1,5 +1,5 @@
 import { Children } from "./Children.js";
-import { Styles } from "./Styles.js";
+import { ContentStyles, Styles } from "./Styles.js";
 import { PropConfigurations } from "./PropConfigurations.js";
 import { PropBinding } from "./PropBinding.js";
 import { SubcomponentRef } from "./Anatomy.js";
@@ -17,6 +17,25 @@ export type Element = {
   children?: Children;
   parent?: string | null;
   styles?: Styles;
+  /**
+   * Styles applied to primitive content filling this element, as distinct from `styles`,
+   * which are the element's own.
+   *
+   * Keyed by primitive (`$text`, `$glyph`) using the same reserved markers this slot's
+   * `anyOf` carries, because default content may hold more than one kind. Each entry is
+   * captured from the first top-level primitive of that kind in the slot's default
+   * content, per variant, and is overridden per variant through `variants[].elements`
+   * exactly as `styles` is.
+   *
+   * A component fill is formatted by the component it instantiates, so a consumer
+   * rendering one applies `styles` and discards `contentStyles` rather than cascading it
+   * onto the instance.
+   *
+   * Meaningful only on a slot element, and its keys should agree with that slot's `anyOf`
+   * markers — both authoring/generator contracts, neither schema-enforced (ADR-102).
+   * @since 0.39.0
+   */
+  contentStyles?: ContentStyles;
   propConfigurations?: PropConfigurations;
   /** The component or component set name, a prop binding for instance swaps, or a subcomponent reference. */
   instanceOf?: string | PropBinding | SubcomponentRef;

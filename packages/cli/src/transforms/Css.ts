@@ -331,7 +331,7 @@ function buildCssLines(input: SheetInput): string[] {
         : CONCEPT_TABLE[concept]?.selector;
 
   lines.push(...variantBlockLines({
-    componentClass, rootAs, tokensFormat, elemTypes, images, context, facts,
+    componentClass, rootAs, tokensFormat, elemTypes, images, context, facts, apiProps,
     displayedInDefault: base.displayedInDefault,
     classifiedProps, stateLookup, nestedClaimedPairs, selectorFor, warnUnnamedValue,
   }));

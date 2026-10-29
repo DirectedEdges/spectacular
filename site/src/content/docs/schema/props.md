@@ -7,7 +7,7 @@ Props define the configurable inputs of a component. Each prop has a type, a def
 
 ```ts
 type Props = Record<string, AnyProp>;
-type AnyProp = BooleanProp | StringProp | EnumProp | NumberProp | SlotProp | ImageProp;
+type AnyProp = BooleanProp | StringProp | EnumProp | NumberProp | SlotProp | ImageProp | ObjectProp;
 ```
 
 ## Prop Kinds
@@ -63,11 +63,39 @@ Inferred from Figma variant values when [`conventions.platforms.figma.inferNumbe
 | `nullable` | `boolean` | No | Whether `null` is a valid value — absent means `true` |
 | `minChildren` | `number` | No | Minimum number of children the slot accepts (since 0.25.0) |
 | `maxChildren` | `number` | No | Maximum number of children the slot accepts (since 0.25.0) |
-| `anyOf` | `string[]` | No | Permitted component type names (since 0.14.0) |
+| `anyOf` | `string[]` | No | Everything the slot permits — component type names and reserved primitive markers (since 0.14.0) |
 | `defaultSlot` | `boolean` | No | Whether this is the component's designated default slot. Absent means `false` |
 | `$extensions` | `PropExtensions` | No | Vendor extensions |
 
 Slot constraint properties (`minChildren`, `maxChildren`, `anyOf`) are emitted when [`conventions.platforms.figma.slotConstraints`](/schema/conventions/#platform-members) is declared.
+
+#### PrimitiveSlotContent
+
+`anyOf` is the one list of what a slot accepts. Alongside component names it carries reserved markers naming a **primitive** kind:
+
+| Marker | Admits |
+|--------|--------|
+| `$text` | A text primitive — a plain string fill |
+| `$glyph` | A glyph primitive — an icon fill |
+
+```yaml
+props:
+  children:
+    type: slot
+    defaultSlot: true
+    anyOf: [$glyph, $text, badge]   # a glyph, a label, or a composed Badge
+  description:
+    type: slot
+    anyOf: [$text, link]            # accepts a primitive, and is not the default slot
+```
+
+`anyOf: [$text]` is a text-only slot — no component permitted. `anyOf: [badge]` is Badge-only — no primitive permitted. Absent means any component and no primitive, which is what every slot without markers means today.
+
+The names are the ones [`anatomy`](/schema/anatomy/) items already use, so `type: text` on an element and `$text` here are the same primitive. The `$` prefix marks a value the contract reserves rather than one the library supplies — the same role it plays in `$token`, `$binding` and `$slotContent`, extended from keys to values. A component key can never shadow a marker, because the safe key grammar admits no leading `$`.
+
+A marker is recorded when the slot's default content in Figma held a top-level primitive of that kind, in at least one variant, and [`slotPrimitives`](/settings/slot-primitives/) is on — which it is unless the library turns it off. A marker only ever joins an `anyOf` that already names at least one component; a slot whose detected content is primitives alone carries no `anyOf`, because `anyOf` is a constraint and `[$text]` would say only a text primitive may fill the slot. Those primitives are not emitted as anatomy elements — the slot is — and their formatting travels on the slot element's [`contentStyles`](/schema/elements/#styles-vs-content-styles), keyed by the same markers.
+
+Markers and `defaultSlot` are orthogonal. A Button's `children` accepts primitives *and* is the default slot; an Alert's `description` accepts a primitive and is *not* the default; a layout component's slots are default-eligible and take components only.
 
 `defaultSlot` marks the one slot a layout component always composes through. It is set at generation time, when the prop's name matched the library's [`specs.slots.default.match`](/schema/conventions/#slots) convention, and is read off the spec thereafter — a consumer needs no access to those conventions to know which slot it is:
 
@@ -112,6 +140,35 @@ props:
     examples:
       - $image: "#/components/dsImage/images/dsImage__image"
 ```
+
+### ObjectProp
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `type` | `'object'` | Yes | |
+| `members` | `Record<string, ObjectPropMember>` | Yes | Named members, each a scalar prop definition. At least one member |
+| `$extensions` | `PropExtensions` | No | Vendor extensions |
+
+A prop whose value is an object of named, individually typed members (since 0.39.0, ADR-111). `ObjectPropMember` is `BooleanProp | StringProp | EnumProp | NumberProp` — members are one level deep: no slots, images, or nested objects. Member names carry no schema semantics (a breakpoint vocabulary is the library's choice), must not begin with `$`, and must not contain the declared separator.
+
+There is no top-level `default` or `nullable`: defaults live per member, and the object's value always exists as the composition of its members' states.
+
+```yaml
+props:
+  margin:
+    type: object
+    members:
+      compact:
+        type: string
+        default: none
+        enum: [none, small, large]
+      expanded:
+        type: string
+        default: none
+        enum: [none, small, large]
+```
+
+Figma authors members as separator-delimited flat property names (`margin.compact`, `margin.expanded`), folded into one `ObjectProp` when [`conventions.platforms.figma.objectProps`](/schema/conventions/#platform-members) is declared. Each member's `$extensions['com.figma'].name` records the flat source name, so unfolding back to Figma is reversal, not re-derivation. Configurations set an object prop with a member-keyed value — see [Prop Configurations](/schema/prop-configurations/).
 
 ## Nullability
 
@@ -169,3 +226,4 @@ The `$extensions` object holds vendor-specific metadata. Currently only the `com
 - [ADR 063 — Image Content](https://github.com/DirectedEdges/specs/blob/main/adr/063-image-content.md) — adds the `ImageProp` type and image fills/registry
 - [ADR 088 — Authoring-default images on `ImageProp`](https://github.com/DirectedEdges/specs/blob/main/adr/088-image-prop-examples.md) — adds `ImageProp.examples`
 - [ADR 066 — Lossless Key Formatting](https://github.com/DirectedEdges/specs/blob/main/adr/066-lossless-key-formatting.md) — adds `name` to `FigmaPropExtension` so lossy key formats stay reversible
+- [ADR 111 — Object-Typed Props](https://github.com/DirectedEdges/specs/blob/main/adr/111-object-props.md) — adds `ObjectProp` with named scalar members, folded from separator-named Figma properties

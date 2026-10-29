@@ -58,6 +58,38 @@
       },
       "additionalProperties": false
     },
+    "TextContentStyles": {
+      "type": "object",
+      "description": "The formatting a text primitive takes on when it fills a slot. Deliberately narrower than Styles: only properties that format text appear, so a container's layout or surface styling cannot enter the content record. Each property is typed identically to its Styles counterpart, so a value valid in styles is valid here. typography carries the composite, so its own members travel inside it. (ADR-102)",
+      "properties": {
+        "textColor": { "$ref": "#/definitions/ColorStyleValue", "description": "Text fill color of the content." },
+        "typography": { "$ref": "#/definitions/TypographyStyleValue", "description": "Typography of the content. TokenReference when a named text style is referenced; Typography when defined inline." },
+        "textAlignHorizontal": { "$ref": "#/definitions/TextAlignHorizontalStyleValue", "description": "Horizontal text alignment using logical inline-axis directions — START, CENTER, END, or JUSTIFY. Structural property — not token-bindable." },
+        "textAlignVertical": { "$ref": "#/definitions/StringStyleValue", "description": "Vertical text alignment of the content." },
+        "textOverflow": { "$ref": "#/definitions/TextOverflowStyleValue", "description": "How overflowing content is handled — CLIP or ELLIPSIS. Structural property — not token-bindable." },
+        "maxLines": { "$ref": "#/definitions/NumberStyleValue", "description": "Maximum number of lines before ELLIPSIS overflow applies; null or absent means no limit." }
+      },
+      "additionalProperties": false
+    },
+    "GlyphContentStyles": {
+      "type": "object",
+      "description": "The formatting a glyph primitive takes on when it fills a slot. fillColor plus the two dimensions: a glyph is sized rather than laid out — its box is the icon's own, set on the layer and not derived from the slot's layout the way a text run's measure is — so a glyph fill that does not carry its dimensions loses them, with nothing for a render to restore. That is why width and height belong to the fill here even though no text member does. (ADR-102)",
+      "properties": {
+        "fillColor": { "$ref": "#/definitions/ColorStyleValue", "description": "Fill color of the glyph." },
+        "width": { "$ref": "#/definitions/NumberStyleValue", "description": "Width of the glyph box, in pixels." },
+        "height": { "$ref": "#/definitions/NumberStyleValue", "description": "Height of the glyph box, in pixels." }
+      },
+      "additionalProperties": false
+    },
+    "ContentStyles": {
+      "type": "object",
+      "description": "The styles applied to primitive content filling an element, as distinct from Styles, which are the element's own. Keyed by primitive, using the same reserved markers SlotProp.anyOf carries, because a slot's default content may hold more than one kind — a glyph and a label — and each kind is formatted by a disjoint property set. On a slot element each entry is captured from the first top-level primitive of that kind in the slot's default content, per variant, and is overridden per variant through variants[].elements exactly as styles is. A component fill is formatted by the component it instantiates, so a consumer rendering one applies styles and discards contentStyles. Meaningful only on a slot element, and its keys should agree with that slot's anyOf markers — both authoring/generator contracts, neither schema-enforced. (ADR-102)",
+      "properties": {
+        "$text": { "$ref": "#/definitions/TextContentStyles", "description": "Formatting for a text primitive filling this slot." },
+        "$glyph": { "$ref": "#/definitions/GlyphContentStyles", "description": "Formatting for a glyph primitive filling this slot." }
+      },
+      "additionalProperties": false
+    },
     "AspectRatioValue": {
       "type": "object",
       "description": "Aspect ratio expressed as a numerator/denominator pair. `x` is the numerator, `y` is the denominator (e.g. x:16, y:9 for 16:9).",

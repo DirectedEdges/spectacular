@@ -10,18 +10,18 @@ Output serialization format. A different team could pick the other format and st
 | **File** | `config/settings.yaml` |
 | **Path** | `spec.format` |
 | **Type** | enum |
-| **Default** | `JSON` |
+| **Default** | `YAML` |
 
 ## Options
 
 | Value | Description |
 |---|---|
+| `YAML` | Human-readable YAML. Default — a spec is read and hand-edited far more often than it is parsed |
 | `JSON` | JavaScript Object Notation |
-| `YAML` | Human-readable YAML format |
 
 ## Example
 
 ```yaml
 spec:
-  format: YAML  # Generate YAML by default
+  format: JSON  # Generate JSON instead
 ```

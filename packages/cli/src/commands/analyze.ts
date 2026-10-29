@@ -25,6 +25,50 @@ export interface AnalyzeResult {
 }
 
 /**
+ * Warnings about `spec.tokens` settings the styling analysis cannot fully read.
+ *
+ * The styling analyzer recognises a token reference in two shapes: the `$token`
+ * object `TOKEN` and `TOKEN_FIGMA_EXTENSIONS` emit, and a bare name string
+ * matched against the fetched token universe, which is what `TOKEN_NAME` and
+ * `FIGMA_NAME` emit. The remaining profiles serialize a reference into a form
+ * that cannot be recognised without reproducing the generator's projection —
+ * a custom object under `CUSTOM`, a platform code-syntax name under the three
+ * `FIGMA_SYNTAX_*` profiles.
+ *
+ * Those profiles produce styling reports that are empty, or — because
+ * `FIGMA_SYNTAX_*` falls back to `TOKEN` for tokens with no code syntax —
+ * populated and partial. Both read as "this component uses no variables"
+ * rather than "the analysis could not see them", so the run says so.
+ */
+export function tokenProfileWarnings(
+  tokensFormat: string,
+  hasFoundations: boolean,
+  analyzers: Transformer[],
+): string[] {
+  if (!analyzers.some(a => a.name === 'styling')) return [];
+
+  if (tokensFormat === 'TOKEN_NAME' || tokensFormat === 'FIGMA_NAME') {
+    // These emit the token's name and nothing else, so the fetched universe is
+    // the only thing that separates a reference from a literal like `CENTER`.
+    if (!hasFoundations) {
+      return [
+        `[analyze] spec.tokens is ${tokensFormat} but no variables/styles data files were found — ` +
+        'token references cannot be matched by name and styling reports will be empty. Run `specs fetch` first.',
+      ];
+    }
+    return [];
+  }
+
+  if (tokensFormat === 'TOKEN' || tokensFormat === 'TOKEN_FIGMA_EXTENSIONS') return [];
+
+  return [
+    `[analyze] spec.tokens is ${tokensFormat} — the styling analysis reads only object-shaped and ` +
+    'name-shaped token references, so styling reports will under-report tokens. ' +
+    'Use TOKEN or TOKEN_NAME for complete styling analysis.',
+  ];
+}
+
+/**
  * Run the analyzers, without exiting the process.
  *
  * The same work `specs analyze` does, as a call that returns — so `specs build`
@@ -116,6 +160,36 @@ export async function runAnalyze(
   console.log(`⏳ Analyzing ${scope} (${analyzers.map(a => a.name).join(', ')})…`);
   console.log('');
 
+  // Load the full token universe (variables, styles) from fetched data files.
+  // Read before the per-spec loop, not after it: analyzers need the universe to
+  // recognise name-shaped token references while they walk a spec, and
+  // `finalize` needs it to report tokens no spec referenced.
+  const dataDirectory = config.settings.data?.directory;
+  const dataDir = dataDirectory ? path.resolve(dataDirectory) : path.resolve(process.cwd());
+  const foundationsPathsFor = (kind: 'variables' | 'styles'): string[] =>
+    Object.entries(config.settings.data?.sources ?? {})
+      .filter(([, s]) => Array.isArray(s.fetch) && s.fetch.includes(kind))
+      .map(([alias]) => path.join(dataDir, `${alias}.${kind}.json`))
+      .filter(p => fs.existsSync(p));
+
+  const variablesPaths = foundationsPathsFor('variables');
+  const stylesPaths = foundationsPathsFor('styles');
+  const foundations = variablesPaths.length > 0 || stylesPaths.length > 0
+    ? await loadFoundations(variablesPaths, stylesPaths)
+    : undefined;
+
+  if (options.verbose) {
+    if (foundations) {
+      console.log(`[analyze] foundations: ${foundations.variables.size} variables, ${foundations.styles.size} styles`);
+    } else {
+      console.log('[analyze] foundations: no data files found — skipping unused-token analysis');
+    }
+  }
+
+  for (const warning of tokenProfileWarnings(config.settings.spec.tokens, Boolean(foundations), analyzers)) {
+    console.warn(warning);
+  }
+
   let succeeded = 0;
   let failed = 0;
 
@@ -139,6 +213,7 @@ export async function runAnalyze(
           componentKey,
           tokensFormat: config.settings.spec.tokens,
           outputFormat: config.settings.spec.format,
+          foundations,
           processingStates: config.conventions.specs?.states as ProcessingStates | undefined,
           specs: config.conventions.specs,
           // The conventions of the platform this analyzer reads (ADR-073), the
@@ -158,30 +233,6 @@ export async function runAnalyze(
       const msg = err instanceof Error ? err.message : String(err);
       console.error(`  ✗ ${componentKey}: ${msg}`);
       failed++;
-    }
-  }
-
-  // Load the full token universe (variables, styles) from fetched data
-  // files so analyzers can report tokens never referenced by any spec.
-  const dataDirectory = config.settings.data?.directory;
-  const dataDir = dataDirectory ? path.resolve(dataDirectory) : path.resolve(process.cwd());
-  const foundationsPathsFor = (kind: 'variables' | 'styles'): string[] =>
-    Object.entries(config.settings.data?.sources ?? {})
-      .filter(([, s]) => Array.isArray(s.fetch) && s.fetch.includes(kind))
-      .map(([alias]) => path.join(dataDir, `${alias}.${kind}.json`))
-      .filter(p => fs.existsSync(p));
-
-  const variablesPaths = foundationsPathsFor('variables');
-  const stylesPaths = foundationsPathsFor('styles');
-  const foundations = variablesPaths.length > 0 || stylesPaths.length > 0
-    ? await loadFoundations(variablesPaths, stylesPaths)
-    : undefined;
-
-  if (options.verbose) {
-    if (foundations) {
-      console.log(`[analyze] foundations: ${foundations.variables.size} variables, ${foundations.styles.size} styles`);
-    } else {
-      console.log('[analyze] foundations: no data files found — skipping unused-token analysis');
     }
   }
 

@@ -1,20 +1,22 @@
 # Choices about this run — curation, sources, spec output, assets.
 # A different team reading the same library could set any of these differently
-# and still be correct. Every commented line is the opposite of the default:
-# uncomment it to change behaviour.
+# and still be correct. Every setting is written out at the value this workspace
+# starts on, so the whole surface is visible and editable in place. Each comment
+# says what its setting decides, and lists the values where there is a choice.
+# All but three are the schema's own default; those three are marked.
 # Reference: https://spectacular.systems/schema/settings/
 
 author: <Your Name Here>
 
 # Which components get a spec — https://spectacular.systems/settings/curation/
 curation:
-  # Spec every component, not only those marked Ready for dev
+  # Which components a first pass selects: READY_FOR_DEV, or ALL to ignore the marking
   defaultSelection: READY_FOR_DEV
 
-  # Hand-edited selections survive a changed Figma signal
+  # Keep a hand-edited selection when the Figma signal changes under it
   preserveManualSelections: true
 
-  # Do not follow what selected components are built from
+  # Select what a selected component is built from, transitively
   includeDependencies: true
 
 # What to fetch, and where it lands — https://spectacular.systems/settings/data-sources/
@@ -62,37 +64,44 @@ spec:
   # https://spectacular.systems/settings/collapse-primitive-wrapper/
   collapsePrimitiveWrapper: true
 
-  # Promote primitive layers in composed examples to component instances
-  # https://spectacular.systems/settings/promote-primitives/
-  promotePrimitives: true
-
-  # Include variants marked invalid — https://spectacular.systems/settings/invalid-variants/
+  # Give variants the library marks invalid a spec of their own
+  # https://spectacular.systems/settings/invalid-variants/
   invalidVariants: false
 
-  # Omit the invalid-combinations list (Pro)
+  # Record which prop combinations the library marks invalid (Pro)
   # https://spectacular.systems/settings/invalid-combinations/
   invalidCombinations: true
 
-  # Include layered variants with no elements — https://spectacular.systems/settings/empty-variants/
+  # Emit layered variants that override no element
+  # https://spectacular.systems/settings/empty-variants/
   emptyVariants: false
 
-  # Emit default slot content as examples (Pro)
-  # https://spectacular.systems/settings/default-slot-content/
-  defaultSlotContent: true
-
   # File layout — https://spectacular.systems/settings/output/
-  # One library file instead of a file per component
+  # A file per component rather than one file for the whole library
   splitComponents: true
 
-  # One file per component instead of a file per concern
+  # A file per concern — api, styling, variants — rather than one per component
   splitConcerns: true
 
-  # Component files side by side instead of each in its own subfolder
+  # Nest each component's files in a subfolder named for the component
   useSubfolders: true
 
-  # Read Dev Mode annotations into anatomy roles — https://spectacular.systems/roles/
+  # Severity of an unmet role obligation: warn and continue, or error and stop
+  roleValidation: warn
+
+  # The three below are on while the schema defaults them off. Each reads something
+  # this workspace has not declared yet, so each finds nothing and changes nothing —
+  # they are on so that declaring the convention is the only step needed later.
+
+  # Read Dev Mode annotations into anatomy roles — needs annotations in Figma
+  # https://spectacular.systems/roles/
   roles: true
 
-  # Fail rather than warn on an unmet role obligation (needs roles: true)
-  roleValidation: error
+  # Promote primitive layers in composed examples to component instances —
+  # needs a figma.primitives convention
+  # https://spectacular.systems/settings/promote-primitives/
+  promotePrimitives: true
 
+  # Emit default slot content as examples (Pro) — needs a slots convention
+  # https://spectacular.systems/settings/default-slot-content/
+  defaultSlotContent: true

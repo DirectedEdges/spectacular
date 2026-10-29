@@ -22,7 +22,7 @@ Which components of a library a run specs at all (ADR-093). A library holds more
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | [`defaultSelection`](/settings/curation/) | `'READY_FOR_DEV' \| 'ALL'` | `'READY_FOR_DEV'` | The signal a first pass derives selection from; `READY_FOR_DEV` falls back to every set and standalone component when the library marks none |
-| [`preserveManualSelections`](/settings/curation/) | `boolean` | `false` | A hand-edited selection outranks a later change to the library's signal |
+| [`preserveManualSelections`](/settings/curation/) | `boolean` | `true` | A hand-edited selection outranks a later change to the library's signal |
 | [`includeDependencies`](/settings/curation/) | `boolean` | `true` | The components a selected component is built from are selected too, transitively |
 
 ## `data`
@@ -44,14 +44,14 @@ Which components of a library a run specs at all (ADR-093). A library holds more
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `directory` | `string` | — | Directory the generated spec is written to |
-| [`format`](/settings/output-format/) | `'JSON' \| 'YAML'` | `'JSON'` | Serialization format |
-| [`keys`](/guides/key-formatting/) | `'SAFE' \| 'CAMEL' \| 'SNAKE' \| 'KEBAB' \| 'PASCAL' \| 'TRAIN'` | `'SAFE'` | Key casing style |
+| [`format`](/settings/output-format/) | `'JSON' \| 'YAML'` | `'YAML'` | Serialization format |
+| [`keys`](/guides/key-formatting/) | `'SAFE' \| 'CAMEL' \| 'SNAKE' \| 'KEBAB' \| 'PASCAL' \| 'TRAIN'` | `'CAMEL'` | Key casing style |
 | [`layout`](/guides/data-layout/) | `'LAYOUT' \| 'PARENT_CHILDREN' \| 'BOTH'` | `'LAYOUT'` | Element hierarchy representation |
 | [`tokens`](/settings/tokens/) | `'TOKEN' \| 'TOKEN_NAME' \| 'TOKEN_FIGMA_EXTENSIONS' \| 'FIGMA_NAME' \| 'CUSTOM' \| 'FIGMA_SYNTAX_WEB' \| 'FIGMA_SYNTAX_IOS' \| 'FIGMA_SYNTAX_ANDROID'` | `'TOKEN'` | Token reference output format |
-| [`color`](/settings/color/) | `ColorFormat` | `'HEX'` | Color value output format |
+| [`color`](/settings/color/) | `ColorFormat` | `'HEXA'` | Color value output format |
 | [`variantDepth`](/guides/variant-depth/) | `1 \| 2 \| 3 \| 9999` | `9999` | Maximum variant nesting depth (9999 = unlimited) |
 | [`details`](/guides/variant-layering/) | `'FULL' \| 'LAYERED'` | `'LAYERED'` | Output detail level |
-| [`collapsePrimitiveWrapper`](/settings/collapse-primitive-wrapper/) | `boolean` | `false` | Strip a root container that only wraps one child — a text/glyph leaf, or a slot — and promote the child to spec root |
+| [`collapsePrimitiveWrapper`](/settings/collapse-primitive-wrapper/) | `boolean` | `true` | Strip a root container that only wraps one child — a text/glyph leaf, or a slot — and promote the child to spec root |
 | [`promotePrimitives`](/settings/promote-primitives/) | `boolean` | `false` | Promote primitive layers in composed example content to instances of the design system's own components |
 | `roles` | `boolean` | `false` | Read Figma Dev Mode annotations and emit [`anatomy.<element>.role`](/schema/anatomy/) and `.actions` — the on-switch for the [role feature](/roles/) (ADR-067) |
 | `roleValidation` | `'warn' \| 'error'` | `'warn'` | Severity for unmet required role obligations, such as a control with no accessible-name source; `error` fails the transform (ADR-067) |
@@ -79,18 +79,18 @@ A runtime export from `@directededges/specs-schema`. Provides defaults for every
 const DEFAULT_SETTINGS: ResolvedSettings = {
   curation: {
     defaultSelection: 'READY_FOR_DEV',
-    preserveManualSelections: false,
+    preserveManualSelections: true,
     includeDependencies: true,
   },
   spec: {
-    format: 'JSON',
-    keys: 'SAFE',
+    format: 'YAML',
+    keys: 'CAMEL',
     layout: 'LAYOUT',
     tokens: 'TOKEN',
-    color: 'HEX',
+    color: 'HEXA',
     variantDepth: 9999,
     details: 'LAYERED',
-    collapsePrimitiveWrapper: false,
+    collapsePrimitiveWrapper: true,
     promotePrimitives: false,
     roles: false,
     roleValidation: 'warn',

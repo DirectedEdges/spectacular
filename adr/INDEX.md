@@ -11,7 +11,6 @@
 | 106 | Spec Provenance Beyond Figma Capture | (reserved, draft in PR #767) |
 | 105 | Type–Schema Parity for Overlapping Prop Unions | (reserved, draft in PR #767) |
 | 104 | Roles on a Collapsed Root — `childRole` Says Which Layer Was Annotated | (reserved, draft on `feat/states-setup-skill`) |
-| 102 | A Default Slot That Accepts a String — Figma TEXT Properties as Composable Children | (reserved, draft on `102-default-text-slots`) |
 | 093 | Composed Dependency Selection Is a Setting | |
 | 092 | `invalidPropCombinations` — Renamed and Relocated to the Api Concern | |
 | 082 | `Component.description` — The Authored Figma Description, Plain Text and Opt-In | (reserved, draft in PR #375) |
@@ -25,10 +24,13 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
+| 112 | Settings Defaults Adopt Their Scaffolded Values | `format`, `keys`, `color`, `preserveManualSelections` and `collapsePrimitiveWrapper` default to the values every scaffolded workspace writes |
+| 111 | Object-Typed Props | A prop whose value is an object of named scalar members; an opt-in convention folds separator-named Figma properties into one |
 | 110 | Rename `Spec*Document` to `Component*Document` | `Spec*Document` renamed to `Component*Document`, matching `CompositionApiDocument`'s naming now that a second spec kind exists |
 | 109 | Composition Concern Documents | Compositions get their own exact `splitConcerns` documents — never a loosened form of a component's, since a composition has no props to vary by |
 | 104 | Roles on a Collapsed Root — `childRole` Says Which Layer Was Annotated | A collapsed element records which of its two Figma layers carried a role: `role` the component node, `childRole` the collapsed child, both means both |
 | 103 | Structural Glyph Membership — `glyphs.structure` Convention | `glyphs` gains a structural membership form — child shapes + stored fill, named from the component name; a glyph cannot have properties |
+| 102 | Slots That Accept Primitive Content — `$text` and `$glyph` in `anyOf` | A slot states the primitives it accepts alongside components, and `Element.contentStyles` records how each primitive fill is formatted per variant |
 | 101 | The Workspace Stage Graph | `specs build` runs the chain once; `specs run` watches and re-runs from what changed. One process, so one license check per run, not four |
 | 100 | `PrimitiveEntry.match` — Promoting a Layer by Its Name, Short-Circuiting Style Scoring | Adds `PrimitiveEntry.match` — layer-name prefixes selecting a promotion entry ahead of style scoring; longest prefix wins |
 | 099 | `slots.default.match` — Naming the Default Slot, and Flattened Instance Nesting | Adds `SpecsConventions.slots.default.match`, `MetadataConventions.specs` and `SlotProp.defaultSlot`, naming a component's always-composed slot so a filling instance can nest as a plain child instead of an explicit slot binding |
