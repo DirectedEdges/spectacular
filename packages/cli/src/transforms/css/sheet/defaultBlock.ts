@@ -132,13 +132,20 @@ export function defaultBlockLines(input: DefaultBlockInput): DefaultBlockResult 
     // Formatting for the slot's primitive content (ADR-102) — what the removed
     // anatomy children used to carry. See ./contentRules.ts for where each
     // property lands and the component-fill residuals.
-    const content = resolveContentStyles(facts.contentStylesOf(elemKey), {});
+    const contentRead = facts.contentStylesOf(elemKey);
+    const content = resolveContentStyles(contentRead, {});
     if (Object.keys(content).length > 0) {
       lines.push(...defaultContentStylesLines({
         slotSel: selector,
         resolved: content,
         tokensFormat,
-        admitsComponents: slotAdmitsComponents(elem as Record<string, unknown>, apiProps),
+        // The whole read, not `content`: what the slot HOLDS is a fact about the
+        // slot, and a variant may be the only block stating it (contentRules.ts).
+        admitsComponents: slotAdmitsComponents(
+          elem as Record<string, unknown>,
+          apiProps,
+          contentRead,
+        ),
         rootAs,
         // The element's own rule above already wrote its flex-direction (if
         // any) against this same selector — the vertical-align box must not

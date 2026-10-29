@@ -411,6 +411,72 @@ describe('slot contentStyles (ADR-102)', () => {
       expect(react).toContain('justify-content: center;');
     });
 
+    // A spec may state a slot's formatting ONLY under a variant — the default
+    // needs no declaration, one configuration does. The slot still holds
+    // primitive content; `contentStyles` presence has to be read across every
+    // block, not off the default alone, or the overlay's own rules are withheld.
+    // Two components in a real catalogue have exactly this shape.
+    it('emits the glyph rule when contentStyles exists only in a variant overlay', async () => {
+      const { react, host } = await run(tmpDir, {
+        default: {
+          layout: [{ root: ['children'] }],
+          elements: {
+            root: { styles: { layoutMode: 'HORIZONTAL' } },
+            children: {
+              children: { $binding: '#/props/children' },
+              styles: { layoutMode: 'HORIZONTAL' },
+            },
+          },
+        },
+        variants: [
+          {
+            configuration: { emphasized: true },
+            elements: {
+              children: {
+                contentStyles: {
+                  $glyph: {
+                    fillColor: colorToken('Color/Inverse on surface'),
+                    width: dimensionToken('Constants/Sizing/4x'),
+                  },
+                },
+              },
+            },
+          },
+        ],
+      }, noAnyOfApi);
+      expect(react).toMatch(
+        /\.ds-badge\[data-emphasized[^\]]*\] \.ds-badge__children > \[data-element\]\[aria-hidden="true"\] \{/,
+      );
+      expect(react).toContain('background-color: var(--color-inverse-on-surface);');
+      expect(react).toContain('width: var(--constants-sizing-4x);');
+      expect(host).toContain('slot::slotted([data-element][aria-hidden="true"])');
+      expect(react).not.toContain('!important');
+    });
+
+    it('emits the box-level text properties when contentStyles exists only in a variant overlay', async () => {
+      const spec = textSlotSpec(undefined, [
+        {
+          configuration: { emphasized: true },
+          elements: {
+            label: {
+              contentStyles: {
+                $text: {
+                  textColor: colorToken('Color/Inverse on surface'),
+                  maxLines: 1,
+                  textOverflow: 'ELLIPSIS',
+                },
+              },
+            },
+          },
+        },
+      ], null);
+      const { react } = await run(tmpDir, spec.variants, spec.api);
+      expect(react).toContain('color: var(--color-inverse-on-surface);');
+      expect(react).toContain('text-overflow: ellipsis;');
+      expect(react).toContain('white-space: nowrap;');
+      expect(react).not.toContain('!important');
+    });
+
     it('emits nothing for a slot with neither an anyOf nor a contentStyles block', async () => {
       // Nothing identified either way: the slot keeps the open answer it has
       // always had, and with no contentStyles there is no formatting to state.

@@ -233,9 +233,12 @@ export function variantBlockLines(input: VariantBlockInput): string[] {
           slotSelectors: rootSelectors.map(s => `${s}${elemSuffix}`),
           delta: contentDelta,
           tokensFormat,
+          // The default element carries the binding; the whole read carries what
+          // the slot holds, across every block that states it (contentRules.ts).
           admitsComponents: slotAdmitsComponents(
             (defaultElements[elemKey] ?? {}) as Record<string, unknown>,
             apiProps,
+            contentRead,
           ),
           rootAs,
           label: `${variantLabel(configuration)} — ${elemKey} slot content`,

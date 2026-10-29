@@ -102,18 +102,36 @@ export function resolveContentStyles(
 }
 
 /**
- * The marker-keyed entries an element declares, ignoring anything that is not a
- * reserved marker.
+ * The primitive kinds a slot element's `contentStyles` records, across the
+ * default block and every variant overlay that carries one.
  *
- * Exported because it is also the second RECORD of what a slot holds, not only a
- * record of formatting: a `contentStyles` entry exists exactly when the generator
- * found a top-level primitive of that kind in the slot's authored default
- * content, and for a slot whose content is primitives alone it is the only
- * record (`anyOf` is a constraint, so markers only ever join a list that already
- * names a component). `slotAdmitsComponents` in ../sheet/contentRules.ts reads it
- * for that, through this one marker list.
+ * A mirror of the shared core's `primitiveKindsInContentStyles`
+ * (specs-transforms `packages/from-specs/src/slotContent.ts`), over the read
+ * this module already produces rather than over a raw element list.
+ *
+ * `contentStyles` is not only a record of FORMATTING, it is the second record of
+ * what a slot HOLDS: an entry exists exactly when the generator found a
+ * top-level primitive of that kind in the slot's authored default content. For a
+ * slot whose content is primitives alone it is the only record, since `anyOf` is
+ * a constraint and a marker-only list would narrow a slot the design never
+ * narrowed — so no `anyOf` is written at all. `slotAdmitsComponents` in
+ * ../sheet/contentRules.ts reads this for that question.
+ *
+ * The union across overlays is what makes the answer stable: a slot's primitive
+ * content is a fact about the slot, not about one configuration, and a spec may
+ * state the formatting only under a variant — a default block carrying none does
+ * not mean the slot holds no primitive.
+ *
+ * Returned in `PRIMITIVE_SLOT_MARKERS` order; every reader tests membership, so
+ * the order carries no meaning.
  */
-export function contentStylesIn(element: Record<string, unknown> | undefined): PrimitiveContentStyles {
+export function primitiveKindsInContentStyles(read: SlotContentStyles): PrimitiveSlotContent[] {
+  const blocks = [read.default, ...read.variants.map(variant => variant.contentStyles)];
+  return PRIMITIVE_SLOT_MARKERS.filter(marker => blocks.some(block => !!block[marker]));
+}
+
+/** The marker-keyed entries an element declares, ignoring anything that is not a reserved marker. */
+function contentStylesIn(element: Record<string, unknown> | undefined): PrimitiveContentStyles {
   const raw = element?.contentStyles;
   if (!raw || typeof raw !== 'object') return {};
   const out: PrimitiveContentStyles = {};

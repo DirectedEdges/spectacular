@@ -77,7 +77,11 @@ import { textAlignDecls } from '../style/textAlign.js';
 import { truncationDecls } from '../style/truncation.js';
 import { sizeDecls } from '../style/size.js';
 import type { RootForm } from '../types.js';
-import { contentStylesIn, type PrimitiveContentStyles } from '../analysis/contentStylesRead.js';
+import {
+  primitiveKindsInContentStyles,
+  type PrimitiveContentStyles,
+  type SlotContentStyles,
+} from '../analysis/contentStylesRead.js';
 
 /**
  * Whether the slot the element binds may hold a fill a box-level rule must not
@@ -92,8 +96,8 @@ import { contentStylesIn, type PrimitiveContentStyles } from '../analysis/conten
  * (`components` present when the prop declared an `anyOf`, `primitives` unioned
  * from the markers in it and the kinds in `contentStyles`); this reads the same
  * two records off the raw spec, the `anyOf` from the api props and the primitive
- * kinds from the element's own `contentStyles` (../analysis/contentStylesRead.ts
- * `contentStylesIn`, the CLI's single marker list).
+ * kinds from the element's `contentStyles` read (../analysis/contentStylesRead.ts
+ * `primitiveKindsInContentStyles`, over the CLI's single marker list).
  *
  * With an `anyOf` present it is the one list of what the slot permits, and
  * entries not starting with `$` name components (ADR-102): named components yes,
@@ -111,10 +115,19 @@ import { contentStylesIn, type PrimitiveContentStyles } from '../analysis/conten
  * nothing identified either way and keeps the open answer it has always had:
  * true, the conservative reading, which is also the answer for an element whose
  * binding or prop cannot be read.
+ *
+ * `content` is the WHOLE read — the default block plus every variant overlay —
+ * never the block resolved for one configuration, because the question is about
+ * the SLOT and not about a configuration. A spec may state a slot's formatting
+ * only under a variant (an emphasized-only label colour on a slot whose default
+ * needs no declaration), and reading the default block alone would answer
+ * "admits components" for such a slot and so withhold the very rules the overlay
+ * exists to emit. The core unions the two records for the same reason.
  */
 export function slotAdmitsComponents(
   element: Record<string, unknown>,
   apiProps: Record<string, Record<string, unknown>>,
+  content: SlotContentStyles,
 ): boolean {
   const binding = (element.children as Record<string, unknown> | undefined)?.$binding;
   const prop = typeof binding === 'string' ? binding.match(/^#\/props\/(.+)$/)?.[1] : undefined;
@@ -122,7 +135,7 @@ export function slotAdmitsComponents(
   if (Array.isArray(anyOf)) {
     return anyOf.some(entry => typeof entry === 'string' && !entry.startsWith('$'));
   }
-  return Object.keys(contentStylesIn(element)).length === 0;
+  return primitiveKindsInContentStyles(content).length === 0;
 }
 
 /** The masked glyph span the emitters write for a `$glyph` fill — see the header. */
