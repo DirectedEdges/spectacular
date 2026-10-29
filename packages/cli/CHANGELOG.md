@@ -5,7 +5,7 @@ All notable changes to `@directededges/specs-cli` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.36.0] - Unreleased
+## [0.36.0] - 2026-10-29
 
 ### Breaking
 
@@ -32,6 +32,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`specs analyze styling` now reads the token references a name-shaped `spec.tokens` emits.** Under `TOKEN_NAME` and `FIGMA_NAME` a reference serializes to the token's name alone, which the analysis skipped — so every styling report came out empty while the run reported success. Names are now matched against the fetched variables and styles, so these two profiles report what `TOKEN` reports
 
 - **`specs analyze styling` says so when `spec.tokens` is a profile it cannot fully read.** `CUSTOM` and the three `FIGMA_SYNTAX_*` profiles serialize references into shapes the analysis cannot recognise without reproducing the generator, and `FIGMA_SYNTAX_*` falls back to `TOKEN` for tokens with no code syntax — so the reports were quietly partial rather than obviously empty. A warning now names the setting and what it costs. A name-shaped profile with no fetched data files warns too, and points at `specs fetch`
+
+### Dependency updates
+
+- **Your specs now record the formatting a slot's primitive content takes.** Via `@directededges/specs-from-figma` 0.38.0, a slot whose default content holds a text layer or a glyph carries that formatting on the slot element and marks the primitive kinds it accepts — which is what the generated stylesheets in this release read. A slot whose only content is primitives names no accepted types at all, because listing them would declare a restriction your design never stated
+
+- **A prop whose Figma name was changed by key formatting keeps a record of the original spelling.** Via `@directededges/specs-from-figma` 0.38.0, that record is now written under `naming: NONE` as well, so a name is recoverable wherever formatting altered it. This matters more in this release than it used to: a separator-named property folded into an object prop puts a dot in the name, which no formatted key can reverse
+
+- **A default slot is only marked on a slot that children actually go into.** Via `@directededges/specs-from-figma` 0.38.0, a well-named prop bound to a text, instance, glyph or vector element is refused as the default slot, and the run warns with the prop name and the rule
+
+- **The types behind all of it.** Via `@directededges/specs-schema` 0.39.0: `ObjectProp` and its member-keyed values (ADR-111), `ContentStyles` for a slot's primitive formatting (ADR-102), and the five settings whose defaults changed (ADR-112)
 
 
 ## [0.35.0] - 2026-10-21
