@@ -232,7 +232,6 @@ export function variantBlockLines(input: VariantBlockInput): string[] {
         lines.push(...variantContentStylesLines({
           slotSelectors: rootSelectors.map(s => `${s}${elemSuffix}`),
           delta: contentDelta,
-          defaultEntry: contentRead.default,
           tokensFormat,
           admitsComponents: slotAdmitsComponents(
             (defaultElements[elemKey] ?? {}) as Record<string, unknown>,

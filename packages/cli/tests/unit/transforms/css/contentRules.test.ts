@@ -5,7 +5,10 @@
 // and the glyph's fill. These tests pin where each property lands per tree —
 // inherited text on the slot element, glyph box/fill on the emitters'
 // masked-span vocabulary — and that variant overlays ride the per-variant
-// blocks important enough to beat the inline defaults the emitters write.
+// blocks at ORDINARY priority. Nothing here is `!important`: `contentStyles`
+// formats unstyled slotted content and must never outrank what a consumer
+// wrote, which is also why the emitters no longer inline it except for a slot
+// that admits a component, where these rules are withheld anyway.
 //
 // The fixture shape models a real badge spec: a slot whose `anyOf` mixes
 // `$glyph` with components, a default `contentStyles.$glyph` with token-bound
@@ -127,7 +130,7 @@ describe('slot contentStyles (ADR-102)', () => {
       expect(host).toContain('background-color: var(--color-on-surface);');
     });
 
-    it('emits a variant\'s fillColor restatement important, under the variant\'s selector', async () => {
+    it('emits a variant\'s fillColor restatement at ordinary priority, under the variant\'s selector', async () => {
       const { react, host } = await run(tmpDir, glyphSlotSpec([
         {
           configuration: { emphasized: true },
@@ -140,11 +143,13 @@ describe('slot contentStyles (ADR-102)', () => {
       ]), glyphOnlyApi);
       expect(react).toContain('/* Variant: emphasized — children slot content */');
       expect(react).toMatch(
-        /\.ds-badge\[data-emphasized[^\]]*\] \.ds-badge__children > \[data-element\]\[aria-hidden="true"\] \{\n {2}background-color: var\(--color-inverse-on-surface\) !important;\n\}/,
+        /\.ds-badge\[data-emphasized[^\]]*\] \.ds-badge__children > \[data-element\]\[aria-hidden="true"\] \{\n {2}background-color: var\(--color-inverse-on-surface\);\n\}/,
       );
       expect(host).toMatch(
-        /\.ds-badge__children > slot::slotted\(\[data-element\]\[aria-hidden="true"\]\) \{\n {2}background-color: var\(--color-inverse-on-surface\) !important;\n\}/,
+        /\.ds-badge__children > slot::slotted\(\[data-element\]\[aria-hidden="true"\]\) \{\n {2}background-color: var\(--color-inverse-on-surface\);\n\}/,
       );
+      expect(react).not.toContain('!important');
+      expect(host).not.toContain('!important');
     });
 
     it('a variant restating only contentStyles still produces its rule', async () => {
@@ -261,7 +266,7 @@ describe('slot contentStyles (ADR-102)', () => {
       expect(react).toContain('justify-content: center;');
     });
 
-    it('a variant override targets the inline-formatted span, important, for a text-only slot', async () => {
+    it('a variant override stays on the slot element for a text-only slot, span selectors gone', async () => {
       const spec = textSlotSpec(['$text'], [
         {
           configuration: { emphasized: true },
@@ -273,19 +278,20 @@ describe('slot contentStyles (ADR-102)', () => {
         },
       ]);
       const { react, host } = await run(tmpDir, spec.variants, spec.api);
-      // React: every string fill is wrapped in the emitter's inline-styled span,
-      // and only an important rule outranks an inline style.
+      // No emitter inlines this formatting for a slot that admits no component,
+      // so there is no wrapper span to target and nothing to outrank: the rule
+      // lands on the slot element and reaches the fill by inheritance, at a
+      // priority a consumer's own styles beat.
       expect(react).toMatch(
-        /\.ds-badge__label > span \{\n {2}color: var\(--color-inverse-on-surface\) !important;\n\}/,
-      );
-      // Host: a slotted text node has no inline style — inheritance suffices —
-      // while the <slot>'s default-content span needs the important re-tint.
-      expect(host).toMatch(
         /\.ds-badge__label \{\n {2}color: var\(--color-inverse-on-surface\);\n\}/,
       );
       expect(host).toMatch(
-        /\.ds-badge__label > slot > span \{\n {2}color: var\(--color-inverse-on-surface\) !important;\n\}/,
+        /\.ds-badge__label \{\n {2}color: var\(--color-inverse-on-surface\);\n\}/,
       );
+      expect(react).not.toContain('> span {');
+      expect(host).not.toContain('> slot > span {');
+      expect(react).not.toContain('!important');
+      expect(host).not.toContain('!important');
     });
 
     it('a variant override stays on the slot element, normal priority, without a default block', async () => {

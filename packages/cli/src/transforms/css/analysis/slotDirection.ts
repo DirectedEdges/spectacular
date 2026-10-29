@@ -149,7 +149,13 @@ function readTarget(componentsDir: string, instanceOf: string): TargetSpec | nul
   }
 
   const props = (api?.props ?? {}) as Record<string, Record<string, unknown>>;
-  const slotProp = Object.entries(props).find(([, def]) => def?.defaultSlot === true)?.[0];
+  // The default slot is the FIRST slot-typed prop declaring it (ADR-099); a
+  // further declaration is ignored, so this names the same prop the emitters'
+  // own resolver does. `find` is that rule, and the type check keeps a
+  // non-slot prop carrying the marker from standing in for one.
+  const slotProp = Object.entries(props).find(
+    ([, def]) => def?.type === 'slot' && def?.defaultSlot === true,
+  )?.[0];
   if (!slotProp) return { defaultDirection: {}, variants: [] };
 
   const defaultElements = (((variantsYaml?.default ?? {}) as Record<string, unknown>).elements ?? {}) as Record<
