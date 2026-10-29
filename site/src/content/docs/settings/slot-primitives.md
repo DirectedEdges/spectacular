@@ -67,6 +67,23 @@ Anatomy is untouched either way: a primitive inside a slot's default content sta
 - A marker joins `anyOf` only when the slot **already names at least one component**. `anyOf` is a constraint, so a slot whose only identified content is primitives emits no `anyOf` at all rather than declaring that nothing but a primitive may fill it. Component names come from [`slotConstraints`](/settings/slot-constraints/) — a library that declares none gets `contentStyles` on its slots and no markers anywhere.
 - `contentStyles` is captured whenever primitives are detected, independently of whether any marker is emitted.
 - A slot holding a primitive purely as placeholder scaffolding is read as accepting one. The failure mode is a content set wider than intended rather than a wrong one, and the marker sits in the spec where it can be seen; author such slots without the placeholder, or turn the reading off.
+- **Properties are recorded, stripped and layered exactly as `styles` are.** Whatever holds for an element's own styling holds here, so there is nothing separate to learn. The next section spells out what that means in practice, since it is the most common source of surprise.
+
+## Where the formatting is recorded
+
+The capture runs per variant and the result layers like `styles`: the value common to every variant lands in the `default` block, and a variant carries only what differs from it. A `$text` entry in a variant showing just `textColor` is a delta — read it over the default block, not instead of it.
+
+Two consequences follow, both shared with `styles`:
+
+**A property equal to the schema default is omitted from the `default` block, but kept in a variant.** `textAlignVertical: TOP` will not appear in the default block, because `TOP` is the default and stating it adds nothing. It *will* appear in a variant whose alignment differs from the default block's — restating a default is a meaningful delta there, and dropping it would lose the change. So alignment showing up in a variant and nowhere else is the mechanism working, not an inconsistency. Nothing is suppressed by how many children the slot holds.
+
+**The whole record can land in a variant rather than in `default`.** That happens when the slot only holds a primitive in some variants — a component whose label is a composed instance in most variants and a bare text layer in one has no common value to hoist. It also happens when the slot element is missing from the block the layering compares against, in which case the record reads as a difference in full. The output is correct either way; the second case is just more verbose than it needs to be.
+
+## Versioning
+
+A change to this formatting is a **patch**. It lives in the variants concern, which is graded as manifestation rather than contract — styling, layout and bindings are patch by design, and this is styling.
+
+Note what that means for a pre-merge comparison between two Figma branches: both sides are generated with the same engine, so the formatting is present on both and only a real difference in the primitives themselves shows up. Turning the reading on for the first time is not a diff between branches; it is a difference between engine runs.
 
 ## Default slot
 
