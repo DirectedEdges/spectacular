@@ -70,7 +70,7 @@ export function slotDirectionResolver(componentsDir: string): SlotDirectionResol
     const direction: SlotDirection = { ...target.defaultDirection };
     // Later variants win, exactly as the stylesheet's own cascade orders them.
     for (const variant of target.variants) {
-      if (!satisfies(variant.configuration, propConfigurations)) continue;
+      if (!configurationSatisfies(variant.configuration, propConfigurations)) continue;
       if (variant.direction.layoutMode !== undefined) direction.layoutMode = variant.direction.layoutMode;
       if (variant.direction.crossAxisAlignment !== undefined) {
         direction.crossAxisAlignment = variant.direction.crossAxisAlignment;
@@ -80,13 +80,38 @@ export function slotDirectionResolver(componentsDir: string): SlotDirectionResol
   };
 }
 
-/** Every key the variant names is pinned to that value on the instance. */
-function satisfies(
+/**
+ * Every key the variant names is pinned to that value on the instance.
+ *
+ * Shared with the contentStyles read (ADR-102), which resolves a slot's
+ * primitive formatting by the same rule — the name matches the shared core's
+ * `configurationSatisfies` in from-specs' `slotDirection.ts`.
+ */
+export function configurationSatisfies(
   configuration: Record<string, unknown>,
   propConfigurations: Record<string, unknown>,
 ): boolean {
-  for (const [key, value] of Object.entries(configuration)) {
-    const pinned = propConfigurations[key];
+  // Member-keyed values (ADR-111) compare per member — identity on the objects
+  // would make every folded variant read as unsatisfied.
+  const flat = (config: Record<string, unknown>): Record<string, unknown> => {
+    const out: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(config)) {
+      if (
+        !key.startsWith('$') && value !== null && typeof value === 'object' && !Array.isArray(value)
+        && Object.keys(value).every(k => !k.startsWith('$'))
+      ) {
+        for (const [memberKey, memberValue] of Object.entries(value)) {
+          if (memberValue !== null) out[`${key}.${memberKey}`] = memberValue;
+        }
+        continue;
+      }
+      out[key] = value;
+    }
+    return out;
+  };
+  const pinnedFlat = flat(propConfigurations);
+  for (const [key, value] of Object.entries(flat(configuration))) {
+    const pinned = pinnedFlat[key];
     if (pinned === undefined) return false;
     if (typeof value === 'string' && typeof pinned === 'string') {
       if (value.toLowerCase() !== pinned.toLowerCase()) return false;
@@ -124,7 +149,13 @@ function readTarget(componentsDir: string, instanceOf: string): TargetSpec | nul
   }
 
   const props = (api?.props ?? {}) as Record<string, Record<string, unknown>>;
-  const slotProp = Object.entries(props).find(([, def]) => def?.defaultSlot === true)?.[0];
+  // The default slot is the FIRST slot-typed prop declaring it (ADR-099); a
+  // further declaration is ignored, so this names the same prop the emitters'
+  // own resolver does. `find` is that rule, and the type check keeps a
+  // non-slot prop carrying the marker from standing in for one.
+  const slotProp = Object.entries(props).find(
+    ([, def]) => def?.type === 'slot' && def?.defaultSlot === true,
+  )?.[0];
   if (!slotProp) return { defaultDirection: {}, variants: [] };
 
   const defaultElements = (((variantsYaml?.default ?? {}) as Record<string, unknown>).elements ?? {}) as Record<

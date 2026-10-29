@@ -8,7 +8,7 @@ A flat map of prop names to the values they must hold for a condition to apply, 
 ```ts
 type PropConfigurations = Record<
   string,
-  string | number | boolean | null | PropBinding | CompositionRef | ImageBinding
+  string | number | boolean | null | PropBinding | CompositionRef | ImageBinding | ObjectPropValue
 >;
 ```
 
@@ -19,8 +19,18 @@ type PropConfigurations = Record<
 | `PropBinding` (`{ $binding }`) | `Element.propConfigurations` only | Pass-through binding to a parent prop |
 | `CompositionRef` (`{ $composition }`) | `Element.propConfigurations` only, under a slot-prop key | JSON Pointer to a named `Composition` (in `Component.slotContent` or in an external composition file) used to fill a nested instance's slot |
 | `ImageBinding` (`{ $binding, examples? }`) | `Element.propConfigurations` only, under an image-prop key | Forwards a parent image prop into a nested image instance's source prop, carrying authoring-default example images (since 0.28.0) |
+| `ObjectPropValue` (member-keyed object) | Anywhere `PropConfigurations` is used, under an object-prop key | Member names to scalar values, or `null` to unset a member; layering is evaluated per member (since 0.39.0, ADR-111) |
 
-`InstanceExample.propConfigurations` accepts scalars, `null`, and slot-content references — `PropBinding` is not permitted there.
+`InstanceExample.propConfigurations` accepts scalars, `null`, slot-content references, and `ObjectPropValue` — `PropBinding` is not permitted there.
+
+An `ObjectPropValue` sets the members of an [`ObjectProp`](/schema/props/#objectprop). Member names must not begin with `$`, which is what keeps the form distinguishable from `PropBinding` and the other `$`-keyed references:
+
+```yaml
+# A variant configuring two members; an omitted member inherits
+margin:
+  compact: none
+  expanded: large
+```
 
 ## Unset props
 

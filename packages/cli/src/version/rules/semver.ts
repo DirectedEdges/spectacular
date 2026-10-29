@@ -228,6 +228,31 @@ rules:
     grade: major
     why: The property was renamed; the mapping is recorded in the rename ledger.
 
+  # ---- api: object-prop members (ADR-111) --------------------------------------
+  # A member is API surface exactly as a prop is: one arriving is additive, one
+  # removed or renamed breaks every consumer addressing it. The per-attribute
+  # rules below each admit an optional members segment for the same reason.
+  - id: prop-member-added
+    concern: api
+    operation: added
+    path: '(^|\.)props\.[^.\[]+\.members\.[^.\[]+$'
+    grade: minor
+    why: An object member was added; additive surface.
+
+  - id: prop-member-removed
+    concern: api
+    operation: removed
+    path: '(^|\.)props\.[^.\[]+\.members\.[^.\[]+$'
+    grade: major
+    why: An object member was removed; code addressing it breaks.
+
+  - id: prop-member-renamed
+    concern: api
+    operation: renamed
+    path: '(^|\.)props\.[^.\[]+\.members\.[^.\[]+$'
+    grade: major
+    why: The member was renamed; the mapping is recorded in the rename ledger.
+
   # ---- api: the attributes a consumer programs against ------------------------
   # type, default, nullable, anyOf, minItems, maxItems and the enum: each is
   # stated for the first time (additive) or changed and withdrawn (breaking).
@@ -236,39 +261,39 @@ rules:
   - id: prop-type-added
     concern: api
     operation: added
-    path: '(^|\.)props\.[^.\[]+\.type$'
+    path: '(^|\.)props\.[^.\[]+(\.members\.[^.\[]+)?\.type$'
     grade: minor
     why: The property states its type, arriving with the property itself.
 
   - id: prop-type-changed
     concern: api
-    path: '(^|\.)props\.[^.\[]+\.type$'
+    path: '(^|\.)props\.[^.\[]+(\.members\.[^.\[]+)?\.type$'
     grade: major
     why: Type expectations break.
 
   - id: prop-default-added
     concern: api
     operation: added
-    path: '(^|\.)props\.[^.\[]+\.default$'
+    path: '(^|\.)props\.[^.\[]+(\.members\.[^.\[]+)?\.default$'
     grade: minor
     why: The property gained a default and became optional; the contract loosened.
 
   - id: prop-default-changed
     concern: api
-    path: '(^|\.)props\.[^.\[]+\.default$'
+    path: '(^|\.)props\.[^.\[]+(\.members\.[^.\[]+)?\.default$'
     grade: major
     why: The default changed or was withdrawn - a silent behavior change, or a property that is now required.
 
   - id: prop-nullable-added
     concern: api
     operation: added
-    path: '(^|\.)props\.[^.\[]+\.nullable$'
+    path: '(^|\.)props\.[^.\[]+(\.members\.[^.\[]+)?\.nullable$'
     grade: minor
     why: The property states its nullability for the first time.
 
   - id: prop-nullable-changed
     concern: api
-    path: '(^|\.)props\.[^.\[]+\.nullable$'
+    path: '(^|\.)props\.[^.\[]+(\.members\.[^.\[]+)?\.nullable$'
     grade: major
     why: What the property accepts as empty changed.
 
@@ -288,28 +313,28 @@ rules:
   - id: enum-value-renamed
     concern: api
     operation: renamed
-    path: '(^|\.)props\.[^.\[]+\.enum$'
+    path: '(^|\.)props\.[^.\[]+(\.members\.[^.\[]+)?\.enum$'
     grade: major
     why: The enum value was renamed; the mapping is recorded in the rename ledger.
 
   - id: enum-value-added
     concern: api
     operation: added
-    path: '(^|\.)props\.[^.\[]+\.enum$'
+    path: '(^|\.)props\.[^.\[]+(\.members\.[^.\[]+)?\.enum$'
     grade: minor
     why: A new accepted value; existing code is unaffected.
 
   - id: enum-value-removed
     concern: api
     operation: removed
-    path: '(^|\.)props\.[^.\[]+\.enum$'
+    path: '(^|\.)props\.[^.\[]+(\.members\.[^.\[]+)?\.enum$'
     grade: major
     why: Code using the value breaks.
 
   - id: enum-reordered
     concern: api
     operation: reordered
-    path: '(^|\.)props\.[^.\[]+\.enum$'
+    path: '(^|\.)props\.[^.\[]+(\.members\.[^.\[]+)?\.enum$'
     grade: patch
     why: Order is presentational.
 
@@ -347,13 +372,13 @@ rules:
   # ---- api: props, everything else --------------------------------------------
   - id: prop-examples
     concern: api
-    path: '(^|\.)props\.[^.\[]+\.examples'
+    path: '(^|\.)props\.[^.\[]+(\.members\.[^.\[]+)?\.examples'
     grade: patch
     why: Documentation, not contract.
 
   - id: prop-extensions
     concern: api
-    path: '(^|\.)props\.[^.\[]+\.\$extensions'
+    path: '(^|\.)props\.[^.\[]+(\.members\.[^.\[]+)?\.\$extensions'
     grade: patch
     why: Figma provenance; consumers never see it.
 

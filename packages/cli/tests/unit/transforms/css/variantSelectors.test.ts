@@ -7,6 +7,7 @@
 // generate a whole stylesheet and read it.
 import { describe, it, expect } from 'vitest';
 import { expandVariantSelectors, type VariantSelectorInput } from '../../../../src/transforms/css/sheet/variantSelectors.js';
+import { flattenMemberValues } from '../../../../src/transforms/css/sheet/variantBlock.js';
 
 /** Concept selectors as the real table supplies them, including the multi-part ones. */
 const SELECTORS: Record<string, string> = {
@@ -275,5 +276,28 @@ describe('the :hover / :active disabled guard', () => {
 
     expect(result.skip).toBe(true);
     expect(result.stateSelSuffixes).toEqual(['']);
+  });
+});
+
+describe('object-prop member configurations (ADR-111)', () => {
+  it('flattens member-keyed values to dotted keys, dropping null members', () => {
+    expect(flattenMemberValues({
+      margin: { compact: 'Tight', expanded: null },
+      size: 'Small',
+      bound: { $binding: '#/props/x' },
+    })).toEqual({
+      'margin.compact': 'Tight',
+      size: 'Small',
+      bound: { $binding: '#/props/x' },
+    });
+  });
+
+  it('a flattened member expands to its own data attribute, never a stringified object', () => {
+    const result = expandVariantSelectors(input({
+      configuration: flattenMemberValues({ margin: { compact: 'Tight' } }),
+      attrNameFor: prop => `data-${prop.replace('.', '-')}`,
+    }));
+    expect(result.skip).toBe(false);
+    expect(result.dataAttrs).toEqual(['[data-margin-compact="tight"]']);
   });
 });

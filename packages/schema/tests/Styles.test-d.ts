@@ -10,6 +10,7 @@ import type {
   Sides, Corners, ItemSpacing, LayoutMode, WrapAlignment,
   MainAxisAlignment, CrossAxisAlignment, Position, PositionOffset,
   StrokeDashPattern, TextAlignHorizontal, TextOverflow,
+  ContentStyles, TextContentStyles, GlyphContentStyles,
 } from '../types/index.js';
 
 // ─── ColorStyle ────────────────────────────────────────────────────────────
@@ -965,3 +966,147 @@ const withMaxLinesToken: Styles = {
 
 // @ts-expect-error: boolean-only object is not a valid Style for maxLines
 const _mlBadObject: Styles = { maxLines: { value: 2 } };
+
+// ─── TextContentStyles — the closed text-formatting set (ADR-102) ─────────────
+
+// All six members, each typed as its Styles counterpart
+const textContentFull: TextContentStyles = {
+  textColor: { $token: 'DS Color.Text.OnPrimary', $type: 'color' },
+  typography: { $token: 'DS Type.Label.Medium', $type: 'typography' },
+  textAlignHorizontal: 'CENTER',
+  textAlignVertical: 'CENTER',
+  textOverflow: 'ELLIPSIS',
+  maxLines: 1,
+};
+
+// Every member is optional — a per-variant override carries only what changes
+const textContentPartial: TextContentStyles = { textColor: '#FFFFFF' };
+const textContentEmpty: TextContentStyles = {};
+
+// typography carries the composite, so its own members travel inside it
+const textContentInlineTypography: TextContentStyles = {
+  typography: { fontSize: 14, fontFamily: 'Inter', lineHeight: '150%', textCase: 'UPPER' },
+};
+
+// Prop binding and conditionals work wherever the underlying type is Style
+const textContentBound: TextContentStyles = { maxLines: { $binding: '#/props/lines' } };
+const textContentConditional: TextContentStyles = {
+  maxLines: {
+    if: {
+      condition: { operation: 'equals', args: { value: { $binding: '#/props/dense' }, compareTo: true } },
+      then: 1,
+      else: null,
+    },
+  },
+};
+
+// A value valid in styles is valid here — same ColorStyle arms
+const textContentColorObject: TextContentStyles = {
+  textColor: { colorSpace: 'srgb', components: [1, 1, 1], alpha: 1, hex: '#FFFFFF' },
+};
+
+// The set is closed — layout, surface and sizing cannot enter the content record
+// @ts-expect-error: padding is not a content-formatting property
+const _tcPadding: TextContentStyles = { padding: 8 };
+
+// @ts-expect-error: backgroundColor is not a content-formatting property
+const _tcBackground: TextContentStyles = { backgroundColor: '#FF0000' };
+
+// @ts-expect-error: layoutMode is not a content-formatting property
+const _tcLayout: TextContentStyles = { layoutMode: 'VERTICAL' };
+
+// @ts-expect-error: width is not a content-formatting property
+const _tcWidth: TextContentStyles = { width: 100 };
+
+// @ts-expect-error: fillColor formats a glyph, not text
+const _tcFill: TextContentStyles = { fillColor: '#FF0000' };
+
+// @ts-expect-error: CENTRE is not a TextAlignHorizontal value
+const _tcBadAlign: TextContentStyles = { textAlignHorizontal: 'CENTRE' };
+
+// @ts-expect-error: TRUNCATE is not a TextOverflow value
+const _tcBadOverflow: TextContentStyles = { textOverflow: 'TRUNCATE' };
+
+// ─── GlyphContentStyles — fillColor and the two dimensions (ADR-102) ──────────
+
+const glyphContentFull: GlyphContentStyles = {
+  fillColor: { $token: 'DS Color.Icon.OnPrimary', $type: 'color' },
+  width: 16,
+  height: 16,
+};
+
+// Every member is optional
+const glyphContentToken: GlyphContentStyles = {
+  fillColor: { $token: 'DS Color.Icon.OnPrimary', $type: 'color' },
+};
+const glyphContentLiteral: GlyphContentStyles = { fillColor: '#FFFFFF' };
+const glyphContentSizeOnly: GlyphContentStyles = { width: 24, height: 24 };
+const glyphContentEmpty: GlyphContentStyles = {};
+
+// Dimensions are `Style`, so they token-bind, prop-bind and take conditionals — the same
+// arms Styles.width has
+const glyphContentSizeToken: GlyphContentStyles = {
+  width: { $token: 'DS Size.Icon.Small', $type: 'dimension' },
+  height: { $token: 'DS Size.Icon.Small', $type: 'dimension' },
+};
+const glyphContentSizeBound: GlyphContentStyles = { width: { $binding: '#/props/iconSize' } };
+const glyphContentSizeConditional: GlyphContentStyles = {
+  height: {
+    if: {
+      condition: { operation: 'equals', args: { value: { $binding: '#/props/dense' }, compareTo: true } },
+      then: 16,
+      else: 24,
+    },
+  },
+};
+
+// Layout and surface still cannot enter — a glyph is sized, not laid out
+// @ts-expect-error: padding is not a glyph content-formatting property
+const _gcPadding: GlyphContentStyles = { padding: 4 };
+
+// @ts-expect-error: minWidth is not a glyph content-formatting property
+const _gcMinWidth: GlyphContentStyles = { minWidth: 16 };
+
+// Text properties do not format a glyph
+// @ts-expect-error: typography is not a glyph content-formatting property
+const _gcTypography: GlyphContentStyles = { typography: { fontSize: 14 } };
+
+// @ts-expect-error: textColor is not a glyph content-formatting property — fillColor is
+const _gcTextColor: GlyphContentStyles = { textColor: '#FFFFFF' };
+
+// ─── ContentStyles — keyed by primitive (ADR-102) ─────────────────────────────
+
+// Both kinds together, which is what a glyph-plus-label default fill records
+const contentBoth: ContentStyles = {
+  $text: { typography: { $token: 'DS Type.Label.Medium', $type: 'typography' } },
+  $glyph: { fillColor: { $token: 'DS Color.Icon.OnPrimary', $type: 'color' } },
+};
+
+// Either kind alone, and the empty map
+const contentTextOnly: ContentStyles = { $text: textContentFull };
+const contentGlyphOnly: ContentStyles = { $glyph: glyphContentToken };
+const contentNone: ContentStyles = {};
+
+// Keys are the marker vocabulary and nothing else
+// @ts-expect-error: $image is not a primitive marker
+const _csImage: ContentStyles = { $image: { fillColor: '#FF0000' } };
+
+// @ts-expect-error: the sigil is part of the key
+const _csBareKey: ContentStyles = { text: textContentFull };
+
+// @ts-expect-error: `string` is not the vocabulary — the primitive is named `text`
+const _csStringKey: ContentStyles = { $string: textContentFull };
+
+// Styles are not written at the top level — they belong under a kind
+// @ts-expect-error: ContentStyles is keyed by primitive, not a flat style block
+const _csFlat: ContentStyles = { textColor: '#FFFFFF' };
+
+// The per-kind sets do not leak into each other
+// @ts-expect-error: a text set is not a glyph set
+const _csSwapped: ContentStyles = { $glyph: { maxLines: 1 } };
+
+// A Styles value is not assignable to ContentStyles — the keyed shape shares no member
+// with it, which the flat shape could not claim
+declare const someStyles: Styles;
+// @ts-expect-error: Styles is not a primitive-keyed content map
+const _fromStyles: ContentStyles = someStyles;

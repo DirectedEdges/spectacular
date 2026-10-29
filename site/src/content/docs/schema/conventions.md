@@ -74,6 +74,8 @@ The shape is deliberately permissive: nothing stops a code platform declaring `i
 | [`images`](/guides/images/) | `object` | — | How the library expresses images. Absent = no image convention |
 | [`slotConstraints`](/guides/slot-constraints/) | `boolean` | `false` | The library authors slot constraints as code-only props |
 | [`inferNumberProps`](/guides/number-inference/) | `boolean` | `false` | The library authors numeric props as Figma `TEXT` props with numeric defaults |
+| [`slotPrimitives`](/settings/slot-primitives/) | `boolean` | `true` | The library's slots carry the primitives they accept in their default content |
+| [`objectProps`](#objectprops) | `object` | — | The library authors object-prop members as separator-named flat props. Absent = no folding |
 | [`stylesProp`](#stylesprop) | `string` | — | *Vocabulary.* Prop receiving styling no promotion mapped. Absent = unmapped styling is dropped |
 | [`defaultFillWidth`](#defaultfillwidth) | `number` | — | Container width for a fill-width root. Absent = the rendering tool uses its own fallback |
 
@@ -117,6 +119,14 @@ At least one of the two forms is declared; a component matching either is a glyp
 | `match` | `string` | — | *Vocabulary.* Figma name of the designated image component (e.g. `DS Image`). Requires a non-empty `sourceProps` |
 | `component` | `string` | — | *Vocabulary.* The same component's name on this platform (e.g. `DsImage`) — the translation target for a `match` declared by whichever platform produced the spec |
 | `sourceProps` | `string[]` | — | Code-only prop names carrying image sources; the first is the designated component's own source prop |
+
+### `objectProps`
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `separator` | `string` | `'.'` | The member-name separator in flat property names |
+
+The library authors [object-prop](/schema/props/#objectprop) members as separator-delimited flat property names — `margin.compact` and `margin.expanded` fold into one `margin` object prop (since 0.39.0, ADR-111; declared via the [objectProps setting](/settings/object-props/)). Absent means no folding: a property name containing the separator stays a flat prop. Each folded member records its flat source name in `$extensions['com.figma'].name`, so writing back to Figma reverses the fold without re-deriving names.
 
 ### `stylesProp`
 
@@ -363,7 +373,7 @@ took the screenshot runner with it, since that read the same script.
 
 ## Resolution
 
-`ResolvedConventions` applies defaults **inside** any declared platform entry: `naming`, `slotConstraints` and `inferNumberProps` are guaranteed once an entry exists, and within a declared block so are `scope`, `backgroundImage`, `sourceProps`, and each binding's concept prop names. A platform's `stylesProp` is folded into each declared primitive, so a consumer reads one level rather than two.
+`ResolvedConventions` applies defaults **inside** any declared platform entry: `naming`, `slotConstraints`, `inferNumberProps` and `slotPrimitives` are guaranteed once an entry exists, and within a declared block so are `scope`, `backgroundImage`, `sourceProps`, and each binding's concept prop names. A platform's `stylesProp` is folded into each declared primitive, so a consumer reads one level rather than two.
 
 A resolver produces a complete entry for any platform it is asked about, **declared or not** — so a consumer reading `figma` gets `naming: NONE` whether or not a `figma.yaml` exists.
 

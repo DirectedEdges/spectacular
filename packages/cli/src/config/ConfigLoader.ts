@@ -554,6 +554,7 @@ export class ConfigLoader {
       naming: 'NONE',
       slotConstraints: raw.slotConstraints === true,
       inferNumberProps: raw.inferNumberProps === true,
+      slotPrimitives: raw.slotPrimitives !== false,
     };
 
     // naming
@@ -586,6 +587,26 @@ export class ConfigLoader {
       const match = typeof raw.codeOnlyProps === 'object' ? raw.codeOnlyProps.match : undefined;
       if (typeof match === 'string' && match.trim() !== '') {
         platform.codeOnlyProps = { match };
+      }
+    }
+
+    // objectProps (ADR-111). Presence of the block is the on-switch; separator
+    // defaults to "." inside a declared block. Absence means no folding.
+    if (raw.objectProps !== undefined) {
+      if (raw.objectProps === null || typeof raw.objectProps !== 'object') {
+        console.warn(`Invalid ${where} objectProps: expected an object. Using default: { separator: "." }`);
+        platform.objectProps = { separator: '.' };
+      } else {
+        const sep = (raw.objectProps as Record<string, unknown>).separator;
+        let separator = '.';
+        if (sep !== undefined) {
+          if (typeof sep === 'string' && sep !== '') {
+            separator = sep;
+          } else {
+            console.warn(`Invalid ${where} objectProps.separator: expected a non-empty string. Using default: "."`);
+          }
+        }
+        platform.objectProps = { separator };
       }
     }
 

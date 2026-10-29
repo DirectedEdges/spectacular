@@ -82,7 +82,8 @@ Schema changes are proposed and tracked through Architecture Decision Records in
 
 1. **`/specs.adr.create`** — Draft a new ADR, claim the next index number, create a branch
 2. **`/specs.adr.implement`** — Apply type, schema, test, doc, and changelog changes described in the ADR (runs compile + schema validation gates)
-3. **`/specs.adr.accept`** — Re-run all gates, flip status to ACCEPTED, update the index, create a PR
+3. **`/specs.adr.analyze`** — Read each consumer package's source against the ADR's new surface; write one workspace adoption analysis with the per-package depth the ADR format forbids (kept off GitHub — it cites internals of obfuscated packages)
+4. **`/specs.adr.accept`** — Re-run all gates, flip status to ACCEPTED, update the index, create a PR
 
 Each step is a separate skill; run them in order. The ADR stays `DRAFT` until all gates pass in the accept step.
 
