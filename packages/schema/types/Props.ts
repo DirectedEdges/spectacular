@@ -168,7 +168,7 @@ export interface NumberProp {
  *
  * Orthogonal to `defaultSlot`: a slot may accept a primitive without being the default
  * slot — an Alert's `description` — or be the default slot and take components only.
- * @since 0.35.0
+ * @since 0.39.0
  */
 export type PrimitiveSlotContent = '$text' | '$glyph';
 
@@ -254,7 +254,7 @@ export interface SlotProp {
    * explicit `SlotContentRef`/`SlotBinding`. Absent means false: this is not the default
    * slot, or the library declared no default-slot convention. At most one `SlotProp` per
    * component may be true — an authoring/generator invariant, not schema-enforced.
-   * @since 0.35.0
+   * @since 0.39.0
    */
   defaultSlot?: boolean;
   /** DTCG §5.2.3 platform-specific extensions. @since 0.14.0 */

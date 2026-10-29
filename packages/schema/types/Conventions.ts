@@ -298,7 +298,7 @@ export interface PlatformConventions {
    *
    * Named for its subject beside `slotConstraints`, and for the engine's
    * `SlotPrimitives` collaborator.
-   * @since 0.35.0
+   * @since 0.39.0
    */
   slotPrimitives?: boolean;
   /**
@@ -621,7 +621,7 @@ export interface ResolvedPlatformConventions {
   slotConstraints: boolean;
   /** Numeric props are authored as Figma `TEXT` props. */
   inferNumberProps: boolean;
-  /** Slots carry the primitives they accept in their default content. Defaulted to true. @since 0.35.0 */
+  /** Slots carry the primitives they accept in their default content. Defaulted to true. @since 0.39.0 */
   slotPrimitives: boolean;
   /** Object-prop members are authored as separator-delimited flat property names. Optional; absence means no folding. `separator` is defaulted inside a declared block. @since 0.39.0 */
   objectProps?: {

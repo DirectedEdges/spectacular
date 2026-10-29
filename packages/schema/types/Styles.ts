@@ -88,7 +88,7 @@ export type Styles = Partial<{
  * `typography` is listed once, as the composite: its own members (`fontSize`,
  * `fontFamily`, `lineHeight`, `letterSpacing`, `textCase`, `textDecoration` and the rest)
  * travel inside {@link Typography} rather than being enumerated again here.
- * @since 0.35.0
+ * @since 0.39.0
  */
 export type TextContentStyles = Partial<{
   /** Text color of the content. */
@@ -113,7 +113,7 @@ export type TextContentStyles = Partial<{
  * run's measure is. So a glyph fill that does not carry its dimensions loses them, and a
  * render has nothing to restore — which is why `width` and `height` belong to the fill
  * here even though no text member does.
- * @since 0.35.0
+ * @since 0.39.0
  */
 export type GlyphContentStyles = Partial<{
   /** Fill color of the glyph. */
@@ -142,7 +142,7 @@ export type GlyphContentStyles = Partial<{
  *
  * Meaningful only on a slot element, and its keys should agree with that slot's `anyOf`
  * markers — both authoring/generator contracts, neither schema-enforced.
- * @since 0.35.0
+ * @since 0.39.0
  */
 export type ContentStyles = Partial<{
   /** Formatting for a text primitive filling this slot. */

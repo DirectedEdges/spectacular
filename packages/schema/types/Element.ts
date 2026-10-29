@@ -33,7 +33,7 @@ export type Element = {
    *
    * Meaningful only on a slot element, and its keys should agree with that slot's `anyOf`
    * markers — both authoring/generator contracts, neither schema-enforced (ADR-102).
-   * @since 0.35.0
+   * @since 0.39.0
    */
   contentStyles?: ContentStyles;
   propConfigurations?: PropConfigurations;

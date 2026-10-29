@@ -907,8 +907,8 @@ referenced, and documented on `anyOf`.
   observed slot carries image default content, so it would be speculative.
   `PrimitiveSlotContent` and `ContentStyles` are where it lands additively.
 - `accepts` and `SlotContentKind` appeared in an earlier revision of this ADR and
-  are not part of it. They were never published — this ADR and ADR-099 both land in
-  the same unreleased `0.35.0` — so nothing depends on them.
+  are not part of it. They were never published — they were introduced and removed
+  within this ADR's own drafting, ahead of any release — so nothing depends on them.
 
 ---
 
@@ -954,7 +954,7 @@ Per-package adoption analysis: `specs-local-workspace/adr/102/plan.md` (maintain
 
 ## Semver Decision
 
-**Target version**: `0.35.0` — the version of `@directededges/specs-schema` on the
+**Target version**: `0.39.0` — the version of `@directededges/specs-schema` on the
 active release branch (`release/next`) this ADR merges into.
 
 **Change class**: `MINOR`.
