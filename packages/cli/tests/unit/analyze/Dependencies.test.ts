@@ -226,6 +226,19 @@ describe('DependenciesAnalyzer', () => {
       expect(slotEdge.to).toBe('dsIcon');
     });
 
+    it('ignores reserved composable-slot markers ($text, $glyph) in anyOf', async () => {
+      const withMarker = {
+        anatomy: { root: { type: 'container' } },
+        props: { items: { type: 'slot', anyOf: ['$text', 'badge'] } },
+        default: { elements: {} },
+      };
+      const { graph } = await runAll({ dsCard: withMarker });
+      const slotEdges = graph.edges.filter((e: { kind: string; from: string }) => e.kind === 'slot' && e.from === 'dsCard');
+      expect(slotEdges.length).toBe(1);
+      expect(slotEdges[0].to).toBe('badge');
+      expect(graph.nodes['$text']).toBeUndefined();
+    });
+
     it('excludes external nodes from roots and leaves', async () => {
       const withExternal = {
         anatomy: { logo: { type: 'instance', instanceOf: 'Third Party Logo' } },

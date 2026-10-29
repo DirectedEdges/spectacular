@@ -554,6 +554,7 @@ export class ConfigLoader {
       naming: 'NONE',
       slotConstraints: raw.slotConstraints === true,
       inferNumberProps: raw.inferNumberProps === true,
+      slotPrimitives: raw.slotPrimitives !== false,
     };
 
     // naming

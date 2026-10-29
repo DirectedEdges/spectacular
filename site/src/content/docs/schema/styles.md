@@ -74,3 +74,57 @@ The Default column is the value a property is treated as having when absent — 
 | [`wrapAlignment`](/schema/styles/wrap-alignment/) | `WrapAlignment` | `counterAxisAlignContent` <small>[ADR 039](https://github.com/DirectedEdges/specs/blob/main/adr/039-wrap-alignment.md)</small> | `null` |
 
 Element-type applicability (`container`/`text`/`glyph`/`vectors`/`line`) moves to per-property pages once those exist.
+
+## ContentStyles
+
+A second style type, carried by [`Element.contentStyles`](/schema/elements/#styles-vs-content-styles). `Styles` describes an element's own appearance; `ContentStyles` describes the appearance of primitive content *filling* it.
+
+It is a map keyed by the [primitive markers](/schema/props/#primitiveslotcontent) a slot's `anyOf` carries, because default slot content may hold more than one primitive and each is formatted by a different set:
+
+| Key | Type |
+|-----|------|
+| `$text` | `TextContentStyles` |
+| `$glyph` | `GlyphContentStyles` |
+
+### TextContentStyles
+
+Six properties and nothing else:
+
+| Property | Type |
+|----------|------|
+| [`textColor`](/schema/styles/text-color/) | `ColorStyle` |
+| [`typography`](/schema/typography/) | `TokenReference`<br>`Typography` |
+| [`textAlignHorizontal`](/schema/styles/text-align-horizontal/) | `TextAlignHorizontal` |
+| [`textAlignVertical`](/schema/styles/text-align-vertical/) | `Style` |
+| [`textOverflow`](/schema/styles/text-overflow/) | `TextOverflow` |
+| [`maxLines`](/schema/styles/max-lines/) | `Style` |
+
+`typography` carries the composite, so its own members (`fontSize`, `fontFamily`, `lineHeight` and the rest) travel inside it rather than being listed again.
+
+### GlyphContentStyles
+
+Three properties:
+
+| Property | Type |
+|----------|------|
+| [`fillColor`](/schema/styles/fill-color/) | `ColorStyle` |
+| [`width`](/schema/styles/width/) | `Style` |
+| [`height`](/schema/styles/height/) | `Style` |
+
+A glyph is **sized**, not laid out. Its box is the icon's own, set on the layer, and a slot's layout does not derive it the way a text run's measure is derived from its container — so a glyph fill recorded without its dimensions has lost them, with nothing for a render to restore.
+
+That is why `width` and `height` are glyph members and not text members. The two sets overlap in nothing, and each holds a member the other must not:
+
+| | `$text` | `$glyph` |
+|---|---|---|
+| Colour | `textColor` | `fillColor` |
+| Size | — the run is measured by its container | `width`, `height` |
+| Typography, alignment, overflow, line clamp | yes | no |
+
+### Both sets are closed
+
+Each property is typed identically to its `Styles` counterpart, so a value valid in `styles` is valid here — token references, prop bindings and conditionals included, wherever the underlying type is `Style`.
+
+Nothing outside a set may appear in it. A container's `padding`, `backgroundColor`, `minWidth` or `layoutMode` is invalid under either key, so a generator cannot record an element's own layout as content formatting. The sets do not leak into each other either: `typography` under `$glyph` is invalid, as is `fillColor` or `width` under `$text`.
+
+A new key — an `$image`, say — would arrive with its own property set, touching neither existing kind.

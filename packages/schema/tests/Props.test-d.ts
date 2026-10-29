@@ -5,7 +5,7 @@
  * These files are intentionally never executed — they are compiled with tsc
  * to assert that the type shape is correct.
  */
-import type { StringProp, BooleanProp, EnumProp, SlotProp, NumberProp, ObjectProp, ObjectPropMember, AnyProp, FigmaCodeOnlySource, FigmaPropExtension, PropExtensions } from '../types/index.js';
+import type { StringProp, BooleanProp, EnumProp, SlotProp, PrimitiveSlotContent, NumberProp, ObjectProp, ObjectPropMember, AnyProp, FigmaCodeOnlySource, FigmaPropExtension, PropExtensions } from '../types/index.js';
 
 // ─── StringProp — examples field ──────────────────────────────────────────────
 
@@ -266,6 +266,52 @@ const _slotBadDefaultSlot: SlotProp = { type: 'slot', defaultSlot: 'true' };
 
 // defaultSlot assignable to AnyProp
 const anyFromDefaultSlot: AnyProp = slotDefaultSlot;
+
+// ─── anyOf carries reserved primitive markers (ADR 102) ───────────────────────
+
+// anyOf is still optional — absence means any component and no primitive
+const slotNoAnyOf: SlotProp = { type: 'slot' };
+
+// Text-only: a Badge whose children are a string, with no component permitted
+const slotTextOnly: SlotProp = { type: 'slot', anyOf: ['$text'] };
+
+// A glyph and a label, or a composed Badge — one list, three permitted things
+const slotGlyphTextOrComponent: SlotProp = { type: 'slot', anyOf: ['$glyph', '$text', 'badge'] };
+
+// Component-only is unchanged from today — no marker, no primitive
+const slotComponentOnly: SlotProp = { type: 'slot', anyOf: ['badge'] };
+
+// Markers and defaultSlot are orthogonal: a primitive-accepting default slot
+const slotPrimitiveDefault: SlotProp = { type: 'slot', defaultSlot: true, anyOf: ['$text', 'badge'] };
+
+// ...primitive-accepting but NOT the default slot — an Alert's description
+const slotPrimitiveNotDefault: SlotProp = { type: 'slot', anyOf: ['$text', 'link'] };
+
+// ...the default slot, taking components only — a layout component
+const slotDefaultComponentOnly: SlotProp = { type: 'slot', defaultSlot: true, anyOf: ['card'] };
+
+// The marker vocabulary
+const markerText: PrimitiveSlotContent = '$text';
+const markerGlyph: PrimitiveSlotContent = '$glyph';
+
+// @ts-expect-error: the vocabulary is closed to the two primitives
+const _markerImage: PrimitiveSlotContent = '$image';
+
+// @ts-expect-error: the sigil is part of the value — a bare primitive name is not a marker
+const _markerBare: PrimitiveSlotContent = 'text';
+
+// @ts-expect-error: `string` is not the vocabulary — the primitive is named `text` (ADR 102, Decision 4)
+const _markerString: PrimitiveSlotContent = '$string';
+
+// anyOf stays string[], so a marker and a component name coexist without a cast
+const anyOfMixed: string[] = ['$glyph', '$text', 'badge'];
+const slotFromMixed: SlotProp = { type: 'slot', anyOf: anyOfMixed };
+
+// A marker is assignable into anyOf precisely because the array is string[]
+const slotFromMarkerConst: SlotProp = { type: 'slot', anyOf: [markerText, 'badge'] };
+
+// Still assignable to AnyProp
+const anyFromMarkers: AnyProp = slotGlyphTextOrComponent;
 
 // ─── ObjectProp (ADR-111) ─────────────────────────────────────────────────────
 

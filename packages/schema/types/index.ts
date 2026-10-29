@@ -18,7 +18,7 @@ export type {
   ComponentExamplesSubcomponent,
 } from './ComponentConcernDocument.js';
 export type { Anatomy, AnatomyElement, ElementTypeRef, SubcomponentRef, RoleConceptName, ActionConceptName, ActionEntry } from './Anatomy.js';
-export type { Props, AnyProp, BooleanProp, StringProp, EnumProp, SlotProp, NumberProp, ObjectProp, ObjectPropMember, FigmaCodeOnlySource, FigmaPropExtension, PropExtensions } from './Props.js';
+export type { Props, AnyProp, BooleanProp, StringProp, EnumProp, SlotProp, PrimitiveSlotContent, NumberProp, ObjectProp, ObjectPropMember, FigmaCodeOnlySource, FigmaPropExtension, PropExtensions } from './Props.js';
 export type { Variant, Variants } from './Variant.js';
 export type { Metadata, RunMetadata, Concern } from './Metadata.js';
 export type { Subcomponent, Subcomponents, SubcomponentSource } from './Subcomponent.js';
@@ -61,7 +61,7 @@ export type { Settings, ResolvedSettings, ColorFormat, SourceEntry } from './Set
 export { DEFAULT_SETTINGS } from './Settings.js';
 
 // Style types
-export type { Styles, Style, ColorStyle, ColorObject, StyleKey, TokenReference, AspectRatioValue, AspectRatioStyle, Typography, Sides, Corners, ItemSpacing, LayoutMode, WrapAlignment, MainAxisAlignment, CrossAxisAlignment, Position, PositionOffset, StrokeDashPattern, TextAlignHorizontal, TextOverflow } from './Styles.js';
+export type { Styles, ContentStyles, TextContentStyles, GlyphContentStyles, Style, ColorStyle, ColorObject, StyleKey, TokenReference, AspectRatioValue, AspectRatioStyle, Typography, Sides, Corners, ItemSpacing, LayoutMode, WrapAlignment, MainAxisAlignment, CrossAxisAlignment, Position, PositionOffset, StrokeDashPattern, TextAlignHorizontal, TextOverflow } from './Styles.js';
 export type { Shadow, Blur, Effects } from './Effects.js';
 export type { GradientStop, GradientCenter, LinearGradient, RadialGradient, AngularGradient, GradientValue } from './Gradient.js';
 

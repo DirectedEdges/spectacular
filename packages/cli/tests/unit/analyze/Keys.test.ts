@@ -198,7 +198,7 @@ describe('KeysAnalyzer', () => {
         specDir: compDir, outputDir: compDir, workspaceDir: outputDir, specsRoot: outputDir, kind: 'component' as const,
         componentKey: 'dsButton', outputFormat: 'YAML', tokensFormat: 'TOKEN',
         platform: opts.workspace
-          ? { naming: opts.workspace, slotConstraints: false, inferNumberProps: false }
+          ? { naming: opts.workspace, slotConstraints: false, inferNumberProps: false, slotPrimitives: false }
           : undefined,
       } as never);
       await a.finalize!(outputDir, analysisDir);

@@ -557,7 +557,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Component type names permitted in this slot"
+          "description": "What this slot permits — the one list of its accepted content. Each entry is either a component type name from the library's own namespace, or a reserved PrimitiveSlotContent marker naming a primitive kind ($text, $glyph). The two populations cannot collide, because the safe key grammar (ADR-066) admits no leading `$` in a component key. Absent means any component and no primitive. Items stay typed as plain strings rather than an enum, because the array holds arbitrary component names alongside the reserved markers. Examples: [$glyph, $text, badge] takes a glyph, a label, or a composed Badge; [$text] is text-only with no component permitted; [badge] is Badge-only with no primitive permitted. (ADR-102)"
         },
         "defaultSlot": {
           "type": "boolean",
@@ -859,6 +859,10 @@
         "styles": {
           "$ref": "#/definitions/Styles"
         },
+        "contentStyles": {
+          "$ref": "#/definitions/ContentStyles",
+          "description": "Styles applied to primitive content filling this element, as distinct from `styles`, which are the element's own. Keyed by primitive ($text, $glyph) using the same reserved markers this slot's anyOf carries, because default content may hold more than one kind — a glyph and a label — and each kind is formatted by a disjoint property set. Each entry is captured from the first top-level primitive of that kind in the slot's default content, per variant, and is overridden per variant through variants[].elements exactly as styles is. A component fill is formatted by the component it instantiates, so a consumer rendering one applies styles and discards contentStyles. Meaningful only on a slot element, and its keys should agree with that slot's anyOf markers — both authoring/generator contracts, neither schema-enforced. (ADR-102)"
+        },
         "propConfigurations": {
           "$ref": "#/definitions/PropConfigurations"
         },
@@ -1027,6 +1031,14 @@
     },
     "Styles": {
       "$ref": "styles.schema.json#/definitions/Styles"
+    },
+    "ContentStyles": {
+      "$ref": "styles.schema.json#/definitions/ContentStyles"
+    },
+    "PrimitiveSlotContent": {
+      "type": "string",
+      "enum": ["$text", "$glyph"],
+      "description": "A primitive kind a slot may accept, written as a reserved value inside SlotProp.anyOf. `$text` admits a text primitive (a plain string fill); `$glyph` admits a glyph primitive (an icon fill). The names are ElementType's, so one word covers the primitive wherever it appears — `type: text` on an anatomy item and `$text` in anyOf are the same thing. The `$` prefix marks the value as reserved by the contract rather than supplied by the library, matching how $token, $binding and $slotContent mark reserved keys; a component key can never shadow a marker, because the safe key grammar (ADR-066) admits no leading `$`. Formatting for such a fill lives under the matching key of the slot element's contentStyles. Orthogonal to defaultSlot. (ADR-102)"
     },
     "Metadata": {
       "type": "object",

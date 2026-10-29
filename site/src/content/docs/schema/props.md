@@ -63,11 +63,39 @@ Inferred from Figma variant values when [`conventions.platforms.figma.inferNumbe
 | `nullable` | `boolean` | No | Whether `null` is a valid value — absent means `true` |
 | `minChildren` | `number` | No | Minimum number of children the slot accepts (since 0.25.0) |
 | `maxChildren` | `number` | No | Maximum number of children the slot accepts (since 0.25.0) |
-| `anyOf` | `string[]` | No | Permitted component type names (since 0.14.0) |
+| `anyOf` | `string[]` | No | Everything the slot permits — component type names and reserved primitive markers (since 0.14.0) |
 | `defaultSlot` | `boolean` | No | Whether this is the component's designated default slot. Absent means `false` |
 | `$extensions` | `PropExtensions` | No | Vendor extensions |
 
 Slot constraint properties (`minChildren`, `maxChildren`, `anyOf`) are emitted when [`conventions.platforms.figma.slotConstraints`](/schema/conventions/#platform-members) is declared.
+
+#### PrimitiveSlotContent
+
+`anyOf` is the one list of what a slot accepts. Alongside component names it carries reserved markers naming a **primitive** kind:
+
+| Marker | Admits |
+|--------|--------|
+| `$text` | A text primitive — a plain string fill |
+| `$glyph` | A glyph primitive — an icon fill |
+
+```yaml
+props:
+  children:
+    type: slot
+    defaultSlot: true
+    anyOf: [$glyph, $text, badge]   # a glyph, a label, or a composed Badge
+  description:
+    type: slot
+    anyOf: [$text, link]            # accepts a primitive, and is not the default slot
+```
+
+`anyOf: [$text]` is a text-only slot — no component permitted. `anyOf: [badge]` is Badge-only — no primitive permitted. Absent means any component and no primitive, which is what every slot without markers means today.
+
+The names are the ones [`anatomy`](/schema/anatomy/) items already use, so `type: text` on an element and `$text` here are the same primitive. The `$` prefix marks a value the contract reserves rather than one the library supplies — the same role it plays in `$token`, `$binding` and `$slotContent`, extended from keys to values. A component key can never shadow a marker, because the safe key grammar admits no leading `$`.
+
+A marker is recorded when the slot's default content in Figma held a top-level primitive of that kind, in at least one variant, and [`slotPrimitives`](/settings/slot-primitives/) is on — which it is unless the library turns it off. A marker only ever joins an `anyOf` that already names at least one component; a slot whose detected content is primitives alone carries no `anyOf`, because `anyOf` is a constraint and `[$text]` would say only a text primitive may fill the slot. Those primitives are not emitted as anatomy elements — the slot is — and their formatting travels on the slot element's [`contentStyles`](/schema/elements/#styles-vs-content-styles), keyed by the same markers.
+
+Markers and `defaultSlot` are orthogonal. A Button's `children` accepts primitives *and* is the default slot; an Alert's `description` accepts a primitive and is *not* the default; a layout component's slots are default-eligible and take components only.
 
 `defaultSlot` marks the one slot a layout component always composes through. It is set at generation time, when the prop's name matched the library's [`specs.slots.default.match`](/schema/conventions/#slots) convention, and is read off the spec thereafter — a consumer needs no access to those conventions to know which slot it is:
 

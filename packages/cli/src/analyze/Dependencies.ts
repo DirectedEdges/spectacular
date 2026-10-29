@@ -531,6 +531,11 @@ function instanceTarget(value: unknown): string | null {
   return typeof value === 'string' && value !== UNRESOLVED_INSTANCE ? value : null;
 }
 
+/** `$`-prefixed anyOf values are reserved composable-slot markers (ADR-102), not component targets. */
+function isReservedSlotMarker(value: string): boolean {
+  return value.startsWith('$');
+}
+
 function bindingTarget(value: unknown): string | null {
   if (!value || typeof value !== 'object') return null;
   const binding = (value as Record<string, unknown>).$binding;
@@ -547,7 +552,7 @@ function collectSlotTargets(props: Record<string, unknown>, record: SpecRecord):
     const prop = raw as Record<string, unknown>;
     if (prop.type !== 'slot' || !Array.isArray(prop.anyOf)) continue;
     for (const target of prop.anyOf) {
-      if (typeof target === 'string' && target !== UNRESOLVED_INSTANCE) {
+      if (typeof target === 'string' && target !== UNRESOLVED_INSTANCE && !isReservedSlotMarker(target)) {
         addToSetMap(record.slotTargets, target, propName);
       }
     }

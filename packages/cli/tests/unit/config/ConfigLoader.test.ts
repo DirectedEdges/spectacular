@@ -96,6 +96,35 @@ spec:
       expect(config.settings.spec.format).toBe(DEFAULT_SETTINGS.spec.format);
     });
 
+    it('resolves slotPrimitives false when the platform declares false', () => {
+      writeSplitFile('conventions/figma.yaml', `
+naming: SENTENCE
+slotPrimitives: false
+`);
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.slotPrimitives).toBe(false);
+    });
+
+    it('defaults slotPrimitives to true when the platform declares no such convention', () => {
+      writeSplitFile('conventions/figma.yaml', `
+naming: SENTENCE
+`);
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.slotPrimitives).toBe(true);
+    });
+
+    it('resolves slotPrimitives true when the platform declares true', () => {
+      writeSplitFile('conventions/figma.yaml', `
+naming: SENTENCE
+slotPrimitives: true
+`);
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.slotPrimitives).toBe(true);
+    });
+
     it('accepts .json split files', () => {
       writeSplitFile('conventions/figma.json', JSON.stringify({ naming: 'TITLE' }));
 

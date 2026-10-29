@@ -9,6 +9,7 @@ import { childOrder, collectLayoutKeys } from '../analysis/layoutQueries.js';
 import { composedSelector, elemSelector, rootSelector } from './selectors.js';
 import { expandVariantSelectors } from './variantSelectors.js';
 import { backgroundImageDecls, gradientRingRule, inlineBlockIfBoxed, overlapRule } from './elementRules.js';
+import { slotAdmitsComponents, variantContentStylesLines } from './contentRules.js';
 import { attrNameFor } from './hostAttributes.js';
 import type { ImagesCssContext, RootForm } from '../types.js';
 import type { SpecAnalysis } from '../analysis/analyzeSpec.js';
@@ -61,6 +62,8 @@ export interface VariantBlockInput {
   images: ImagesCssContext | undefined;
   context: TransformerContext;
   facts: SpecAnalysis;
+  /** api.yaml's props — a slot's `anyOf` decides where its content rules may land. */
+  apiProps: Record<string, Record<string, unknown>>;
   displayedInDefault: ReadonlySet<string>;
   /** Props the states convention routes through real CSS selectors. */
   classifiedProps: ReadonlySet<string>;
@@ -83,7 +86,7 @@ function isReversal(variantOrder: string[], defaultOrder: string[]): boolean {
 
 export function variantBlockLines(input: VariantBlockInput): string[] {
   const {
-    componentClass, rootAs, tokensFormat, elemTypes, images, context, facts,
+    componentClass, rootAs, tokensFormat, elemTypes, images, context, facts, apiProps,
     displayedInDefault, classifiedProps, stateLookup, nestedClaimedPairs, selectorFor, warnUnnamedValue,
   } = input;
   const rootSel = rootSelector(componentClass, rootAs);
@@ -91,7 +94,7 @@ export function variantBlockLines(input: VariantBlockInput): string[] {
 
   const lines: string[] = [];
 
-  for (const variant of variantList) {
+  for (const [variantIndex, variant] of variantList.entries()) {
     // Member-keyed values (ADR-111) flatten to dotted keys so the expansion sees
     // scalars — and the data attribute each member hooks as matches the emitted
     // scaffolds' spelling (`data-margin-compact`).
@@ -214,6 +217,33 @@ export function variantBlockLines(input: VariantBlockInput): string[] {
         tokensFormat,
         ((defaultElements[elemKey]?.styles ?? {}) as Record<string, unknown>).strokeWeight,
       ));
+
+      // The variant's contentStyles overlay — formatting for the slot's
+      // primitive content (ADR-102), riding the same selectors the element's
+      // own delta uses. Matched by position in variantsYaml.variants — the
+      // same array this loop's own `variantList` reads — rather than by the
+      // configuration object's identity, which a future re-parse could break
+      // silently (emitting zero content rules with no error).
+      const contentRead = facts.contentStylesOf(elemKey);
+      const contentDelta = contentRead.variants.find(
+        v => v.index === variantIndex,
+      )?.contentStyles;
+      if (contentDelta && Object.keys(contentDelta).length > 0) {
+        lines.push(...variantContentStylesLines({
+          slotSelectors: rootSelectors.map(s => `${s}${elemSuffix}`),
+          delta: contentDelta,
+          tokensFormat,
+          // The default element carries the binding; the whole read carries what
+          // the slot holds, across every block that states it (contentRules.ts).
+          admitsComponents: slotAdmitsComponents(
+            (defaultElements[elemKey] ?? {}) as Record<string, unknown>,
+            apiProps,
+            contentRead,
+          ),
+          rootAs,
+          label: `${variantLabel(configuration)} — ${elemKey} slot content`,
+        }));
+      }
     }
   }
 

@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Declaring `objectProps` in your figma conventions folds separator-named properties into one prop with named members** — `Margin.compact` and `Margin.expanded` become a single `margin` (ADR-111). `specs init` scaffolds the block commented out. Dependency and prop analysis, visual manifests, version grading and generated CSS all read members rather than skipping them
 
+- **A slot whose default content holds a text layer or a glyph now says so** (ADR-102). The `slotPrimitives` figma convention is **on unless you turn it off**: `$text`/`$glyph` markers join the slot's `anyOf` wherever it already names a component, and the formatting that primitive content takes is recorded on the slot element. Set `slotPrimitives: false` in `config/conventions/figma.yaml` to stop; `specs init` scaffolds that off-switch commented out
+  - The generated stylesheets carry that formatting, in both the React and custom-element sheets. Every rule is an ordinary declaration, never `!important` — it styles a slot's *unstyled* content, so anything you write for the content you pass in wins by ordinary cascade
+  - On a slot that accepts a component as well as a primitive, only the inheriting properties are emitted — colour and typography. A glyph's fill and dimensions are withheld there, because nothing in the emitted markup distinguishes a component's own root from a primitive fill, and a rule strong enough to reach one would reshape the other. A mixed slot is the one case where the scaffolds still inline the formatting, because these withheld rules are the only ones that could have carried it
+
 ### Changed
 
 - **`specs init` writes every setting with a comment saying what that setting decides**, rather than a comment describing the value you would get by changing it. Three settings are scaffolded on while the schema defaults them off, and the file says which three and why
