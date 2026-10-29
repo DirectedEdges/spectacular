@@ -13,7 +13,7 @@ Rationale: Every consumer (`specs-from-figma`, `specs-cli`, `specs-plugin-2`) re
 
 ### II. No Logic — Types and Schema Only
 This package MUST NOT contain transformation logic, processing algorithms, or runtime behavior beyond:
-- `DEFAULT_SETTINGS` exported from `Settings.ts`, `DEFAULT_PIPELINE` from `Pipeline.ts`, and `DEFAULT_CONVENTIONS` from `Conventions.ts`
+- `DEFAULT_SETTINGS` exported from `Settings.ts` and `DEFAULT_CONVENTIONS` from `Conventions.ts`
 
 All other exports MUST be pure type declarations (`type`, `interface`) or static schema files. No classes, no functions, no async operations.
 
@@ -25,7 +25,7 @@ The exports from `types/index.ts` are the full public API. Every exported type i
 - New types require explicit justification: they MUST represent a genuine, shared concept in the Specs schema — not an internal implementation detail of any one package.
 - Removing or renaming an exported type or a named field within a type is a breaking change and MUST follow semantic versioning.
 - Schema exports (via `exports` in `package.json`) are equally contractual — adding, removing, or restructuring a schema file is a breaking change.
-- The permitted runtime exports are `DEFAULT_SETTINGS`, `DEFAULT_PIPELINE`, and `DEFAULT_CONVENTIONS` — one defaults constant per configuration artifact (ADR-071). Adding a runtime export for anything else requires constitutional amendment.
+- The permitted runtime exports are `DEFAULT_SETTINGS` and `DEFAULT_CONVENTIONS` — one defaults constant per configuration artifact (ADR-071). Adding a runtime export for anything else requires constitutional amendment.
 - **ADRs and spec decisions MUST be justified by the shared contract's own coherence and the needs of all consumers equally. No single downstream package's internal model, class structure, or implementation detail may be cited as a decision driver or rationale. ADRs inform downstream packages; they are not driven by them.**
 
 Rationale: All downstream packages compile against these types. Any change has a multiplied impact across `specs-from-figma`, `specs-cli`, and `specs-plugin-2` simultaneously. Allowing one package's internals to steer the spec contract creates an implicit ownership hierarchy that undermines the shared-language role of this package.

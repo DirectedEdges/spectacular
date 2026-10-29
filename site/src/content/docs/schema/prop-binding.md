@@ -3,8 +3,6 @@ title: "PropBinding"
 description: "Dynamic links between props and element or style properties"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge pro-badge">Pro</span>')</script>
-
 A `PropBinding` creates a dynamic link between a prop and an element or style property. When the bound prop changes value, the linked property updates accordingly.
 
 ```ts

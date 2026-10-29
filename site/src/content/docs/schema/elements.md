@@ -55,7 +55,7 @@ variants:
 
 Each entry is captured from the **first top-level primitive of that kind** in the slot's default content, evaluated per variant. Where a default fill holds two primitives of one kind — a label and a trailing counter — the first supplies that kind's formatting.
 
-**`contentStyles` applies to a primitive fill only.** When the slot is filled with a component instead, that component brings its own formatting — apply `styles` and discard `contentStyles` rather than cascading it onto the instance.
+**`contentStyles` applies to a primitive fill only.** When the slot is filled with a component instead, that component brings its own formatting — apply `styles` and discard `contentStyles` rather than applying it to the instance.
 
 `contentStyles` is meaningful only on a slot element, and its keys should agree with that slot's `anyOf` markers. Both are authoring and generator contracts: the schema cannot relate a prop to an element, so neither is validated.
 
