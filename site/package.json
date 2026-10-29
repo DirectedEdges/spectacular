@@ -3,8 +3,8 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "prebuild": "node scripts/build-releases.mjs && node scripts/build-adrs.mjs",
-    "predev": "node scripts/build-releases.mjs && node scripts/build-adrs.mjs",
+    "prebuild": "node scripts/build-releases.mjs && node scripts/build-adrs.mjs && node scripts/build-specification.mjs",
+    "predev": "node scripts/build-releases.mjs && node scripts/build-adrs.mjs && node scripts/build-specification.mjs",
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
