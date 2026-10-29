@@ -1,9 +1,9 @@
 ---
 title: "slotPrimitives"
-description: "Read a slot's primitive default content as the primitives that slot accepts"
+description: "Read the primitives a slot holds in its default content as the primitives that slot accepts"
 ---
 
-A Figma slot's default content is inspected for primitives. Every primitive kind present as a **top-level child**, in at least one variant, is recorded as a [reserved marker](/schema/props/#primitiveslotcontent) in that slot's `anyOf` — `$text` for a text layer, `$glyph` for a glyph. The primitives themselves are not emitted as anatomy elements; their formatting is captured onto the slot element's [`contentStyles`](/schema/elements/#styles-vs-content-styles), keyed by the same markers.
+A slot's default content is inspected for primitives, and what it holds is recorded two ways: the formatting a primitive fill should take is captured onto the slot element's [`contentStyles`](/schema/elements/#styles-vs-content-styles), and — where the slot already names components it accepts — `$text` and `$glyph` [markers](/schema/props/#primitiveslotcontent) join that list. A library fact: it states that this library expresses composable content the way Figma already allows, with a designer who wants a label that can also hold a Badge authoring a slot with a primitive inside, and a designer who wants a plain string authoring a `TEXT` property instead.
 
 | | |
 |---|---|
@@ -12,58 +12,33 @@ A Figma slot's default content is inspected for primitives. Every primitive kind
 | **Type** | boolean |
 | **Default** | `true` |
 
-A library fact, declared in `config/conventions/figma.yaml`. It states that this library expresses composable content the way Figma already lets it: a designer who wants a label that can also hold a Badge authors a **slot with a primitive inside**, while a designer who wants a plain string authors a **`TEXT` property on a text layer**. Nothing names the prop and nothing annotates it — the two shapes already differ, and the difference is the intent.
-
-That is why this works per component rather than per catalogue. An Alert's `description` is composable because *that* slot has a text layer in it; a Tooltip's `message` is a plain string because it is a `TEXT` prop. Neither needs an entry anywhere.
-
-It sits beside [`slotConstraints`](/settings/slot-constraints/) — same subject, same boolean shape.
-
 ## Example
 
-The reading is on without any declaration. Turn it off by declaring `false`:
-
 ```yaml
-slotPrimitives: false  # Stop reading a slot's primitive default content as what it accepts
+slotPrimitives: false  # Stop reading a slot's default content as the primitives it accepts
 ```
-
-## The rule
-
-| | |
-|---|---|
-| **Which primitives count** | Top-level children of the slot only. A text layer nested inside a composed instance belongs to that instance's component, not to this slot. |
-| **How many** | Any number, of any kinds. Each kind is evaluated independently, so a glyph-plus-label fill makes the slot accept both. |
-| **Across variants** | A kind counts if it appears in at least one variant. |
-| **Which one supplies formatting** | The first top-level primitive of that kind, in child order, evaluated per variant. |
-| **When a marker is written** | Only into an `anyOf` that already names at least one component. `anyOf` is a constraint, so a slot whose detected content is primitives alone gets no `anyOf` at all — `[$text]` would say *only* a text primitive may fill it, which is narrower than the design said. |
-| **What is captured regardless** | `contentStyles`. A primitive-only slot records its primitives' formatting and keeps them out of anatomy even though no marker is written. |
 
 ## Result
 
-**With** the reading off (`false`), a slot holding a glyph and a label is emitted as it was before ADR-102 — components only, with both primitives as their own anatomy elements:
+The example is a Button whose `children` slot holds a glyph and a label in its default content, and which already declares `badge` among the components that slot accepts.
+
+**Without** the reading (`false`) the slot says nothing about primitives:
 
 ```json
 {
   "props": {
-    "children": { "type": "slot" }
-  },
-  "anatomy": [
-    { "key": "children", "type": "slot" },
-    { "key": "buttonIcon", "type": "glyph" },
-    { "key": "buttonLabel", "type": "text" }
-  ]
+    "children": { "type": "slot", "anyOf": ["badge"] }
+  }
 }
 ```
 
-**With** the reading on — the default — the slot states what it accepts, the primitives leave anatomy, and their formatting moves onto the slot element, attributed per kind:
+**With** the reading — the default — the slot states the primitives too, and the formatting for each is recorded on the slot element:
 
 ```json
 {
   "props": {
     "children": { "type": "slot", "anyOf": ["$glyph", "$text", "badge"] }
-  },
-  "anatomy": [
-    { "key": "children", "type": "slot" }
-  ]
+  }
 }
 ```
 
@@ -82,20 +57,35 @@ default:
           fillColor: { $token: "DS Color.Icon.OnPrimary", $type: color }
 ```
 
-Any prop authored as a Figma `TEXT` property is unaffected, declared or not.
+Anatomy is untouched either way: a primitive inside a slot's default content stays the element it always was. Any prop authored as a Figma `TEXT` property is unaffected, declared or not.
 
-## Independent of the default slot
+## Detection rules
 
-Whether a slot accepts primitives and whether it is the component's [default slot](/schema/props/) are separate questions, recorded separately:
+- Only **top-level** children of the slot count. A text layer nested inside a composed instance, or inside a container within the slot, belongs to that structure rather than to this slot and is not read.
+- Each kind is evaluated independently and across variants: a kind counts when it appears in at least one variant, so a glyph-plus-label fill makes the slot accept both.
+- The **first** top-level primitive of a kind supplies that kind's formatting, in child order, evaluated per variant. A fill holding a label and a trailing counter records the label's formatting for `$text`; the counter's is not captured unless it is a component.
+- A marker joins `anyOf` only when the slot **already names at least one component**. `anyOf` is a constraint, so a slot whose only identified content is primitives emits no `anyOf` at all rather than declaring that nothing but a primitive may fill it. Component names come from [`slotConstraints`](/settings/slot-constraints/) — a library that declares none gets `contentStyles` on its slots and no markers anywhere.
+- `contentStyles` is captured whenever primitives are detected, independently of whether any marker is emitted.
+- A slot holding a primitive purely as placeholder scaffolding is read as accepting one. The failure mode is a content set wider than intended rather than a wrong one, and the marker sits in the spec where it can be seen; author such slots without the placeholder, or turn the reading off.
+
+## Default slot
+
+What a slot accepts and whether it is the component's [default slot](/schema/props/) are separate questions, recorded separately:
 
 | Component | Prop | `anyOf` | `defaultSlot` |
 |-----------|------|---------|---------------|
-| Button | `children` | `[$glyph, $text, badge]` | `true` |
-| Alert | `description` | `[$text, link]` | — |
-| Layout | `children` | `[card]` | `true` |
+| Button | `children` | `["$glyph", "$text", "badge"]` | `true` |
+| Alert | `description` | `["$text", "link"]` | — |
+| Layout | `children` | `["card"]` | `true` |
 
-## Two things to know
+## Downstream
 
-**Placeholder slots read as composable.** A slot holding a primitive purely as placeholder scaffolding, with no intent that a primitive ever fill it, gets a marker too. The failure mode is a content set wider than intended, not a wrong one — a consumer permits a fill the design never meant to offer, and the marker is sitting in the spec where you can see it. That is why the reading is on by default: the opposite default under-describes every genuinely composable slot silently, with nothing in the output to point at. Either author such slots without the placeholder, or turn the reading off.
+Generated code treats a slot's content as content, never narrowing it to match the markers: a slot is `React.ReactNode` in React and a projected `<slot>` in Web Components whatever `anyOf` says, because no platform can stop a consumer passing a string. The markers and `contentStyles` describe what the design intends and how primitive content should be formatted — that formatting reaches output through the generated stylesheet, so a consumer's own styles override it by ordinary cascade.
 
-**Two primitives of one kind record only the first.** A default fill holding a label and a trailing counter records the label's formatting for `$text`; the counter's is not captured unless it is a component.
+A slot's recorded default content is example content. It reaches stories, scaffolds and examples; it is never emitted as a component's own fallback.
+
+## See Also
+
+- [slotConstraints](/settings/slot-constraints/) — the neighbouring convention that names the components a slot accepts.
+- [Props](/schema/props/) — `SlotProp`, `anyOf`, and the marker vocabulary.
+- [Elements](/schema/elements/#styles-vs-content-styles) — `contentStyles` and how it differs from an element's own `styles`.

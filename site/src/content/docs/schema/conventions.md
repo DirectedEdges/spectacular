@@ -74,7 +74,7 @@ The shape is deliberately permissive: nothing stops a code platform declaring `i
 | [`images`](/guides/images/) | `object` | — | How the library expresses images. Absent = no image convention |
 | [`slotConstraints`](/guides/slot-constraints/) | `boolean` | `false` | The library authors slot constraints as code-only props |
 | [`inferNumberProps`](/guides/number-inference/) | `boolean` | `false` | The library authors numeric props as Figma `TEXT` props with numeric defaults |
-| [`inferComposableSlots`](/settings/infer-composable-slots/) | `boolean` | `false` | The library authors composable content as a slot holding primitives in its default content |
+| [`slotPrimitives`](/settings/slot-primitives/) | `boolean` | `true` | The library's slots carry the primitives they accept in their default content |
 | [`objectProps`](#objectprops) | `object` | — | The library authors object-prop members as separator-named flat props. Absent = no folding |
 | [`stylesProp`](#stylesprop) | `string` | — | *Vocabulary.* Prop receiving styling no promotion mapped. Absent = unmapped styling is dropped |
 | [`defaultFillWidth`](#defaultfillwidth) | `number` | — | Container width for a fill-width root. Absent = the rendering tool uses its own fallback |
@@ -373,7 +373,7 @@ took the screenshot runner with it, since that read the same script.
 
 ## Resolution
 
-`ResolvedConventions` applies defaults **inside** any declared platform entry: `naming`, `slotConstraints`, `inferNumberProps` and `inferComposableSlots` are guaranteed once an entry exists, and within a declared block so are `scope`, `backgroundImage`, `sourceProps`, and each binding's concept prop names. A platform's `stylesProp` is folded into each declared primitive, so a consumer reads one level rather than two.
+`ResolvedConventions` applies defaults **inside** any declared platform entry: `naming`, `slotConstraints`, `inferNumberProps` and `slotPrimitives` are guaranteed once an entry exists, and within a declared block so are `scope`, `backgroundImage`, `sourceProps`, and each binding's concept prop names. A platform's `stylesProp` is folded into each declared primitive, so a consumer reads one level rather than two.
 
 A resolver produces a complete entry for any platform it is asked about, **declared or not** — so a consumer reading `figma` gets `naming: NONE` whether or not a `figma.yaml` exists.
 
