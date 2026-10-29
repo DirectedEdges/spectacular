@@ -87,8 +87,11 @@ changes nothing about ADR-099.
 - **Per-variant formatting must not fork from how variants already work**:
   variant-specific element values live in `default.elements` and
   `variants[].elements`, and this must be addressable there.
-- **A changed reading of existing data is opt-in.** Emitting a slot differently
-  than today changes output for libraries that authored nothing new.
+- **A changed reading of existing data needs an off-switch, and the default goes to
+  the accurate description.** Emitting a slot differently than today changes output
+  for libraries that authored nothing new — so a library must be able to decline the
+  reading. Which way it defaults is settled by which failure is visible, not by which
+  is smaller.
 - **Absence must stay backward compatible.** Every existing spec must remain valid
   and keep its meaning.
 - **Degrade only with data the spec carries.** Where a fill is a component, the
@@ -143,7 +146,7 @@ records its own answer.
   keys no consumer could resolve against an arbitrary fill.
 - A slot authored with primitive default content purely as placeholder
   scaffolding, never meant to take a primitive fill, reads as accepting one. This
-  is why Decision 2 gates the whole reading. The failure mode is a content set
+  is why Decision 2 keeps an off-switch for the whole reading. The failure mode is a content set
   wider than intended, not a wrong one.
 - The answer depends on default content a designer may change for unrelated
   reasons — deleting the placeholder label narrows what the slot accepts.
@@ -194,44 +197,83 @@ Mode, which not every workspace has.
 
 ---
 
-### Decision 2 — Whether the reading is gated, and where that gate lives
+### Decision 2 — Whether the reading is gated, where that gate lives, and which way it defaults
 
-#### Option A: `inferComposableSlots` on `PlatformConventions` *(Selected)*
+#### Option A: `slotPrimitives` on `PlatformConventions`, defaulting to `true` *(Selected)*
 
-Add `inferComposableSlots?: boolean` to `PlatformConventions`, authored in
-`config/conventions/figma.yaml`, optional and defaulting to `false`, with a
-required counterpart on `ResolvedPlatformConventions` — mirroring
-`inferNumberProps` exactly.
+Add `slotPrimitives?: boolean` to `PlatformConventions`, authored in
+`config/conventions/figma.yaml`, optional and **defaulting to `true`**, with a
+required counterpart on `ResolvedPlatformConventions` — the resolved-shape
+treatment `inferNumberProps` and `slotConstraints` already get.
+
+The gate exists so a library can turn the reading off. It defaults on.
+
+**Why it is named `slotPrimitives`**: it sits beside `slotConstraints` — same
+subject (what a slot permits), same boolean shape — and it matches the engine's
+`SlotPrimitives` collaborator, so one word covers the convention and the code that
+applies it. The alternative considered and rejected was `inferComposableSlots`:
+"composable" said nothing specific, because every slot is composable. What this
+reading is actually about is the *primitives* a slot carries.
+
+**Why it defaults to `true`**: a slot containing a text layer genuinely does accept
+text content on every code platform — React's `ReactNode`, a Web Component's
+`<slot>`, SwiftUI's `@ViewBuilder`. Defaulting the reading off therefore defaults
+to describing those slots *inaccurately*, which is not a neutral starting position.
+
+The failure modes are asymmetric, and that asymmetry decides it:
+
+| Default | What goes wrong | Who sees it |
+|---|---|---|
+| `true` | A leftover placeholder primitive gains a marker the design never intended | Visible — the marker is in the spec, and the remedy is removing the placeholder or declaring `false` |
+| `false` | Every genuinely composable slot is silently under-described | Nobody — there is no output to point at, so the missing content set is undetectable from the spec |
+
+A wrong-but-visible marker is correctable. A missing-and-invisible content set is
+not, because nothing in the artifact says what is absent.
 
 **Pros**:
-- `inferNumberProps` is the precedent and the direct analogue: it says "this
-  platform authors numeric props as `TEXT` props whose values parse as numbers."
-  This says "this platform authors composable content as a slot with primitives in
-  it." Same kind of claim, same risk profile, same opt-in treatment.
 - Correctly a `PlatformConventions` member under ADR-073 Decision 4: what it names
-  — a slot primitive's default content — exists only in a platform's artifacts, so
+  — a slot's primitive default content — exists only in a platform's artifacts, so
   a reader holding only the spec cannot apply it.
-- Default `false` keeps the change opt-in, so Decision 1's placeholder trade-off
-  cannot surprise anyone who did not ask for the reading.
 - The required-on-resolved shape means a consumer never decides what an absent
   value meant, matching `inferNumberProps` and `slotConstraints`.
+- Defaulting on means the common, correct case needs no declaration, and the
+  declaration that does exist states something unusual about the library.
 
 **Cons / Trade-offs**:
-- A third `infer*`-style member on an already-wide type. The alternative is less
-  control over a reading that can be wrong.
+- It changes generated output for existing libraries that declared nothing.
+  Accepted: the change is from an inaccurate description to an accurate one, and
+  Decision 3's narrowed `anyOf` rule bounds it — a slot whose detected content is
+  primitives alone emits no `anyOf` at all, so no slot acquires a *constraint* it
+  did not have.
+- A placeholder-only slot reads as composable. Accepted on the asymmetry above.
 
 ---
 
-#### Option B: No gate — always read primitive default content this way
+#### Option B: The same member, defaulting to `false` (opt-in)
 
-**Rejected because**: it changes generated output for every existing library with
-no declaration. Any slot whose default content happens to include a text layer —
-placeholder scaffolding included — silently gains a wider content set on the next
-generation. `inferNumberProps` exists as an opt-in for exactly this reason.
+Gate the reading and require a library to ask for it.
+
+**Rejected because**: the default would be the inaccurate description. A slot
+holding a text layer accepts text on every code platform, so "off" is not a
+conservative starting point — it is a wrong one, chosen for every library that
+never heard of the setting. It also puts the undetectable failure on the default
+path: an opted-out library's specs look complete and are not, where an opted-in
+library's over-wide marker is sitting in the file to be found. *(This option was
+selected in an earlier revision of this ADR, on the grounds that a changed reading
+of existing data should be opt-in. The asymmetry of the two failure modes is what
+reverses it.)*
 
 ---
 
-#### Option C: A `Settings` member
+#### Option C: No gate at all
+
+**Rejected because**: a library really may author placeholder primitives
+systematically, and there has to be a way to say so. The cost of the member is one
+boolean; the cost of having no off-switch is a library with no recourse.
+
+---
+
+#### Option D: A `Settings` member
 
 **Rejected because**: `Settings` holds run choices — a different value produces
 different output from the same library. This is a fact *about the library*: either
@@ -252,12 +294,42 @@ existing primitive vocabulary (Decision 4):
 # Takes a label string, or a Badge, or an Icon
 anyOf: [$text, badge, icon]
 
-# Text-only — a Badge whose children are a string
-anyOf: [$text]
-
 # A glyph and a label, or a composed Badge
 anyOf: [$glyph, $text, badge]
 ```
+
+**A marker joins an `anyOf` that already names at least one component; it never
+constitutes one.** `anyOf` is a *constraint* — the closed list of what may fill
+this slot — so a list is only ever written where the design constrained the slot.
+A slot whose detected default content is primitives alone emits **no `anyOf` at
+all**, because `anyOf: [$text]` would say "only a text primitive may fill this",
+which the design did not say and which is narrower than the truth. Absence keeps
+the meaning it has always had: unconstrained.
+
+```yaml
+# Default content: [ text "Save" ], and the slot is otherwise unconstrained
+# → no anyOf. The slot is not narrowed to text; it was never narrowed at all.
+children:
+  type: slot
+
+# Default content: [ glyph, text ], and the slot's constraint already names Badge
+# → the markers join that list
+children:
+  type: slot
+  anyOf: [$glyph, $text, badge]
+```
+
+The rule follows from what `anyOf` means rather than from what is convenient to
+emit: a marker widens an existing constraint, and widening nothing is not a
+narrowing of everything.
+
+**`contentStyles` capture is unaffected by this rule.** A primitive-only slot
+still records its primitives' formatting on the slot element's `contentStyles`,
+and those primitives still leave anatomy. Formatting and constraint are separate
+subjects: what a fill is *styled* with is recorded whenever a primitive was found,
+whether or not anything constrains what may fill the slot. So a Button whose label
+slot holds a text layer and nothing else carries `contentStyles.$text` with no
+`anyOf` beside it, and that is the expected shape rather than an inconsistency.
 
 **Pros**:
 - One list answers one question. "What may fill this slot" has a single home, and
@@ -270,14 +342,16 @@ anyOf: [$glyph, $text, badge]
   otherwise exist. A reserved bare word like `string` could clash with a component
   named `String`; `$text` cannot clash with any component name, since the safe key
   grammar (ADR-066) does not admit a leading `$`.
-- `anyOf`'s existing absence semantics survive untouched: absent still means "any
-  component, no primitive", which is what every published spec means today.
-  Nothing needs a new default.
+- `anyOf` needs no new default and no new type. Absent still means what it has
+  always meant — *unconstrained*, nothing narrowed — and every published spec keeps
+  its meaning. The one thing absence can no longer be read as is "no primitive",
+  since a primitive-only slot emits no list; a reader asking what primitive content
+  a slot takes reads the slot element's `contentStyles` keys.
 - It extends by adding a vocabulary member, not a type member. A future `$image`
   is one more reserved value, with no change to `SlotProp`'s shape.
-- The narrowing composes naturally. `[$text]` is text-only, `[$text, badge]` is
-  text-or-Badge, and `[badge]` is Badge-only — three distinct statements that a
-  boolean plus a list cannot all make.
+- A constraint and a widening of it compose in one list. `[badge]` is Badge-only,
+  `[$text, badge]` is text-or-Badge, and an absent `anyOf` is unconstrained —
+  three distinct statements that a boolean plus a list cannot all make.
 
 **Cons / Trade-offs**:
 - `anyOf`'s element type stays `string[]` while two populations of string live in
@@ -316,9 +390,12 @@ objection, and with it the reason to keep two members.)*
 `acceptsText?: boolean`, `acceptsGlyph?: boolean`.
 
 **Rejected because**: each new primitive is another member on `SlotProp`, with no
-single place to read what a slot takes, and the text-only slot stays
-inexpressible — an absent `anyOf` already means "any component", so a boolean
-cannot narrow components away while admitting a primitive.
+single place to read what a slot takes. A consumer enumerating permitted content
+would have to read `anyOf` plus one boolean per primitive kind, and each future
+kind widens `SlotProp` rather than the vocabulary. The booleans also cannot
+express the widening relationship that makes the marker approach coherent: a
+marker *joins* a constraint, where a sibling boolean sits outside it with no
+stated interaction.
 
 ---
 
@@ -628,26 +705,34 @@ model. It would also read as permanently scoped to slots.
 
 ## Decision
 
-### `PlatformConventions` gains `inferComposableSlots`
+### `PlatformConventions` gains `slotPrimitives`
 
-`PlatformConventions` (`types/Conventions.ts`) gains `inferComposableSlots?:
-boolean`, optional and defaulting to `false`, with a required counterpart on
-`ResolvedPlatformConventions` — mirroring `inferNumberProps` (Decision 2).
-Authored in `config/conventions/figma.yaml`.
+`PlatformConventions` (`types/Conventions.ts`) gains `slotPrimitives?: boolean`,
+optional and **defaulting to `true`**, with a required counterpart on
+`ResolvedPlatformConventions` (Decision 2). Authored in
+`config/conventions/figma.yaml`.
 
-When true, a slot's default content is inspected per Decision 1. When false or
-absent, slots are emitted exactly as they are today.
+True or absent, a slot's default content is inspected per Decision 1. Declared
+`false`, slots are emitted as they were before this ADR.
 
-`DEFAULT_CONVENTIONS` gains nothing: it carries no members at all, so the `false`
+It is named for its subject — beside `slotConstraints`, same subject and same
+boolean shape — and for the engine's `SlotPrimitives` collaborator.
+
+The default is `true` because a slot containing a text layer does accept text
+content on every code platform, so a `false` default would default to describing
+those slots inaccurately. The failure modes are asymmetric: on, a leftover
+placeholder gains a marker that is visible in the spec and correctable; off, slots
+are silently under-described with nothing in the output to point at.
+
+`DEFAULT_CONVENTIONS` gains nothing: it carries no members at all, so the `true`
 default is supplied by whoever resolves a platform, exactly as `inferNumberProps`'
-is.
+`false` is.
 
 ### `anyOf` carries reserved primitive markers
 
 `SlotProp.anyOf` keeps its type, `string[]`, and its absence semantics — absent
-still means "any component, no primitive" (Decision 3). It gains a reserved
-vocabulary of `$`-prefixed values (Decisions 4 and 5), exported as a documented
-union:
+still means unconstrained (Decision 3). It gains a reserved vocabulary of
+`$`-prefixed values (Decisions 4 and 5), exported as a documented union:
 
 ```yaml
 # New exported union
@@ -670,7 +755,21 @@ props:
   description:
     type: slot
     anyOf: [$text, link]       # accepts a primitive, and is not the default slot
+  label:
+    type: slot                 # primitives only in its default content, nothing
+                               # constraining it → no anyOf at all
 ```
+
+**A marker is recorded only into an `anyOf` that already names at least one
+component.** A slot whose detected default content is primitives alone emits no
+`anyOf`, because `anyOf` is a constraint: `anyOf: [$text]` would state that only a
+text primitive may fill the slot, which is narrower than anything the design said.
+Markers widen an existing constraint; they never create one.
+
+`contentStyles` capture is unaffected by that rule. A primitive-only slot still
+records its primitives' formatting on the slot element's `contentStyles` and still
+keeps those primitives out of anatomy — formatting is about how a fill is styled,
+not about what may fill the slot.
 
 A library can never author a component whose key shadows a marker: the safe key
 grammar (ADR-066) does not admit a leading `$`.
@@ -758,8 +857,8 @@ replacement for it.
 | `Props.ts` | Doc-only: `anyOf` description states that `$`-prefixed reserved values name primitive kinds alongside component names | PATCH |
 | `Styles.ts` | Added `TextContentStyles`, `GlyphContentStyles`, and `ContentStyles` exported types | MINOR |
 | `Element.ts` | Added `contentStyles?: ContentStyles` to `Element` | MINOR |
-| `Conventions.ts` | Added `inferComposableSlots?: boolean` to `PlatformConventions` | MINOR |
-| `Conventions.ts` | Added required `inferComposableSlots: boolean` to `ResolvedPlatformConventions` | MINOR |
+| `Conventions.ts` | Added `slotPrimitives?: boolean` to `PlatformConventions` | MINOR |
+| `Conventions.ts` | Added required `slotPrimitives: boolean` to `ResolvedPlatformConventions` | MINOR |
 | `index.ts` | Exported `PrimitiveSlotContent`, `ContentStyles`, `TextContentStyles`, `GlyphContentStyles` | MINOR |
 
 ### Schema changes (`schema/`)
@@ -771,7 +870,7 @@ replacement for it.
 | `component.schema.json` | Added `contentStyles` property to `Element`, `$ref`-ing `ContentStyles` | MINOR |
 | `component.schema.json` | Added `PrimitiveSlotContent` definition (string enum: `$text`, `$glyph`) | MINOR |
 | `component.schema.json` | Doc-only: `SlotProp.anyOf` description states the reserved marker vocabulary | PATCH |
-| `conventions.schema.json` | Added `inferComposableSlots` boolean (`default: false`) to `PlatformConventions` | MINOR |
+| `conventions.schema.json` | Added `slotPrimitives` boolean (`default: true`) to `PlatformConventions` | MINOR |
 
 No `ResolvedPlatformConventions` counterpart is added to `schema/`, because the
 schema defines no `Resolved*` shape at all — it validates authored documents, and
@@ -792,11 +891,13 @@ referenced, and documented on `anyOf`.
 - `typography` is listed once, as the composite. Its members — `fontSize`,
   `fontFamily`, `lineHeight`, `letterSpacing`, `textCase`, `textDecoration` and
   the rest — are not enumerated, because `Typography` already holds them.
-- A slot's `anyOf` markers and its element's `contentStyles` keys should agree, but
-  the schema does not enforce the correspondence — they live on different objects
-  (a prop and an element), which JSON Schema cannot relate. An
+- Where a slot has an `anyOf`, its markers and the element's `contentStyles` keys
+  should agree. The schema does not enforce the correspondence — they live on
+  different objects (a prop and an element), which JSON Schema cannot relate. An
   authoring/generator contract, consistent with ADR-099's handling of the
-  at-most-one-`defaultSlot` invariant.
+  at-most-one-`defaultSlot` invariant. The correspondence runs one way only:
+  `contentStyles` keys with no `anyOf` beside them are the expected shape for a
+  primitive-only slot, not a disagreement.
 - **The fill value itself is not re-decided here.** A primitive filling a slot is a
   slot fill like any other, recorded where slot fills already are —
   `SlotProp.default` for the authoring default, `Element.propConfigurations` for an
@@ -825,9 +926,9 @@ referenced, and documented on `anyOf`.
 - **Parity check**: `Element.contentStyles` maps to
   `#/definitions/Element/properties/contentStyles`, which `$ref`s `ContentStyles`
   via the stub — optional on both sides, absent from `required[]`.
-- **Parity check**: `PlatformConventions.inferComposableSlots` (optional, defaults
-  to false) maps to the matching property with `default: false`.
-- **Justified asymmetry — resolved shapes**: `ResolvedPlatformConventions.inferComposableSlots`
+- **Parity check**: `PlatformConventions.slotPrimitives` (optional, defaults
+  to true) maps to the matching property with `default: true`.
+- **Justified asymmetry — resolved shapes**: `ResolvedPlatformConventions.slotPrimitives`
   is required in `types/` and has no schema counterpart, because `schema/` defines
   no `Resolved*` shape. `inferNumberProps` and `slotConstraints` sit the same way.
 - **Justified asymmetry — `anyOf` items**: the type stays `string[]` and the schema
@@ -842,9 +943,9 @@ referenced, and documented on `anyOf`.
 
 | Consumer | Impact | Action required |
 |----------|--------|-----------------|
-| `specs-from-figma` | Reads `inferComposableSlots` and, when set, inspects each slot's default content per variant: every top-level primitive kind present is recorded as a `$`-marker in `anyOf`, and the first top-level primitive of each kind supplies that kind's entry in the slot element's `contentStyles`. Those primitives are no longer emitted as anatomy elements. | Engine work to apply the reading and the capture relocation this ADR decides. |
-| `figma-from-specs` | Reads `anyOf` markers to decide whether a fill is primitive or component content, and on a primitive fill rebuilds the layer inside the slot from the matching `contentStyles` entry for the variant being rendered. Applies `styles` but not `contentStyles` to a component fill. | Engine work to render a primitive-accepting slot in both fill modes. |
-| `specs-cli` | Loads and validates `inferComposableSlots` from `config/conventions/figma.yaml`, and documents it in the `init` template. The `react` and `webcomponents` transforms emit a primitive-accepting slot as content rather than a scalar prop — `children: ReactNode`, or a named `<slot>` — and emit `contentStyles` as the rule formatting slotted content, per primitive, applied to primitive fills only. | Config loader, template, and transform work. |
+| `specs-from-figma` | Reads `slotPrimitives` — on unless declared `false` — and inspects each slot's default content per variant. Every top-level primitive kind present is recorded as a `$`-marker in `anyOf`, **but only where that `anyOf` already names at least one component**; a slot whose detected content is primitives alone emits no `anyOf`. The first top-level primitive of each kind supplies that kind's entry in the slot element's `contentStyles`, which is captured either way. Those primitives are no longer emitted as anatomy elements. | Engine work to apply the reading, the `anyOf` condition, and the capture relocation this ADR decides. |
+| `figma-from-specs` | On a primitive fill, rebuilds the layer inside the slot from the matching `contentStyles` entry for the variant being rendered; applies `styles` but not `contentStyles` to a component fill. Which kinds a slot takes is read from `contentStyles` keys as well as `anyOf` markers, since a primitive-only slot carries the keys and no `anyOf`. | Engine work to render a primitive-accepting slot in both fill modes. |
+| `specs-cli` | Loads and validates `slotPrimitives` from `config/conventions/figma.yaml`, and documents it in the `init` template. The `react` and `webcomponents` transforms emit a primitive-accepting slot as content rather than a scalar prop — `children: ReactNode`, or a named `<slot>` — and emit `contentStyles` as the rule formatting slotted content, per primitive, applied to primitive fills only. | Config loader, template, and transform work. |
 | `specs-plugin-2` | None at this ADR's scope. | Recompiles against the new optional members. |
 
 Per-package adoption analysis: `specs-local-workspace/adr/102/plan.md` (maintained outside this repo).
@@ -859,26 +960,41 @@ active release branch (`release/next`) this ADR merges into.
 **Change class**: `MINOR`.
 
 **Justification**: The additions are two optional members (`contentStyles` on
-`Element`, `inferComposableSlots` on `PlatformConventions`) and four new exported
+`Element`, `slotPrimitives` on `PlatformConventions`) and four new exported
 types (`PrimitiveSlotContent`, `ContentStyles`, `TextContentStyles`,
 `GlyphContentStyles`), with no removal, rename, or narrowing of any existing field
 — additive-only per Constitution Additional Constraints & Standards. `anyOf` keeps
 its type and its absence semantics; it gains permitted values, which widens what
 validates rather than narrowing it.
 
-The required `inferComposableSlots` on `ResolvedPlatformConventions` is a new
+The required `slotPrimitives` on `ResolvedPlatformConventions` is a new
 required member on a resolved shape, MAJOR-shaped in isolation. It is MINOR here on
 the same grounds `inferNumberProps` and `slotConstraints` were: that shape is
 produced by resolution, never authored, and resolution supplies the default — so no
 authored document becomes invalid and no consumer loses a field it had.
 
-That a slot's default primitives stop being emitted as anatomy elements changes
-generated output, but only for a library that sets `inferComposableSlots: true`. The
-opt-in default of `false` is what keeps this MINOR.
+`slotPrimitives` defaults to `true`, so a library that declares nothing does see
+changed generated output: its slots gain markers, and their default primitives stop
+being emitted as anatomy elements. **That is a behavioural change in the consumers,
+not a compatibility break in this contract**, and the distinction is what keeps
+this MINOR. On the schema's own terms nothing is removed, renamed, or narrowed; no
+authored document that validates today stops validating; and no consumer loses a
+field it had. The output change is carried by the engine's and the CLI's own
+changelogs, where a reader looks for it.
 
-`accepts` and `SlotContentKind`, from an earlier revision of this ADR, are removed
-rather than deprecated. They were never published — this ADR lands in the same
-unreleased `0.35.0` that introduced them — so no released version carries them.
+Decision 2's default is also not a change *to* a published default. `slotPrimitives`
+is introduced by this ADR and has never shipped, so `true` is its first and only
+released value — there is no `false → true` migration for anyone to perform.
+
+Two names from earlier revisions of this ADR are removed rather than deprecated,
+on the same grounds: none was ever published, because this ADR and the members it
+introduces land in the same unreleased version.
+
+- `accepts` and `SlotContentKind` — the parallel content-kind member Decision 3
+  Option B describes, dropped once the sigil removed the reason for it.
+- `inferComposableSlots` — the first name for `slotPrimitives`, renamed outright
+  rather than aliased (Decision 2). No released version carries it, so nothing
+  depends on the old spelling.
 
 ---
 
@@ -909,12 +1025,25 @@ unreleased `0.35.0` that introduced them — so no released version carries them
   kinds or neither.
 - Where a default fill holds two primitives of one kind, the first supplies that
   kind's formatting. The second's styling is not recorded unless it is a component.
-- A library opts in per platform via `inferComposableSlots`, defaulting to `false`.
-  A library that declares nothing gets byte-identical output.
-- A library that opts in and has placeholder-only primitive slots will see those
-  slots gain markers. The failure mode is a content set wider than intended, not a
-  wrong one; the remedy is authoring the slot without the placeholder, or leaving the
-  reading off.
+- The reading is on by default, per platform, and `slotPrimitives: false` turns it
+  off. A library that declares nothing gets the reading, because a slot holding a
+  text layer accepts text content on every code platform and describing it any
+  other way is inaccurate.
+- A library that declares nothing therefore sees changed output on its next
+  generation: composable slots gain markers, and their default primitives leave
+  anatomy. The change is from an inaccurate description to an accurate one.
+- A placeholder-only primitive slot gains a marker it did not want. The failure
+  mode is a content set wider than intended, not a wrong one, and the marker is
+  visible in the spec; the remedy is authoring the slot without the placeholder, or
+  declaring `slotPrimitives: false`. The opposite default would have made the
+  failure silent instead — under-described slots with nothing in the output to
+  point at — which is why the asymmetry decided the default rather than caution did.
+- A marker never creates an `anyOf`. A slot whose detected content is primitives
+  alone emits no `anyOf`, so no slot acquires a constraint the design did not state;
+  an absent `anyOf` stays unconstrained, as it always was.
+- `contentStyles` is captured whether or not an `anyOf` is written. A primitive-only
+  slot records its primitives' formatting and keeps them out of anatomy, because how
+  a fill is styled and what may fill the slot are separate subjects.
 - Anatomy stays honest. A composable slot contributes one anatomy element — the slot
   — and nothing in anatomy disappears when the slot takes a component.
 - Per-variant formatting rides the mechanism every other per-variant element value
@@ -923,13 +1052,15 @@ unreleased `0.35.0` that introduced them — so no released version carries them
   `styles` is what makes discarding it expressible.
 - Two style blocks now exist on `Element`, of different types. A reader resolving a
   property must know which it came from.
-- A spec's `anyOf` markers and its `contentStyles` keys should agree; the schema
-  cannot relate a prop to an element, so that correspondence is an
-  authoring/generator contract.
+- Where a slot has an `anyOf`, its markers and its `contentStyles` keys should
+  agree; the schema cannot relate a prop to an element, so that correspondence is an
+  authoring/generator contract. `contentStyles` without an `anyOf` is the
+  primitive-only slot, not a mismatch.
 - **Follow-up implementation work in `specs-from-figma`**: read
-  `inferComposableSlots`, inspect slot default content per variant, record markers in
-  `anyOf`, capture first-per-kind formatting into `contentStyles`, and stop emitting
-  those primitives as anatomy elements.
+  `slotPrimitives`, inspect slot default content per variant, record markers into an
+  `anyOf` that already names a component (and write none where it would not),
+  capture first-per-kind formatting into `contentStyles` regardless, and stop
+  emitting those primitives as anatomy elements.
 - **Follow-up implementation work in `figma-from-specs`**: render a
   primitive-accepting slot in both fill modes, rebuilding each primitive from its
   `contentStyles` entry and ignoring `contentStyles` on a component fill.
