@@ -3,8 +3,6 @@ title: "keys"
 description: "List the Figma layer and property names a formatted key cannot reconstruct, organized as a per-component checklist"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge experimental-badge">Experimental</span>')</script>
-
 Reads every component's `api.yaml` and produces `analysis/keys.yaml`: every Figma layer and property name that falls outside the [safe key grammar](/guides/key-formatting/), grouped by component so it reads as a checklist, then by cause and by frequency.
 
 ## Requires a declared convention

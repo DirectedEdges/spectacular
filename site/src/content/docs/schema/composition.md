@@ -3,9 +3,6 @@ title: "Composition"
 description: "A named, authored unit of composed content"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge pro-badge">Pro</span>')</script>
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge experimental-badge">Experimental</span>')</script>
-
 A `Composition` is a named, authored unit of composed content. The top-level [`anatomy`](/schema/anatomy/) + [`elements`](/schema/elements/) + [`layout`](/schema/layout/) triplet **is** the primary content — there is no wrapper and no reserved `main` key. An optional `slotContent` map bundles named slot fills alongside that primary content for authoring convenience.
 
 ```ts

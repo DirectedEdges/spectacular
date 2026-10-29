@@ -7,7 +7,7 @@ description: "How component properties accumulate across variant configurations"
 
 Variant layering is the schema model that describes how component properties accumulate across multiple variant configurations. This model enables a succinct, lossless representation of component variants by eliminating redundant data while preserving the complete specification of every valid variant combination.
 
-The layering model is analogous to CSS cascading rules: each variant contributes only the properties that change at that configuration level, and the final rendered state is computed by merging all matching variant layers in sequence.
+The model is a sparse differential patch: only the differences are stored. The default variant carries the complete baseline, each entry in `variants` carries only the properties that change at its configuration, and the resolved state is the baseline with every matching variant's deltas applied in declaration order. The same configuration always resolves to the same values.
 
 This model is active when `spec.details` is set to `'LAYERED'` (the default). When set to `'FULL'`, every variant contains its complete resolved state with no layering.
 
@@ -38,7 +38,7 @@ A non-default variant **matches** a target configuration if:
 - Every prop in the variant's configuration is present in the target configuration
 - The values match exactly
 
-For a target configuration with multiple props, multiple variants may match. All matching variants contribute their data in order of specificity (variants with fewer props before variants with more props).
+For a target configuration with multiple props, multiple variants may match. All matching variants contribute their data in declaration order, and `variants` lists variants with fewer props before variants with more. Nothing is scored or weighed — position in the array is the whole of the order.
 
 ### Example: Alert Component
 
@@ -297,7 +297,7 @@ variants:
 
 The inline `Typography` object replaces the text style token reference. The consumer must resolve the inline properties, not the token.
 
-**Note**: Unlike CSS, where setting `font-size` on an element that inherits `font-family` from a parent is additive, variant layering is **replacement-based**. When a variant specifies `typography`, the entire prior `typography` value (whether token or object) is replaced. No runtime style resolution is performed.
+**Note**: Variant layering is **replacement-based**, not field-merging. When a variant specifies `typography`, the entire prior `typography` value — token reference or inline object — is replaced, and no property survives from the value beneath it. No runtime style resolution is performed.
 
 **Layering rule**: Typography replacement is **property-level**. Token references and inline objects do not merge — the later variant's value completely replaces the earlier value.
 

@@ -8,7 +8,7 @@
 
 | Package | Path | Description |
 |---------|------|-------------|
-| `@directededges/specs-schema` | `packages/schema/` | TypeScript types and JSON schema definitions for component specifications. Exports are type-only except for `DEFAULT_CONVENTIONS`, `DEFAULT_SETTINGS`, and `DEFAULT_PIPELINE`. |
+| `@directededges/specs-schema` | `packages/schema/` | TypeScript types and JSON schema definitions for component specifications. Exports are type-only except for `DEFAULT_CONVENTIONS` and `DEFAULT_SETTINGS`. |
 | `@directededges/specs-cli` | `packages/cli/` | CLI for design system operations: generate, scan, and fetch component specs from the Figma REST API. |
 
 ## Dependency Flow

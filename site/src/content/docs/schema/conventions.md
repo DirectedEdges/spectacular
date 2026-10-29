@@ -377,7 +377,7 @@ took the screenshot runner with it, since that read the same script.
 
 A resolver produces a complete entry for any platform it is asked about, **declared or not** — so a consumer reading `figma` gets `naming: NONE` whether or not a `figma.yaml` exists.
 
-What no default can supply is a convention *block*: `glyphs`, `subcomponents`, `images`, `specs.slots`. Their absence is a statement about the library, and inventing one would fabricate a fact nobody declared. `DEFAULT_CONVENTIONS` is an empty object for the same reason a map has no fixed key to populate — not because the defaults went away.
+What no default can supply is a convention *block*: `glyphs`, `subcomponents`, `images`, `specs.slots`. A defaulted block would assert something about a library nobody has read — declare `glyphs` with a pattern the library doesn't use and no component matches it, so every icon arrives as an ordinary element. That is wrong output which still validates, and nothing in the run can tell it apart from a library that genuinely has no glyphs. `DEFAULT_CONVENTIONS` is an empty object for the same reason a map has no fixed key to populate — not because the defaults went away.
 
 `specs` needs no resolution step: no member of it takes a default, so the authored shape is already the resolved one.
 

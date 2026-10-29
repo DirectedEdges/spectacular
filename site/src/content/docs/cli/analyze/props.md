@@ -3,8 +3,6 @@ title: "props"
 description: "Emit a property inventory and cross-library aggregate for governance and analysis"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge experimental-badge">Experimental</span>')</script>
-
 Reads every component's `api.yaml` and produces `analysis/props.yaml`: a cross-library aggregate covering prop name frequency, enum value discordance, boolean naming patterns, API surface per component, and a slot inventory.
 
 ## Use When
