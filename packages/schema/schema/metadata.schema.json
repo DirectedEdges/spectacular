@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://spectacular.systems/schema/0.39.0/metadata.schema.json",
   "title": "Specs Run Metadata Schema",
   "description": "Facts about the generation run that produced a set of component specs — identical for every component in that run, and carrying no per-component data. (ADR-089)",
   "$ref": "#/definitions/RunMetadata",

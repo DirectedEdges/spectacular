@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://spectacular.systems/schema/0.39.0/composition-concern.schema.json",
   "title": "Specs Composition Concern Document Schema",
   "description": "One concern of a composition, as written by a run with splitConcerns. Each concern has its own shape, requiring what it carries and permitting nothing else. Component-level definitions are referenced from component.schema.json rather than restated. (ADR-109)",
   "oneOf": [

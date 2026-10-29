@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://specs.directededges.com/conventions.schema.json",
+  "$id": "https://spectacular.systems/schema/0.39.0/conventions.schema.json",
   "title": "Specs Library Conventions",
   "description": "Facts about the libraries a spec was generated from and is generated for, keyed by platform. Every consumer reading the same libraries declares the same values; differing values produce incorrect output, not merely different output.",
   "definitions": {
