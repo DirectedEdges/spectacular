@@ -2,7 +2,7 @@
 
 **Branch**: `102-default-text-slots`
 **Created**: 2026-10-06
-**Status**: DRAFT
+**Status**: ACCEPTED
 **Summary**: Reserved `$text` and `$glyph` markers in `anyOf`, with `Element.contentStyles` formatting each primitive fill per variant.
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
