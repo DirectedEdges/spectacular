@@ -44,6 +44,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PropConfigurationValue` — accepts a member-keyed `ObjectPropValue` under an object-prop key (ADR-111)
 - `InstanceExample.propConfigurations` — accepts `ObjectPropValue` for object props (ADR-111)
 - `platforms.<platform>.objectProps` — opt-in folding of separator-named flat props into object props (ADR-111)
+- `Scalar` — a string, number or boolean value. Excludes `null`, which means *unset* (ADR-080) wherever it appears beside a scalar
+- `ComponentName` — the name of a component or component set, as written in this spec's `format.keys`
+- `LayoutBranch` — a parent layout node, element name as key and ordered child `LayoutNode`s as value. `LayoutNode` is now written as `string | LayoutBranch`, the same structural type it already was
+- `SlotContentMap` — named `SlotContent` entries, keyed by a name of letters, digits, underscore or hyphen
+- `ElementRole` — a semantic behavior role concept, or a non-empty list of them
+- `InstanceExampleConfigurationValue` — the value of one prop in an `InstanceExample`; a deliberate subset of `PropConfigurationValue` with no `PropBinding` and no `ImageBinding`
+- `AnatomyElementExtensions` and `FigmaAnatomyElementExtension` are now exported from the package root. Both already existed as types; only the export is new
+
+These six types name shapes TypeScript carried only inline. Every one of them is new. No existing type was renamed, and no existing declaration changed its structural type.
+
+Their JSON Schema counterparts are named definitions arriving separately; until that lands, these six are the type side of a pairing whose schema side is still inline. Parity closes when both are in (`CONSTITUTION.md` §I, `SPECIFICATION.md` DSPEC-22).
 
 ### Changed
 

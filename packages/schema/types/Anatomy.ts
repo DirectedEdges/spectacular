@@ -107,6 +107,16 @@ export interface FigmaAnatomyElementExtension {
 export type RoleConceptName = string;
 
 /**
+ * A semantic behavior role concept, or a non-empty list of them.
+ *
+ * The named union behind `AnatomyElement.role` and
+ * `FigmaAnatomyElementExtension.childRole`. The list form is meaningful only on
+ * an element of type `instance` — see `AnatomyElement.role`.
+ * @since 0.39.0
+ */
+export type ElementRole = RoleConceptName | RoleConceptName[];
+
+/**
  * Behavior invoked when an element is activated (ADR-087).
  *
  * An open string, like `RoleConceptName`. The recognized vocabulary is published
