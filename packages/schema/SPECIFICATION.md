@@ -165,6 +165,16 @@ An `ObjectProp` member name MUST NOT begin with `$` (schema: `component.schema.j
 
 A scalar is a string, number or boolean — the `Scalar` definition. It deliberately excludes `null`, whose meaning is defined per site (§4.2).
 
+### 4.1a An absent style key resolves to its declared default
+
+Every property of `Styles` declares a `default` in `styles.schema.json`. A style key absent from an element resolves to that default, and a consumer MUST use it rather than substituting a platform convention of its own (DSPEC-44; ADR-113).
+
+The declaration is by **key presence**, not truthiness: 19 of the 46 properties declare `default: null`, meaning *apply nothing*. That is a decision, and it is distinct from a property carrying no `default` keyword at all, which would mean nobody has decided.
+
+A declared default is always a literal — never a `TokenReference`, `PropBinding` or `Conditional`, even where the property's value union admits them (DSPEC-45). A default is what a reader assumes in the absence of any authored value, so it cannot itself require resolution.
+
+**A default answers only one of three reasons a key can be absent.** A key may also be absent because a variant inherits it under layering (§4.4), or because its element type cannot carry it. Nothing in a document marks which applies, and the three are not distinguishable by a consumer reading one document. This specification does not yet resolve that; see `mappings/DEFAULTS.md`.
+
 ### 4.2 `null` means unset
 
 In a prop configuration, `null` under a prop key means the prop is **unset** in that configuration. It is a value, not an absence: an absent key inherits from the layer beneath; a `null` key overrides an inherited value with "no value" (ADR-080; schema: `component.schema.json`).
@@ -365,6 +375,10 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-41 | A platform binding declares a disposition for every property of `Styles` | binding | §11.1 |
 | DSPEC-42 | A platform binding declares its handling of each of the four style value forms | binding | §11.1 |
 | DSPEC-43 | A degradation applies the spec's own recorded fallback or applies nothing and warns; it never invents data the document does not carry | binding | §11.2 |
+| DSPEC-44 | Every property of `Styles` declares a `default`, and its value validates against that property's own schema | package | §4.1a, ADR-113 |
+| DSPEC-45 | A declared `default` is a literal, never a `TokenReference`, `PropBinding` or `Conditional` | package | §4.1a, ADR-113 |
+| DSPEC-46 | A platform binding does not redeclare a style default; it cites the schema's | binding | §11.1, ADR-113 |
+| DSPEC-47 | Jointly resolved keys are stated as an ordered case table over a declared operand set, not as prose | binding | §11.1 |
 
 Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.
 
@@ -399,6 +413,12 @@ A binding MUST declare, for every property of `Styles`, one of four dispositions
 | `unverified` | Coverage detected, mapping not confirmed by a human |
 
 A reader MAY rely on `bound`, `approximated` and `unsupported`. An `unverified` row asserts nothing — it records outstanding work, and a binding that is wholly `unverified` is a stub, not a specification.
+
+Where several keys resolve **jointly** — no one key determining any one output — a binding MUST state the mapping as an ordered case table over a declared, finite operand set, not as prose. A sentence describing a decision procedure cannot be checked, and reads as determinism without being it. Each case carries a predicate and the exact outputs it emits; an empty output list is a claim, a missing one is an omission (DSPEC-47).
+
+The predicate grammar reuses this specification's `ConditionExpression` vocabulary — an `operation` with `args` — because `operation` is a deliberately open string (DSPEC-28). The operand space differs and the difference is declared, not glossed: a spec `Conditional` tests a `PropBinding` into `#/props/*`, while a binding case tests a style fact on `self`, `parent`, a named derived predicate, or the emitting context.
+
+A binding MUST NOT redeclare a style default. What an absent key means is a property of the document, declared once in the schema (§4.1a), and a binding that restates it creates a second source free to disagree. A binding states what a platform does with a *value*; the value an absent key carries is not the platform's choice (DSPEC-46).
 
 A binding MUST also declare what it does with each of the four value forms a style may take — a literal, a `TokenReference`, a `PropBinding`, a `Conditional` (DSPEC-42). A disposition for `padding` means nothing without saying whether a `Conditional` padding is realised, approximated, or dropped.
 

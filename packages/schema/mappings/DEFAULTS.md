@@ -11,11 +11,11 @@ says.
 
 ## The problem
 
-STYLE_DEFAULTS is declared only in specs-from-figma and is referenced nowhere in the spectacular repo. Until it lives in the contract, no consumer outside that package can interpret an omitted key correctly.
+Resolved by ADR-113: every Styles property declares a default, so the schema answers what an absent key means. STYLE_DEFAULTS in specs-from-figma is no longer an authority and should be derived from or asserted against the schema.
 
 ## Absence is ambiguous
 
-Absence is ambiguous today. removeDefaults drops any style whose value is null, so an absent key may mean "equal to the default" OR "evaluated to null for a structural reason" — strokeAlign is forced null when no visible stroke exists, which is not the same as strokeAlign being INSIDE. A consumer cannot tell these apart from the document.
+
 
 A key can be absent for at least three reasons, and a consumer reading one document cannot
 tell them apart:
@@ -35,49 +35,49 @@ All 46 keys have a declared default.
 
 | Style key | Assumed when absent | Declared by |
 |---|---|---|
-| `rotation` | `0` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `visible` | `true` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `opacity` | `1` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `locked` | `false` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `backgroundColor` | *apply nothing* | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `backgroundImage` | *apply nothing* | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `fillColor` | *apply nothing* | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `textColor` | *apply nothing* | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `effects` | *apply nothing* | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `clipsContent` | `false` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `cornerRadius` | `0` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `width` | `0` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `height` | `0` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `minWidth` | `0` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `minHeight` | `0` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `maxWidth` | *apply nothing* | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `maxHeight` | *apply nothing* | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `position` | `"AUTO"` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `top` | *apply nothing* | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `bottom` | *apply nothing* | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `start` | *apply nothing* | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `end` | *apply nothing* | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `centerHorizontalOffset` | *apply nothing* | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `centerVerticalOffset` | *apply nothing* | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `layoutSizingHorizontal` | `"FIXED"` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `layoutSizingVertical` | `"FIXED"` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `strokes` | *apply nothing* | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `strokeAlign` | `"INSIDE"` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `strokeWeight` | `0` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `strokeDashPattern` | *apply nothing* | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `typography` | *apply nothing* | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `textAlignHorizontal` | `"START"` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `textAlignVertical` | `"TOP"` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `textOverflow` | `"CLIP"` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `maxLines` | *apply nothing* | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `mainAxisAlignment` | `"START"` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `primaryAxisSizingMode` | `"AUTO"` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `crossAxisAlignment` | `"START"` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `layoutMode` | `"NONE"` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `wrap` | `false` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `wrapAlignment` | *apply nothing* | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `itemReverseZIndex` | `false` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `itemSpacing` | `0` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `padding` | `0` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `cornerSmoothing` | `0` | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
-| `aspectRatio` | *apply nothing* | specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS) |
+| `rotation` | `0` | schema/styles.schema.json#/definitions/Styles/properties/rotation (default) |
+| `visible` | `true` | schema/styles.schema.json#/definitions/Styles/properties/visible (default) |
+| `opacity` | `1` | schema/styles.schema.json#/definitions/Styles/properties/opacity (default) |
+| `locked` | `false` | schema/styles.schema.json#/definitions/Styles/properties/locked (default) |
+| `backgroundColor` | *apply nothing* | schema/styles.schema.json#/definitions/Styles/properties/backgroundColor (default) |
+| `backgroundImage` | *apply nothing* | schema/styles.schema.json#/definitions/Styles/properties/backgroundImage (default) |
+| `fillColor` | *apply nothing* | schema/styles.schema.json#/definitions/Styles/properties/fillColor (default) |
+| `textColor` | *apply nothing* | schema/styles.schema.json#/definitions/Styles/properties/textColor (default) |
+| `effects` | *apply nothing* | schema/styles.schema.json#/definitions/Styles/properties/effects (default) |
+| `clipsContent` | `false` | schema/styles.schema.json#/definitions/Styles/properties/clipsContent (default) |
+| `cornerRadius` | `0` | schema/styles.schema.json#/definitions/Styles/properties/cornerRadius (default) |
+| `width` | `0` | schema/styles.schema.json#/definitions/Styles/properties/width (default) |
+| `height` | `0` | schema/styles.schema.json#/definitions/Styles/properties/height (default) |
+| `minWidth` | `0` | schema/styles.schema.json#/definitions/Styles/properties/minWidth (default) |
+| `minHeight` | `0` | schema/styles.schema.json#/definitions/Styles/properties/minHeight (default) |
+| `maxWidth` | *apply nothing* | schema/styles.schema.json#/definitions/Styles/properties/maxWidth (default) |
+| `maxHeight` | *apply nothing* | schema/styles.schema.json#/definitions/Styles/properties/maxHeight (default) |
+| `position` | `"AUTO"` | schema/styles.schema.json#/definitions/Styles/properties/position (default) |
+| `top` | *apply nothing* | schema/styles.schema.json#/definitions/Styles/properties/top (default) |
+| `bottom` | *apply nothing* | schema/styles.schema.json#/definitions/Styles/properties/bottom (default) |
+| `start` | *apply nothing* | schema/styles.schema.json#/definitions/Styles/properties/start (default) |
+| `end` | *apply nothing* | schema/styles.schema.json#/definitions/Styles/properties/end (default) |
+| `centerHorizontalOffset` | *apply nothing* | schema/styles.schema.json#/definitions/Styles/properties/centerHorizontalOffset (default) |
+| `centerVerticalOffset` | *apply nothing* | schema/styles.schema.json#/definitions/Styles/properties/centerVerticalOffset (default) |
+| `layoutSizingHorizontal` | `"FIXED"` | schema/styles.schema.json#/definitions/Styles/properties/layoutSizingHorizontal (default) |
+| `layoutSizingVertical` | `"FIXED"` | schema/styles.schema.json#/definitions/Styles/properties/layoutSizingVertical (default) |
+| `strokes` | *apply nothing* | schema/styles.schema.json#/definitions/Styles/properties/strokes (default) |
+| `strokeAlign` | `"INSIDE"` | schema/styles.schema.json#/definitions/Styles/properties/strokeAlign (default) |
+| `strokeWeight` | `0` | schema/styles.schema.json#/definitions/Styles/properties/strokeWeight (default) |
+| `strokeDashPattern` | *apply nothing* | schema/styles.schema.json#/definitions/Styles/properties/strokeDashPattern (default) |
+| `typography` | *apply nothing* | schema/styles.schema.json#/definitions/Styles/properties/typography (default) |
+| `textAlignHorizontal` | `"START"` | schema/styles.schema.json#/definitions/Styles/properties/textAlignHorizontal (default) |
+| `textAlignVertical` | `"TOP"` | schema/styles.schema.json#/definitions/Styles/properties/textAlignVertical (default) |
+| `textOverflow` | `"CLIP"` | schema/styles.schema.json#/definitions/Styles/properties/textOverflow (default) |
+| `maxLines` | *apply nothing* | schema/styles.schema.json#/definitions/Styles/properties/maxLines (default) |
+| `mainAxisAlignment` | `"START"` | schema/styles.schema.json#/definitions/Styles/properties/mainAxisAlignment (default) |
+| `primaryAxisSizingMode` | `"AUTO"` | schema/styles.schema.json#/definitions/Styles/properties/primaryAxisSizingMode (default) |
+| `crossAxisAlignment` | `"START"` | schema/styles.schema.json#/definitions/Styles/properties/crossAxisAlignment (default) |
+| `layoutMode` | `"NONE"` | schema/styles.schema.json#/definitions/Styles/properties/layoutMode (default) |
+| `wrap` | `false` | schema/styles.schema.json#/definitions/Styles/properties/wrap (default) |
+| `wrapAlignment` | *apply nothing* | schema/styles.schema.json#/definitions/Styles/properties/wrapAlignment (default) |
+| `itemReverseZIndex` | `false` | schema/styles.schema.json#/definitions/Styles/properties/itemReverseZIndex (default) |
+| `itemSpacing` | `0` | schema/styles.schema.json#/definitions/Styles/properties/itemSpacing (default) |
+| `padding` | `0` | schema/styles.schema.json#/definitions/Styles/properties/padding (default) |
+| `cornerSmoothing` | `0` | schema/styles.schema.json#/definitions/Styles/properties/cornerSmoothing (default) |
+| `aspectRatio` | *apply nothing* | schema/styles.schema.json#/definitions/Styles/properties/aspectRatio (default) |

@@ -109,6 +109,8 @@ bound — keys: `position`, `top`, `bottom`, `start`, `end`, `centerHorizontalOf
 
 *specs-from-figma StylesProcessor.ts:108-274. These keys are POST-PROCESSED, not read — a binding presenting them as direct reads misleads anyone implementing a second time.*
 
+> Stated as prose. Not yet converted to a case table, so it cannot be mechanically checked.
+
 ### wrapping
 
 bound — keys: `wrap`, `wrapAlignment`, `itemSpacing`, `layoutMode`
@@ -123,6 +125,8 @@ bound — keys: `wrap`, `wrapAlignment`, `itemSpacing`, `layoutMode`
 
 *specs-from-figma StylesProcessor.ts:291-300; Style.ts:489-564; BiaxialComposite.ts:29-45*
 
+> Stated as prose. Not yet converted to a case table, so it cannot be mechanically checked.
+
 ### namedStyleVersusInline
 
 bound — keys: `typography`
@@ -136,6 +140,8 @@ bound — keys: `typography`
 **Stage.** `postProcess` — produced by a later pass, not read directly.
 
 *specs-from-figma StylesProcessor.ts relateTextStyleAndTextProperties; TypographyProcessor.ts:74-80*
+
+> Stated as prose. Not yet converted to a case table, so it cannot be mechanically checked.
 
 ## Absent keys
 

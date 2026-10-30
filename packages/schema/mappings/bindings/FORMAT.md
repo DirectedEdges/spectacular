@@ -42,22 +42,41 @@ So the format carries **two** sections, and a key appears in exactly one of them
 ## `concepts.styleClusters` — keys that resolve jointly
 
 ```json
-"autoLayout": {
+"autoLayoutSizing": {
   "disposition": "bound",
-  "keys": ["layoutMode", "mainAxisAlignment", "crossAxisAlignment", "wrap", "wrapAlignment", "itemSpacing"],
-  "outputs": ["display", "flex-direction", "justify-content", "align-items", "flex-wrap", "gap"],
-  "resolution": "layoutMode selects the axis and gates the rest; with it absent the cluster emits nothing.",
-  "partial": "What happens when some keys are present and others absent.",
-  "notes": null
+  "form": "cases",
+  "keys": ["layoutSizingHorizontal", "layoutSizingVertical"],
+  "inputs": [
+    { "ref": "self.layoutSizingHorizontal", "from": "document" },
+    { "ref": "parent.layoutMode", "from": "document (ancestor)" },
+    { "ref": "context.isInstance", "from": "emitter context" }
+  ],
+  "derived": {
+    "crossStretches": {
+      "expression": { "operation": "all", "args": [ /* … */ ] },
+      "source": "layoutToCSS.ts:130-131"
+    }
+  },
+  "cases": [
+    { "when": { "operation": "equals", "args": { "value": "self.layoutSizingHorizontal", "compareTo": "FILL" } },
+      "emit": ["width: 100%"] }
+  ],
+  "otherwise": { "emit": [], "why": "FIXED or absent contributes nothing" }
 }
 ```
 
 | Field | Meaning |
 |---|---|
+| `form` | `cases` or `prose`. A `prose` cluster is unconverted debt and renders with a warning |
 | `keys` | Every spec key participating. Each must also appear in `concepts.styles` with `cluster` naming this one |
-| `outputs` | Every output the cluster can produce — not a per-key mapping, because there isn't one |
-| `resolution` | The rule deciding which outputs appear. The actual content of the mapping |
-| `partial` | Behaviour on a partially present cluster. This is where real documents fail, so it is required |
+| `inputs` | Every fact the cluster may read, and where it comes from. Finite and visible by declaration |
+| `derived` | Named sub-predicates, each with the source line it came from. Keeps a case readable without hiding it |
+| `cases` | Ordered; first match wins. Each carries `when` and `emit` |
+| `otherwise` | What happens when no case matches |
+
+Predicates reuse this contract's `ConditionExpression` vocabulary — `operation` with `args` — because `operation` is a deliberately open string (DSPEC-28). `all`, `any` and `not` join the built-in `equals`, `notEquals`, `isNull` and `isNotNull`.
+
+The operand space differs from a spec `Conditional`'s, and the difference is declared rather than glossed: a `Conditional` tests a `PropBinding` into `#/props/*`; a binding case tests a style fact on `self`, `parent`, `derived`, or the emitting `context`.
 
 Cross-referencing both ways is what keeps the format honest: a key cannot quietly drop out of the table by being "handled elsewhere", and a cluster cannot claim a key the table does not agree it owns. `build-mappings.mjs` enforces both directions.
 
@@ -67,29 +86,21 @@ Because it would be false. Writing `mainAxisAlignment → justify-content` is wr
 
 The cluster section costs more to author and is the only form that can be true.
 
-## `defaults` — what an absent key means
+## Defaults are not here
 
-A spec omits a style key for at least three different reasons, and a consumer cannot tell them apart from the document alone:
+A binding declares what a platform does with a **value**. What an absent key means is not a platform's choice, so a binding never declares it (DSPEC-46).
 
-1. The value equalled a default and was dropped at generation.
-2. It is a variant that inherits from `default` under layering.
-3. The element type cannot carry it.
+Since ADR-113, every property of `Styles` carries a `default` in `styles.schema.json`, and that is the single source. `_defaults.json` is a generated summary of those declarations, published as `DEFAULTS.md` — it cites the schema and decides nothing.
 
-Only the second is recoverable by a consumer, by reading `default`. The first requires a declared default, and that is what this section is for:
+A default answers only one of the three reasons a key can be absent. The other two — a variant inheriting under layering, and an element type that cannot carry the key — remain unmarked in a document. `DEFAULTS.md` states that gap rather than papering over it.
 
-```json
-"defaults": {
-  "layoutMode": { "assumed": "NONE", "declaredBy": "...", "platformBehaviour": "..." }
-}
-```
+## Why cases, not prose
 
-| Field | Meaning |
-|---|---|
-| `assumed` | The value a consumer assumes when the key is absent, or `null` for "apply nothing" |
-| `declaredBy` | Where that default comes from. `"none"` means nobody has declared it — a gap, not a value |
-| `platformBehaviour` | What this platform actually does on absence, which may differ from `assumed` |
+An earlier draft of this format gave each cluster a `resolution` sentence. That was inference wearing determinism's clothes: "emits nothing when the parent cross-stretches" cannot be checked, and a reader implementing from it is guessing at the boundaries.
 
-An entry whose `declaredBy` is `"none"` is a finding: the platform is guessing, and two platforms may guess differently. Those are the rows worth arguing about.
+A case table has boundaries. Each case names its predicate and the exact outputs it emits; the order is the precedence; `emit: []` is a claim that nothing is emitted, which is different from having said nothing. The operand set is declared up front, so the facts a cluster may consult are finite and visible — a case referencing something outside that set is a defect the reader can see.
+
+It is also testable, which prose never was: synthesize a document matching a case's predicate, run the platform's transform, and compare against `emit`. That test does not exist yet; the format is what makes it possible.
 
 ## Evaluation versus post-processing
 

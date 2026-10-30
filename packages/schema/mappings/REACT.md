@@ -99,73 +99,222 @@ resolution rule is the mapping rather than a row in the table above.
 
 bound — keys: `layoutMode`, `mainAxisAlignment`, `crossAxisAlignment`, `wrap`, `wrapAlignment`, `itemSpacing`
 
-**Outputs.** `display`, `flex-direction`, `justify-content`, `align-items`, `flex-wrap`, `gap`, `column-gap`, `row-gap`
+**Operands.** Every fact the cluster reads. Nothing outside this set participates.
 
-**Resolution.** layoutMode selects display:flex plus flex-direction; absent, the cluster emits nothing and the element stays in flow. mainAxisAlignment becomes justify-content and crossAxisAlignment becomes align-items — both meaningless without layoutMode.
+| Operand | From |
+|---|---|
+| `self.layoutMode` | document |
+| `self.mainAxisAlignment` | document |
+| `self.crossAxisAlignment` | document |
+| `self.wrap` | document |
+| `self.wrapAlignment` | document |
+| `self.itemSpacing` | document |
 
-**Partially present.** A non-negative itemSpacing emits gap. A NEGATIVE itemSpacing emits no gap at all: overlap is expressed as a negative margin on a sibling-combinator rule (`selector > * + *`) emitted by a different module entirely, so the declaration does not land on this element.
+**Cases** — ordered, first match wins.
 
-*css/style/layoutToCSS.ts:39-96; css/sheet/elementRules.ts:254-268*
+| # | When | Emits | Why |
+|---|---|---|---|
+| 1 | (`self.layoutMode` absent **or** `self.layoutMode` = `NONE`) | *nothing* | without a layout mode the whole cluster is inert; the element stays in flow |
+| 2 | `self.layoutMode` = `HORIZONTAL` | `display: flex`<br>`flex-direction: row` |  |
+| 3 | `self.layoutMode` = `VERTICAL` | `display: flex`<br>`flex-direction: column` |  |
+
+**Member cases** — ordered, first match wins.
+
+| # | When | Emits | Why |
+|---|---|---|---|
+| 1 | `self.mainAxisAlignment` present | `justify-content: <mapped>` |  |
+| 2 | `self.crossAxisAlignment` present | `align-items: <mapped>` |  |
+| 3 | `self.wrap` = `true` | `flex-wrap: wrap` |  |
+| 4 | `self.wrap` = `false` | `flex-wrap: nowrap` |  |
+| 5 | `self.wrapAlignment` present | `align-content: <mapped>` |  |
+| 6 | `self.itemSpacing` present **and** `self.itemSpacing.sign` = `nonNegative` | `gap: <self.itemSpacing>` |  |
+| 7 | `self.itemSpacing` present **and** `self.itemSpacing.sign` = `negative` | `NOT on this element — a negative margin on `<selector> > * + *`, emitted by elementRules` | gap does not accept negative values; overlap is a sibling margin |
+
+*css/style/layoutToCSS.ts:39-96; css/sheet/elementRules.ts:254-268. `cases` decides display and direction; `memberCases` apply only when a case above emitted a display.*
 
 ### autoLayoutSizing
 
 bound — keys: `layoutSizingHorizontal`, `layoutSizingVertical`
 
-**Outputs.** `width: fit-content`, `height: fit-content`, `flex: 1 0 0`, `width: 100%`, `height: 100%`, `flex-shrink: 0`
+**Operands.** Every fact the cluster reads. Nothing outside this set participates.
 
-**Resolution.** Resolved against facts about the PARENT, not this element: the parent layoutMode axis and the parent crossAxisAlignment. FILL emits flex:1 0 0 on the parent main axis, width/height:100% across it, and NOTHING when the parent cross-stretches. HUG emits fit-content unless the parent main axis already hugs.
+| Operand | From |
+|---|---|
+| `self.layoutSizingHorizontal` | document |
+| `self.layoutSizingVertical` | document |
+| `self.clipsContent` | document |
+| `self.maxLines` | document |
+| `self.width` | document |
+| `self.height` | document |
+| `parent.layoutMode` | document (ancestor) |
+| `parent.crossAxisAlignment` | document (ancestor) |
+| `context.isInstance` | emitter context |
+| `context.isDefaultBlock` | emitter context |
 
-**Partially present.** flex-shrink:0 is gated on whether layoutSizing OR the matching width/height is stated at all — three keys plus a default-block flag jointly decide one declaration. clipsContent and maxLines on this element suppress the HUG branch.
+**Derived predicates.**
 
-*css/style/layoutToCSS.ts:130-179. A per-key table cannot state this: the same key value yields three different outputs depending on the parent.*
+| Name | Expression | Source |
+|---|---|---|
+| `derived.mainHugs` | `context.isInstance` = `false` **and** `self.clipsContent` ≠ `true` **and** `self.maxLines` absent | layoutToCSS.ts:133-134 |
+| `derived.crossStretches` | `context.isInstance` = `false` **and** (`parent.crossAxisAlignment` absent **or** `parent.crossAxisAlignment` = `STRETCH`) | layoutToCSS.ts:130-131 |
+
+**Cases** — ordered, first match wins.
+
+| # | When | Emits | Why |
+|---|---|---|---|
+| 1 | `self.layoutSizingHorizontal` = `HUG` **and** `parent.layoutMode` = `HORIZONTAL` **and** `derived.mainHugs` = `true` | *nothing* | the parent main axis already hugs |
+| 2 | `self.layoutSizingHorizontal` = `HUG` | `width: fit-content` |  |
+| 3 | `self.layoutSizingHorizontal` = `FILL` **and** `parent.layoutMode` = `HORIZONTAL` | `flex: 1 0 0` |  |
+| 4 | `self.layoutSizingHorizontal` = `FILL` **and** `parent.layoutMode` = `VERTICAL` **and** `derived.crossStretches` = `true` | *nothing* | the parent stretches it across the cross axis already |
+| 5 | `self.layoutSizingHorizontal` = `FILL` | `width: 100%` |  |
+| 6 | `self.layoutSizingVertical` = `HUG` **and** `parent.layoutMode` = `VERTICAL` **and** `derived.mainHugs` = `true` | *nothing* |  |
+| 7 | `self.layoutSizingVertical` = `HUG` | `height: fit-content` |  |
+| 8 | `self.layoutSizingVertical` = `FILL` **and** `parent.layoutMode` = `VERTICAL` | `flex: 1 0 0` |  |
+| 9 | `self.layoutSizingVertical` = `FILL` **and** `parent.layoutMode` = `HORIZONTAL` **and** `derived.crossStretches` = `true` | *nothing* |  |
+| 10 | `self.layoutSizingVertical` = `FILL` | `height: 100%` |  |
+| 11 | (`parent.layoutMode` = `HORIZONTAL` **or** `parent.layoutMode` = `VERTICAL`) **and** (`context.isDefaultBlock` = `true` **or** `self.layoutSizingHorizontal` present **or** `self.layoutSizingVertical` present **or** `self.width` present **or** `self.height` present) **and** `self.layoutSizingOnParentAxis` ≠ `FILL` | `flex-shrink: 0` | stated sizing on a flex child that is not FILL must not shrink |
+
+**Otherwise.** *nothing* — FIXED or absent contributes nothing from this cluster
+
+*css/style/layoutToCSS.ts:130-179. Cases are ordered and the first match wins. `self.layoutSizingOnParentAxis` is the axis-selected key the source computes from parentLayoutMode.*
 
 ### absolutePositioning
 
 bound — keys: `position`, `top`, `bottom`, `start`, `end`, `centerHorizontalOffset`, `centerVerticalOffset`
 
-**Outputs.** `position: absolute`, `position: static`, `inset-block-start`, `inset-block-end`, `inset-inline-start`, `inset-inline-end`, `translate`
+**Operands.** Every fact the cluster reads. Nothing outside this set participates.
 
-**Resolution.** An explicit position wins outright. Absent, impliesAbsolute decides from inset presence plus the parent layoutMode: outside auto-layout any inset implies absolute; inside it, only a non-zero inset or two opposing anchors do — zero-only single anchors are canvas noise.
+| Operand | From |
+|---|---|
+| `self.position` | document |
+| `self.top` | document |
+| `self.bottom` | document |
+| `self.start` | document |
+| `self.end` | document |
+| `self.centerHorizontalOffset` | document |
+| `self.centerVerticalOffset` | document |
+| `parent.layoutMode` | document (ancestor) |
+| `context.isRoot` | emitter context |
 
-**Partially present.** An edge anchor on an axis cancels the centre offset for that same axis, because emitting both would put two values on one property. translate carries -50% only on the axes the centre offsets survived on.
+**Derived predicates.**
 
-*css/style/position.ts:4-27 (hasInsets, impliesAbsolute), 84-107 (centerDecls)*
+| Name | Expression | Source |
+|---|---|---|
+| `derived.hasInsets` | (`self.top` present **or** `self.bottom` present **or** `self.start` present **or** `self.end` present) | position.ts:4-9 |
+| `derived.parentAutoLayout` | (`parent.layoutMode` = `HORIZONTAL` **or** `parent.layoutMode` = `VERTICAL`) | position.ts:18-27 (parentAutoLayout argument) |
+| `derived.nonZeroInset` | (`self.top` present **and** `self.top` ≠ `0` **or** `self.bottom` present **and** `self.bottom` ≠ `0` **or** `self.start` present **and** `self.start` ≠ `0` **or** `self.end` present **and** `self.end` ≠ `0`) | position.ts:24 |
+| `derived.opposingAnchors` | (`self.top` present **and** `self.bottom` present **or** `self.start` present **and** `self.end` present) | position.ts:25 |
+
+**Cases** — ordered, first match wins.
+
+| # | When | Emits | Why |
+|---|---|---|---|
+| 1 | `self.position` = `ABSOLUTE` | `position: absolute` | an explicit position wins outright |
+| 2 | `self.position` = `AUTO` | `position: static` |  |
+| 3 | `self.position` absent **and** `context.isRoot` = `true` | *nothing* | a root never infers absolute |
+| 4 | `self.position` absent **and** `derived.hasInsets` = `false` | *nothing* | no coordinates, nothing to infer from |
+| 5 | `self.position` absent **and** `derived.parentAutoLayout` = `false` | `position: absolute` | outside auto-layout, any coordinate is meaningful |
+| 6 | `self.position` absent **and** (`derived.nonZeroInset` = `true` **or** `derived.opposingAnchors` = `true`) | `position: absolute` | inside auto-layout only a meaningful coordinate implies absolute |
+| 7 | `self.position` absent | *nothing* | a zero-only single anchor inside auto-layout is canvas noise |
+
+**Offset cases** — ordered, first match wins.
+
+| # | When | Emits | Why |
+|---|---|---|---|
+| 1 | `self.top` present | `inset-block-start: <self.top>` |  |
+| 2 | `self.bottom` present | `inset-block-end: <self.bottom>` |  |
+| 3 | `self.start` present | `inset-inline-start: <self.start>` |  |
+| 4 | `self.end` present | `inset-inline-end: <self.end>` |  |
+| 5 | `self.centerVerticalOffset` present **and** `derived.verticalAnchored` = `false` | `inset-block-start: <self.centerVerticalOffset>` | an edge anchor on the same axis wins; both would put two values on one property |
+| 6 | `self.centerHorizontalOffset` present **and** `derived.horizontalAnchored` = `false` | `inset-inline-start: <self.centerHorizontalOffset>` |  |
+| 7 | (`derived.verticalCentred` = `true` **or** `derived.horizontalCentred` = `true`) | `translate: <-50% on each centred axis, 0 on the other>` |  |
+
+*css/style/position.ts:4-27 (hasInsets, impliesAbsolute), 42-59, 84-107 (centerDecls). `cases` decides the position property; `insetCases` decides the offsets. verticalAnchored/horizontalAnchored are presence of top|bottom and start|end respectively.*
 
 ### strokeRendering
 
 bound — keys: `strokes`, `strokeAlign`, `strokeWeight`
 
-**Outputs.** `border-color`, `border-style`, `border-width`, `outline-color`, `outline-style`, `outline-width`, `outline-offset`, `border-image: none`
+**Operands.** Every fact the cluster reads. Nothing outside this set participates.
 
-**Resolution.** strokeWeight SHAPE decides the property family: a per-side object becomes border-*, a scalar or token becomes outline-*. A gradient stroke takes neither — it is painted by a separate pseudo-element rule.
+| Operand | From |
+|---|---|
+| `self.strokes` | document |
+| `self.strokeWeight` | document |
+| `self.strokeAlign` | document |
+| `context.isDefaultBlock` | emitter context |
 
-**Partially present.** strokeAlign contributes no declaration of its own; it only flips the sign of outline-offset, and is skipped for OUTSIDE and CENTER.
+**Derived predicates.**
 
-*css/style/border.ts:51-53 (asOutline), 73-141. The same strokes value maps to a different CSS property depending on a sibling key shape.*
+| Name | Expression | Source |
+|---|---|---|
+| `derived.asOutline` | **not** `self.strokeWeight.form` = `perSideObject` **and** `self.strokeWeight.form` ≠ `tokenReference` | border.ts:51-53 — a per-side object becomes border-*, a scalar or token becomes outline-* |
+| `derived.gradientStroke` | `self.strokes.form` = `gradient` | border.ts:73-113 |
+
+**Cases** — ordered, first match wins.
+
+| # | When | Emits | Why |
+|---|---|---|---|
+| 1 | `derived.gradientStroke` = `true` | *nothing* | a gradient stroke is painted by a separate pseudo-element rule, not a border or outline |
+| 2 | `self.strokes` present **and** `derived.asOutline` = `false` | `border-color: <self.strokes>`<br>`border-style: solid` |  |
+| 3 | `self.strokes` present **and** `derived.asOutline` = `true` | `outline-color: <self.strokes>`<br>`outline-style: solid` |  |
+| 4 | `self.strokeWeight` present **and** `derived.asOutline` = `false` | `border-width: <per side>` |  |
+| 5 | `self.strokeWeight` present **and** `derived.asOutline` = `true` **and** (`self.strokeAlign` = `OUTSIDE` **or** `self.strokeAlign` = `CENTER`) | `outline-width: <self.strokeWeight>` |  |
+| 6 | `self.strokeWeight` present **and** `derived.asOutline` = `true` | `outline-width: <self.strokeWeight>`<br>`outline-offset: <negated self.strokeWeight>` |  |
+| 7 | `context.isDefaultBlock` = `true` **and** `self.strokeWeight` absent | `border-width: 0 or outline-width: 0, matching whichever style was emitted` | a default block must reset a width it did not state |
+
+**Otherwise.** *nothing*
+
+*css/style/border.ts:51-53, 73-167. strokeAlign contributes no declaration of its own — it only flips the outline-offset sign. `strokeDashPattern` is NOT consulted: see its own row.*
 
 ### intrinsicSize
 
 bound — keys: `width`, `height`, `aspectRatio`
 
-**Outputs.** `width`, `height`, `aspect-ratio`
+**Operands.** Every fact the cluster reads. Nothing outside this set participates.
 
-**Resolution.** A stated aspectRatio suppresses the height declaration even though height is present in the document — the ratio derives it.
+| Operand | From |
+|---|---|
+| `self.width` | document |
+| `self.height` | document |
+| `self.aspectRatio` | document |
 
-**Partially present.** minWidth/minHeight/maxWidth/maxHeight are independent and map one-to-one.
+**Cases** — ordered, first match wins.
 
-*css/style/size.ts:22-34*
+| # | When | Emits | Why |
+|---|---|---|---|
+| 1 | `self.width` present | `width: <self.width>` |  |
+| 2 | `self.height` present **and** `self.aspectRatio` present | *nothing* | a stated ratio derives the height |
+| 3 | `self.height` present | `height: <self.height>` |  |
+| 4 | `self.aspectRatio` present | `aspect-ratio: <x> / <y>` |  |
+
+**Otherwise.** *nothing*
+
+*css/style/size.ts:22-34. minWidth, minHeight, maxWidth and maxHeight are independent and map one-to-one.*
 
 ### textTruncation
 
 bound — keys: `textOverflow`, `maxLines`
 
-**Outputs.** `white-space`, `overflow`, `text-overflow`, `display: -webkit-box`, `-webkit-box-orient`, `-webkit-line-clamp`, `line-clamp`
+**Operands.** Every fact the cluster reads. Nothing outside this set participates.
 
-**Resolution.** A truth table, not a per-key mapping: maxLines of 1, more than 1, or absent, crossed with textOverflow ELLIPSIS, yields three structurally different declaration sets.
+| Operand | From |
+|---|---|
+| `self.textOverflow` | document |
+| `self.maxLines` | document |
 
-**Partially present.** maxLines above 1 switches the element to a -webkit-box, which changes its display and therefore interacts with the autoLayout cluster.
+**Cases** — ordered, first match wins.
 
-*css/style/truncation.ts:12-37*
+| # | When | Emits | Why |
+|---|---|---|---|
+| 1 | `self.maxLines` present **and** `self.maxLines` ≠ `1` | `display: -webkit-box`<br>`-webkit-box-orient: vertical`<br>`-webkit-line-clamp: <self.maxLines>`<br>`line-clamp: <self.maxLines>`<br>`overflow: hidden` | multi-line clamp changes the display type |
+| 2 | `self.maxLines` = `1` **and** `self.textOverflow` = `ELLIPSIS` | `white-space: nowrap`<br>`overflow: hidden`<br>`text-overflow: ellipsis` |  |
+| 3 | `self.maxLines` = `1` | `white-space: nowrap`<br>`overflow: hidden` |  |
+| 4 | `self.textOverflow` = `ELLIPSIS` | `overflow: hidden`<br>`text-overflow: ellipsis` |  |
+
+**Otherwise.** *nothing*
+
+*css/style/truncation.ts:12-37. The multi-line case sets display, so it interacts with the autoLayout cluster on the same element.*
 
 ## Absent keys
 

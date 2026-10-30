@@ -39,6 +39,31 @@ const badge = (d) =>
 
 const failures = [];
 
+/**
+ * Render a predicate as compact, scannable text. The stored form reuses the
+ * schema's ConditionExpression vocabulary — `operation` plus `args` — and
+ * `operation` is a deliberately open string (DSPEC-28), so `all`, `any` and
+ * `not` join the built-in `equals`, `notEquals`, `isNull` and `isNotNull`.
+ *
+ * The operand space differs from a spec Conditional's: there, `args.value` is a
+ * PropBinding into `#/props/*`; here it is a style fact on `self`, `parent`, a
+ * named `derived` predicate, or the emitting `context`.
+ */
+const fmt = (p) => {
+  if (p == null) return '';
+  const lit = (v) => (typeof v === 'string' ? `\`${v}\`` : `\`${JSON.stringify(v)}\``);
+  switch (p.operation) {
+    case 'all': return p.args.map(fmt).join(' **and** ');
+    case 'any': return `(${p.args.map(fmt).join(' **or** ')})`;
+    case 'not': return `**not** ${fmt(p.args[0])}`;
+    case 'equals': return `\`${p.args.value}\` = ${lit(p.args.compareTo)}`;
+    case 'notEquals': return `\`${p.args.value}\` ≠ ${lit(p.args.compareTo)}`;
+    case 'isNull': return `\`${p.args.value}\` absent`;
+    case 'isNotNull': return `\`${p.args.value}\` present`;
+    default: return `\`${p.operation}\`(${JSON.stringify(p.args)})`;
+  }
+};
+
 const renderPlatform = (file) => {
   const platform = file.replace(/\.json$/, '');
   const b = JSON.parse(readFileSync(join(bindingsDir, file), 'utf8'));
@@ -73,8 +98,16 @@ const renderPlatform = (file) => {
       if (!(k in styles)) failures.push(`${file}: cluster "${name}" names \`${k}\`, absent from concepts.styles`);
       else if (styles[k].cluster !== name) failures.push(`${file}: \`${k}\` is in cluster "${name}" but declares cluster "${styles[k].cluster ?? 'none'}"`);
     }
-    if (!c.resolution) failures.push(`${file}: cluster "${name}" has no resolution rule — the rule IS the mapping`);
-    if (!c.partial) failures.push(`${file}: cluster "${name}" does not say what a partially present cluster does`);
+    if (c.form === 'cases') {
+      if (!c.inputs?.length) failures.push(`${file}: cluster "${name}" declares cases but no inputs — the operand set must be finite and visible`);
+      for (const [i, cs] of (c.cases ?? []).entries()) {
+        if (!cs.when) failures.push(`${file}: cluster "${name}" case ${i} has no predicate`);
+        if (!Array.isArray(cs.emit)) failures.push(`${file}: cluster "${name}" case ${i} has no emit list — an empty array is a claim, a missing one is an omission`);
+      }
+    } else {
+      if (!c.resolution) failures.push(`${file}: cluster "${name}" has no resolution rule — the rule IS the mapping`);
+      if (!c.partial) failures.push(`${file}: cluster "${name}" does not say what a partially present cluster does`);
+    }
   }
   for (const [k, v] of Object.entries(styles)) {
     if (v.cluster && !(v.cluster in clusters)) failures.push(`${file}: \`${k}\` names cluster "${v.cluster}", which is not declared`);
@@ -93,16 +126,43 @@ const renderPlatform = (file) => {
     ? `| Style key | Disposition | ${col} | Element types | Notes |\n|---|---|---|---|---|`
     : `| Style key | Disposition | ${col} | Notes |\n|---|---|---|---|`;
 
-  const clusterSections = Object.entries(clusters).map(([name, c]) => `### ${name}
+  const clusterSections = Object.entries(clusters).map(([name, c]) => {
+    const head = `### ${name}
 
 ${badge(c.disposition)} — keys: ${c.keys.map((k) => `\`${k}\``).join(', ')}
+`;
 
+    if (c.form !== 'cases') {
+      return `${head}
 **Outputs.** ${c.outputs.map((o) => `\`${o}\``).join(', ')}
 
 **Resolution.** ${c.resolution}
 
 **Partially present.** ${c.partial}
-${c.stage ? `\n**Stage.** \`${c.stage}\` — produced by a later pass, not read directly.\n` : ''}${c.notes ? `\n*${c.notes}*\n` : ''}`).join('\n');
+${c.stage ? `\n**Stage.** \`${c.stage}\` — produced by a later pass, not read directly.\n` : ''}${c.notes ? `\n*${c.notes}*\n` : ''}
+> Stated as prose. Not yet converted to a case table, so it cannot be mechanically checked.
+`;
+    }
+
+    const inputs = `| Operand | From |\n|---|---|\n${c.inputs.map((i) => `| \`${i.ref}\` | ${i.from} |`).join('\n')}`;
+
+    const derived = Object.keys(c.derived ?? {}).length
+      ? `\n**Derived predicates.**\n\n| Name | Expression | Source |\n|---|---|---|\n${Object.entries(c.derived).map(([n, d]) => `| \`derived.${n}\` | ${fmt(d.expression)} | ${d.source ?? ''} |`).join('\n')}\n`
+      : '';
+
+    const caseTable = (label, list) =>
+      `\n**${label}** — ordered, first match wins.\n\n| # | When | Emits | Why |\n|---|---|---|---|\n${list
+        .map((cs, i) => `| ${i + 1} | ${fmt(cs.when)} | ${cs.emit.length ? cs.emit.map((e) => `\`${e}\``).join('<br>') : '*nothing*'} | ${cs.why ?? ''} |`)
+        .join('\n')}\n`;
+
+    return `${head}
+**Operands.** Every fact the cluster reads. Nothing outside this set participates.
+
+${inputs}
+${derived}${caseTable('Cases', c.cases)}${c.insetCases ? caseTable('Offset cases', c.insetCases) : ''}${c.memberCases ? caseTable('Member cases', c.memberCases) : ''}${
+      c.otherwise ? `\n**Otherwise.** ${c.otherwise.emit?.length ? c.otherwise.emit.map((e) => `\`${e}\``).join(', ') : '*nothing*'}${c.otherwise.why ? ` — ${c.otherwise.why}` : ''}\n` : ''
+    }${c.stage ? `\n**Stage.** \`${c.stage}\` — produced by a later pass, not read directly.\n` : ''}${c.notes ? `\n*${c.notes}*\n` : ''}`;
+  }).join('\n');
 
   return `# ${title} binding
 
