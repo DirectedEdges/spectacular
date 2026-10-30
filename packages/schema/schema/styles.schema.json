@@ -128,7 +128,7 @@
       "oneOf": [
         { "type": "boolean" },
         { "$ref": "#/definitions/TokenReference" },
-        { "$ref": "#/definitions/PropBinding" },
+        { "$ref": "component.schema.json#/definitions/PropBinding" },
         { "$ref": "#/definitions/Conditional" },
         { "type": "null" }
       ]
@@ -319,22 +319,12 @@
       ]
     },
     "StrokeStyleValue": {
-      "description": "Stroke weight value (from StrokeStyle processor)",
-      "oneOf": [
-        { "type": "number" },
-        { "type": "string", "const": "mixed" },
-        { "$ref": "#/definitions/TokenReference" },
-        { "type": "null" }
-      ]
+      "$ref": "#/definitions/MixedNumberStyleValue",
+      "description": "Stroke weight value (from StrokeStyle processor)"
     },
     "CornerStyleValue": {
-      "description": "Corner radius value (from CornerStyle processor)",
-      "oneOf": [
-        { "type": "number" },
-        { "type": "string", "const": "mixed" },
-        { "$ref": "#/definitions/TokenReference" },
-        { "type": "null" }
-      ]
+      "$ref": "#/definitions/MixedNumberStyleValue",
+      "description": "Corner radius value (from CornerStyle processor)"
     },
     "Sides": {
       "type": "object",
@@ -536,31 +526,17 @@
         { "type": "null" }
       ]
     },
-    "PropBinding": {
-      "type": "object",
-      "description": "A component-prop binding. Emitted when a property is bound to a Figma component property. Discriminated by $binding to avoid JSON Schema $ref keyword collision.",
-      "properties": {
-        "$binding": {
-          "type": "string",
-          "description": "JSON Pointer to the bound prop within this spec's props block, e.g. '#/props/propName'"
-        }
-      },
-      "required": ["$binding"],
-      "additionalProperties": false
-    },
     "ConditionArgs": {
       "type": "object",
       "description": "Arguments for a condition expression. value is the prop binding to test; compareTo is the operand for binary operations.",
       "properties": {
         "value": {
-          "$ref": "#/definitions/PropBinding",
+          "$ref": "component.schema.json#/definitions/PropBinding",
           "description": "The prop binding whose value is tested"
         },
         "compareTo": {
           "oneOf": [
-            { "type": "string" },
-            { "type": "number" },
-            { "type": "boolean" },
+            { "$ref": "component.schema.json#/definitions/Scalar" },
             { "type": "null" }
           ],
           "description": "Comparison operand for binary operations (equals, notEquals). Omitted for unary operations."
@@ -597,18 +573,14 @@
             "then": {
               "description": "Value when condition is true",
               "oneOf": [
-                { "type": "string" },
-                { "type": "boolean" },
-                { "type": "number" },
+                { "$ref": "component.schema.json#/definitions/Scalar" },
                 { "type": "null" }
               ]
             },
             "else": {
               "description": "Value when condition is false",
               "oneOf": [
-                { "type": "string" },
-                { "type": "boolean" },
-                { "type": "number" },
+                { "$ref": "component.schema.json#/definitions/Scalar" },
                 { "type": "null" }
               ]
             }

@@ -69,14 +69,8 @@
           "description": "Named instance examples (documented usages) for this component."
         },
         "slotContentExamples": {
-          "type": "object",
-          "description": "Named slot-content examples for this component (ADR-047). Each entry is a SlotContent — a flat anatomy+elements+layout triplet usable as a named slot fill. Referenced via SlotContentRef from SlotBinding.examples and from Element.propConfigurations slot-prop entries (ADR-049). specs-from-figma de-duplicates entries by structural equality.",
-          "patternProperties": {
-            "^[a-zA-Z0-9_-]+$": {
-              "$ref": "#/definitions/SlotContent"
-            }
-          },
-          "additionalProperties": false
+          "$ref": "#/definitions/SlotContentMap",
+          "description": "Named slot-content examples for this component (ADR-047). Each entry is a SlotContent — a flat anatomy+elements+layout triplet usable as a named slot fill. Referenced via SlotContentRef from SlotBinding.examples and from Element.propConfigurations slot-prop entries (ADR-049). specs-from-figma de-duplicates entries by structural equality."
         },
         "images": {
           "$ref": "#/definitions/Images",
@@ -105,30 +99,28 @@
           "type": "object",
           "description": "Prop values for this example. Scalar types for scalar props; SlotContentRef for slot props; ObjectPropValue for object props (ADR-111); null when the prop is unset in this example (ADR-080). PropBinding is not permitted here.",
           "additionalProperties": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/definitions/SlotContentRef"
-              },
-              {
-                "$ref": "#/definitions/ObjectPropValue"
-              }
-            ]
+            "$ref": "#/definitions/InstanceExampleConfigurationValue"
           }
         }
       },
       "additionalProperties": false
+    },
+    "InstanceExampleConfigurationValue": {
+      "description": "The value of one prop in an InstanceExample: a scalar, null when unset (ADR-080), a SlotContentRef for a slot prop, or an ObjectPropValue for an object prop (ADR-111). PropBinding is not permitted.",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/Scalar"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/definitions/SlotContentRef"
+        },
+        {
+          "$ref": "#/definitions/ObjectPropValue"
+        }
+      ]
     },
     "InstanceExamples": {
       "type": "object",
@@ -189,6 +181,10 @@
       ],
       "additionalProperties": false
     },
+    "ComponentName": {
+      "type": "string",
+      "description": "The name of a component or component set, as written in this spec's format.keys."
+    },
     "SubcomponentRef": {
       "type": "object",
       "description": "Reference to a subcomponent definition within the same spec.",
@@ -202,6 +198,51 @@
       "required": [
         "$ref"
       ],
+      "additionalProperties": false
+    },
+    "ElementRole": {
+      "description": "A semantic behavior role concept, or a non-empty list of them.",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+      ]
+    },
+    "ElementAction": {
+      "type": "object",
+      "description": "One behavior this element performs when activated.",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The behavior's concept name (e.g. 'dismiss'). Recognized names are published on the docs site; unrecognized values are ignored by transforms."
+        }
+      },
+      "additionalProperties": false
+    },
+    "AnatomyElementExtensions": {
+      "type": "object",
+      "description": "Platform extensions. com.figma carries extraction provenance.",
+      "properties": {
+        "com.figma": {
+          "$ref": "#/definitions/AnatomyElementFigmaExtension"
+        }
+      },
+      "additionalProperties": false
+    },
+    "AnatomyElementFigmaExtension": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The element's name in Figma. Recorded on any of three triggers: primitive-wrapper collapse promoted this element to root (ADR-058), always and independent of format.figmaKeys; the name fell outside the safe key grammar so format.keys could not represent it losslessly (ADR-066); or the name was already written in the destination format and passed through unformatted, making reversal identity rather than re-derivation (ADR-066). Under NONE no source convention is declared, so nothing can be re-derived from a key and reversal hands the key back as the name — the key reconstructs the name only where the two are already identical, and this field is recorded wherever formatting changed the name at all."
+        },
+        "childRole": {
+          "$ref": "#/definitions/ElementRole",
+          "description": "A role annotated on the layer that primitive-wrapper collapse folded into this element, rather than on the element itself. Collapse leaves one anatomy element where Figma has two layers, so role means the root carried it, childRole means the collapsed child did, and both present means both did. Deliberately not merged into role: merging would make the two-role case indistinguishable from the child-only case, which is the pair render has to tell apart. A role annotated on a collapsing component's child reaches no emitted code."
+        }
+      },
       "additionalProperties": false
     },
     "AnatomyElement": {
@@ -226,7 +267,7 @@
         "instanceOf": {
           "oneOf": [
             {
-              "type": "string"
+              "$ref": "#/definitions/ComponentName"
             },
             {
               "$ref": "#/definitions/SubcomponentRef"
@@ -235,51 +276,16 @@
           "description": "The component or component set name that this instance element references, or a subcomponent reference"
         },
         "$extensions": {
-          "type": "object",
-          "description": "Platform extensions. com.figma carries extraction provenance.",
-          "properties": {
-            "com.figma": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "The element's name in Figma. Recorded on any of three triggers: primitive-wrapper collapse promoted this element to root (ADR-058), always and independent of format.figmaKeys; the name fell outside the safe key grammar so format.keys could not represent it losslessly (ADR-066); or the name was already written in the destination format and passed through unformatted, making reversal identity rather than re-derivation (ADR-066). Under NONE no source convention is declared, so nothing can be re-derived from a key and reversal hands the key back as the name — the key reconstructs the name only where the two are already identical, and this field is recorded wherever formatting changed the name at all."
-                },
-                "childRole": {
-                  "oneOf": [
-                    { "type": "string" },
-                    { "type": "array", "items": { "type": "string" }, "minItems": 1 }
-                  ],
-                  "description": "A role annotated on the layer that primitive-wrapper collapse folded into this element, rather than on the element itself. Collapse leaves one anatomy element where Figma has two layers, so role means the root carried it, childRole means the collapsed child did, and both present means both did. Deliberately not merged into role: merging would make the two-role case indistinguishable from the child-only case, which is the pair render has to tell apart. A role annotated on a collapsing component's child reaches no emitted code."
-                }
-              },
-              "additionalProperties": false
-            }
-          },
-          "additionalProperties": false
+          "$ref": "#/definitions/AnatomyElementExtensions"
         },
         "role": {
-          "oneOf": [
-            { "type": "string" },
-            { "type": "array", "items": { "type": "string" }, "minItems": 1 }
-          ],
+          "$ref": "#/definitions/ElementRole",
           "description": "Semantic behavior role for this element (e.g. 'button', 'checkbox', 'label'), generated from Figma Dev Mode annotations of the form role:<concept> on the component node or one of its layers. Recognized concept names are published on the docs site; unrecognized values are ignored by transforms. An array is meaningful only on an element of type 'instance', where each concept routes to whichever element of the composed component ascribes it; on an owned element more than one role is an error."
         },
         "actions": {
           "type": "array",
           "items": {
-            "type": "object",
-            "required": [
-              "type"
-            ],
-            "additionalProperties": false,
-            "properties": {
-              "type": {
-                "type": "string",
-                "description": "The behavior's concept name (e.g. 'dismiss'). Recognized names are published on the docs site; unrecognized values are ignored by transforms."
-              }
-            },
-            "description": "One behavior this element performs when activated."
+            "$ref": "#/definitions/ElementAction"
           },
           "description": "Behaviors invoked when this element is activated (ADR-087), generated from Dev Mode annotations of the form action:<concept>. An array so an element may perform more than one, and so each entry can grow properties of its own."
         }
@@ -555,7 +561,7 @@
         "anyOf": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/ComponentName"
           },
           "description": "What this slot permits — the one list of its accepted content. Each entry is either a component type name from the library's own namespace, or a reserved PrimitiveSlotContent marker naming a primitive kind ($text, $glyph). The two populations cannot collide, because the safe key grammar (ADR-066) admits no leading `$` in a component key. Absent means any component and no primitive. Items stay typed as plain strings rather than an enum, because the array holds arbitrary component names alongside the reserved markers. Examples: [$glyph, $text, badge] takes a glyph, a label, or a composed Badge; [$text] is text-only with no component permitted; [badge] is Badge-only with no primitive permitted. (ADR-102)"
         },
@@ -589,16 +595,20 @@
           "type": "boolean"
         },
         "layout": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/LayoutNode"
-          }
+          "$ref": "#/definitions/Layout"
         },
         "elements": {
           "$ref": "#/definitions/Elements"
         }
       },
       "additionalProperties": false
+    },
+    "Layout": {
+      "type": "array",
+      "description": "Ordered list of top-level layout nodes describing element nesting.",
+      "items": {
+        "$ref": "#/definitions/LayoutNode"
+      }
     },
     "LayoutNode": {
       "description": "Hierarchical layout structure representing element nesting. Leaf nodes are strings (element names), parent nodes are objects with element name as key and children array as value.",
@@ -620,18 +630,22 @@
           "type": "string"
         },
         {
-          "type": "object",
-          "additionalProperties": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/LayoutNode"
-            }
-          }
+          "$ref": "#/definitions/LayoutBranch"
         }
       ]
     },
-    "PropConfigurationValue": {
-      "description": "The value of a single prop configuration entry (ADR-049): a scalar, a PropBinding for pass-through to a parent prop, a SlotContentRef under a slot-prop key for a named slot-content fill, an ImageBinding under an image-prop key forwarding an image into a nested image instance (ADR-063), an ObjectPropValue under an object-prop key (ADR-111), or null when the prop is unset in this configuration — a value, not an absence: an absent key inherits, a null key overrides an inherited value with no value (ADR-080).",
+    "LayoutBranch": {
+      "type": "object",
+      "description": "A parent layout node: element name as key, ordered child LayoutNodes as value.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/LayoutNode"
+        }
+      }
+    },
+    "Scalar": {
+      "description": "A string, number or boolean value.",
       "oneOf": [
         {
           "type": "string"
@@ -641,6 +655,14 @@
         },
         {
           "type": "boolean"
+        }
+      ]
+    },
+    "PropConfigurationValue": {
+      "description": "The value of a single prop configuration entry (ADR-049): a scalar, a PropBinding for pass-through to a parent prop, a SlotContentRef under a slot-prop key for a named slot-content fill, an ImageBinding under an image-prop key forwarding an image into a nested image instance (ADR-063), an ObjectPropValue under an object-prop key (ADR-111), or null when the prop is unset in this configuration — a value, not an absence: an absent key inherits, a null key overrides an inherited value with no value (ADR-080).",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/Scalar"
         },
         {
           "type": "null"
@@ -744,10 +766,17 @@
           "$ref": "#/definitions/Elements"
         },
         "layout": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/LayoutNode"
-          }
+          "$ref": "#/definitions/Layout"
+        }
+      },
+      "additionalProperties": false
+    },
+    "SlotContentMap": {
+      "type": "object",
+      "description": "Named SlotContent entries, keyed by a name of letters, digits, underscore or hyphen.",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "$ref": "#/definitions/SlotContent"
         }
       },
       "additionalProperties": false
@@ -776,20 +805,11 @@
           "$ref": "#/definitions/Elements"
         },
         "layout": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/LayoutNode"
-          }
+          "$ref": "#/definitions/Layout"
         },
         "slotContent": {
-          "type": "object",
-          "description": "Named slot fills bundled alongside this composition's primary content. Authoring convenience only — not a scope boundary. Entries are reachable via a deeper SlotContentRef pointer.",
-          "patternProperties": {
-            "^[a-zA-Z0-9_-]+$": {
-              "$ref": "#/definitions/SlotContent"
-            }
-          },
-          "additionalProperties": false
+          "$ref": "#/definitions/SlotContentMap",
+          "description": "Named slot fills bundled alongside this composition's primary content. Authoring convenience only — not a scope boundary. Entries are reachable via a deeper SlotContentRef pointer."
         },
         "images": {
           "$ref": "#/definitions/Images",
@@ -834,7 +854,7 @@
         "instanceOf": {
           "oneOf": [
             {
-              "type": "string"
+              "$ref": "#/definitions/ComponentName"
             },
             {
               "$ref": "#/definitions/PropBinding"
@@ -922,113 +942,6 @@
       ],
       "additionalProperties": false
     },
-    "ConditionArgs": {
-      "type": "object",
-      "description": "Arguments for a condition expression. value is the prop binding to test; compareTo is the operand for binary operations.",
-      "properties": {
-        "value": {
-          "$ref": "#/definitions/PropBinding",
-          "description": "The prop binding whose value is tested"
-        },
-        "compareTo": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "number"
-            },
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "Comparison operand for binary operations (equals, notEquals). Omitted for unary operations."
-        }
-      },
-      "required": [
-        "value"
-      ],
-      "additionalProperties": false
-    },
-    "ConditionExpression": {
-      "type": "object",
-      "description": "A declarative condition expression pairing an operation with its arguments.",
-      "properties": {
-        "operation": {
-          "type": "string",
-          "description": "Predicate operation name (e.g. 'isNull', 'isNotNull', 'equals', 'notEquals')"
-        },
-        "args": {
-          "$ref": "#/definitions/ConditionArgs"
-        }
-      },
-      "required": [
-        "operation",
-        "args"
-      ],
-      "additionalProperties": false
-    },
-    "Conditional": {
-      "type": "object",
-      "description": "A conditional binding. Evaluates the condition against a bound prop and resolves to the then or else branch.",
-      "properties": {
-        "if": {
-          "type": "object",
-          "properties": {
-            "condition": {
-              "$ref": "#/definitions/ConditionExpression"
-            },
-            "then": {
-              "description": "Value when condition is true",
-              "oneOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "else": {
-              "description": "Value when condition is false",
-              "oneOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            }
-          },
-          "required": [
-            "condition",
-            "then",
-            "else"
-          ],
-          "additionalProperties": false
-        }
-      },
-      "required": [
-        "if"
-      ],
-      "additionalProperties": false
-    },
     "Styles": {
       "$ref": "styles.schema.json#/definitions/Styles"
     },
@@ -1065,29 +978,8 @@
           "description": "Choices about the run that generated this spec."
         },
         "source": {
-          "type": "object",
-          "properties": {
-            "pageId": {
-              "type": "string"
-            },
-            "nodeId": {
-              "type": "string"
-            },
-            "nodeType": {
-              "type": "string",
-              "enum": [
-                "COMPONENT",
-                "COMPONENT_SET",
-                "FRAME"
-              ]
-            }
-          },
-          "required": [
-            "pageId",
-            "nodeId",
-            "nodeType"
-          ],
-          "additionalProperties": false
+          "$ref": "#/definitions/SubcomponentSource",
+          "description": "The Figma node this spec was captured from."
         },
         "concern": {
           "type": "string",

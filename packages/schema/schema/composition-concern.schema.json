@@ -88,10 +88,7 @@
           "description": "Per-element styles, content, and children for the composition"
         },
         "layout": {
-          "type": "array",
-          "items": {
-            "$ref": "component.schema.json#/definitions/LayoutNode"
-          },
+          "$ref": "component.schema.json#/definitions/Layout",
           "description": "The composition's layout tree"
         }
       }
@@ -123,14 +120,8 @@
           "description": "Must state `concern: examples`. This is what identifies the document, and what separates it from the other concerns in root.schema.json."
         },
         "slotContent": {
-          "type": "object",
-          "description": "Named slot fills bundled alongside this composition's primary content (ADR-042, ADR-046).",
-          "patternProperties": {
-            "^[a-zA-Z0-9_-]+$": {
-              "$ref": "component.schema.json#/definitions/SlotContent"
-            }
-          },
-          "additionalProperties": false
+          "$ref": "component.schema.json#/definitions/SlotContentMap",
+          "description": "Named slot fills bundled alongside this composition's primary content (ADR-042, ADR-046)."
         },
         "images": {
           "$ref": "component.schema.json#/definitions/Images",
