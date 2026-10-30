@@ -38,34 +38,27 @@ let drift = 0;
 let checked = 0;
 const skipped = [];
 
-/** Figma declares its coverage; compare element-type membership key by key. */
+/**
+ * Figma declares its coverage as data — `style-bindings.json`, shipped by
+ * figma-from-specs and kept true by a test in that package. Reading the
+ * declaration rather than parsing keys.ts is the point: the two transforms
+ * write their tuples in different styles, and a regex that reads one misreads
+ * the other.
+ */
 const verifyFigma = () => {
-  const keysFile = resolve(pkg, '../../../specs-transforms/packages/figma-from-specs/src/Styles/keys.ts');
-  if (!existsSync(keysFile)) return skipped.push('figma — figma-from-specs not checked out');
+  const declaredFile = resolve(pkg, '../../../specs-transforms/packages/figma-from-specs/src/Styles/style-bindings.json');
+  if (!existsSync(declaredFile)) return skipped.push('figma — figma-from-specs not checked out');
   checked++;
 
-  const src = read(keysFile);
-  const groups = {};
-  const re = /const\s+([A-Z_]+)\s*=\s*\[([\s\S]*?)\]\s*as const/g;
-  let m;
-  while ((m = re.exec(src))) {
-    groups[m[1]] = {
-      literals: [...m[2].matchAll(/'([a-zA-Z]+)'/g)].map((x) => x[1]),
-      spreads: [...m[2].matchAll(/\.\.\.([A-Z_]+)/g)].map((x) => x[1]),
-    };
+  const impl = JSON.parse(read(declaredFile));
+  if (impl.direction !== 'spec-to-figma') {
+    drift++;
+    console.error(`DRIFT figma: implementation declares direction "${impl.direction}", expected "spec-to-figma"`);
   }
-  const seen = new Set();
-  const expand = (n) => {
-    if (seen.has(n) || !groups[n]) return [];
-    seen.add(n);
-    const out = [...groups[n].literals, ...groups[n].spreads.flatMap(expand)];
-    seen.delete(n);
-    return out;
-  };
-  const TYPES = ['COMPONENT','FRAME','SLOT','INSTANCE','TEXT','VECTOR','ELLIPSE','STAR','POLYGON','RECTANGLE','LINE','GLYPH'];
+  const elements = impl.elements ?? {};
   const actual = {};
   for (const k of styleProps) {
-    actual[k] = TYPES.filter((t) => groups[t] && new Set(expand(t)).has(k)).map((t) => t.toLowerCase()).sort();
+    actual[k] = Object.entries(elements).filter(([, keys]) => keys.includes(k)).map(([t]) => t).sort();
   }
 
   const declared = bindings('figma').concepts.styles;
