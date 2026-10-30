@@ -93,22 +93,24 @@
         "notes": null
       },
       "width": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "layoutToCSS",
           "size"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "intrinsicSize"
       },
       "height": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "layoutToCSS",
           "size"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "intrinsicSize"
       },
       "minWidth": {
         "disposition": "unverified",
@@ -143,104 +145,116 @@
         "notes": null
       },
       "position": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "position",
           "styleToCSS"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "absolutePositioning"
       },
       "top": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "position"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "absolutePositioning"
       },
       "bottom": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "position"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "absolutePositioning"
       },
       "start": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "position",
           "textAlign"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "absolutePositioning"
       },
       "end": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "position",
           "textAlign"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "absolutePositioning"
       },
       "centerHorizontalOffset": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "position"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "absolutePositioning"
       },
       "centerVerticalOffset": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "position"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "absolutePositioning"
       },
       "layoutSizingHorizontal": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "layoutToCSS"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "autoLayoutSizing"
       },
       "layoutSizingVertical": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "layoutToCSS"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "autoLayoutSizing"
       },
       "strokes": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "border",
           "options"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "strokeRendering"
       },
       "strokeAlign": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "border"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "strokeRendering"
       },
       "strokeWeight": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "border"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "strokeRendering"
       },
       "strokeDashPattern": {
         "disposition": "unverified",
@@ -271,29 +285,32 @@
         "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand."
       },
       "textOverflow": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "truncation"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "textTruncation"
       },
       "maxLines": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "layoutToCSS",
           "truncation"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "textTruncation"
       },
       "mainAxisAlignment": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "layoutToCSS"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "autoLayout"
       },
       "primaryAxisSizingMode": {
         "disposition": "unverified",
@@ -302,36 +319,40 @@
         "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand."
       },
       "crossAxisAlignment": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "layoutToCSS"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "autoLayout"
       },
       "layoutMode": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "layoutToCSS"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "autoLayout"
       },
       "wrap": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "layoutToCSS"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "autoLayout"
       },
       "wrapAlignment": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "layoutToCSS"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "autoLayout"
       },
       "itemReverseZIndex": {
         "disposition": "unverified",
@@ -340,12 +361,13 @@
         "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand."
       },
       "itemSpacing": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "layoutToCSS"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "autoLayout"
       },
       "padding": {
         "disposition": "unverified",
@@ -362,12 +384,157 @@
         "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand."
       },
       "aspectRatio": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "aspectRatio"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "cluster": "intrinsicSize"
+      }
+    },
+    "styleClusters": {
+      "autoLayout": {
+        "disposition": "bound",
+        "keys": [
+          "layoutMode",
+          "mainAxisAlignment",
+          "crossAxisAlignment",
+          "wrap",
+          "wrapAlignment",
+          "itemSpacing"
+        ],
+        "outputs": [
+          "display",
+          "flex-direction",
+          "justify-content",
+          "align-items",
+          "flex-wrap",
+          "gap",
+          "column-gap",
+          "row-gap"
+        ],
+        "resolution": "layoutMode selects display:flex plus flex-direction; absent, the cluster emits nothing and the element stays in flow. mainAxisAlignment becomes justify-content and crossAxisAlignment becomes align-items — both meaningless without layoutMode.",
+        "partial": "A non-negative itemSpacing emits gap. A NEGATIVE itemSpacing emits no gap at all: overlap is expressed as a negative margin on a sibling-combinator rule (`selector > * + *`) emitted by a different module entirely, so the declaration does not land on this element.",
+        "module": [
+          "layoutToCSS",
+          "elementRules (overlapRule)"
+        ],
+        "notes": "css/style/layoutToCSS.ts:39-96; css/sheet/elementRules.ts:254-268"
+      },
+      "autoLayoutSizing": {
+        "disposition": "bound",
+        "keys": [
+          "layoutSizingHorizontal",
+          "layoutSizingVertical"
+        ],
+        "outputs": [
+          "width: fit-content",
+          "height: fit-content",
+          "flex: 1 0 0",
+          "width: 100%",
+          "height: 100%",
+          "flex-shrink: 0"
+        ],
+        "resolution": "Resolved against facts about the PARENT, not this element: the parent layoutMode axis and the parent crossAxisAlignment. FILL emits flex:1 0 0 on the parent main axis, width/height:100% across it, and NOTHING when the parent cross-stretches. HUG emits fit-content unless the parent main axis already hugs.",
+        "partial": "flex-shrink:0 is gated on whether layoutSizing OR the matching width/height is stated at all — three keys plus a default-block flag jointly decide one declaration. clipsContent and maxLines on this element suppress the HUG branch.",
+        "module": [
+          "layoutToCSS"
+        ],
+        "notes": "css/style/layoutToCSS.ts:130-179. A per-key table cannot state this: the same key value yields three different outputs depending on the parent."
+      },
+      "absolutePositioning": {
+        "disposition": "bound",
+        "keys": [
+          "position",
+          "top",
+          "bottom",
+          "start",
+          "end",
+          "centerHorizontalOffset",
+          "centerVerticalOffset"
+        ],
+        "outputs": [
+          "position: absolute",
+          "position: static",
+          "inset-block-start",
+          "inset-block-end",
+          "inset-inline-start",
+          "inset-inline-end",
+          "translate"
+        ],
+        "resolution": "An explicit position wins outright. Absent, impliesAbsolute decides from inset presence plus the parent layoutMode: outside auto-layout any inset implies absolute; inside it, only a non-zero inset or two opposing anchors do — zero-only single anchors are canvas noise.",
+        "partial": "An edge anchor on an axis cancels the centre offset for that same axis, because emitting both would put two values on one property. translate carries -50% only on the axes the centre offsets survived on.",
+        "module": [
+          "position"
+        ],
+        "notes": "css/style/position.ts:4-27 (hasInsets, impliesAbsolute), 84-107 (centerDecls)"
+      },
+      "strokeRendering": {
+        "disposition": "bound",
+        "keys": [
+          "strokes",
+          "strokeAlign",
+          "strokeWeight"
+        ],
+        "outputs": [
+          "border-color",
+          "border-style",
+          "border-width",
+          "outline-color",
+          "outline-style",
+          "outline-width",
+          "outline-offset",
+          "border-image: none"
+        ],
+        "resolution": "strokeWeight SHAPE decides the property family: a per-side object becomes border-*, a scalar or token becomes outline-*. A gradient stroke takes neither — it is painted by a separate pseudo-element rule.",
+        "partial": "strokeAlign contributes no declaration of its own; it only flips the sign of outline-offset, and is skipped for OUTSIDE and CENTER.",
+        "module": [
+          "border"
+        ],
+        "notes": "css/style/border.ts:51-53 (asOutline), 73-141. The same strokes value maps to a different CSS property depending on a sibling key shape."
+      },
+      "intrinsicSize": {
+        "disposition": "bound",
+        "keys": [
+          "width",
+          "height",
+          "aspectRatio"
+        ],
+        "outputs": [
+          "width",
+          "height",
+          "aspect-ratio"
+        ],
+        "resolution": "A stated aspectRatio suppresses the height declaration even though height is present in the document — the ratio derives it.",
+        "partial": "minWidth/minHeight/maxWidth/maxHeight are independent and map one-to-one.",
+        "module": [
+          "size",
+          "aspectRatio"
+        ],
+        "notes": "css/style/size.ts:22-34"
+      },
+      "textTruncation": {
+        "disposition": "bound",
+        "keys": [
+          "textOverflow",
+          "maxLines"
+        ],
+        "outputs": [
+          "white-space",
+          "overflow",
+          "text-overflow",
+          "display: -webkit-box",
+          "-webkit-box-orient",
+          "-webkit-line-clamp",
+          "line-clamp"
+        ],
+        "resolution": "A truth table, not a per-key mapping: maxLines of 1, more than 1, or absent, crossed with textOverflow ELLIPSIS, yields three structurally different declaration sets.",
+        "partial": "maxLines above 1 switches the element to a -webkit-box, which changes its display and therefore interacts with the autoLayout cluster.",
+        "module": [
+          "truncation"
+        ],
+        "notes": "css/style/truncation.ts:12-37"
       }
     }
   },

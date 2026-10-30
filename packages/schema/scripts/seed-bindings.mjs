@@ -116,18 +116,72 @@ const seedReact = (root) => {
   return bindings;
 };
 
+/**
+ * Style defaults are NOT a per-platform concern: "an absent key means X" is a
+ * statement about the document, and every platform must agree on it or they
+ * disagree about what the same spec says.
+ *
+ * They are nonetheless declared in exactly one place today — STYLE_DEFAULTS in
+ * specs-from-figma/src/Component/Styles/defaults.ts — and nowhere in this repo.
+ * A consumer outside that package cannot correctly interpret an omitted style
+ * key. Seeding them here is the first step to giving them a home in the
+ * contract; see the recommendation in the assessment.
+ */
+const seedDefaults = (root) => {
+  const file = join(root, 'packages/specs-from-figma/src/Component/Styles/defaults.ts');
+  if (!existsSync(file)) {
+    console.error(`not found: ${file}`);
+    process.exit(1);
+  }
+  const src = readFileSync(file, 'utf8');
+  const parsed = Object.fromEntries(
+    [...src.matchAll(/^\s{2}([a-zA-Z]+):\s*(.+?),\s*$/gm)].map(([, k, v]) => [k, v.trim()])
+  );
+  const lit = (v) =>
+    v === 'null' ? null : v === 'true' ? true : v === 'false' ? false
+      : /^-?\d+(\.\d+)?$/.test(v) ? Number(v)
+      : v.replace(/^'(.*)'$/, '$1');
+
+  const out = {};
+  for (const key of styleKeys()) {
+    const has = key in parsed;
+    out[key] = {
+      assumed: has ? lit(parsed[key]) : null,
+      declaredBy: has
+        ? 'specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)'
+        : 'none',
+      notes: has ? null : 'No declared default — a consumer reading this key as absent is guessing.',
+    };
+  }
+  return out;
+};
+
 const [platform, rootArg] = process.argv.slice(2);
 const defaults = {
   figma: resolve(pkg, '../../../specs-transforms'),
   react: resolve(pkg, '../..'),
+  defaults: resolve(pkg, '../../../specs-transforms'),
 };
 
-if (!['figma', 'react'].includes(platform)) {
-  console.error('Usage: node scripts/seed-bindings.mjs <figma|react> [root]');
+if (!['figma', 'react', 'defaults'].includes(platform)) {
+  console.error('Usage: node scripts/seed-bindings.mjs <figma|react|defaults> [root]');
   process.exit(1);
 }
 
 const root = rootArg ? resolve(rootArg) : defaults[platform];
+
+if (platform === 'defaults') {
+  console.log(JSON.stringify({
+    kind: 'style-defaults',
+    seededFrom: root,
+    note: 'What a consumer assumes when a style key is ABSENT from a document. Spec-level, not per-platform: platforms that disagree here disagree about what the same document says.',
+    caveat: 'Absence is ambiguous today. removeDefaults drops any style whose value is null, so an absent key may mean "equal to the default" OR "evaluated to null for a structural reason" — strokeAlign is forced null when no visible stroke exists, which is not the same as strokeAlign being INSIDE. A consumer cannot tell these apart from the document.',
+    homeProblem: 'STYLE_DEFAULTS is declared only in specs-from-figma and is referenced nowhere in the spectacular repo. Until it lives in the contract, no consumer outside that package can interpret an omitted key correctly.',
+    defaults: seedDefaults(root),
+  }, null, 2));
+  process.exit(0);
+}
+
 const styles = platform === 'figma' ? seedFigma(root) : seedReact(root);
 
 console.log(JSON.stringify({

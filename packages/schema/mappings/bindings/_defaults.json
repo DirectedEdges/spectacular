@@ -1,0 +1,239 @@
+{
+  "kind": "style-defaults",
+  "seededFrom": "/Users/nathanacurtis/Github Desktop/specs-transforms",
+  "note": "What a consumer assumes when a style key is ABSENT from a document. Spec-level, not per-platform: platforms that disagree here disagree about what the same document says.",
+  "caveat": "Absence is ambiguous today. removeDefaults drops any style whose value is null, so an absent key may mean \"equal to the default\" OR \"evaluated to null for a structural reason\" — strokeAlign is forced null when no visible stroke exists, which is not the same as strokeAlign being INSIDE. A consumer cannot tell these apart from the document.",
+  "homeProblem": "STYLE_DEFAULTS is declared only in specs-from-figma and is referenced nowhere in the spectacular repo. Until it lives in the contract, no consumer outside that package can interpret an omitted key correctly.",
+  "defaults": {
+    "rotation": {
+      "assumed": 0,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "visible": {
+      "assumed": true,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "opacity": {
+      "assumed": 1,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "locked": {
+      "assumed": false,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "backgroundColor": {
+      "assumed": null,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "backgroundImage": {
+      "assumed": null,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "fillColor": {
+      "assumed": null,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "textColor": {
+      "assumed": null,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "effects": {
+      "assumed": null,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "clipsContent": {
+      "assumed": false,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "cornerRadius": {
+      "assumed": 0,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "width": {
+      "assumed": 0,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "height": {
+      "assumed": 0,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "minWidth": {
+      "assumed": 0,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "minHeight": {
+      "assumed": 0,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "maxWidth": {
+      "assumed": null,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "maxHeight": {
+      "assumed": null,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "position": {
+      "assumed": "AUTO",
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "top": {
+      "assumed": null,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "bottom": {
+      "assumed": null,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "start": {
+      "assumed": null,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "end": {
+      "assumed": null,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "centerHorizontalOffset": {
+      "assumed": null,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "centerVerticalOffset": {
+      "assumed": null,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "layoutSizingHorizontal": {
+      "assumed": "FIXED",
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "layoutSizingVertical": {
+      "assumed": "FIXED",
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "strokes": {
+      "assumed": null,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "strokeAlign": {
+      "assumed": "INSIDE",
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "strokeWeight": {
+      "assumed": 0,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "strokeDashPattern": {
+      "assumed": null,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "typography": {
+      "assumed": null,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "textAlignHorizontal": {
+      "assumed": "START",
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "textAlignVertical": {
+      "assumed": "TOP",
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "textOverflow": {
+      "assumed": "CLIP",
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "maxLines": {
+      "assumed": null,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "mainAxisAlignment": {
+      "assumed": "START",
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "primaryAxisSizingMode": {
+      "assumed": "AUTO",
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "crossAxisAlignment": {
+      "assumed": "START",
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "layoutMode": {
+      "assumed": "NONE",
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "wrap": {
+      "assumed": false,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "wrapAlignment": {
+      "assumed": null,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "itemReverseZIndex": {
+      "assumed": false,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "itemSpacing": {
+      "assumed": 0,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "padding": {
+      "assumed": 0,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "cornerSmoothing": {
+      "assumed": 0,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    },
+    "aspectRatio": {
+      "assumed": null,
+      "declaredBy": "specs-from-figma/src/Component/Styles/defaults.ts (STYLE_DEFAULTS)",
+      "notes": null
+    }
+  }
+}

@@ -92,6 +92,7 @@ export default defineConfig({
               items: [
                 { label: 'Figma', slug: 'schema/mappings/figma' },
                 { label: 'React', slug: 'schema/mappings/react' },
+                { label: 'Style Defaults', slug: 'schema/mappings/defaults' },
               ],
             },
             { label: 'Decision Records (ADRs)', slug: 'adr' },

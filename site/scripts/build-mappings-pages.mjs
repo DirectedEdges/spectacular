@@ -23,7 +23,10 @@ const outDir = resolve(root, 'src/content/docs/schema/mappings');
 const DESCRIPTIONS = {
   FIGMA: 'How the Figma binding realises the Specs schema — per-style-key disposition, value forms, and declared degradation',
   REACT: 'How the React binding realises the Specs schema — per-style-key disposition, value forms, and declared degradation',
+  DEFAULTS: 'What a consumer assumes when a style key is absent from a document — the spec-level default table, and why absence is ambiguous',
 };
+
+const TITLES = { DEFAULTS: 'Style Defaults' };
 
 if (!existsSync(srcDir)) {
   console.log('mappings pages: no packages/schema/mappings — nothing to render');
@@ -48,7 +51,7 @@ for (const file of files) {
   // The package file links to ../SPECIFICATION.md, which is not the site's shape.
   const linked = body.replace(/\]\(\.\.\/SPECIFICATION\.md\)/g, '](/schema/specification/)');
 
-  const title = platform.charAt(0) + platform.slice(1).toLowerCase();
+  const title = TITLES[platform] ?? platform.charAt(0) + platform.slice(1).toLowerCase();
   const page = `---
 title: "${title}"
 description: "${DESCRIPTIONS[platform] ?? `How the ${title} binding realises the Specs schema`}"

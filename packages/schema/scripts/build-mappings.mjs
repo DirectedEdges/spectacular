@@ -64,17 +64,45 @@ const renderPlatform = (file) => {
       ? v.target ? `\`${v.target}\`` : '—'
       : v.module?.length ? v.module.map((m) => `\`${m}\``).join(', ') : '—';
 
+  const clusters = b.concepts?.styleClusters ?? {};
+
+  // Cross-reference both ways. A key cannot quietly leave the table by being
+  // "handled elsewhere", and a cluster cannot claim a key the table disowns.
+  for (const [name, c] of Object.entries(clusters)) {
+    for (const k of c.keys ?? []) {
+      if (!(k in styles)) failures.push(`${file}: cluster "${name}" names \`${k}\`, absent from concepts.styles`);
+      else if (styles[k].cluster !== name) failures.push(`${file}: \`${k}\` is in cluster "${name}" but declares cluster "${styles[k].cluster ?? 'none'}"`);
+    }
+    if (!c.resolution) failures.push(`${file}: cluster "${name}" has no resolution rule — the rule IS the mapping`);
+    if (!c.partial) failures.push(`${file}: cluster "${name}" does not say what a partially present cluster does`);
+  }
+  for (const [k, v] of Object.entries(styles)) {
+    if (v.cluster && !(v.cluster in clusters)) failures.push(`${file}: \`${k}\` names cluster "${v.cluster}", which is not declared`);
+  }
+
   const rows = styleProps.map((k) => {
     const v = styles[k] ?? { disposition: 'unverified' };
     const scope = isFigma
       ? (v.elements?.length === 12 ? 'all' : (v.elements?.length ? v.elements.join(', ') : '—'))
       : '';
-    return `| \`${k}\` | ${badge(v.disposition)} | ${cell(v)} | ${isFigma ? scope + ' | ' : ''}${v.notes ?? ''} |`;
+    const realises = v.cluster ? `cluster [${v.cluster}](#${v.cluster.toLowerCase()})` : cell(v);
+    return `| \`${k}\` | ${badge(v.disposition)} | ${realises} | ${isFigma ? scope + ' | ' : ''}${v.notes ?? ''} |`;
   });
 
   const header = isFigma
     ? `| Style key | Disposition | ${col} | Element types | Notes |\n|---|---|---|---|---|`
     : `| Style key | Disposition | ${col} | Notes |\n|---|---|---|---|`;
+
+  const clusterSections = Object.entries(clusters).map(([name, c]) => `### ${name}
+
+${badge(c.disposition)} — keys: ${c.keys.map((k) => `\`${k}\``).join(', ')}
+
+**Outputs.** ${c.outputs.map((o) => `\`${o}\``).join(', ')}
+
+**Resolution.** ${c.resolution}
+
+**Partially present.** ${c.partial}
+${c.stage ? `\n**Stage.** \`${c.stage}\` — produced by a later pass, not read directly.\n` : ''}${c.notes ? `\n*${c.notes}*\n` : ''}`).join('\n');
 
   return `# ${title} binding
 
@@ -116,8 +144,24 @@ ${b.valueForms?.summary ?? ''}
 
 ## Styles
 
+A key whose row says *cluster* does not map on its own — see the cluster below. Writing a
+per-key mapping for it would be false, not merely incomplete.
+
 ${header}
 ${rows.join('\n')}
+
+## Clusters
+
+Keys that resolve jointly. No single key in a cluster determines any single output, so the
+resolution rule is the mapping rather than a row in the table above.
+
+${clusterSections}
+## Absent keys
+
+What a consumer assumes when a style key is **absent** is spec-level, not per-platform:
+two platforms that answer differently disagree about what the same document says. It is
+declared once, in [\`bindings/_defaults.json\`](bindings/_defaults.json), and summarised in
+[\`DEFAULTS.md\`](DEFAULTS.md).
 
 ## Concepts not yet bound
 
@@ -132,14 +176,74 @@ here so their absence is visible rather than implied:
 `;
 };
 
-const files = readdirSync(bindingsDir).filter((f) => f.endsWith('.json'));
+/** The spec-level default table — one page, not per platform. */
+const renderDefaults = () => {
+  const b = JSON.parse(readFileSync(join(bindingsDir, '_defaults.json'), 'utf8'));
+  const d = b.defaults ?? {};
+  const missing = styleProps.filter((k) => !(k in d));
+  if (missing.length) failures.push(`_defaults.json: missing style keys — ${missing.join(', ')}`);
+
+  const undeclared = styleProps.filter((k) => d[k]?.declaredBy === 'none');
+  const rows = styleProps.map((k) => {
+    const v = d[k] ?? {};
+    const assumed = v.assumed === null ? '*apply nothing*' : `\`${JSON.stringify(v.assumed)}\``;
+    return `| \`${k}\` | ${assumed} | ${v.declaredBy === 'none' ? '**none**' : v.declaredBy} |`;
+  });
+
+  return `# Style defaults
+
+**What a consumer assumes when a style key is absent from a document — draft.**
+
+Normative frame: [\`SPECIFICATION.md\`](../SPECIFICATION.md) §11. Generated from
+\`mappings/bindings/_defaults.json\`; edit that file, never this page.
+
+This is **not** a per-platform concern. "An absent key means X" is a statement about the
+document, and two platforms that answer differently disagree about what the same document
+says.
+
+## The problem
+
+${b.homeProblem ?? ''}
+
+## Absence is ambiguous
+
+${b.caveat ?? ''}
+
+A key can be absent for at least three reasons, and a consumer reading one document cannot
+tell them apart:
+
+| Reason | Recoverable by a consumer? |
+|---|---|
+| The value equalled a default and was dropped at generation | No — needs the table below |
+| A variant inherits it from \`default\` under layering | Partly — by reading \`default\`, if it knows the run used layered details |
+| The element type cannot carry it | No — needs the per-element-type key table, which ships in no published artefact |
+
+Nothing in a serialized document marks which applies. There is no sentinel, no metadata
+member, no \`$extensions\` marker.
+
+## Defaults
+
+${undeclared.length ? `${undeclared.length} of ${styleProps.length} keys have no declared default.` : `All ${styleProps.length} keys have a declared default.`}
+
+| Style key | Assumed when absent | Declared by |
+|---|---|---|
+${rows.join('\n')}
+`;
+};
+
+const files = readdirSync(bindingsDir).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
+const pages = [];
 for (const file of files) {
   const platform = file.replace(/\.json$/, '');
-  const out = join(pkg, `mappings/${platform.toUpperCase()}.md`);
-  const page = renderPlatform(file);
-  if (failures.length) continue;
-  writeFileSync(out, page);
-  console.log(`mappings: wrote mappings/${platform.toUpperCase()}.md`);
+  pages.push([join(pkg, `mappings/${platform.toUpperCase()}.md`), renderPlatform(file), `${platform.toUpperCase()}.md`]);
+}
+pages.push([join(pkg, 'mappings/DEFAULTS.md'), renderDefaults(), 'DEFAULTS.md']);
+
+if (!failures.length) {
+  for (const [out, page, label] of pages) {
+    writeFileSync(out, page);
+    console.log(`mappings: wrote mappings/${label}`);
+  }
 }
 
 if (failures.length) {
