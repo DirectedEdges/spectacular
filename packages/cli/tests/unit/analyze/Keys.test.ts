@@ -17,7 +17,7 @@ type KeysYaml = {
   };
   byComponent: Record<string, {
     divergent: number;
-    props?: Array<{ key: string; figmaName: string; cause: string }>;
+    props?: Array<{ key: string; figmaName: string; cause: string; segment?: string }>;
     anatomy?: Array<{ key: string; figmaName: string; cause: string }>;
   }>;
   byCause: Array<{ cause: string; occurrences: number; names: string[] }>;
@@ -46,10 +46,13 @@ describe('KeysAnalyzer', () => {
   /**
    * @param figmaKeys The convention the specs declare in `metadata.config`. Defaults to
    *   SENTENCE; pass undefined to model a catalog generated under the NONE default.
+   * @param objectProps The workspace's `objectProps` block, when the catalog folds
+   *   object-prop members (ADR-111) on something other than the default separator.
    */
   async function runAnalyzer(
     components: Record<string, Record<string, unknown>>,
     figmaKeys: 'SENTENCE' | 'TITLE' | undefined = 'SENTENCE',
+    objectProps?: { separator?: string },
   ) {
     const a = new KeysAnalyzer();
     for (const [componentKey, apiYaml] of Object.entries(components)) {
@@ -58,7 +61,7 @@ describe('KeysAnalyzer', () => {
       const spec = figmaKeys
         ? { ...apiYaml, metadata: { config: { format: { keys: 'CAMEL', figmaKeys } } } }
         : apiYaml;
-      await a.run(spec, { specDir: compDir, outputDir: compDir, workspaceDir: compDir, specsRoot: compDir, kind: 'component' as const, componentKey, outputFormat: 'YAML', tokensFormat: 'TOKEN' });
+      await a.run(spec, { specDir: compDir, outputDir: compDir, workspaceDir: compDir, specsRoot: compDir, kind: 'component' as const, componentKey, outputFormat: 'YAML', tokensFormat: 'TOKEN', ...(objectProps ? { platform: { naming: 'NONE', slotConstraints: false, inferNumberProps: false, slotPrimitives: false, objectProps } } : {}) } as never);
     }
     await a.finalize!(outputDir, analysisDir);
     const file = path.join(analysisDir, 'keys.yaml');
@@ -254,6 +257,86 @@ describe('KeysAnalyzer', () => {
       expect(result!.summary.divergentNames).toBe(0);
       expect(warn).toHaveBeenCalledWith(expect.stringContaining('no Figma naming convention declared'));
       warn.mockRestore();
+    });
+  });
+
+  /**
+   * An object prop (ADR-111) carries no Figma name of its own, so reading it as an
+   * ordinary prop dropped every one of its members: a `Margin.Compact` that used to be
+   * reported stopped appearing under either half of its name once `objectProps` folded
+   * it. The members are the real property names in the file.
+   */
+  describe('object prop members', () => {
+    /** The shape the generator emits: the flat source name recorded on each member. */
+    const objectProp = (members: Record<string, string>) => ({
+      type: 'object',
+      members: Object.fromEntries(
+        Object.entries(members).map(([key, figmaName]) => [key, withName('string', figmaName)]),
+      ),
+    });
+
+    it('reports a divergent member under a dotted key', async () => {
+      const result = await runAnalyzer({
+        dsCard: { props: { anObjectProp: objectProp({ label: 'AnObjectProp.Label' }) } },
+      });
+      expect(result!.byComponent.dsCard.props).toEqual([
+        { key: 'anObjectProp.label', figmaName: 'AnObjectProp.Label', cause: 'casing', segment: 'AnObjectProp' },
+      ]);
+    });
+
+    it('does not report the separator as a symbol problem', async () => {
+      // Measuring the whole compound name would fail on the dot and report every
+      // object-prop member in the library, naming an edit nobody should make.
+      const result = await runAnalyzer({
+        dsCard: { props: { margin: objectProp({ compact: 'Margin.Compact', expanded: 'Margin.Expanded' }) } },
+      });
+      expect(result!.summary.divergentNames).toBe(0);
+      expect(result!.byComponent).toEqual({});
+    });
+
+    it('counts each member as a name, and the container as none', async () => {
+      const result = await runAnalyzer({
+        dsCard: {
+          props: {
+            margin: objectProp({ compact: 'Margin.Compact', expanded: 'Margin.Expanded' }),
+            size: withName('string', 'Size'),
+          },
+        },
+      });
+      expect(result!.summary.totalNames).toBe(3);
+    });
+
+    it('names the failing segment when the other half is well formed', async () => {
+      const result = await runAnalyzer({
+        dsCard: { props: { margin: objectProp({ compact: 'Margin.Compact Thing' }) } },
+      });
+      expect(result!.byComponent.dsCard.props![0].segment).toBe('Compact Thing');
+    });
+
+    it('splits on the separator the workspace declared, not always a dot', async () => {
+      const result = await runAnalyzer({
+        dsCard: { props: { margin: objectProp({ compact: 'Margin/Compact Thing' }) } },
+      }, 'SENTENCE', { separator: '/' });
+      expect(result!.byComponent.dsCard.props).toEqual([
+        { key: 'margin.compact', figmaName: 'Margin/Compact Thing', cause: 'casing', segment: 'Compact Thing' },
+      ]);
+    });
+
+    it('aggregates a repeated member name across components', async () => {
+      const props = { margin: objectProp({ compact: 'A11y label.Compact' }) };
+      const result = await runAnalyzer({ dsAvatar: { props }, dsBadge: { props } });
+      const entry = result!.byName.find(n => n.figmaName === 'A11y label.Compact')!;
+      expect(entry.occurrences).toBe(2);
+      expect(entry.cause).toBe('mixed-letter-digit');
+    });
+
+    it('treats a prop typed object with no members as an ordinary prop', async () => {
+      const result = await runAnalyzer({
+        dsCard: { props: { margin: { type: 'object', members: {}, ...withName('string', 'Start Icon') } } },
+      });
+      expect(result!.byComponent.dsCard.props).toEqual([
+        { key: 'margin', figmaName: 'Start Icon', cause: 'casing' },
+      ]);
     });
   });
 

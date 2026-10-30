@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+### Fixed
+
+- **`specs analyze keys` now measures the Figma name behind each object-prop member** (ADR-111), under a `margin.compact` key and one segment at a time, so a declared separator is never flagged. A divergent row carries `segment`, naming the half to fix
+
 ### Removed
 
 

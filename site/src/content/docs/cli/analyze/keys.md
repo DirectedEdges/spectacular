@@ -105,6 +105,25 @@ byComponent:
 
 Names appear under `props` (component property names) or `anatomy` (layer names). A surface with nothing to fix is omitted.
 
+#### Object prop members
+
+With [`objectProps`](/settings/object-props/) declared, a Figma property named `Margin.Compact` folds into a member of a `margin` prop. The fold itself has no Figma name — the members do — so each member is listed under its own `prop.member` key, carrying the flat source name as it stands in the file:
+
+```yaml
+byComponent:
+  dsCard:
+    divergent: 1
+    props:
+      - key: margin.compact
+        figmaName: AnObjectProp.Compact
+        cause: casing
+        segment: AnObjectProp
+```
+
+Compound names are measured one segment at a time, so the separator you declared is never reported as a `symbol` problem. `segment` appears only on these rows and names the half that failed — without it the row shows a whole name beside a cause that describes part of it, and the separator reads as the defect. Where both halves are wrong, the first is named, same as `cause`.
+
+Each member counts as one of `totalNames`; the fold counts as none.
+
 ### byCause
 
 The same names grouped by what is wrong with them, most common first. Useful for deciding what to fix in bulk: a library with 28 casing problems and 2 symbol problems has one systemic issue and two one-offs.
@@ -161,4 +180,5 @@ Two things worth knowing before a cleanup:
 
 - [Key Formatting guide](/guides/key-formatting/) — the safe key grammar and what happens to unsafe names
 - [Figma Keys](/settings/figma-keys/) — declaring the source convention this analyzer depends on
+- [Object Props](/settings/object-props/) — the fold whose members this report measures one segment at a time
 - [Analyze overview](/cli/analyze/) — options shared by every analyzer
