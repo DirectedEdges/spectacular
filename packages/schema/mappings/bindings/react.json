@@ -1,0 +1,381 @@
+{
+  "platform": "react",
+  "seededFrom": "/Users/nathanacurtis/Github Desktop/spectacular",
+  "note": "disposition: bound (confirmed against the implementation) | approximated (maps with stated loss) | unsupported (declared, with stated behaviour) | unverified (coverage detected, mapping not yet confirmed by a human). Only bound rows are claims; unverified rows are work.",
+  "concepts": {
+    "styles": {
+      "rotation": {
+        "disposition": "unverified",
+        "module": [
+          "transform"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "visible": {
+        "disposition": "unverified",
+        "module": [
+          "effects",
+          "layoutToCSS",
+          "visibility"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "opacity": {
+        "disposition": "unverified",
+        "module": [
+          "opacity"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "locked": {
+        "disposition": "unverified",
+        "module": [],
+        "declarations": null,
+        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand."
+      },
+      "backgroundColor": {
+        "disposition": "unverified",
+        "module": [
+          "fills"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "backgroundImage": {
+        "disposition": "unverified",
+        "module": [],
+        "declarations": null,
+        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand."
+      },
+      "fillColor": {
+        "disposition": "unverified",
+        "module": [
+          "fills"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "textColor": {
+        "disposition": "unverified",
+        "module": [
+          "fills"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "effects": {
+        "disposition": "unverified",
+        "module": [
+          "effects"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "clipsContent": {
+        "disposition": "unverified",
+        "module": [
+          "layoutToCSS",
+          "overflow",
+          "truncation"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "cornerRadius": {
+        "disposition": "unverified",
+        "module": [
+          "cornerRadius"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "width": {
+        "disposition": "unverified",
+        "module": [
+          "layoutToCSS",
+          "size"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "height": {
+        "disposition": "unverified",
+        "module": [
+          "layoutToCSS",
+          "size"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "minWidth": {
+        "disposition": "unverified",
+        "module": [
+          "size"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "minHeight": {
+        "disposition": "unverified",
+        "module": [
+          "size"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "maxWidth": {
+        "disposition": "unverified",
+        "module": [
+          "size"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "maxHeight": {
+        "disposition": "unverified",
+        "module": [
+          "size"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "position": {
+        "disposition": "unverified",
+        "module": [
+          "position",
+          "styleToCSS"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "top": {
+        "disposition": "unverified",
+        "module": [
+          "position"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "bottom": {
+        "disposition": "unverified",
+        "module": [
+          "position"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "start": {
+        "disposition": "unverified",
+        "module": [
+          "position",
+          "textAlign"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "end": {
+        "disposition": "unverified",
+        "module": [
+          "position",
+          "textAlign"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "centerHorizontalOffset": {
+        "disposition": "unverified",
+        "module": [
+          "position"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "centerVerticalOffset": {
+        "disposition": "unverified",
+        "module": [
+          "position"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "layoutSizingHorizontal": {
+        "disposition": "unverified",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "layoutSizingVertical": {
+        "disposition": "unverified",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "strokes": {
+        "disposition": "unverified",
+        "module": [
+          "border",
+          "options"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "strokeAlign": {
+        "disposition": "unverified",
+        "module": [
+          "border"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "strokeWeight": {
+        "disposition": "unverified",
+        "module": [
+          "border"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "strokeDashPattern": {
+        "disposition": "unverified",
+        "module": [],
+        "declarations": null,
+        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand."
+      },
+      "typography": {
+        "disposition": "unverified",
+        "module": [
+          "typography"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "textAlignHorizontal": {
+        "disposition": "unverified",
+        "module": [
+          "textAlign"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "textAlignVertical": {
+        "disposition": "unverified",
+        "module": [],
+        "declarations": null,
+        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand."
+      },
+      "textOverflow": {
+        "disposition": "unverified",
+        "module": [
+          "truncation"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "maxLines": {
+        "disposition": "unverified",
+        "module": [
+          "layoutToCSS",
+          "truncation"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "mainAxisAlignment": {
+        "disposition": "unverified",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "primaryAxisSizingMode": {
+        "disposition": "unverified",
+        "module": [],
+        "declarations": null,
+        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand."
+      },
+      "crossAxisAlignment": {
+        "disposition": "unverified",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "layoutMode": {
+        "disposition": "unverified",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "wrap": {
+        "disposition": "unverified",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "wrapAlignment": {
+        "disposition": "unverified",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "itemReverseZIndex": {
+        "disposition": "unverified",
+        "module": [],
+        "declarations": null,
+        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand."
+      },
+      "itemSpacing": {
+        "disposition": "unverified",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "padding": {
+        "disposition": "unverified",
+        "module": [
+          "padding"
+        ],
+        "declarations": null,
+        "notes": null
+      },
+      "cornerSmoothing": {
+        "disposition": "unverified",
+        "module": [],
+        "declarations": null,
+        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand."
+      },
+      "aspectRatio": {
+        "disposition": "unverified",
+        "module": [
+          "aspectRatio"
+        ],
+        "declarations": null,
+        "notes": null
+      }
+    }
+  },
+  "valueForms": {
+    "summary": "Every style value may be a literal, a TokenReference, a PropBinding, or a Conditional. A binding must say what it does with each.",
+    "literal": "bound",
+    "tokenReference": "bound — emitted per settings.spec.tokens; see code/style-mapping.md",
+    "propBinding": "unverified",
+    "conditional": "unverified"
+  }
+}

@@ -1,0 +1,682 @@
+{
+  "platform": "figma",
+  "seededFrom": "/Users/nathanacurtis/Github Desktop/specs-transforms",
+  "note": "disposition: bound (confirmed against the implementation) | approximated (maps with stated loss) | unsupported (declared, with stated behaviour) | unverified (coverage detected, mapping not yet confirmed by a human). Only bound rows are claims; unverified rows are work.",
+  "concepts": {
+    "styles": {
+      "rotation": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": "node.rotation",
+        "notes": "Degrees, written directly."
+      },
+      "visible": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "opacity": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": "node.opacity",
+        "notes": "A TokenReference binds the variable; otherwise the raw number is written."
+      },
+      "locked": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": "node.locked",
+        "notes": "Canvas interaction only — the Plugin API can still mutate a locked node, so it applies wherever it is reached, children included."
+      },
+      "backgroundColor": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "rectangle"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "backgroundImage": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "fillColor": {
+        "disposition": "unverified",
+        "elements": [
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "textColor": {
+        "disposition": "unverified",
+        "elements": [
+          "text"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "effects": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": "Effects.apply",
+        "notes": "Accepts Effects, TokenReference, or null."
+      },
+      "clipsContent": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": "node.clipsContent",
+        "notes": "Container types only; the key never reaches another type because no other key list admits it."
+      },
+      "cornerRadius": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "width": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "height": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "minWidth": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "minHeight": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "maxWidth": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "maxHeight": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "position": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "top": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "bottom": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "start": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "end": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "centerHorizontalOffset": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "centerVerticalOffset": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "layoutSizingHorizontal": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "layoutSizingVertical": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "strokes": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "strokeAlign": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "strokeWeight": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "strokeDashPattern": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "typography": {
+        "disposition": "bound",
+        "elements": [
+          "text"
+        ],
+        "target": "Typography.apply",
+        "notes": "Accepts Typography or TokenReference. A font that fails to load degrades to Inter Regular with a warning, never aborts."
+      },
+      "textAlignHorizontal": {
+        "disposition": "unverified",
+        "elements": [
+          "text"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "textAlignVertical": {
+        "disposition": "unverified",
+        "elements": [
+          "text"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "textOverflow": {
+        "disposition": "unverified",
+        "elements": [
+          "text"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "maxLines": {
+        "disposition": "bound",
+        "elements": [
+          "text"
+        ],
+        "target": "node.maxLines",
+        "notes": "Deferred to last — honoured only while textTruncation is ENDING, so textOverflow must land first."
+      },
+      "mainAxisAlignment": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "primaryAxisSizingMode": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": "node.primaryAxisSizingMode",
+        "notes": "Deferred after layoutSizingHorizontal/Vertical, which themselves write it — the shorthand would otherwise clobber the explicit primitive."
+      },
+      "crossAxisAlignment": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "layoutMode": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "wrap": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "wrapAlignment": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "itemReverseZIndex": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": "node.itemReverseZIndex",
+        "notes": "Auto-layout only — a frame with no layoutMode has nothing to reverse. layoutMode is structural and applied first."
+      },
+      "itemSpacing": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "padding": {
+        "disposition": "unverified",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": null,
+        "notes": null
+      },
+      "cornerSmoothing": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle"
+        ],
+        "target": "CornerStyle.applySmoothing",
+        "notes": "Skipped on TEXT nodes."
+      },
+      "aspectRatio": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "glyph"
+        ],
+        "target": "node.targetAspectRatio",
+        "notes": "Deferred to last — the lock reads the node final dimensions, so an earlier resize would be clobbered by later sizing keys."
+      }
+    }
+  },
+  "valueForms": {
+    "summary": "Every style value may be a literal, a TokenReference, a PropBinding, or a Conditional. A binding must say what it does with each.",
+    "literal": "bound",
+    "tokenReference": "bound — resolves the Figma variable; falls back to $extensions[com.figma].rawValue where the variable is unavailable",
+    "propBinding": "unverified",
+    "conditional": "unverified"
+  }
+}

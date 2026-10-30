@@ -362,6 +362,9 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-38 | `metadata.schema.url` resolves to the exact schema version named by `metadata.schema.version` | producer | §8.2, ADR-023 |
 | DSPEC-39 | When `settings.spec.color` is not `OBJECT`, every color-bearing value in the document is a string in that notation | validator | §2.6, ADR-043 |
 | DSPEC-40 | The length and order of a `ColorObject`'s `components` correspond to the channels of its `colorSpace` | validator | styles reference, ADR-009 |
+| DSPEC-41 | A platform binding declares a disposition for every property of `Styles` | binding | §11.1 |
+| DSPEC-42 | A platform binding declares its handling of each of the four style value forms | binding | §11.1 |
+| DSPEC-43 | A degradation applies the spec's own recorded fallback or applies nothing and warns; it never invents data the document does not carry | binding | §11.2 |
 
 Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.
 
@@ -377,3 +380,42 @@ Rules DSPEC-23 through 40 were harvested from ADRs 001–045 in a systematic sec
 - A test validating every `examples` value in the schema files against its enclosing definition (137 of 138 definitions currently carry no `examples` — issue 785 Step 2).
 
 Consumer requirements stated above (DSPEC-19, DSPEC-21, §1.5, §4.2, §6.3, §6.4, §6.5) bind any tool reading Specs documents, whether or not a validator exists.
+
+## 11. Platform bindings
+
+§§2–8 say what a Specs document *is*. They do not say what any platform must do with one. A **platform binding** closes that gap: one document per platform, stating how that platform realises the schema.
+
+Bindings live in `mappings/` beside this document — `mappings/FIGMA.md`, `mappings/REACT.md` — and are generated from the declarations in `mappings/bindings/<platform>.json`.
+
+### 11.1 What a binding declares
+
+A binding MUST declare, for every property of `Styles`, one of four dispositions (DSPEC-41):
+
+| Disposition | Meaning |
+|---|---|
+| `bound` | Realised, and confirmed against an implementation |
+| `approximated` | Realised with loss, and the loss is stated |
+| `unsupported` | Declared as not realised, with the resulting behaviour stated |
+| `unverified` | Coverage detected, mapping not confirmed by a human |
+
+A reader MAY rely on `bound`, `approximated` and `unsupported`. An `unverified` row asserts nothing — it records outstanding work, and a binding that is wholly `unverified` is a stub, not a specification.
+
+A binding MUST also declare what it does with each of the four value forms a style may take — a literal, a `TokenReference`, a `PropBinding`, a `Conditional` (DSPEC-42). A disposition for `padding` means nothing without saying whether a `Conditional` padding is realised, approximated, or dropped.
+
+A binding SHOULD declare dispositions for props, anatomy and elements, and layout. Where it does not, it MUST name the concept as undeclared so the absence is visible rather than implied.
+
+### 11.2 Degradation
+
+An `approximated` or `unsupported` disposition MUST state the resulting behaviour. "Not supported" alone is not a binding: a consumer needs to know whether the value is dropped silently, warned about, or substituted.
+
+A binding MUST NOT describe a degradation that invents data the document does not carry. Where a platform cannot realise a value, the permitted behaviours are to apply the spec's own recorded fallback, or to apply nothing and warn (DSPEC-43).
+
+### 11.3 Direction
+
+A binding MUST declare its direction. Figma is bidirectional — a document renders onto the canvas and is generated back from it — so its binding carries fidelity obligations both ways. The code platforms are emit-only, and a binding that does not say so implies a round trip that does not exist.
+
+### 11.4 Bindings are not the implementation
+
+A binding is a specification, not a description of one codebase. It is seeded from an implementation and continuously checked against it, but the declaration is authoritative: where they disagree, one of them is a defect, and the binding says which behaviour was intended.
+
+This separation is what lets the binding be published from this repository while an implementation lives elsewhere, and what lets a second implementation of the same platform be judged conforming or not.
