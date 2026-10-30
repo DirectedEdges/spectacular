@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://spectacular.systems/schema/0.39.0/components.schema.json",
   "title": "Specs Components Set Schema",
   "description": "A set of named components, each conforming to the Specs component schema.",
-  "version": "0.12.0",
   "type": "object",
   "properties": {
     "components": {

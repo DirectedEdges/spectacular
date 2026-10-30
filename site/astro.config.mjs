@@ -84,6 +84,7 @@ export default defineConfig({
           collapsed: true,
           items: [
             { label: 'Overview', slug: 'schema' },
+            { label: 'Specification', slug: 'schema/specification' },
             { label: 'Platform Neutrality', slug: 'schema/platform-neutrality' },
             { label: 'Decision Records (ADRs)', slug: 'adr' },
             {

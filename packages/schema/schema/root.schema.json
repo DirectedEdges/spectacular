@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://spectacular.systems/schema/0.39.0/root.schema.json",
   "title": "Specs Schema Package",
   "description": "Root schema for the Specs component and components set definitions.",
-  "version": "0.12.0",
   "oneOf": [
     { "$ref": "component.schema.json" },
     { "$ref": "components.schema.json" },

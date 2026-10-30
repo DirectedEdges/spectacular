@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://specs.directededges.com/settings.schema.json",
+  "$id": "https://spectacular.systems/schema/0.39.0/settings.schema.json",
   "title": "Specs Settings",
   "description": "Choices about a run rather than facts about a library. Changing a setting produces different output, never incorrect output.",
   "definitions": {

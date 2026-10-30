@@ -5,7 +5,8 @@
 ### I. Types and Schema Are the Same Contract (NON-NEGOTIABLE)
 `@directededges/specs-schema` publishes two interlinked artifacts: TypeScript types in `types/` and JSON schemas in `schema/`. They MUST describe the same structure at all times.
 
-- Every type in `types/` has a corresponding definition (direct or via reference) in `schema/component.schema.json` or its siblings. Changes to one MUST be reflected in the other before publishing.
+- Parity runs **both ways**. Every type in `types/` has a corresponding definition (direct or via reference) in `schema/component.schema.json` or its siblings, **and every named definition in those files has a named type**. Changes to one MUST be reflected in the other before publishing.
+- A named definition is a name consumers read and cite. Leaving one without a type says the contract has a concept TypeScript cannot name — so extracting a definition for documentation's sake creates a type obligation, it does not escape one.
 - The JSON schemas are the authoritative validation contract for serialized output. The TypeScript types are the authoritative compile-time contract for code consuming that output.
 - Neither artifact may drift ahead of the other. Misalignment is a bug.
 
