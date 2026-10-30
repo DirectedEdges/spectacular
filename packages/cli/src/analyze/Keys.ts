@@ -64,6 +64,7 @@ interface NameEntry {
 
 /** Empty surfaces are omitted rather than emitted as `[]`, to keep the checklist quiet. */
 interface ComponentEntry {
+  /** Detections, which is edits to make — not names, when a folded name fails twice. */
   divergent: number;
   props?: NameEntry[];
   anatomy?: NameEntry[];
@@ -100,7 +101,15 @@ interface KeysAggregate {
     totalComponents: number;
     componentsWithDivergence: number;
     totalNames: number;
+    /** Recorded names with at least one failing segment. */
     divergentNames: number;
+    /**
+     * Edits to make, which is one per failing segment — so a folded name wrong in both
+     * its group name and its member name counts twice, in the two places they are
+     * edited. Equal to `divergentNames` in a catalogue with no object props, which is
+     * what the figure used to be in every catalogue.
+     */
+    detections: number;
     causeDistribution: Record<string, number>;
   };
   byComponent: Record<string, ComponentEntry>;
@@ -130,6 +139,12 @@ export class KeysAnalyzer implements Transformer {
   private readonly _divergent: Collected[] = [];
   private readonly _components = new Set<string>();
   private _totalNames = 0;
+  /**
+   * Names with at least one failing segment, counted here rather than read off
+   * `_divergent.length` so it keeps meaning names after a folded name started
+   * contributing one entry per failure.
+   */
+  private _divergentNames = 0;
   private _outputFormat: 'JSON' | 'YAML' = 'JSON';
   /** Resolved from the spec, its run document, or the workspace; undefined means none declared. */
   private _convention: DeclaredConvention | undefined;
@@ -205,6 +220,13 @@ export class KeysAnalyzer implements Transformer {
    * Records a name only if it actually fails the declared grammar. A recorded name that
    * passes was written for the other reason the field exists — wrapper-collapse
    * provenance — and is not a naming problem: it reconstructs from its key unaided.
+   *
+   * A folded name produces one detection **per failing segment**, not one for the name.
+   * `AnObjectProp.Variant1` is wrong twice over — a camel-cased group name and a member
+   * name that runs letters into digits — in two places a designer edits separately, and
+   * reporting only the first meant fixing it revealed a second problem that had been
+   * there all along. Which is `causeOf`'s rule inverted on purpose: one name has one
+   * best edit, so first-match-wins is right *within* a segment and wrong across them.
    */
   private record(
     component: string,
@@ -219,16 +241,20 @@ export class KeysAnalyzer implements Transformer {
     // convention, not a stray symbol, so testing the whole name would report every
     // object-prop member in the library as a symbol problem and name no real edit.
     const segments = compound ? figmaName.split(this._separator) : [figmaName];
-    const failing = segments.find(segment => !pattern.test(segment));
-    if (failing === undefined) return;
-    this._divergent.push({
-      component,
-      key,
-      figmaName,
-      surface,
-      cause: causeOf(failing),
-      ...(segments.length > 1 ? { segment: failing } : {}),
-    });
+    const failing = segments.filter(segment => !pattern.test(segment));
+    if (failing.length === 0) return;
+
+    this._divergentNames++;
+    for (const segment of failing) {
+      this._divergent.push({
+        component,
+        key,
+        figmaName,
+        surface,
+        cause: causeOf(segment),
+        ...(segments.length > 1 ? { segment } : {}),
+      });
+    }
   }
 
   async finalize(outputDir: string, analysisDir?: string): Promise<void> {
@@ -266,6 +292,10 @@ export class KeysAnalyzer implements Transformer {
     }
     const byComponent: Record<string, ComponentEntry> = {};
     for (const [component, { props, anatomy }] of surfaces) {
+      // Sorted by name only, so the two detections of one folded name tie and the sort's
+      // stability leaves them in the order they were collected — which is the order the
+      // segments appear in the name. Adding a tiebreak would reorder them alphabetically
+      // and separate a name's group-name problem from its member-name problem.
       props.sort((a, b) => a.figmaName.localeCompare(b.figmaName));
       anatomy.sort((a, b) => a.figmaName.localeCompare(b.figmaName));
       byComponent[component] = {
@@ -332,7 +362,8 @@ export class KeysAnalyzer implements Transformer {
         totalComponents: this._components.size,
         componentsWithDivergence: Object.keys(byComponent).length,
         totalNames: this._totalNames,
-        divergentNames: this._divergent.length,
+        divergentNames: this._divergentNames,
+        detections: this._divergent.length,
         causeDistribution,
       },
       byComponent: Object.fromEntries(Object.entries(byComponent).sort(([a], [b]) => a.localeCompare(b))),

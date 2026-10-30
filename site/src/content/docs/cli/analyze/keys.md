@@ -57,6 +57,7 @@ summary:
   componentsWithDivergence: 52
   totalNames: 948
   divergentNames: 75
+  detections: 75
   causeDistribution:
     mixed-letter-digit: 42
     casing: 28
@@ -65,6 +66,8 @@ summary:
     digit-initial: 1
     already-a-key: 1
 ```
+
+`divergentNames` counts names with something wrong; `detections` counts edits to make. The two are equal unless [`objectProps`](/settings/object-props/) is folding properties, because a folded name can be wrong in both halves and those halves are edited in different places. Everything grouped below — `byComponent`, `byCause`, `causeDistribution` — counts detections.
 
 **Read `measured` before any of the counts.** Without a declared `naming` convention there is nothing to measure names against, so every name passes and `divergentNames` is `0` however the library is named — which is indistinguishable from a library that round-trips perfectly. `measured: false` and `namingConvention: null` say which it is, in the file rather than only in the terminal that produced it:
 
@@ -112,15 +115,23 @@ With [`objectProps`](/settings/object-props/) declared, a Figma property named `
 ```yaml
 byComponent:
   dsCard:
-    divergent: 1
+    divergent: 2
     props:
-      - key: margin.compact
-        figmaName: AnObjectProp.Compact
+      - key: margin.variant1
+        figmaName: AnObjectProp.Variant1
         cause: casing
         segment: AnObjectProp
+      - key: margin.variant1
+        figmaName: AnObjectProp.Variant1
+        cause: mixed-letter-digit
+        segment: Variant1
 ```
 
-Compound names are measured one segment at a time, so the separator you declared is never reported as a `symbol` problem. `segment` appears only on these rows and names the half that failed — without it the row shows a whole name beside a cause that describes part of it, and the separator reads as the defect. Where both halves are wrong, the first is named, same as `cause`.
+Compound names are measured one segment at a time, so the separator you declared is never reported as a `symbol` problem. `segment` appears only on these rows and names the half that failed — without it the row shows a whole name beside a cause that describes part of it, and the separator reads as the defect.
+
+**A name wrong in both halves gets a row for each.** `AnObjectProp.Variant1` above is two problems: a camel-cased group name, and a member name that runs letters into digits. They sit in different places in Figma and are two separate edits, so they are two detections sharing one key. Reporting only the first meant fixing it revealed a second problem that had been there all along, and a cleanup took as many passes as the worst name had bad segments.
+
+Rows for one name stay in the order its segments appear, so the group name always reads before the member name.
 
 Each member counts as one of `totalNames`; the fold counts as none.
 
@@ -168,6 +179,8 @@ Rows are grouped by name **and** cause, so one name can appear twice. That happe
 | `already-a-key` | Not a defect — a name authored in a key convention rather than as a display name | `x-figmacollapse` |
 
 A name is reported under the most specific cause that applies, since that is the edit to make. `already-a-key` is listed last because it is a deliberate authoring choice, not a problem: such names are [retained as authored](/guides/key-formatting/#names-already-written-as-keys).
+
+One cause per name, except across the halves of a folded object-prop member — each half gets its own cause, because each is its own edit.
 
 ## Fixing What It Finds
 

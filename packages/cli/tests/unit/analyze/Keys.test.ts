@@ -13,6 +13,7 @@ type KeysYaml = {
     componentsWithDivergence: number;
     totalNames: number;
     divergentNames: number;
+    detections: number;
     causeDistribution: Record<string, number>;
   };
   byComponent: Record<string, {
@@ -310,7 +311,43 @@ describe('KeysAnalyzer', () => {
       const result = await runAnalyzer({
         dsCard: { props: { margin: objectProp({ compact: 'Margin.Compact Thing' }) } },
       });
-      expect(result!.byComponent.dsCard.props![0].segment).toBe('Compact Thing');
+      expect(result!.byComponent.dsCard.props).toEqual([
+        { key: 'margin.compact', figmaName: 'Margin.Compact Thing', cause: 'casing', segment: 'Compact Thing' },
+      ]);
+    });
+
+    it('reports both halves of a name that fails twice, as separate detections', async () => {
+      // Reporting only the first failure meant fixing the group name revealed a member
+      // name problem that had been there all along — a cleanup that took as many passes
+      // as the name had bad segments. The two are edited in different places in Figma.
+      const result = await runAnalyzer({
+        dsCard: { props: { margin: objectProp({ variant1: 'AnObjectProp.Variant1' }) } },
+      });
+      expect(result!.byComponent.dsCard.props).toEqual([
+        { key: 'margin.variant1', figmaName: 'AnObjectProp.Variant1', cause: 'casing', segment: 'AnObjectProp' },
+        { key: 'margin.variant1', figmaName: 'AnObjectProp.Variant1', cause: 'mixed-letter-digit', segment: 'Variant1' },
+      ]);
+      expect(result!.byComponent.dsCard.divergent).toBe(2);
+    });
+
+    it('separates names from edits in the summary', async () => {
+      // One name, two edits. The two figures are equal in a catalogue with no object
+      // props, which is what `divergentNames` counted in every catalogue before folding.
+      const result = await runAnalyzer({
+        dsCard: { props: { margin: objectProp({ variant1: 'AnObjectProp.Variant1' }) } },
+      });
+      expect(result!.summary.divergentNames).toBe(1);
+      expect(result!.summary.detections).toBe(2);
+      expect(result!.summary.causeDistribution).toEqual({ casing: 1, 'mixed-letter-digit': 1 });
+    });
+
+    it('keeps a name\'s detections in segment order, not alphabetical', async () => {
+      // 'Variant1' sorts before 'AnObjectProp'; the group name must still read first,
+      // because that is the order the two parts appear in the name being fixed.
+      const result = await runAnalyzer({
+        dsCard: { props: { margin: objectProp({ variant1: 'AnObjectProp.Variant1' }) } },
+      });
+      expect(result!.byComponent.dsCard.props!.map(p => p.segment)).toEqual(['AnObjectProp', 'Variant1']);
     });
 
     it('splits on the separator the workspace declared, not always a dot', async () => {
