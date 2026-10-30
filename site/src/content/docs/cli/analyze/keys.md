@@ -153,6 +153,8 @@ byName:
     cause: mixed-letter-digit
 ```
 
+Rows are grouped by name **and** cause, so one name can appear twice. That happens where `objectProps` folds a property in some components and excludes it in others: the same `Margin.Compact` is measured whole where it stays a flat prop, and segment by segment where it folded — `symbol` in the first case, whatever the bad segment is in the second. They are two different edits, and one row could not name both.
+
 ## Causes
 
 | Cause | Meaning | Example |

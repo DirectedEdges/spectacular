@@ -21,7 +21,7 @@ type KeysYaml = {
     anatomy?: Array<{ key: string; figmaName: string; cause: string }>;
   }>;
   byCause: Array<{ cause: string; occurrences: number; names: string[] }>;
-  byName: Array<{ figmaName: string; occurrences: number; components: string[]; cause: string }>;
+  byName: Array<{ figmaName: string; occurrences: number; components: string[]; cause: string; segment?: string }>;
 };
 
 /** An anatomy or prop entry carrying a recorded Figma name. */
@@ -328,6 +328,23 @@ describe('KeysAnalyzer', () => {
       const entry = result!.byName.find(n => n.figmaName === 'A11y label.Compact')!;
       expect(entry.occurrences).toBe(2);
       expect(entry.cause).toBe('mixed-letter-digit');
+    });
+
+    it('splits a byName row when the same name is folded in one component and flat in another', async () => {
+      // The fixture catalogue does exactly this: `objectProps` excludes some properties
+      // from the fold, so one name is measured whole here and segment by segment there.
+      // Keeping one row per name reported whichever cause arrived first, which
+      // contradicted `byComponent` for every other component listed in that row.
+      const result = await runAnalyzer({
+        dsFolded: { props: { margin: objectProp({ compact: 'AnObjectProp.Compact' }) } },
+        dsFlat: { props: { anobjectpropCompact: withName('string', 'AnObjectProp.Compact') } },
+      });
+
+      const rows = result!.byName.filter(n => n.figmaName === 'AnObjectProp.Compact');
+      expect(rows).toEqual([
+        { figmaName: 'AnObjectProp.Compact', occurrences: 1, components: ['dsFolded'], cause: 'casing', segment: 'AnObjectProp' },
+        { figmaName: 'AnObjectProp.Compact', occurrences: 1, components: ['dsFlat'], cause: 'symbol' },
+      ]);
     });
 
     it('treats a prop typed object with no members as an ordinary prop', async () => {

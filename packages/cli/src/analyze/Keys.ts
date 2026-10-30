@@ -80,6 +80,8 @@ interface NameFrequencyEntry {
   occurrences: number;
   components: string[];
   cause: Cause;
+  /** As on {@link NameEntry} — the failing part of a folded member's name. */
+  segment?: string;
 }
 
 interface KeysAggregate {
@@ -109,6 +111,15 @@ interface KeysAggregate {
 interface Collected extends NameEntry {
   component: string;
   surface: Surface;
+}
+
+/** One `byName` row under construction — the name and cause it groups, and its members. */
+interface FrequencyRecord {
+  components: Set<string>;
+  occurrences: number;
+  figmaName: string;
+  cause: Cause;
+  segment?: string;
 }
 
 export class KeysAnalyzer implements Transformer {
@@ -276,22 +287,41 @@ export class KeysAnalyzer implements Transformer {
 
     // A name wrong in twelve components is one decision, not twelve — which is what a
     // per-component checklist cannot show on its own.
-    const frequency = new Map<string, { components: Set<string>; occurrences: number; cause: Cause }>();
+    //
+    // Grouped by name AND cause, because one Figma name can now fail in two ways: the
+    // same `Margin.Compact` is measured whole where it stays a flat prop and segment by
+    // segment where `objectProps` folded it, so `symbol` in one component and `casing`
+    // in another. Keying on the name alone kept whichever cause arrived first and
+    // contradicted `byComponent` for every other component in the row. They are also
+    // two different edits, so one row could not have named both.
+    //
+    // The composite id is unambiguous because no cause contains a space.
+    const frequency = new Map<string, FrequencyRecord>();
     for (const entry of this._divergent) {
-      const record = frequency.get(entry.figmaName)
-        ?? { components: new Set<string>(), occurrences: 0, cause: entry.cause };
+      const id = `${entry.figmaName} ${entry.cause}`;
+      const record = frequency.get(id) ?? {
+        components: new Set<string>(),
+        occurrences: 0,
+        figmaName: entry.figmaName,
+        cause: entry.cause,
+        segment: entry.segment,
+      };
       record.components.add(entry.component);
       record.occurrences++;
-      frequency.set(entry.figmaName, record);
+      frequency.set(id, record);
     }
-    const byName: NameFrequencyEntry[] = [...frequency.entries()]
-      .map(([figmaName, r]) => ({
-        figmaName,
+    const byName: NameFrequencyEntry[] = [...frequency.values()]
+      .map(r => ({
+        figmaName: r.figmaName,
         occurrences: r.occurrences,
         components: [...r.components].sort(),
         cause: r.cause,
+        ...(r.segment ? { segment: r.segment } : {}),
       }))
-      .sort((a, b) => b.occurrences - a.occurrences || a.figmaName.localeCompare(b.figmaName));
+      .sort((a, b) =>
+        b.occurrences - a.occurrences
+        || a.figmaName.localeCompare(b.figmaName)
+        || a.cause.localeCompare(b.cause));
 
     return {
       summary: {
