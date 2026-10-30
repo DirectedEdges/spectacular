@@ -86,6 +86,14 @@ export default defineConfig({
             { label: 'Overview', slug: 'schema' },
             { label: 'Specification', slug: 'schema/specification' },
             { label: 'Platform Neutrality', slug: 'schema/platform-neutrality' },
+            {
+              label: 'Platform Mappings',
+              collapsed: true,
+              items: [
+                { label: 'Figma', slug: 'schema/mappings/figma' },
+                { label: 'React', slug: 'schema/mappings/react' },
+              ],
+            },
             { label: 'Decision Records (ADRs)', slug: 'adr' },
             {
               label: 'Parts',
