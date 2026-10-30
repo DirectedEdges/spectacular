@@ -26,7 +26,7 @@ type PropConfigurations = Record<
 An `ObjectPropValue` sets the members of an [`ObjectProp`](/schema/props/#objectprop). Member names must not begin with `$`, which is what keeps the form distinguishable from `PropBinding` and the other `$`-keyed references:
 
 ```yaml
-# A variant configuring two members; an omitted member inherits
+# A variant configuring two members; an omitted member keeps its resolved value
 margin:
   compact: none
   expanded: large
@@ -36,8 +36,8 @@ margin:
 
 `null` means the prop is **unset** in this configuration. It is a value, not an absence, and the distinction matters because configurations layer:
 
-- an **absent** key inherits whatever the layer beneath it set
-- a **`null`** key overrides an inherited value with "no value"
+- an **absent** key keeps whatever value the preceding configurations resolved to
+- a **`null`** key replaces that resolved value with "no value"
 
 A nullable prop is therefore fully described by its own key. Nothing beside it — a paired visibility flag, a producer extension — needs to be read to know whether the prop is set:
 

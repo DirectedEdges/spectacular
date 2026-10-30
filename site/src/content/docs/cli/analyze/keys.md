@@ -3,8 +3,6 @@ title: "keys"
 description: "List the Figma layer and property names a formatted key cannot reconstruct, organized as a per-component checklist"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge experimental-badge">Experimental</span>')</script>
-
 Reads every component's `api.yaml` and produces `analysis/keys.yaml`: every Figma layer and property name that falls outside the [safe key grammar](/guides/key-formatting/), grouped by component so it reads as a checklist, then by cause and by frequency.
 
 ## Requires a declared convention
@@ -59,6 +57,7 @@ summary:
   componentsWithDivergence: 52
   totalNames: 948
   divergentNames: 75
+  detections: 75
   causeDistribution:
     mixed-letter-digit: 42
     casing: 28
@@ -67,6 +66,8 @@ summary:
     digit-initial: 1
     already-a-key: 1
 ```
+
+`divergentNames` counts names with something wrong; `detections` counts edits to make. The two are equal unless [`objectProps`](/settings/object-props/) is folding properties, because a folded name can be wrong in both halves and those halves are edited in different places. Everything grouped below — `byComponent`, `byCause`, `causeDistribution` — counts detections.
 
 **Read `measured` before any of the counts.** Without a declared `naming` convention there is nothing to measure names against, so every name passes and `divergentNames` is `0` however the library is named — which is indistinguishable from a library that round-trips perfectly. `measured: false` and `namingConvention: null` say which it is, in the file rather than only in the terminal that produced it:
 
@@ -107,6 +108,33 @@ byComponent:
 
 Names appear under `props` (component property names) or `anatomy` (layer names). A surface with nothing to fix is omitted.
 
+#### Object prop members
+
+With [`objectProps`](/settings/object-props/) declared, a Figma property named `Margin.Compact` folds into a member of a `margin` prop. The fold itself has no Figma name — the members do — so each member is listed under its own `prop.member` key, carrying the flat source name as it stands in the file:
+
+```yaml
+byComponent:
+  dsCard:
+    divergent: 2
+    props:
+      - key: margin.variant1
+        figmaName: AnObjectProp.Variant1
+        cause: casing
+        segment: AnObjectProp
+      - key: margin.variant1
+        figmaName: AnObjectProp.Variant1
+        cause: mixed-letter-digit
+        segment: Variant1
+```
+
+Compound names are measured one segment at a time, so the separator you declared is never reported as a `symbol` problem. `segment` appears only on these rows and names the half that failed — without it the row shows a whole name beside a cause that describes part of it, and the separator reads as the defect.
+
+**A name wrong in both halves gets a row for each.** `AnObjectProp.Variant1` above is two problems: a camel-cased group name, and a member name that runs letters into digits. They sit in different places in Figma and are two separate edits, so they are two detections sharing one key. Reporting only the first meant fixing it revealed a second problem that had been there all along, and a cleanup took as many passes as the worst name had bad segments.
+
+Rows for one name stay in the order its segments appear, so the group name always reads before the member name.
+
+Each member counts as one of `totalNames`; the fold counts as none.
+
 ### byCause
 
 The same names grouped by what is wrong with them, most common first. Useful for deciding what to fix in bulk: a library with 28 casing problems and 2 symbol problems has one systemic issue and two one-offs.
@@ -136,6 +164,8 @@ byName:
     cause: mixed-letter-digit
 ```
 
+Rows are grouped by name **and** cause, so one name can appear twice. That happens where `objectProps` folds a property in some components and excludes it in others: the same `Margin.Compact` is measured whole where it stays a flat prop, and segment by segment where it folded — `symbol` in the first case, whatever the bad segment is in the second. They are two different edits, and one row could not name both.
+
 ## Causes
 
 | Cause | Meaning | Example |
@@ -150,6 +180,8 @@ byName:
 
 A name is reported under the most specific cause that applies, since that is the edit to make. `already-a-key` is listed last because it is a deliberate authoring choice, not a problem: such names are [retained as authored](/guides/key-formatting/#names-already-written-as-keys).
 
+One cause per name, except across the halves of a folded object-prop member — each half gets its own cause, because each is its own edit.
+
 ## Fixing What It Finds
 
 Nothing here is a validation failure. Every name it lists is fully supported — its Figma name is recorded, so the spec round-trips correctly either way. The report exists so naming can be tidied at the source, which makes the extensions disappear and the specs smaller.
@@ -163,4 +195,5 @@ Two things worth knowing before a cleanup:
 
 - [Key Formatting guide](/guides/key-formatting/) — the safe key grammar and what happens to unsafe names
 - [Figma Keys](/settings/figma-keys/) — declaring the source convention this analyzer depends on
+- [Object Props](/settings/object-props/) — the fold whose members this report measures one segment at a time
 - [Analyze overview](/cli/analyze/) — options shared by every analyzer

@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+### Fixed
+
+- **`specs analyze keys` now measures the Figma name behind each object-prop member** (ADR-111), under a `margin.compact` key and one segment at a time, so a declared separator is never flagged. A divergent row carries `segment`, naming the half to fix
+
+- **`specs analyze keys` reports every bad half of a folded name, not just the first.** A group name and a member name are two edits in two places, so a cleanup no longer takes one pass per bad segment. `summary.detections` counts edits where `divergentNames` counts names
+
+- **`specs analyze keys` groups `byName` by name and cause**, so a name that folds in one component and stays flat in another gets a row for each rather than one row carrying whichever cause was reached first
+
 ### Removed
 
 

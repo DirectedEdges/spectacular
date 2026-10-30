@@ -53,10 +53,18 @@ interface NameEntry {
   key: string;
   figmaName: string;
   cause: Cause;
+  /**
+   * Present, and only present, on a folded object-prop member (ADR-111), naming the
+   * part of the compound name that failed. Without it the row shows a name whose
+   * separator is legitimate beside a cause that describes one of its segments, and the
+   * separator reads as the defect. First failing segment wins, as with `cause`.
+   */
+  segment?: string;
 }
 
 /** Empty surfaces are omitted rather than emitted as `[]`, to keep the checklist quiet. */
 interface ComponentEntry {
+  /** Detections, which is edits to make — not names, when a folded name fails twice. */
   divergent: number;
   props?: NameEntry[];
   anatomy?: NameEntry[];
@@ -73,6 +81,8 @@ interface NameFrequencyEntry {
   occurrences: number;
   components: string[];
   cause: Cause;
+  /** As on {@link NameEntry} — the failing part of a folded member's name. */
+  segment?: string;
 }
 
 interface KeysAggregate {
@@ -91,7 +101,15 @@ interface KeysAggregate {
     totalComponents: number;
     componentsWithDivergence: number;
     totalNames: number;
+    /** Recorded names with at least one failing segment. */
     divergentNames: number;
+    /**
+     * Edits to make, which is one per failing segment — so a folded name wrong in both
+     * its group name and its member name counts twice, in the two places they are
+     * edited. Equal to `divergentNames` in a catalogue with no object props, which is
+     * what the figure used to be in every catalogue.
+     */
+    detections: number;
     causeDistribution: Record<string, number>;
   };
   byComponent: Record<string, ComponentEntry>;
@@ -104,6 +122,15 @@ interface Collected extends NameEntry {
   surface: Surface;
 }
 
+/** One `byName` row under construction — the name and cause it groups, and its members. */
+interface FrequencyRecord {
+  components: Set<string>;
+  occurrences: number;
+  figmaName: string;
+  cause: Cause;
+  segment?: string;
+}
+
 export class KeysAnalyzer implements Transformer {
   readonly name = 'keys';
   /** The report measures Figma names against the Figma naming convention (ADR-073). */
@@ -112,15 +139,25 @@ export class KeysAnalyzer implements Transformer {
   private readonly _divergent: Collected[] = [];
   private readonly _components = new Set<string>();
   private _totalNames = 0;
+  /**
+   * Names with at least one failing segment, counted here rather than read off
+   * `_divergent.length` so it keeps meaning names after a folded name started
+   * contributing one entry per failure.
+   */
+  private _divergentNames = 0;
   private _outputFormat: 'JSON' | 'YAML' = 'JSON';
   /** Resolved from the spec, its run document, or the workspace; undefined means none declared. */
   private _convention: DeclaredConvention | undefined;
+  /** The object-prop member separator (ADR-111), resolved alongside the convention. */
+  private _separator = DEFAULT_OBJECT_PROP_SEPARATOR;
 
   async run(apiYaml: Record<string, unknown>, context: TransformerContext): Promise<void> {
     const { componentKey, outputFormat } = context;
     this._outputFormat = outputFormat;
     this._components.add(componentKey);
-    this._convention = resolveConvention(apiYaml, context) ?? this._convention;
+    const rules = resolveFigmaRules(apiYaml, context);
+    this._convention = rules.convention ?? this._convention;
+    this._separator = rules.separator;
 
     this.collect(componentKey, apiYaml);
 
@@ -156,10 +193,26 @@ export class KeysAnalyzer implements Transformer {
     }
   }
 
+  /**
+   * An object prop (ADR-111) has no Figma name of its own: it is the fold of its
+   * members' separator-delimited source names, and each of those is a real property in
+   * the file that someone has to rename. So the members are what gets measured and
+   * counted, and the container — which nobody can see in Figma — is neither. Before
+   * the fold existed each of those names was an ordinary prop and was reported; left
+   * alone, this read the container, found no name, and dropped the whole group.
+   */
   private collectProps(component: string, props: unknown): void {
     for (const [key, raw] of Object.entries((props ?? {}) as Record<string, unknown>)) {
-      this._totalNames++;
-      this.record(component, key, 'prop', figmaNameOf(raw));
+      const members = objectPropMembers(raw);
+      if (!members) {
+        this._totalNames++;
+        this.record(component, key, 'prop', figmaNameOf(raw));
+        continue;
+      }
+      for (const [memberKey, member] of Object.entries(members)) {
+        this._totalNames++;
+        this.record(component, `${key}.${memberKey}`, 'prop', figmaNameOf(member), true);
+      }
     }
   }
 
@@ -167,11 +220,41 @@ export class KeysAnalyzer implements Transformer {
    * Records a name only if it actually fails the declared grammar. A recorded name that
    * passes was written for the other reason the field exists — wrapper-collapse
    * provenance — and is not a naming problem: it reconstructs from its key unaided.
+   *
+   * A folded name produces one detection **per failing segment**, not one for the name.
+   * `AnObjectProp.Variant1` is wrong twice over — a camel-cased group name and a member
+   * name that runs letters into digits — in two places a designer edits separately, and
+   * reporting only the first meant fixing it revealed a second problem that had been
+   * there all along. Which is `causeOf`'s rule inverted on purpose: one name has one
+   * best edit, so first-match-wins is right *within* a segment and wrong across them.
    */
-  private record(component: string, key: string, surface: Surface, figmaName: string | undefined): void {
+  private record(
+    component: string,
+    key: string,
+    surface: Surface,
+    figmaName: string | undefined,
+    compound = false,
+  ): void {
     if (!figmaName || !this._convention) return;
-    if (SAFE_KEY_PATTERNS[this._convention].test(figmaName)) return;
-    this._divergent.push({ component, key, figmaName, surface, cause: causeOf(figmaName) });
+    const pattern = SAFE_KEY_PATTERNS[this._convention];
+    // A folded member's name is measured segment by segment: the separator is declared
+    // convention, not a stray symbol, so testing the whole name would report every
+    // object-prop member in the library as a symbol problem and name no real edit.
+    const segments = compound ? figmaName.split(this._separator) : [figmaName];
+    const failing = segments.filter(segment => !pattern.test(segment));
+    if (failing.length === 0) return;
+
+    this._divergentNames++;
+    for (const segment of failing) {
+      this._divergent.push({
+        component,
+        key,
+        figmaName,
+        surface,
+        cause: causeOf(segment),
+        ...(segments.length > 1 ? { segment } : {}),
+      });
+    }
   }
 
   async finalize(outputDir: string, analysisDir?: string): Promise<void> {
@@ -200,10 +283,19 @@ export class KeysAnalyzer implements Transformer {
       const bucket = surfaces.get(entry.component)
         ?? surfaces.set(entry.component, { props: [], anatomy: [] }).get(entry.component)!;
       const list = entry.surface === 'prop' ? bucket.props : bucket.anatomy;
-      list.push({ key: entry.key, figmaName: entry.figmaName, cause: entry.cause });
+      list.push({
+        key: entry.key,
+        figmaName: entry.figmaName,
+        cause: entry.cause,
+        ...(entry.segment ? { segment: entry.segment } : {}),
+      });
     }
     const byComponent: Record<string, ComponentEntry> = {};
     for (const [component, { props, anatomy }] of surfaces) {
+      // Sorted by name only, so the two detections of one folded name tie and the sort's
+      // stability leaves them in the order they were collected — which is the order the
+      // segments appear in the name. Adding a tiebreak would reorder them alphabetically
+      // and separate a name's group-name problem from its member-name problem.
       props.sort((a, b) => a.figmaName.localeCompare(b.figmaName));
       anatomy.sort((a, b) => a.figmaName.localeCompare(b.figmaName));
       byComponent[component] = {
@@ -225,22 +317,41 @@ export class KeysAnalyzer implements Transformer {
 
     // A name wrong in twelve components is one decision, not twelve — which is what a
     // per-component checklist cannot show on its own.
-    const frequency = new Map<string, { components: Set<string>; occurrences: number; cause: Cause }>();
+    //
+    // Grouped by name AND cause, because one Figma name can now fail in two ways: the
+    // same `Margin.Compact` is measured whole where it stays a flat prop and segment by
+    // segment where `objectProps` folded it, so `symbol` in one component and `casing`
+    // in another. Keying on the name alone kept whichever cause arrived first and
+    // contradicted `byComponent` for every other component in the row. They are also
+    // two different edits, so one row could not have named both.
+    //
+    // The composite id is unambiguous because no cause contains a space.
+    const frequency = new Map<string, FrequencyRecord>();
     for (const entry of this._divergent) {
-      const record = frequency.get(entry.figmaName)
-        ?? { components: new Set<string>(), occurrences: 0, cause: entry.cause };
+      const id = `${entry.figmaName} ${entry.cause}`;
+      const record = frequency.get(id) ?? {
+        components: new Set<string>(),
+        occurrences: 0,
+        figmaName: entry.figmaName,
+        cause: entry.cause,
+        segment: entry.segment,
+      };
       record.components.add(entry.component);
       record.occurrences++;
-      frequency.set(entry.figmaName, record);
+      frequency.set(id, record);
     }
-    const byName: NameFrequencyEntry[] = [...frequency.entries()]
-      .map(([figmaName, r]) => ({
-        figmaName,
+    const byName: NameFrequencyEntry[] = [...frequency.values()]
+      .map(r => ({
+        figmaName: r.figmaName,
         occurrences: r.occurrences,
         components: [...r.components].sort(),
         cause: r.cause,
+        ...(r.segment ? { segment: r.segment } : {}),
       }))
-      .sort((a, b) => b.occurrences - a.occurrences || a.figmaName.localeCompare(b.figmaName));
+      .sort((a, b) =>
+        b.occurrences - a.occurrences
+        || a.figmaName.localeCompare(b.figmaName)
+        || a.cause.localeCompare(b.cause));
 
     return {
       summary: {
@@ -251,7 +362,8 @@ export class KeysAnalyzer implements Transformer {
         totalComponents: this._components.size,
         componentsWithDivergence: Object.keys(byComponent).length,
         totalNames: this._totalNames,
-        divergentNames: this._divergent.length,
+        divergentNames: this._divergentNames,
+        detections: this._divergent.length,
         causeDistribution,
       },
       byComponent: Object.fromEntries(Object.entries(byComponent).sort(([a], [b]) => a.localeCompare(b))),
@@ -259,6 +371,20 @@ export class KeysAnalyzer implements Transformer {
       byName,
     };
   }
+}
+
+/**
+ * The members of an object prop (ADR-111), or undefined for every other prop shape.
+ * Both the type and a populated `members` map are required, so a malformed prop reads
+ * as an ordinary one rather than silently contributing no names at all.
+ */
+function objectPropMembers(raw: unknown): Record<string, unknown> | undefined {
+  const prop = raw as Record<string, unknown> | undefined;
+  if (prop?.type !== 'object') return undefined;
+  const members = prop.members;
+  if (!members || typeof members !== 'object' || Array.isArray(members)) return undefined;
+  const entries = members as Record<string, unknown>;
+  return Object.keys(entries).length > 0 ? entries : undefined;
 }
 
 function figmaNameOf(raw: unknown): string | undefined {
@@ -287,8 +413,11 @@ function causeOf(name: string): Cause {
   return 'casing';
 }
 
+/** The `objectProps.separator` default the conventions loader applies (ADR-111). */
+const DEFAULT_OBJECT_PROP_SEPARATOR = '.';
+
 /**
- * The convention to measure names against, most specific statement first.
+ * The two Figma-side facts the report measures against, most specific statement first.
  *
  * A spec's own metadata is the most specific record, but since ADR-089 a generated
  * spec keeps only `metadata.source` and the run's facts live in `latest.metadata.yaml`
@@ -296,20 +425,38 @@ function causeOf(name: string): Cause {
  * `config/conventions/figma.yaml` (arriving as `context.platform`) last. Reading only
  * the per-spec block, as this did, found nothing on any current output and reported
  * zero divergence for every catalogue.
+ *
+ * Both facts are resolved in one pass because finding the run document is a filesystem
+ * walk per spec, and a second resolver would double it. The separator skips the
+ * per-spec tier the convention has, because that tier reads a path no current output
+ * writes (see `declaredConvention`) and a second lookup there would find nothing.
+ *
+ * The separator always answers, unlike the convention: it is only consulted for a prop
+ * already typed `object`, so whether the block was declared is not in question by then
+ * — only which character it named.
  */
-function resolveConvention(
+function resolveFigmaRules(
   apiYaml: Record<string, unknown>,
   context: TransformerContext,
-): DeclaredConvention | undefined {
-  return declaredConvention(apiYaml)
-    ?? runConvention(context.specDir)
-    ?? asConvention(context.platform?.naming);
+): { convention: DeclaredConvention | undefined; separator: string } {
+  const run = platformOf(RunMetadataReader.find(context.specDir)?.conventions, FIGMA_PLATFORM);
+  return {
+    convention: declaredConvention(apiYaml)
+      ?? asConvention(run.naming)
+      ?? asConvention(context.platform?.naming),
+    separator: asSeparator(run.objectProps)
+      ?? asSeparator(context.platform?.objectProps)
+      ?? DEFAULT_OBJECT_PROP_SEPARATOR,
+  };
 }
 
-/** The convention recorded by the run that produced this spec (ADR-089). */
-function runConvention(specDir: string): DeclaredConvention | undefined {
-  const run = RunMetadataReader.find(specDir);
-  return asConvention(platformOf(run?.conventions, FIGMA_PLATFORM).naming);
+/** A declared `objectProps` block's separator, or undefined when the block is absent. */
+function asSeparator(objectProps: unknown): string | undefined {
+  if (!objectProps || typeof objectProps !== 'object') return undefined;
+  const separator = (objectProps as Record<string, unknown>).separator;
+  return typeof separator === 'string' && separator.length > 0
+    ? separator
+    : DEFAULT_OBJECT_PROP_SEPARATOR;
 }
 
 /** Only SENTENCE and TITLE have a safe key grammar to test against. */

@@ -3,8 +3,6 @@ title: "states.setup"
 description: "Propose the states block for your library from its own prop data, with the reasoning for every row"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge experimental-badge">Experimental</span>')</script>
-
 A skill that proposes the [`states`](/settings/states/) block for your `config/conventions/specs.yaml`: which of your variant props carry state concepts, which value of each activates the concept, and which props are deliberately left as `data-*`.
 
 Installed by [`specs skills install`](/cli/commands/skills/) as `.claude/skills/specs-cli.states.setup/`, then invoked in Claude Code.

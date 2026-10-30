@@ -3,8 +3,6 @@ title: "Subcomponents"
 description: "Embedded child component definitions and $ref linking"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge pro-badge">Pro</span>')</script>
-
 Subcomponents are smaller components embedded within a parent component's spec. They follow the same structure as a top-level `Component` but without `metadata` or nested subcomponents. An optional `source` field carries the Figma node identity needed for reverse-direction tooling.
 
 ```ts

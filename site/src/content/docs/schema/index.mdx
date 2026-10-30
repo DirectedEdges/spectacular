@@ -60,7 +60,7 @@ default:
       content: # literal or $binding to a prop
       children: # reference to a slot property
       propConfigurations: # for nested instances
-variants: # zero or more layer, just like css
+variants: # zero or more deltas from the default, applied in order
   - configurations:
       ... # key/value pairs, like disabled:true
     layout:
@@ -69,7 +69,7 @@ variants: # zero or more layer, just like css
       ... # same schema as default, for impacted elements only
 ```
 
-Variants are [`layered`](/guides/variant-layering/) like CSS. The default variant is the complete baseline: every element fully described, with styles, content and layout. Every entry in `variants` layers a change based on a [`configuration`](/schema/prop-configurations/) of prop(s) that activate the layout, styles and/or content changes because of it. A component's resolved state is all layered variants merged in order onto the default.
+Variants are a [sparse differential patch](/guides/variant-layering/): only the differences are stored. The default variant is the complete baseline — every element fully described, with styles, content and layout. Every entry in `variants` stores only what a [`configuration`](/schema/prop-configurations/) of prop(s) changes about the layout, styles and/or content. A component's resolved state is the default with every matching variant's deltas applied in declaration order, which resolves the same way every time.
 
 ### [`examples`](/schema/documents/component-examples) file
 
@@ -227,7 +227,7 @@ A spec points at things rather than repeating them, with five references. Each i
 | [`naming`](/settings/figma-keys/) | whether a key can be reversed back to its original layer name |
 | [`states`](/settings/states/) | whether a variant prop emits a CSS pseudo-class or a `data-*` attribute |
 
-`DEFAULT_CONVENTIONS` is an empty object, and that is deliberate: a default can supply a missing *member* of a declared convention, but never a convention block — their absence is a statement about the library, and inventing one would fabricate a fact nobody declared. The full per-platform treatment is at [Conventions](/schema/conventions/).
+A wrong convention costs more than a missing one. If `DEFAULT_CONVENTIONS` shipped a `glyphs` pattern your library doesn't use, no component would match it and every icon would arrive as an ordinary element rather than a named glyph — output that looks complete, is wrong, and flags nothing. So a default can fill in a missing *member* of a convention you declared, but never a convention block: the object is empty so that nothing is claimed about your library until you claim it. The full per-platform treatment is at [Conventions](/schema/conventions/).
 
 ## Package Exports
 
@@ -235,10 +235,10 @@ The package exports TypeScript types for every node in the schema, plus two runt
 
 ```ts
 import type { Component } from '@directededges/specs-schema';
-import { DEFAULT_SETTINGS, DEFAULT_PIPELINE } from '@directededges/specs-schema';
+import { DEFAULT_CONVENTIONS, DEFAULT_SETTINGS } from '@directededges/specs-schema';
 ```
 
-`DEFAULT_SETTINGS` and `DEFAULT_PIPELINE` are the only runtime exports. All other exports are type-only. There is no defaults export for [Conventions](/schema/conventions/): a convention's absence means the library declares no such convention, and nothing can supply that.
+`DEFAULT_CONVENTIONS` and `DEFAULT_SETTINGS` are the only runtime exports; everything else is type-only. Spreading `DEFAULT_CONVENTIONS` adds nothing, and that is what makes it safe to spread — it is the identity value for [Conventions](/schema/conventions/), so a consumer applies defaults the same way whether or not the library declares any.
 
 ## Analysis reports
 
