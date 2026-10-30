@@ -1,5 +1,5 @@
 ---
-description: Check consistency across adr/, packages/schema/, packages/cli/, and site/ for the current branch before merging.
+description: Check consistency across adr/, packages/schema/ (types, JSON schema, and SPECIFICATION.md), packages/cli/, and site/ for the current branch before merging. Reports gaps between what the ADR declares, what the schema defines, what the specification requires, what the CLI exposes, and what the docs cover.
 ---
 
 **Territory: schema/cli/docs (cross-territory exit check).** Before proceeding, read the repo-root `ARCHITECTURE.md` if not already loaded — its sync-set section is the checklist this agent verifies.
@@ -14,12 +14,13 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Purpose
 
-This skill checks that the four artifact areas touched by schema/CLI work are mutually consistent before a PR is merged. It is intentionally tolerant of *expected* gaps (e.g., docs not yet written) but flags *contradictions* and *missing required artifacts* that would cause drift post-merge.
+This skill checks that the artifact areas touched by schema/CLI work are mutually consistent before a PR is merged. It is intentionally tolerant of *expected* gaps (e.g., docs not yet written) but flags *contradictions* and *missing required artifacts* that would cause drift post-merge.
 
-The four areas and their relationships:
+The areas and their relationships:
 
 - **ADR** (`adr/`) — declares intent: what is changing, why, and what the semver impact is. Source of truth for this check.
 - **Schema** (`packages/schema/`) — must reflect everything the ADR declares: new/changed types, fields, enums, JSON schema entries, and CHANGELOG entry.
+- **Specification** (`packages/schema/SPECIFICATION.md`) — must state every requirement the ADR declares that the JSON Schema cannot enforce, as a §9 rule-catalogue row or a §2–§8 prose requirement. Part of the Schema area by path, checked as its own question: §1.6 says an ADR is not normative, so a rule left only in an ADR binds nobody. An ADR confined to the leaf style vocabularies needs no entry — §1.5 declares that gradient.
 - **CLI** (`packages/cli/`) — must expose or handle every schema change the ADR says the CLI is affected by. Commands, flags, output shape, help text.
 - **Docs** (`site/`) — must document every user-facing change: new config values, command flags, behavioral changes, examples.
 
@@ -47,7 +48,7 @@ Collect all changed files. Categorize each into one or more areas:
 - `packages/cli/` → **CLI**
 - `site/` → **Docs**
 
-If no files fall into any of the four areas, halt: "No changes detected in adr/, packages/schema/, packages/cli/, or site/. Nothing to check."
+If no files fall into any of these areas, halt: "No changes detected in adr/, packages/schema/, packages/cli/, or site/. Nothing to check."
 
 Report the file count per area and total at the start of output.
 
@@ -69,6 +70,14 @@ For each area that has changed files (or that the ADR says should be affected), 
 - Every schema change is reflected in the JSON schema files under `schema/`
 - `CHANGELOG.md` has an entry for this change under the correct semver bump
 - No field mentioned in the ADR is absent from the types
+
+#### Specification (`packages/schema/SPECIFICATION.md`)
+- Every requirement the ADR declares that draft-07 cannot enforce has a §9 rule-catalogue row, or is stated as a §2–§8 prose requirement
+- Each new §9 row carries a fresh `DSPEC-nn` — no ID reused or renumbered, since IDs are stable citation targets
+- Every requirement added or edited in §2–§8 carries an enforcement note from §1.2
+- A field or type the ADR renames or removes is not still named by a §9 row or a §2–§8 requirement under its old name
+- `site/src/content/docs/schema/specification.md` is not hand-edited — it is generated from this file by `site/scripts/build-specification.mjs` and gitignored
+- If the ADR touches only the leaf style vocabularies, record "no specification change required (§1.5)" rather than treating the absence as a gap
 
 #### CLI (`packages/cli/`)
 - Every schema change the ADR says the CLI surfaces is handled (command updated, flag added, output adapted)

@@ -3,8 +3,9 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "prebuild": "node scripts/build-releases.mjs && node scripts/build-adrs.mjs && node scripts/build-specification.mjs",
-    "predev": "node scripts/build-releases.mjs && node scripts/build-adrs.mjs && node scripts/build-specification.mjs",
+    "build:content": "node scripts/build-releases.mjs && node scripts/build-adrs.mjs && node scripts/build-specification.mjs",
+    "prebuild": "npm run build:content",
+    "predev": "npm run build:content",
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
