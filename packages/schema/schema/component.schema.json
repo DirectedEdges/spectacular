@@ -1,6 +1,6 @@
 {
-  "version": "0.14.0",
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://spectacular.systems/schema/0.39.0/component.schema.json",
   "title": "Specs Plugin Output Schema",
   "description": "JSON Schema for data that's output by the Specs Figma plugin produced by Directed Edges",
   "$comment": "Copyright (c) 2025 Directed Edges. Licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Attribution required.",
