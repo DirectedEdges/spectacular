@@ -127,9 +127,9 @@ Annotation only. No type is added, removed, or changed; no document's validity c
 |---|---|
 | `specs-from-figma` | `STYLE_DEFAULTS` becomes redundant as an authority. It should be derived from, or asserted against, the schema rather than standing as its own source. Not changed by this ADR |
 | `figma-from-specs` | No change. Already reads values from documents, not defaults |
-| The CSS transform | No change. It currently imputes nothing for an absent key, relying on CSS's own initial values — which may or may not agree with the schema's declared default. Divergences become visible once the defaults are declared, and each is then a decision rather than an accident |
-| Platform mapping specifications | `mappings/bindings/_defaults.json` currently records `declaredBy` as the `specs-from-figma` constant. Those citations move to the schema |
-| Documentation site | The 44 per-property `#### Default` sections become generated from the schema rather than hand-maintained, and `effects` and `typography` stop being gaps |
+| The CSS transform | No change. It imputes nothing for an absent key, relying on CSS's own initial values — which may or may not agree with the schema's declared default. **Declaring the defaults does not by itself reveal a disagreement**: nothing compares the two. Surfacing them needs each binding to record its behaviour on absence, which is deferred |
+| Platform mapping specifications | `mappings/bindings/_defaults.json` recorded `declaredBy` as the `specs-from-figma` constant. Those citations now point at the schema — **done in this pass** |
+| Documentation site | The 44 per-property `#### Default` sections remain hand-maintained, and `effects` and `typography` still have no page. Generating them from the schema is **deferred**, not done here |
 
 ## Semver Decision
 
@@ -139,10 +139,11 @@ Target version: **0.40.0**, the version the release branch carries. Change class
 
 The contract can be read without reading a transform, and a second platform binding has something normative to bind to.
 
-Three things this does not do, stated so they are not assumed:
+Four things this does not do, stated so they are not assumed:
 
 - It does not resolve the **three-way ambiguity of absence**. A key absent because it equalled a default, absent because a variant inherits it, and absent because the element type cannot carry it remain indistinguishable in a document. Declaring defaults answers the first case only. The remaining two need either an in-document marker or a published per-element-type key table, and that is its own decision.
-- It does not make the CSS transform's behaviour agree with the declared defaults. It makes disagreement *visible*.
+- It does not make a platform's behaviour on absence agree with the declared default, **and it does not reveal a disagreement either**. Nothing compares the schema's default against what a transform actually does when a key is missing. Making that visible requires each binding to declare its own behaviour on absence, which is deferred.
+- It does not generate the documentation site's per-property `#### Default` sections from the schema. Those 44 pages stay hand-maintained, and `effects` and `typography` still have no page. Their values agree with the schema today; nothing holds them there.
 - It does not remove `STYLE_DEFAULTS`. Deleting or deriving it is work in another repository.
 
 The cost is 46 annotations that must stay true, which the test in *Tests* converts from a maintenance burden into a build failure.
