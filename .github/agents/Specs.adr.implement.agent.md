@@ -117,6 +117,16 @@ Do not reorder these, and do not fold two steps into one pass. A tier-3 or tier-
     - Keep the ADR as provenance, not authority: §1.6 says an ADR is not normative, so state the rule here rather than pointing at the ADR for it.
     - **Gate**: if the ADR declares a rule nothing in the schema can enforce and §9 gained no row, halt and report — the requirement would otherwise exist only in an ADR, where §1.6 says no consumer is bound by it.
 
+11b. **File an issue for every deferred consequence.**
+    - An ADR's **Consequences** and **Downstream Impact** sections are where deferred work goes to die. ADR-113 shipped asserting that 44 documentation pages "become generated from the schema" and that a transform's disagreement with the schema "becomes visible" — neither was implemented, neither had an issue, and both were invisible until someone asked.
+    - Re-read those two sections against what you actually changed. Sort every statement into one of three:
+      - **Done** — implemented in this pass. Nothing to file.
+      - **Deliberate non-goal** — the ADR states it is out of scope, in those words. Nothing to file.
+      - **Deferred** — asserted as an effect, or named as downstream impact, but not implemented. **This needs an issue.**
+    - For each deferred item, file an issue using the `create-issue` skill's **small form** — what, why, files, under 100 words. Label it with the territories it touches and make it a subissue of the ADR's own tracking issue where one exists.
+    - **Do not record the issue numbers in the ADR.** ADRs are not trackers and not plans: an ADR states a decision and its consequences, and what remains lives in issues. Report the numbers in step 14 instead.
+    - **Gate**: if a statement in Consequences or Downstream Impact is neither implemented nor an explicitly stated non-goal nor filed as an issue, halt and report it. An ADR that claims an effect nothing produced is a false record, and the claim is what a reader will rely on.
+
 12. **Update CHANGELOG.md**:
     - The release branch scaffolds an `## [X.Y.Z] - Unreleased` heading with empty sections. Add entries into the existing scaffold — do **not** replace `Unreleased` with a date (the date is set at release time). If no scaffold heading exists, prepend one using `Unreleased` as the date.
     - **Format**: one top-level bullet per user-visible change; no sub-bullets; no bold; no code blocks; no wrapping prose paragraphs
@@ -130,7 +140,9 @@ Do not reorder these, and do not fold two steps into one pass. A tier-3 or tier-
 13. **Confirm the version in `package.json`**: It must equal the ADR's **target version** — the one the release branch already carries, normally set by `/start-next-release`. Write it only if it differs; do not invent a bump beyond the release branch's version.
     - **Gate**: After writing, read `package.json` back and confirm the `"version"` field matches the ADR's target version. If it does not match, halt and report — do not proceed to step 14.
 
-14. **Report**: List every file modified (with one-line description each) — all of which must be under `packages/schema/`, `adr/`, or `site/`. Name any ADR that had no schema-package surface, and any consumer left uncompilable, as outstanding work rather than doing it. The list **must** include the ADR file, `CHANGELOG.md`, and `package.json` — if any is absent from the list, halt: steps 10, 12, or 13 were not completed. State either the `SPECIFICATION.md` change or the reason the ADR needed none (§1.5 gradient, or no semantic rule introduced) — silence on it is not an acceptable report. State that the author should review the diff and accept the ADR once satisfied. Remind the author that this ADR branch (`$BRANCH`) targets the release branch (`$RELEASE_BRANCH`), not `main`.
+14. **Report**: List every file modified (with one-line description each) — all of which must be under `packages/schema/`, `adr/`, or `site/`. Name any ADR that had no schema-package surface, and any consumer left uncompilable, as outstanding work rather than doing it. The list **must** include the ADR file, `CHANGELOG.md`, and `package.json` — if any is absent from the list, halt: steps 10, 12, or 13 were not completed. State either the `SPECIFICATION.md` change or the reason the ADR needed none (§1.5 gradient, or no semantic rule introduced) — silence on it is not an acceptable report. List the issues filed for deferred consequences (step 11b) with their numbers, or state that every statement in Consequences and Downstream Impact was implemented or is an explicit non-goal. Remind the author that this ADR branch (`$BRANCH`) targets the release branch (`$RELEASE_BRANCH`), not `main`.
+
+**Do not tell the author to accept the ADR while any deferred-consequence issue is open.** An ACCEPTED ADR asserting effects that nothing produced is a false record, and acceptance is the moment that record becomes load-bearing. Say which issues gate it instead.
 
 ## Key rules
 
