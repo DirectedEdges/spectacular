@@ -1,0 +1,2193 @@
+{
+  "platform": "css",
+  "seededFrom": "/Users/nathanacurtis/Github Desktop/spectacular",
+  "note": "disposition: bound (confirmed against the implementation) | approximated (maps with stated loss) | unsupported (declared, with stated behaviour) | unverified (coverage detected, mapping not yet confirmed by a human). Only bound rows are claims; unverified rows are work.",
+  "concepts": {
+    "styles": {
+      "rotation": {
+        "disposition": "bound",
+        "module": [
+          "transform"
+        ],
+        "declarations": null,
+        "notes": "Emits `transform: rotate(<n>deg)`. A rotation of 0 is suppressed because it matches the CSS initial value and a transform would otherwise create a containing block for absolute descendants.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "visible": {
+        "disposition": "bound",
+        "module": [
+          "effects",
+          "layoutToCSS",
+          "visibility"
+        ],
+        "declarations": null,
+        "notes": "Only `false` emits, as `display: none`. A visible element says nothing, so the display its layout chose is not overridden. A variant revealing an element hidden in the default restores display from the default element's own layout mode.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "opacity": {
+        "disposition": "bound",
+        "module": [
+          "opacity"
+        ],
+        "declarations": null,
+        "notes": "A literal ratio is emitted directly. A token is multiplied into a percentage — `calc(<var> * 1%)` — because an opacity variable is authored on a 0–100 scale.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "locked": {
+        "disposition": "unsupported",
+        "module": [],
+        "declarations": null,
+        "notes": "Not emitted. `locked` is a canvas-interaction concept with no CSS counterpart, and the transform has no awareness of the key. The value is dropped with no warning.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "backgroundColor": {
+        "disposition": "approximated",
+        "module": [
+          "fills"
+        ],
+        "declarations": null,
+        "notes": "Emits `background`. A gradient resolves to a CSS gradient function; a `null` becomes `transparent`. Loss: a gradient stop whose position is not a number silently becomes 0, and a gradient with fewer than two resolvable stops is dropped entirely rather than degraded.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation",
+        "needsDecision": "partialOnUnresolved"
+      },
+      "backgroundImage": {
+        "disposition": "approximated",
+        "module": [],
+        "declarations": null,
+        "notes": "Emitted from the sheet layer, outside the main style pipeline. `background-position`, `background-repeat` and `background-size` are emitted independently of whether the image reference resolves — deliberately, so the fit behaviour is conveyed regardless. `objectFit: CONTAIN` becomes `background-size: contain`; everything else, including absent, becomes `cover`. Loss: the source path is reduced to its basename, discarding any directory structure.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "fillColor": {
+        "disposition": "approximated",
+        "module": [
+          "fills"
+        ],
+        "declarations": null,
+        "notes": "The CSS property depends on the element type: a glyph or vector takes `background-color`, an untyped legacy element takes `fill`, anything else takes `background`. Loss: a gradient fill on an untyped element is skipped entirely, because an inline SVG paint has no gradient equivalent.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "textColor": {
+        "disposition": "bound",
+        "module": [
+          "fills"
+        ],
+        "declarations": null,
+        "notes": "Emits `color`. A gradient becomes a four-declaration bundle — background, both background-clip prefixes, and a transparent colour — which is the standard way to paint text with a gradient.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "effects": {
+        "disposition": "approximated",
+        "module": [
+          "effects"
+        ],
+        "declarations": null,
+        "notes": "Emits `box-shadow`, `filter` and `backdrop-filter`. A `null` resets all three. Loss: a shadow whose offset, blur or spread cannot be resolved substitutes `0`, and an unresolvable colour substitutes `currentColor`, so an unresolved value is masked as a plausible one rather than reported. A blur whose radius fails to resolve emits nothing at all and no reset.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation",
+        "needsDecision": "partialOnUnresolved"
+      },
+      "clipsContent": {
+        "disposition": "bound",
+        "module": [
+          "layoutToCSS",
+          "overflow",
+          "truncation"
+        ],
+        "declarations": null,
+        "notes": "Emits `overflow: hidden` or `overflow: visible`. A non-boolean is dropped.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "cornerRadius": {
+        "disposition": "approximated",
+        "module": [
+          "cornerRadius"
+        ],
+        "declarations": null,
+        "notes": "Emits `border-radius`, reordering a per-corner object from the schema's logical order into CSS's. Loss: a corner that cannot be resolved substitutes `0` rather than being reported, and an unresolved token radius with no cached fallback degrades to the keyword `unset`. An ellipse receives `border-radius: 50%` only when this key produced nothing.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "width": {
+        "disposition": "bound",
+        "module": [
+          "layoutToCSS",
+          "size"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "intrinsicSize",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "height": {
+        "disposition": "bound",
+        "module": [
+          "layoutToCSS",
+          "size"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "intrinsicSize",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "minWidth": {
+        "disposition": "approximated",
+        "module": [
+          "size"
+        ],
+        "declarations": null,
+        "notes": "Emits `min-width`. Loss: a resolved value of `0` is suppressed, so an explicit zero minimum is indistinguishable from an unstated one.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation",
+        "needsDecision": "explicitZero"
+      },
+      "minHeight": {
+        "disposition": "approximated",
+        "module": [
+          "size"
+        ],
+        "declarations": null,
+        "notes": "Emits `min-height`, with the same zero suppression as `minWidth`. Unlike `height`, it is not suppressed when an aspect ratio is stated.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation",
+        "needsDecision": "explicitZero"
+      },
+      "maxWidth": {
+        "disposition": "approximated",
+        "module": [
+          "size"
+        ],
+        "declarations": null,
+        "notes": "Emits `max-width`. Loss: a resolved value of `0` is suppressed — and unlike a minimum, a maximum of zero is a constraint the schema permits and Figma accepts, so this one is a CSS-side choice rather than a platform limit.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation",
+        "needsDecision": "explicitZero"
+      },
+      "maxHeight": {
+        "disposition": "approximated",
+        "module": [
+          "size"
+        ],
+        "declarations": null,
+        "notes": "Emits `max-height`, with the same zero suppression as `maxWidth`.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation",
+        "needsDecision": "explicitZero"
+      },
+      "position": {
+        "disposition": "bound",
+        "module": [
+          "position",
+          "styleToCSS"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "absolutePositioning",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "top": {
+        "disposition": "bound",
+        "module": [
+          "position"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "absolutePositioning",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "bottom": {
+        "disposition": "bound",
+        "module": [
+          "position"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "absolutePositioning",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "start": {
+        "disposition": "bound",
+        "module": [
+          "position",
+          "textAlign"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "absolutePositioning",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "end": {
+        "disposition": "bound",
+        "module": [
+          "position",
+          "textAlign"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "absolutePositioning",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "centerHorizontalOffset": {
+        "disposition": "bound",
+        "module": [
+          "position"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "absolutePositioning",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "centerVerticalOffset": {
+        "disposition": "bound",
+        "module": [
+          "position"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "absolutePositioning",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "layoutSizingHorizontal": {
+        "disposition": "bound",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "autoLayoutSizing",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "layoutSizingVertical": {
+        "disposition": "bound",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "autoLayoutSizing",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "strokes": {
+        "disposition": "bound",
+        "module": [
+          "border",
+          "options"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "strokeRendering",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "strokeAlign": {
+        "disposition": "bound",
+        "module": [
+          "border"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "strokeRendering",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "strokeWeight": {
+        "disposition": "bound",
+        "module": [
+          "border"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "strokeRendering",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "strokeDashPattern": {
+        "disposition": "unsupported",
+        "module": [],
+        "declarations": null,
+        "notes": "Not emitted. CSS offers no control over border dash geometry — `border-style: dashed` exists but its dash and gap lengths are chosen by the user agent — so the schema's explicit `{ dash, gap }` in pixels cannot be honoured. A dashed stroke currently renders solid, because the border style the transform emits is always `solid`.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "typography": {
+        "disposition": "approximated",
+        "module": [
+          "typography"
+        ],
+        "declarations": null,
+        "notes": "A resolvable token emits the `font` shorthand plus a companion `letter-spacing`, since the shorthand cannot carry tracking. Otherwise each member emits its own property, and `fontStyle` is split into `font-weight` and `font-style`. Loss: a weight word absent from the recognised map loses `font-weight` while italic detection still succeeds; `textCase` and `textDecoration` values outside their maps are dropped silently; and the companion letter-spacing depends on a pattern match against the resolved variable name, which if it fails loses tracking.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "textAlignHorizontal": {
+        "disposition": "bound",
+        "module": [
+          "textAlign"
+        ],
+        "declarations": null,
+        "notes": "Remaps the schema's logical values to CSS logical keywords: `START` to `start`, `END` to `end`, `JUSTIFY` to `justify`. All four schema values are covered, so the fallback is unreachable for valid input.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "textAlignVertical": {
+        "disposition": "unsupported",
+        "module": [],
+        "declarations": null,
+        "notes": "Not emitted for an element's `styles`. The key is absent from the style pipeline entirely, so a plain element carrying it produces nothing. The separate `contentStyles` member of the same name IS handled for a text primitive filling a slot, and only where that slot admits no components — two different members with one name, and only one of them is realised.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "textOverflow": {
+        "disposition": "bound",
+        "module": [
+          "truncation"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "textTruncation",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "maxLines": {
+        "disposition": "bound",
+        "module": [
+          "layoutToCSS",
+          "truncation"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "textTruncation",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "mainAxisAlignment": {
+        "disposition": "bound",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "autoLayout",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "primaryAxisSizingMode": {
+        "disposition": "unsupported",
+        "module": [],
+        "declarations": null,
+        "notes": "Not emitted. Sizing is derived instead from `layoutSizingHorizontal` and `layoutSizingVertical` against the parent axis, which the `autoLayoutSizing` cluster states. This key is never read.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "crossAxisAlignment": {
+        "disposition": "bound",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "autoLayout",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "layoutMode": {
+        "disposition": "bound",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "autoLayout",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "wrap": {
+        "disposition": "bound",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "autoLayout",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "wrapAlignment": {
+        "disposition": "bound",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "autoLayout",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "itemReverseZIndex": {
+        "disposition": "unsupported",
+        "module": [],
+        "declarations": null,
+        "notes": "The key is never read. The semantic it names is approximated by a different mechanism: a variant whose layout reverses the default's child order emits `row-reverse` or `column-reverse`, derived from comparing the two layout trees. A partial reorder is not expressible that way and is handled by relocating the element instead.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "itemSpacing": {
+        "disposition": "bound",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "autoLayout",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "padding": {
+        "disposition": "approximated",
+        "module": [
+          "padding"
+        ],
+        "declarations": null,
+        "notes": "A uniform value emits `padding`; a `null` emits `padding: 0`. A per-side object emits a `padding-block` and `padding-inline` pair, deliberately avoiding the four-value shorthand so a logical side is never misread as a physical one — the direction-safe treatment Figma lacks. Defect: a side present but unresolvable is omitted with no fallback, while `cornerRadius` substitutes `0` for the same class of failure. Nothing should be dropped; the two disagree.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "cornerSmoothing": {
+        "disposition": "unsupported",
+        "module": [],
+        "declarations": null,
+        "notes": "Not emitted, and nothing attempts a substitute. CSS has no squircle primitive; a clip-path or mask approximation would change the element's box rather than its corner, so none is offered.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "aspectRatio": {
+        "disposition": "bound",
+        "module": [
+          "aspectRatio"
+        ],
+        "declarations": null,
+        "notes": null,
+        "cluster": "intrinsicSize",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      }
+    },
+    "styleClusters": {
+      "autoLayout": {
+        "disposition": "bound",
+        "keys": [
+          "layoutMode",
+          "mainAxisAlignment",
+          "crossAxisAlignment",
+          "wrap",
+          "wrapAlignment",
+          "itemSpacing"
+        ],
+        "outputs": [
+          "display",
+          "flex-direction",
+          "justify-content",
+          "align-items",
+          "flex-wrap",
+          "gap",
+          "column-gap",
+          "row-gap"
+        ],
+        "module": [
+          "layoutToCSS",
+          "elementRules (overlapRule)"
+        ],
+        "notes": "css/style/layoutToCSS.ts:39-96; css/sheet/elementRules.ts:254-268. `cases` decides display and direction; `memberCases` apply only when a case above emitted a display.",
+        "inputs": [
+          {
+            "ref": "self.layoutMode",
+            "from": "document"
+          },
+          {
+            "ref": "self.mainAxisAlignment",
+            "from": "document"
+          },
+          {
+            "ref": "self.crossAxisAlignment",
+            "from": "document"
+          },
+          {
+            "ref": "self.wrap",
+            "from": "document"
+          },
+          {
+            "ref": "self.wrapAlignment",
+            "from": "document"
+          },
+          {
+            "ref": "self.itemSpacing",
+            "from": "document"
+          }
+        ],
+        "cases": [
+          {
+            "when": {
+              "operation": "any",
+              "args": [
+                {
+                  "operation": "isNull",
+                  "args": {
+                    "value": "self.layoutMode"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "self.layoutMode",
+                    "compareTo": "NONE"
+                  }
+                }
+              ]
+            },
+            "emit": [],
+            "why": "without a layout mode the whole cluster is inert; the element stays in flow"
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "self.layoutMode",
+                "compareTo": "HORIZONTAL"
+              }
+            },
+            "emit": [
+              "display: flex",
+              "flex-direction: row"
+            ]
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "self.layoutMode",
+                "compareTo": "VERTICAL"
+              }
+            },
+            "emit": [
+              "display: flex",
+              "flex-direction: column"
+            ]
+          }
+        ],
+        "memberCases": [
+          {
+            "when": {
+              "operation": "isNotNull",
+              "args": {
+                "value": "self.mainAxisAlignment"
+              }
+            },
+            "emit": [
+              "justify-content: <mapped>"
+            ]
+          },
+          {
+            "when": {
+              "operation": "isNotNull",
+              "args": {
+                "value": "self.crossAxisAlignment"
+              }
+            },
+            "emit": [
+              "align-items: <mapped>"
+            ]
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "self.wrap",
+                "compareTo": true
+              }
+            },
+            "emit": [
+              "flex-wrap: wrap"
+            ]
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "self.wrap",
+                "compareTo": false
+              }
+            },
+            "emit": [
+              "flex-wrap: nowrap"
+            ]
+          },
+          {
+            "when": {
+              "operation": "isNotNull",
+              "args": {
+                "value": "self.wrapAlignment"
+              }
+            },
+            "emit": [
+              "align-content: <mapped>"
+            ]
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "isNotNull",
+                  "args": {
+                    "value": "self.itemSpacing"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "self.itemSpacing.sign",
+                    "compareTo": "nonNegative"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "gap: <self.itemSpacing>"
+            ]
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "isNotNull",
+                  "args": {
+                    "value": "self.itemSpacing"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "self.itemSpacing.sign",
+                    "compareTo": "negative"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "NOT on this element — a negative margin on `<selector> > * + *`, emitted by elementRules"
+            ],
+            "why": "gap does not accept negative values; overlap is a sibling margin"
+          }
+        ],
+        "form": "cases",
+        "basis": "implementation"
+      },
+      "autoLayoutSizing": {
+        "disposition": "bound",
+        "keys": [
+          "layoutSizingHorizontal",
+          "layoutSizingVertical"
+        ],
+        "outputs": [
+          "width: fit-content",
+          "height: fit-content",
+          "flex: 1 0 0",
+          "width: 100%",
+          "height: 100%",
+          "flex-shrink: 0"
+        ],
+        "module": [
+          "layoutToCSS"
+        ],
+        "notes": "css/style/layoutToCSS.ts:130-179. Cases are ordered and the first match wins. `self.layoutSizingOnParentAxis` is the axis-selected key the source computes from parentLayoutMode.",
+        "inputs": [
+          {
+            "ref": "self.layoutSizingHorizontal",
+            "from": "document"
+          },
+          {
+            "ref": "self.layoutSizingVertical",
+            "from": "document"
+          },
+          {
+            "ref": "self.clipsContent",
+            "from": "document"
+          },
+          {
+            "ref": "self.maxLines",
+            "from": "document"
+          },
+          {
+            "ref": "self.width",
+            "from": "document"
+          },
+          {
+            "ref": "self.height",
+            "from": "document"
+          },
+          {
+            "ref": "parent.layoutMode",
+            "from": "document (ancestor)"
+          },
+          {
+            "ref": "parent.crossAxisAlignment",
+            "from": "document (ancestor)"
+          },
+          {
+            "ref": "context.isInstance",
+            "from": "emitter context"
+          },
+          {
+            "ref": "context.isDefaultBlock",
+            "from": "emitter context"
+          }
+        ],
+        "derived": {
+          "mainHugs": {
+            "expression": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "context.isInstance",
+                    "compareTo": false
+                  }
+                },
+                {
+                  "operation": "notEquals",
+                  "args": {
+                    "value": "self.clipsContent",
+                    "compareTo": true
+                  }
+                },
+                {
+                  "operation": "isNull",
+                  "args": {
+                    "value": "self.maxLines"
+                  }
+                }
+              ]
+            },
+            "source": "layoutToCSS.ts:133-134"
+          },
+          "crossStretches": {
+            "expression": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "context.isInstance",
+                    "compareTo": false
+                  }
+                },
+                {
+                  "operation": "any",
+                  "args": [
+                    {
+                      "operation": "isNull",
+                      "args": {
+                        "value": "parent.crossAxisAlignment"
+                      }
+                    },
+                    {
+                      "operation": "equals",
+                      "args": {
+                        "value": "parent.crossAxisAlignment",
+                        "compareTo": "STRETCH"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "source": "layoutToCSS.ts:130-131"
+          }
+        },
+        "cases": [
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "self.layoutSizingHorizontal",
+                    "compareTo": "HUG"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "parent.layoutMode",
+                    "compareTo": "HORIZONTAL"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "derived.mainHugs",
+                    "compareTo": true
+                  }
+                }
+              ]
+            },
+            "emit": [],
+            "why": "the parent main axis already hugs"
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "self.layoutSizingHorizontal",
+                "compareTo": "HUG"
+              }
+            },
+            "emit": [
+              "width: fit-content"
+            ]
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "self.layoutSizingHorizontal",
+                    "compareTo": "FILL"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "parent.layoutMode",
+                    "compareTo": "HORIZONTAL"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "flex: 1 0 0"
+            ]
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "self.layoutSizingHorizontal",
+                    "compareTo": "FILL"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "parent.layoutMode",
+                    "compareTo": "VERTICAL"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "derived.crossStretches",
+                    "compareTo": true
+                  }
+                }
+              ]
+            },
+            "emit": [],
+            "why": "the parent stretches it across the cross axis already"
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "self.layoutSizingHorizontal",
+                "compareTo": "FILL"
+              }
+            },
+            "emit": [
+              "width: 100%"
+            ]
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "self.layoutSizingVertical",
+                    "compareTo": "HUG"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "parent.layoutMode",
+                    "compareTo": "VERTICAL"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "derived.mainHugs",
+                    "compareTo": true
+                  }
+                }
+              ]
+            },
+            "emit": []
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "self.layoutSizingVertical",
+                "compareTo": "HUG"
+              }
+            },
+            "emit": [
+              "height: fit-content"
+            ]
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "self.layoutSizingVertical",
+                    "compareTo": "FILL"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "parent.layoutMode",
+                    "compareTo": "VERTICAL"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "flex: 1 0 0"
+            ]
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "self.layoutSizingVertical",
+                    "compareTo": "FILL"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "parent.layoutMode",
+                    "compareTo": "HORIZONTAL"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "derived.crossStretches",
+                    "compareTo": true
+                  }
+                }
+              ]
+            },
+            "emit": []
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "self.layoutSizingVertical",
+                "compareTo": "FILL"
+              }
+            },
+            "emit": [
+              "height: 100%"
+            ]
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "any",
+                  "args": [
+                    {
+                      "operation": "equals",
+                      "args": {
+                        "value": "parent.layoutMode",
+                        "compareTo": "HORIZONTAL"
+                      }
+                    },
+                    {
+                      "operation": "equals",
+                      "args": {
+                        "value": "parent.layoutMode",
+                        "compareTo": "VERTICAL"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "operation": "any",
+                  "args": [
+                    {
+                      "operation": "equals",
+                      "args": {
+                        "value": "context.isDefaultBlock",
+                        "compareTo": true
+                      }
+                    },
+                    {
+                      "operation": "isNotNull",
+                      "args": {
+                        "value": "self.layoutSizingHorizontal"
+                      }
+                    },
+                    {
+                      "operation": "isNotNull",
+                      "args": {
+                        "value": "self.layoutSizingVertical"
+                      }
+                    },
+                    {
+                      "operation": "isNotNull",
+                      "args": {
+                        "value": "self.width"
+                      }
+                    },
+                    {
+                      "operation": "isNotNull",
+                      "args": {
+                        "value": "self.height"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "operation": "notEquals",
+                  "args": {
+                    "value": "self.layoutSizingOnParentAxis",
+                    "compareTo": "FILL"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "flex-shrink: 0"
+            ],
+            "why": "stated sizing on a flex child that is not FILL must not shrink",
+            "source": "layoutToCSS.ts:173-179"
+          }
+        ],
+        "otherwise": {
+          "emit": [],
+          "why": "FIXED or absent contributes nothing from this cluster"
+        },
+        "form": "cases",
+        "basis": "implementation"
+      },
+      "absolutePositioning": {
+        "disposition": "bound",
+        "keys": [
+          "position",
+          "top",
+          "bottom",
+          "start",
+          "end",
+          "centerHorizontalOffset",
+          "centerVerticalOffset"
+        ],
+        "outputs": [
+          "position: absolute",
+          "position: static",
+          "inset-block-start",
+          "inset-block-end",
+          "inset-inline-start",
+          "inset-inline-end",
+          "translate"
+        ],
+        "module": [
+          "position"
+        ],
+        "notes": "css/style/position.ts:4-27 (hasInsets, impliesAbsolute), 42-59, 84-107 (centerDecls). `cases` decides the position property; `insetCases` decides the offsets. verticalAnchored/horizontalAnchored are presence of top|bottom and start|end respectively.",
+        "inputs": [
+          {
+            "ref": "self.position",
+            "from": "document"
+          },
+          {
+            "ref": "self.top",
+            "from": "document"
+          },
+          {
+            "ref": "self.bottom",
+            "from": "document"
+          },
+          {
+            "ref": "self.start",
+            "from": "document"
+          },
+          {
+            "ref": "self.end",
+            "from": "document"
+          },
+          {
+            "ref": "self.centerHorizontalOffset",
+            "from": "document"
+          },
+          {
+            "ref": "self.centerVerticalOffset",
+            "from": "document"
+          },
+          {
+            "ref": "parent.layoutMode",
+            "from": "document (ancestor)"
+          },
+          {
+            "ref": "context.isRoot",
+            "from": "emitter context"
+          }
+        ],
+        "derived": {
+          "hasInsets": {
+            "expression": {
+              "operation": "any",
+              "args": [
+                {
+                  "operation": "isNotNull",
+                  "args": {
+                    "value": "self.top"
+                  }
+                },
+                {
+                  "operation": "isNotNull",
+                  "args": {
+                    "value": "self.bottom"
+                  }
+                },
+                {
+                  "operation": "isNotNull",
+                  "args": {
+                    "value": "self.start"
+                  }
+                },
+                {
+                  "operation": "isNotNull",
+                  "args": {
+                    "value": "self.end"
+                  }
+                }
+              ]
+            },
+            "source": "position.ts:4-9"
+          },
+          "parentAutoLayout": {
+            "expression": {
+              "operation": "any",
+              "args": [
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "parent.layoutMode",
+                    "compareTo": "HORIZONTAL"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "parent.layoutMode",
+                    "compareTo": "VERTICAL"
+                  }
+                }
+              ]
+            },
+            "source": "position.ts:18-27 (parentAutoLayout argument)"
+          },
+          "nonZeroInset": {
+            "expression": {
+              "operation": "any",
+              "args": [
+                {
+                  "operation": "all",
+                  "args": [
+                    {
+                      "operation": "isNotNull",
+                      "args": {
+                        "value": "self.top"
+                      }
+                    },
+                    {
+                      "operation": "notEquals",
+                      "args": {
+                        "value": "self.top",
+                        "compareTo": 0
+                      }
+                    }
+                  ]
+                },
+                {
+                  "operation": "all",
+                  "args": [
+                    {
+                      "operation": "isNotNull",
+                      "args": {
+                        "value": "self.bottom"
+                      }
+                    },
+                    {
+                      "operation": "notEquals",
+                      "args": {
+                        "value": "self.bottom",
+                        "compareTo": 0
+                      }
+                    }
+                  ]
+                },
+                {
+                  "operation": "all",
+                  "args": [
+                    {
+                      "operation": "isNotNull",
+                      "args": {
+                        "value": "self.start"
+                      }
+                    },
+                    {
+                      "operation": "notEquals",
+                      "args": {
+                        "value": "self.start",
+                        "compareTo": 0
+                      }
+                    }
+                  ]
+                },
+                {
+                  "operation": "all",
+                  "args": [
+                    {
+                      "operation": "isNotNull",
+                      "args": {
+                        "value": "self.end"
+                      }
+                    },
+                    {
+                      "operation": "notEquals",
+                      "args": {
+                        "value": "self.end",
+                        "compareTo": 0
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "source": "position.ts:24"
+          },
+          "opposingAnchors": {
+            "expression": {
+              "operation": "any",
+              "args": [
+                {
+                  "operation": "all",
+                  "args": [
+                    {
+                      "operation": "isNotNull",
+                      "args": {
+                        "value": "self.top"
+                      }
+                    },
+                    {
+                      "operation": "isNotNull",
+                      "args": {
+                        "value": "self.bottom"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "operation": "all",
+                  "args": [
+                    {
+                      "operation": "isNotNull",
+                      "args": {
+                        "value": "self.start"
+                      }
+                    },
+                    {
+                      "operation": "isNotNull",
+                      "args": {
+                        "value": "self.end"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "source": "position.ts:25"
+          }
+        },
+        "cases": [
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "self.position",
+                "compareTo": "ABSOLUTE"
+              }
+            },
+            "emit": [
+              "position: absolute"
+            ],
+            "why": "an explicit position wins outright"
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "self.position",
+                "compareTo": "AUTO"
+              }
+            },
+            "emit": [
+              "position: static"
+            ]
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "isNull",
+                  "args": {
+                    "value": "self.position"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "context.isRoot",
+                    "compareTo": true
+                  }
+                }
+              ]
+            },
+            "emit": [],
+            "why": "a root never infers absolute"
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "isNull",
+                  "args": {
+                    "value": "self.position"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "derived.hasInsets",
+                    "compareTo": false
+                  }
+                }
+              ]
+            },
+            "emit": [],
+            "why": "no coordinates, nothing to infer from"
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "isNull",
+                  "args": {
+                    "value": "self.position"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "derived.parentAutoLayout",
+                    "compareTo": false
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "position: absolute"
+            ],
+            "why": "outside auto-layout, any coordinate is meaningful"
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "isNull",
+                  "args": {
+                    "value": "self.position"
+                  }
+                },
+                {
+                  "operation": "any",
+                  "args": [
+                    {
+                      "operation": "equals",
+                      "args": {
+                        "value": "derived.nonZeroInset",
+                        "compareTo": true
+                      }
+                    },
+                    {
+                      "operation": "equals",
+                      "args": {
+                        "value": "derived.opposingAnchors",
+                        "compareTo": true
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "emit": [
+              "position: absolute"
+            ],
+            "why": "inside auto-layout only a meaningful coordinate implies absolute"
+          },
+          {
+            "when": {
+              "operation": "isNull",
+              "args": {
+                "value": "self.position"
+              }
+            },
+            "emit": [],
+            "why": "a zero-only single anchor inside auto-layout is canvas noise"
+          }
+        ],
+        "insetCases": [
+          {
+            "when": {
+              "operation": "isNotNull",
+              "args": {
+                "value": "self.top"
+              }
+            },
+            "emit": [
+              "inset-block-start: <self.top>"
+            ]
+          },
+          {
+            "when": {
+              "operation": "isNotNull",
+              "args": {
+                "value": "self.bottom"
+              }
+            },
+            "emit": [
+              "inset-block-end: <self.bottom>"
+            ]
+          },
+          {
+            "when": {
+              "operation": "isNotNull",
+              "args": {
+                "value": "self.start"
+              }
+            },
+            "emit": [
+              "inset-inline-start: <self.start>"
+            ]
+          },
+          {
+            "when": {
+              "operation": "isNotNull",
+              "args": {
+                "value": "self.end"
+              }
+            },
+            "emit": [
+              "inset-inline-end: <self.end>"
+            ]
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "isNotNull",
+                  "args": {
+                    "value": "self.centerVerticalOffset"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "derived.verticalAnchored",
+                    "compareTo": false
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "inset-block-start: <self.centerVerticalOffset>"
+            ],
+            "why": "an edge anchor on the same axis wins; both would put two values on one property"
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "isNotNull",
+                  "args": {
+                    "value": "self.centerHorizontalOffset"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "derived.horizontalAnchored",
+                    "compareTo": false
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "inset-inline-start: <self.centerHorizontalOffset>"
+            ]
+          },
+          {
+            "when": {
+              "operation": "any",
+              "args": [
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "derived.verticalCentred",
+                    "compareTo": true
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "derived.horizontalCentred",
+                    "compareTo": true
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "translate: <-50% on each centred axis, 0 on the other>"
+            ]
+          }
+        ],
+        "form": "cases",
+        "basis": "implementation"
+      },
+      "strokeRendering": {
+        "disposition": "bound",
+        "keys": [
+          "strokes",
+          "strokeAlign",
+          "strokeWeight"
+        ],
+        "outputs": [
+          "border-color",
+          "border-style",
+          "border-width",
+          "outline-color",
+          "outline-style",
+          "outline-width",
+          "outline-offset",
+          "border-image: none"
+        ],
+        "module": [
+          "border"
+        ],
+        "notes": "css/style/border.ts:51-53, 73-167. strokeAlign contributes no declaration of its own — it only flips the outline-offset sign. `strokeDashPattern` is NOT consulted: see its own row.",
+        "inputs": [
+          {
+            "ref": "self.strokes",
+            "from": "document"
+          },
+          {
+            "ref": "self.strokeWeight",
+            "from": "document"
+          },
+          {
+            "ref": "self.strokeAlign",
+            "from": "document"
+          },
+          {
+            "ref": "context.isDefaultBlock",
+            "from": "emitter context"
+          }
+        ],
+        "derived": {
+          "asOutline": {
+            "expression": {
+              "operation": "not",
+              "args": [
+                {
+                  "operation": "all",
+                  "args": [
+                    {
+                      "operation": "equals",
+                      "args": {
+                        "value": "self.strokeWeight.form",
+                        "compareTo": "perSideObject"
+                      }
+                    },
+                    {
+                      "operation": "notEquals",
+                      "args": {
+                        "value": "self.strokeWeight.form",
+                        "compareTo": "tokenReference"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "source": "border.ts:51-53 — a per-side object becomes border-*, a scalar or token becomes outline-*"
+          },
+          "gradientStroke": {
+            "expression": {
+              "operation": "equals",
+              "args": {
+                "value": "self.strokes.form",
+                "compareTo": "gradient"
+              }
+            },
+            "source": "border.ts:73-113"
+          }
+        },
+        "cases": [
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "derived.gradientStroke",
+                "compareTo": true
+              }
+            },
+            "emit": [],
+            "why": "a gradient stroke is painted by a separate pseudo-element rule, not a border or outline"
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "isNotNull",
+                  "args": {
+                    "value": "self.strokes"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "derived.asOutline",
+                    "compareTo": false
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "border-color: <self.strokes>",
+              "border-style: solid"
+            ]
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "isNotNull",
+                  "args": {
+                    "value": "self.strokes"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "derived.asOutline",
+                    "compareTo": true
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "outline-color: <self.strokes>",
+              "outline-style: solid"
+            ]
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "isNotNull",
+                  "args": {
+                    "value": "self.strokeWeight"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "derived.asOutline",
+                    "compareTo": false
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "border-width: <per side>"
+            ]
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "isNotNull",
+                  "args": {
+                    "value": "self.strokeWeight"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "derived.asOutline",
+                    "compareTo": true
+                  }
+                },
+                {
+                  "operation": "any",
+                  "args": [
+                    {
+                      "operation": "equals",
+                      "args": {
+                        "value": "self.strokeAlign",
+                        "compareTo": "OUTSIDE"
+                      }
+                    },
+                    {
+                      "operation": "equals",
+                      "args": {
+                        "value": "self.strokeAlign",
+                        "compareTo": "CENTER"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "emit": [
+              "outline-width: <self.strokeWeight>"
+            ]
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "isNotNull",
+                  "args": {
+                    "value": "self.strokeWeight"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "derived.asOutline",
+                    "compareTo": true
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "outline-width: <self.strokeWeight>",
+              "outline-offset: <negated self.strokeWeight>"
+            ]
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "context.isDefaultBlock",
+                    "compareTo": true
+                  }
+                },
+                {
+                  "operation": "isNull",
+                  "args": {
+                    "value": "self.strokeWeight"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "border-width: 0 or outline-width: 0, matching whichever style was emitted"
+            ],
+            "why": "a default block must reset a width it did not state"
+          }
+        ],
+        "otherwise": {
+          "emit": []
+        },
+        "form": "cases",
+        "basis": "implementation"
+      },
+      "intrinsicSize": {
+        "disposition": "bound",
+        "keys": [
+          "width",
+          "height",
+          "aspectRatio"
+        ],
+        "outputs": [
+          "width",
+          "height",
+          "aspect-ratio"
+        ],
+        "module": [
+          "size",
+          "aspectRatio"
+        ],
+        "notes": "css/style/size.ts:22-34. minWidth, minHeight, maxWidth and maxHeight are independent and map one-to-one.",
+        "inputs": [
+          {
+            "ref": "self.width",
+            "from": "document"
+          },
+          {
+            "ref": "self.height",
+            "from": "document"
+          },
+          {
+            "ref": "self.aspectRatio",
+            "from": "document"
+          }
+        ],
+        "cases": [
+          {
+            "when": {
+              "operation": "isNotNull",
+              "args": {
+                "value": "self.width"
+              }
+            },
+            "emit": [
+              "width: <self.width>"
+            ]
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "isNotNull",
+                  "args": {
+                    "value": "self.height"
+                  }
+                },
+                {
+                  "operation": "isNotNull",
+                  "args": {
+                    "value": "self.aspectRatio"
+                  }
+                }
+              ]
+            },
+            "emit": [],
+            "why": "a stated ratio derives the height"
+          },
+          {
+            "when": {
+              "operation": "isNotNull",
+              "args": {
+                "value": "self.height"
+              }
+            },
+            "emit": [
+              "height: <self.height>"
+            ]
+          },
+          {
+            "when": {
+              "operation": "isNotNull",
+              "args": {
+                "value": "self.aspectRatio"
+              }
+            },
+            "emit": [
+              "aspect-ratio: <x> / <y>"
+            ]
+          }
+        ],
+        "otherwise": {
+          "emit": []
+        },
+        "form": "cases",
+        "basis": "implementation"
+      },
+      "textTruncation": {
+        "disposition": "bound",
+        "keys": [
+          "textOverflow",
+          "maxLines"
+        ],
+        "outputs": [
+          "white-space",
+          "overflow",
+          "text-overflow",
+          "display: -webkit-box",
+          "-webkit-box-orient",
+          "-webkit-line-clamp",
+          "line-clamp"
+        ],
+        "module": [
+          "truncation"
+        ],
+        "notes": "css/style/truncation.ts:12-37. The multi-line case sets display, so it interacts with the autoLayout cluster on the same element.",
+        "inputs": [
+          {
+            "ref": "self.textOverflow",
+            "from": "document"
+          },
+          {
+            "ref": "self.maxLines",
+            "from": "document"
+          }
+        ],
+        "cases": [
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "isNotNull",
+                  "args": {
+                    "value": "self.maxLines"
+                  }
+                },
+                {
+                  "operation": "notEquals",
+                  "args": {
+                    "value": "self.maxLines",
+                    "compareTo": 1
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "display: -webkit-box",
+              "-webkit-box-orient: vertical",
+              "-webkit-line-clamp: <self.maxLines>",
+              "line-clamp: <self.maxLines>",
+              "overflow: hidden"
+            ],
+            "why": "multi-line clamp changes the display type"
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "self.maxLines",
+                    "compareTo": 1
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "self.textOverflow",
+                    "compareTo": "ELLIPSIS"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "white-space: nowrap",
+              "overflow: hidden",
+              "text-overflow: ellipsis"
+            ]
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "self.maxLines",
+                "compareTo": 1
+              }
+            },
+            "emit": [
+              "white-space: nowrap",
+              "overflow: hidden"
+            ]
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "self.textOverflow",
+                "compareTo": "ELLIPSIS"
+              }
+            },
+            "emit": [
+              "overflow: hidden",
+              "text-overflow: ellipsis"
+            ]
+          }
+        ],
+        "otherwise": {
+          "emit": []
+        },
+        "form": "cases",
+        "basis": "implementation"
+      }
+    }
+  },
+  "valueForms": {
+    "summary": "Every style value may be a literal, a TokenReference, a PropBinding, or a Conditional. A disposition for a key means little without saying what happens to each form (DSPEC-42).",
+    "literal": "bound",
+    "literalNote": "The ordinary case; every case table above is written against literals.",
+    "tokenReference": "bound",
+    "tokenReferenceNote": "Emitted per `settings.spec.tokens`. A dedicated token-value path recognises `$token` and renders it in the configured notation.",
+    "propBinding": "unsupported",
+    "propBindingNote": "A PropBinding is not applied to any style value. `visible` is the one possible exception and is not currently realised either: the check is a literal `false` comparison, which a `{ $binding }` object fails, so a bound visibility emits nothing. Declared scope, not an unfound gap.",
+    "conditional": "unsupported",
+    "conditionalNote": "Not yet implemented. Nothing in the transform matches a conditional, so a `visible` carrying the ADR-018 conditional form renders permanently visible and the condition is discarded. The render path does implement it, so a document survives a Figma round trip and loses the condition only on the way to CSS."
+  },
+  "realises": "The style surface. Every output in this binding is a CSS declaration, so it is shared by every platform that styles with CSS rather than belonging to any one of them.",
+  "dependedOnBy": [
+    "react",
+    "webcomponents"
+  ],
+  "onAbsentVocabulary": {
+    "declaredDefault": "Applies the value the schema declares for an absent key.",
+    "platformInitial": "Applies the platform's own initial value, which may differ from the schema's declared default.",
+    "warns": "Warns and applies nothing.",
+    "nothing": "Applies nothing, silently.",
+    "unverified": "Nobody has established what this platform does when the key is absent."
+  },
+  "onAbsentNote": "What this platform does when a style key is absent from a document. The schema declares the meaning of absence once (§4.1a); this records whether the platform honours it. A row whose onAbsent is not declaredDefault is a disagreement with the contract, and each one is a decision rather than an accident.",
+  "basisVocabulary": {
+    "implementation": "Verified against a citable implementation. The drift guard checks it, and a change to that implementation fails the build.",
+    "intent": "Asserted from the authoritative source for what the data means, which is not publicly citable. Nothing mechanical checks it; a reviewer must."
+  },
+  "basisNote": "Every claim here is verified against a citable implementation in this repository.",
+  "decisionThemes": {
+    "colorSpace": {
+      "title": "A non-sRGB ColorObject renders as if it were sRGB",
+      "note": "The schema admits 14 colour spaces and the render path never reads `colorSpace` — components 0 through 2 are taken as red, green and blue regardless, so an `oklch` value is misread rather than approximated. A `none` component becomes 0, and components beyond the third are dropped.",
+      "decided": "Convert to sRGB at render time (#813). The schema keeps all 14 spaces; the render path gains a conversion with gamut mapping for values outside sRGB. Until that lands, a non-sRGB ColorObject renders wrong rather than degraded."
+    },
+    "explicitZero": {
+      "title": "Zero is not distinguishable from unset",
+      "note": "Both platforms currently treat a dimension of 0 as \"no constraint\" rather than \"a constraint of zero\".",
+      "decided": "Open. Deferred — see #814, and #812 on what an absent `width`/`height` means. The two interact and should be settled together."
+    },
+    "logicalToPhysical": {
+      "title": "Logical sides become physical without a direction",
+      "note": "The schema uses `start` and `end` so a document is direction-agnostic. The Figma render maps `start` to the left padding with no writing-direction branch.",
+      "decided": "Accepted as a platform limit. Figma cannot express a writing direction, so the mapping is left-to-right only and the loss is declared rather than fixed — which is what `approximated` means. CSS stays direction-safe by emitting `padding-block` and `padding-inline`."
+    },
+    "partialOnUnresolved": {
+      "title": "A value is dropped rather than degraded",
+      "note": "A gradient whose stops do not yield two resolvable colours is dropped whole. A `padding` side that is present but unresolvable is omitted while its siblings emit, whereas `cornerRadius` substitutes `0` for the same failure. DSPEC-43 says a degradation applies the spec's own recorded fallback, or applies nothing and warns — dropping part of a value silently is neither.",
+      "decided": "Open. See #816 on the disagreement between the composite types, and #815 on the gradient path."
+    }
+  }
+}

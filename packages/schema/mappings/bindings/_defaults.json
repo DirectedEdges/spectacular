@@ -1,0 +1,239 @@
+{
+  "kind": "style-defaults",
+  "seededFrom": "schema/styles.schema.json",
+  "note": "What a consumer assumes when a style key is ABSENT from a document. Spec-level, not per-platform: platforms that disagree here disagree about what the same document says.",
+  "homeProblem": "Resolved by ADR-113: every Styles property declares a default, so the schema answers what an absent key means. The capture path no longer holds that answer and should be derived from or asserted against the schema.",
+  "defaults": {
+    "rotation": {
+      "assumed": 0,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/rotation (default)",
+      "notes": null
+    },
+    "visible": {
+      "assumed": true,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/visible (default)",
+      "notes": null
+    },
+    "opacity": {
+      "assumed": 1,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/opacity (default)",
+      "notes": null
+    },
+    "locked": {
+      "assumed": false,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/locked (default)",
+      "notes": null
+    },
+    "backgroundColor": {
+      "assumed": null,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/backgroundColor (default)",
+      "notes": null
+    },
+    "backgroundImage": {
+      "assumed": null,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/backgroundImage (default)",
+      "notes": null
+    },
+    "fillColor": {
+      "assumed": null,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/fillColor (default)",
+      "notes": null
+    },
+    "textColor": {
+      "assumed": null,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/textColor (default)",
+      "notes": null
+    },
+    "effects": {
+      "assumed": null,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/effects (default)",
+      "notes": null
+    },
+    "clipsContent": {
+      "assumed": false,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/clipsContent (default)",
+      "notes": null
+    },
+    "cornerRadius": {
+      "assumed": 0,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/cornerRadius (default)",
+      "notes": null
+    },
+    "width": {
+      "assumed": 0,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/width (default)",
+      "notes": null
+    },
+    "height": {
+      "assumed": 0,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/height (default)",
+      "notes": null
+    },
+    "minWidth": {
+      "assumed": 0,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/minWidth (default)",
+      "notes": null
+    },
+    "minHeight": {
+      "assumed": 0,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/minHeight (default)",
+      "notes": null
+    },
+    "maxWidth": {
+      "assumed": null,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/maxWidth (default)",
+      "notes": null
+    },
+    "maxHeight": {
+      "assumed": null,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/maxHeight (default)",
+      "notes": null
+    },
+    "position": {
+      "assumed": "AUTO",
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/position (default)",
+      "notes": null
+    },
+    "top": {
+      "assumed": null,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/top (default)",
+      "notes": null
+    },
+    "bottom": {
+      "assumed": null,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/bottom (default)",
+      "notes": null
+    },
+    "start": {
+      "assumed": null,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/start (default)",
+      "notes": null
+    },
+    "end": {
+      "assumed": null,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/end (default)",
+      "notes": null
+    },
+    "centerHorizontalOffset": {
+      "assumed": null,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/centerHorizontalOffset (default)",
+      "notes": null
+    },
+    "centerVerticalOffset": {
+      "assumed": null,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/centerVerticalOffset (default)",
+      "notes": null
+    },
+    "layoutSizingHorizontal": {
+      "assumed": "FIXED",
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/layoutSizingHorizontal (default)",
+      "notes": null
+    },
+    "layoutSizingVertical": {
+      "assumed": "FIXED",
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/layoutSizingVertical (default)",
+      "notes": null
+    },
+    "strokes": {
+      "assumed": null,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/strokes (default)",
+      "notes": null
+    },
+    "strokeAlign": {
+      "assumed": "INSIDE",
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/strokeAlign (default)",
+      "notes": null
+    },
+    "strokeWeight": {
+      "assumed": 0,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/strokeWeight (default)",
+      "notes": null
+    },
+    "strokeDashPattern": {
+      "assumed": null,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/strokeDashPattern (default)",
+      "notes": null
+    },
+    "typography": {
+      "assumed": null,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/typography (default)",
+      "notes": null
+    },
+    "textAlignHorizontal": {
+      "assumed": "START",
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/textAlignHorizontal (default)",
+      "notes": null
+    },
+    "textAlignVertical": {
+      "assumed": "TOP",
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/textAlignVertical (default)",
+      "notes": null
+    },
+    "textOverflow": {
+      "assumed": "CLIP",
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/textOverflow (default)",
+      "notes": null
+    },
+    "maxLines": {
+      "assumed": null,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/maxLines (default)",
+      "notes": null
+    },
+    "mainAxisAlignment": {
+      "assumed": "START",
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/mainAxisAlignment (default)",
+      "notes": null
+    },
+    "primaryAxisSizingMode": {
+      "assumed": "AUTO",
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/primaryAxisSizingMode (default)",
+      "notes": null
+    },
+    "crossAxisAlignment": {
+      "assumed": "START",
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/crossAxisAlignment (default)",
+      "notes": null
+    },
+    "layoutMode": {
+      "assumed": "NONE",
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/layoutMode (default)",
+      "notes": null
+    },
+    "wrap": {
+      "assumed": false,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/wrap (default)",
+      "notes": null
+    },
+    "wrapAlignment": {
+      "assumed": null,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/wrapAlignment (default)",
+      "notes": null
+    },
+    "itemReverseZIndex": {
+      "assumed": false,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/itemReverseZIndex (default)",
+      "notes": null
+    },
+    "itemSpacing": {
+      "assumed": 0,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/itemSpacing (default)",
+      "notes": null
+    },
+    "padding": {
+      "assumed": 0,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/padding (default)",
+      "notes": null
+    },
+    "cornerSmoothing": {
+      "assumed": 0,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/cornerSmoothing (default)",
+      "notes": null
+    },
+    "aspectRatio": {
+      "assumed": null,
+      "declaredBy": "schema/styles.schema.json#/definitions/Styles/properties/aspectRatio (default)",
+      "notes": null
+    }
+  },
+  "absenceIsStillAmbiguous": "A declared default answers only one of three reasons a key can be absent. A key may also be absent because a variant inherits it under layering, or because the element type cannot carry it, and nothing in a document marks which applies. ADR-113 Consequences states this explicitly."
+}

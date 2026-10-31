@@ -1,0 +1,1242 @@
+{
+  "platform": "figma",
+  "seededFrom": "/Users/nathanacurtis/Github Desktop/specs-transforms",
+  "note": "disposition: bound (confirmed against the implementation) | approximated (maps with stated loss) | unsupported (declared, with stated behaviour) | unverified (coverage detected, mapping not yet confirmed by a human). Only bound rows are claims; unverified rows are work.",
+  "concepts": {
+    "styles": {
+      "rotation": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": "node.rotation",
+        "notes": "Degrees, written directly.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "visible": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": "Sets `node.visible` from a boolean. A `$binding` value is skipped by an earlier guard, and the conditional form is deferred to the paired-visibility feature — both are declared at the value-form level.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "opacity": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": "node.opacity",
+        "notes": "A TokenReference binds the variable; otherwise the raw number is written.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "locked": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": "node.locked",
+        "notes": "Canvas interaction only — the Plugin API can still mutate a locked node, so it applies wherever it is reached, children included.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "backgroundColor": {
+        "disposition": "approximated",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "rectangle"
+        ],
+        "target": null,
+        "notes": "Resolves in four steps — gradient, resolved style, bound variable, cached raw value — and writes a single solid paint. A token with neither a resolvable variable nor a cached raw value is skipped with a warning, which is the degradation DSPEC-43 permits. Loss: `colorSpace` is never read, so components are taken as sRGB regardless; a `none` component becomes 0; components beyond the third are dropped. Never applied to a text node.",
+        "onAbsent": "unverified",
+        "basis": "implementation",
+        "needsDecision": "colorSpace"
+      },
+      "backgroundImage": {
+        "disposition": "approximated",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": null,
+        "notes": "Appends an image paint rather than replacing existing fills. Loss: `objectFit` is binary — `CONTAIN` becomes Figma's FIT and everything else, including absent, becomes FILL. An image whose hash does not resolve is dropped with no warning. Container types only.",
+        "onAbsent": "unverified",
+        "basis": "implementation",
+        "needsDecision": "partialOnUnresolved"
+      },
+      "fillColor": {
+        "disposition": "approximated",
+        "elements": [
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": "A gradient takes its own path; otherwise the same four-step paint resolution. On an instance the target is the first fillable descendant, found by walking the subtree. Loss: the colour-space issue above, and an instance with no fillable descendant drops the value silently.",
+        "onAbsent": "unverified",
+        "basis": "implementation",
+        "needsDecision": "colorSpace"
+      },
+      "textColor": {
+        "disposition": "approximated",
+        "elements": [
+          "text"
+        ],
+        "target": null,
+        "notes": "Text nodes only, using the same four-step paint resolution. Loss: the colour-space issue above.",
+        "onAbsent": "unverified",
+        "basis": "implementation",
+        "needsDecision": "colorSpace"
+      },
+      "effects": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": "Effects.apply",
+        "notes": "Accepts Effects, TokenReference, or null.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "clipsContent": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": "node.clipsContent",
+        "notes": "Container types only; the key never reaches another type because no other key list admits it.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "cornerRadius": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "rectangle",
+          "slot"
+        ],
+        "target": null,
+        "notes": "A uniform value sets the node radius; a token also binds the variable to all four corner fields; a per-corner object expands to Figma's physical corner properties. Not applied to a text node.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "width": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null,
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "height": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null,
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "minWidth": {
+        "disposition": "approximated",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": "Loss: a value of 0 is written as `null`, because the Plugin API rejects zero for a minimum. An explicit zero minimum and an absent one are therefore indistinguishable on the canvas. Skipped on text nodes.",
+        "onAbsent": "unverified",
+        "basis": "implementation",
+        "needsDecision": "explicitZero"
+      },
+      "minHeight": {
+        "disposition": "approximated",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": "Same zero-to-null remap as `minWidth`, for the same API reason.",
+        "onAbsent": "unverified",
+        "basis": "implementation",
+        "needsDecision": "explicitZero"
+      },
+      "maxWidth": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": "Written as resolved. Zero is preserved, because a maximum of zero is a real if unusual constraint and the API accepts it. Skipped on text nodes.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "maxHeight": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": "Written as resolved, preserving zero, as `maxWidth`.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "position": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null,
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "top": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null,
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "bottom": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null,
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "start": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null,
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "end": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null,
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "centerHorizontalOffset": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null,
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "centerVerticalOffset": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null,
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "layoutSizingHorizontal": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null,
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "layoutSizingVertical": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": null,
+        "notes": null,
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "strokes": {
+        "disposition": "approximated",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line"
+        ],
+        "target": null,
+        "notes": "The same four-step paint resolution, written to the node's strokes. Loss: the colour-space issue above. Never applied to a text node, and absent from an instance's key list.",
+        "onAbsent": "unverified",
+        "basis": "implementation",
+        "needsDecision": "colorSpace"
+      },
+      "strokeAlign": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line"
+        ],
+        "target": null,
+        "notes": "Passed through unchanged. The schema types this as an open string rather than an enum, so there is no mapping to lose. A `null` is skipped rather than resetting the node's current alignment.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "strokeWeight": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line"
+        ],
+        "target": null,
+        "notes": "A number sets the weight; a token also binds the variable to all four per-side fields; a per-side object expands to Figma's physical stroke-weight properties.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "strokeDashPattern": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line"
+        ],
+        "target": null,
+        "notes": "The schema's `{ dash, gap }` becomes Figma's two-element dash array, which is exactly what the property takes. The schema permits no longer pattern — both members are required and no others are allowed — so nothing is truncated.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "typography": {
+        "disposition": "bound",
+        "elements": [
+          "text"
+        ],
+        "target": "Typography.apply",
+        "notes": "Accepts Typography or TokenReference. A font that fails to load degrades to Inter Regular with a warning, never aborts.",
+        "cluster": "namedStyleVersusInline",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "textAlignHorizontal": {
+        "disposition": "bound",
+        "elements": [
+          "text"
+        ],
+        "target": null,
+        "notes": "Inverts the capture mapping: the schema's logical `START`, `CENTER`, `END` and `JUSTIFY` become Figma's physical `LEFT`, `CENTER`, `RIGHT` and `JUSTIFIED`. All four schema values are covered, so the fallback is unreachable for valid input. Requires the node's font to be loaded first.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "textAlignVertical": {
+        "disposition": "bound",
+        "elements": [
+          "text"
+        ],
+        "target": null,
+        "notes": "Passed through unchanged. The schema types this as an open string, and Figma's own values match, so the identity mapping loses nothing. Text nodes only.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "textOverflow": {
+        "disposition": "bound",
+        "elements": [
+          "text"
+        ],
+        "target": null,
+        "notes": "Remaps the schema's two values to Figma's truncation vocabulary: `ELLIPSIS` becomes ENDING and `CLIP` becomes DISABLED. Both schema values are covered. Ordering matters — `maxLines` is honoured only while truncation is ENDING, so it is deliberately applied after this key.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "maxLines": {
+        "disposition": "bound",
+        "elements": [
+          "text"
+        ],
+        "target": "node.maxLines",
+        "notes": "Deferred to last — honoured only while textTruncation is ENDING, so textOverflow must land first.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "mainAxisAlignment": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": null,
+        "notes": "Remaps all four schema values to Figma's primary-axis vocabulary. Gated on the node actually having the property, which effectively means an auto-layout container.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "primaryAxisSizingMode": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": "node.primaryAxisSizingMode",
+        "notes": "Deferred after layoutSizingHorizontal/Vertical, which themselves write it — the shorthand would otherwise clobber the explicit primitive.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "crossAxisAlignment": {
+        "disposition": "approximated",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": null,
+        "notes": "Remaps `START`, `END`, `CENTER` and `BASELINE`. Loss: `STRETCH` is a schema value Figma's counter-axis property cannot express, and it is skipped with a warning — a declared degradation that applies nothing and says so, which is exactly what DSPEC-43 asks for.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "layoutMode": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": null,
+        "notes": null,
+        "cluster": "wrapping",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "wrap": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": null,
+        "notes": null,
+        "cluster": "wrapping",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "wrapAlignment": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": null,
+        "notes": null,
+        "cluster": "wrapping",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "itemReverseZIndex": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": "node.itemReverseZIndex",
+        "notes": "Auto-layout only — a frame with no layoutMode has nothing to reverse. layoutMode is structural and applied first.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "itemSpacing": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": null,
+        "notes": null,
+        "cluster": "wrapping",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "padding": {
+        "disposition": "approximated",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": null,
+        "notes": "A uniform value or token sets all four sides; a per-side object expands to Figma's physical padding properties. Loss: `start` always becomes the left padding and `end` the right, with no writing-direction branch, so a right-to-left context renders mirrored. A side omitted from the object is left at its current value rather than reset.",
+        "onAbsent": "unverified",
+        "basis": "implementation",
+        "needsDecision": "logicalToPhysical"
+      },
+      "cornerSmoothing": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle"
+        ],
+        "target": "CornerStyle.applySmoothing",
+        "notes": "Skipped on TEXT nodes.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "aspectRatio": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "glyph"
+        ],
+        "target": "node.targetAspectRatio",
+        "notes": "Deferred to last — the lock reads the node final dimensions, so an earlier resize would be clobbered by later sizing keys.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      }
+    },
+    "styleClusters": {
+      "autoVsAbsoluteLayout": {
+        "disposition": "bound",
+        "keys": [
+          "position",
+          "top",
+          "bottom",
+          "start",
+          "end",
+          "centerHorizontalOffset",
+          "centerVerticalOffset",
+          "layoutSizingHorizontal",
+          "layoutSizingVertical",
+          "width",
+          "height"
+        ],
+        "outputs": [
+          "node.layoutPositioning",
+          "node.x",
+          "node.y",
+          "node.constraints",
+          "node.layoutSizingHorizontal",
+          "node.layoutSizingVertical"
+        ],
+        "stage": "postEvaluate",
+        "notes": "Per axis. These keys are computed from constraints and geometry, never read from a single Figma property — a binding presenting them as direct reads misleads anyone implementing a second time. ADR-041 governs the constraint mapping.",
+        "direction": "figma-to-spec",
+        "form": "cases",
+        "inputs": [
+          {
+            "ref": "node.constraints.horizontal",
+            "from": "Figma node"
+          },
+          {
+            "ref": "node.constraints.vertical",
+            "from": "Figma node"
+          },
+          {
+            "ref": "node.position",
+            "from": "Figma node geometry"
+          },
+          {
+            "ref": "node.dimension",
+            "from": "Figma node geometry"
+          },
+          {
+            "ref": "parent.dimension",
+            "from": "Figma parent geometry"
+          },
+          {
+            "ref": "parent.layoutMode",
+            "from": "Figma parent"
+          },
+          {
+            "ref": "self.layoutSizing",
+            "from": "the axis-matching sizing key"
+          },
+          {
+            "ref": "context.isRoot",
+            "from": "capture context"
+          }
+        ],
+        "cases": [
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "node.constraints",
+                "compareTo": "MIN"
+              }
+            },
+            "emit": [
+              "the leading edge offset — `start` or `top` — set to the node position"
+            ]
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "node.constraints",
+                "compareTo": "MAX"
+              }
+            },
+            "emit": [
+              "the trailing edge offset — `end` or `bottom` — set to parent dimension less node position less node dimension"
+            ]
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "node.constraints",
+                "compareTo": "CENTER"
+              }
+            },
+            "emit": [
+              "the matching centre offset, set to node position plus half the node dimension less half the parent dimension"
+            ]
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "node.constraints",
+                "compareTo": "STRETCH"
+              }
+            },
+            "emit": [
+              "both edge offsets on the axis",
+              "the axis dimension suppressed"
+            ],
+            "why": "a stretched node is defined by its edges, not its size"
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "node.constraints",
+                "compareTo": "SCALE"
+              }
+            },
+            "emit": [
+              "both edge offsets on the axis, as percentage strings"
+            ]
+          }
+        ],
+        "relationCases": [
+          {
+            "when": {
+              "operation": "any",
+              "args": [
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "self.layoutSizing",
+                    "compareTo": "HUG"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "self.layoutSizing",
+                    "compareTo": "FILL"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "the matching `width` or `height` nulled"
+            ],
+            "why": "a hugged or filled axis has no fixed dimension to record"
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "self.layoutSizing",
+                "compareTo": "FIXED"
+              }
+            },
+            "emit": [
+              "the matching `width` or `height` present"
+            ]
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "self.position",
+                "compareTo": "ABSOLUTE"
+              }
+            },
+            "emit": [
+              "`layoutSizingHorizontal` and `layoutSizingVertical` nulled"
+            ],
+            "why": "an absolutely positioned child is not sized by the parent axis"
+          }
+        ],
+        "otherwise": {
+          "emit": [],
+          "why": "a flow-placed child in auto-layout records no positioning offsets"
+        },
+        "basis": "intent"
+      },
+      "wrapping": {
+        "disposition": "bound",
+        "keys": [
+          "wrap",
+          "wrapAlignment",
+          "itemSpacing",
+          "layoutMode"
+        ],
+        "outputs": [
+          "node.layoutWrap",
+          "node.counterAxisAlignContent",
+          "node.itemSpacing",
+          "node.counterAxisSpacing"
+        ],
+        "stage": "postEvaluate",
+        "notes": "A property that cannot apply is removed rather than recorded as null, so a reader never sees a dead key.",
+        "direction": "figma-to-spec",
+        "form": "cases",
+        "inputs": [
+          {
+            "ref": "node.layoutMode",
+            "from": "Figma node"
+          },
+          {
+            "ref": "node.layoutWrap",
+            "from": "Figma node"
+          },
+          {
+            "ref": "node.itemSpacing",
+            "from": "Figma node"
+          },
+          {
+            "ref": "node.counterAxisSpacing",
+            "from": "Figma node"
+          }
+        ],
+        "cases": [
+          {
+            "when": {
+              "operation": "any",
+              "args": [
+                {
+                  "operation": "isNull",
+                  "args": {
+                    "value": "node.layoutMode"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "node.layoutMode",
+                    "compareTo": "NONE"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "`wrap` false",
+              "`mainAxisAlignment` null",
+              "`crossAxisAlignment` null",
+              "`wrapAlignment` null"
+            ],
+            "why": "none of them mean anything without auto-layout"
+          },
+          {
+            "when": {
+              "operation": "notEquals",
+              "args": {
+                "value": "node.layoutWrap",
+                "compareTo": "WRAP"
+              }
+            },
+            "emit": [
+              "`wrapAlignment` removed entirely"
+            ],
+            "why": "a dead property otherwise — removed, not nulled"
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "any",
+                  "args": [
+                    {
+                      "operation": "equals",
+                      "args": {
+                        "value": "node.layoutMode",
+                        "compareTo": "HORIZONTAL"
+                      }
+                    },
+                    {
+                      "operation": "equals",
+                      "args": {
+                        "value": "node.layoutMode",
+                        "compareTo": "VERTICAL"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "node.layoutWrap",
+                    "compareTo": "WRAP"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "`itemSpacing` as a biaxial composite, mapping the Figma primary and counter axes onto absolute horizontal and vertical"
+            ]
+          },
+          {
+            "when": {
+              "operation": "isNotNull",
+              "args": {
+                "value": "node.itemSpacing"
+              }
+            },
+            "emit": [
+              "`itemSpacing` as a scalar"
+            ]
+          }
+        ],
+        "otherwise": {
+          "emit": []
+        },
+        "basis": "intent"
+      },
+      "namedStyleVersusInline": {
+        "disposition": "bound",
+        "keys": [
+          "typography"
+        ],
+        "outputs": [
+          "node.textStyleId",
+          "~13 inline text properties"
+        ],
+        "stage": "postProcess",
+        "notes": "A named text style and inline typography are mutually exclusive in a document: one is a reference, the other is the resolved values. Typography sub-fields are additionally compared against their own defaults, a second and distinct default source from the style keys.",
+        "direction": "figma-to-spec",
+        "form": "cases",
+        "inputs": [
+          {
+            "ref": "node.textStyleId",
+            "from": "Figma node"
+          },
+          {
+            "ref": "baseline.typography",
+            "from": "the unvaried baseline for this element"
+          }
+        ],
+        "cases": [
+          {
+            "when": {
+              "operation": "isNotNull",
+              "args": {
+                "value": "node.textStyleId"
+              }
+            },
+            "emit": [
+              "a style reference",
+              "`typography` removed"
+            ],
+            "why": "the named style is the source; resolved values beside it would be a second copy"
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "isNull",
+                  "args": {
+                    "value": "node.textStyleId"
+                  }
+                },
+                {
+                  "operation": "isNull",
+                  "args": {
+                    "value": "self.typography"
+                  }
+                },
+                {
+                  "operation": "isNotNull",
+                  "args": {
+                    "value": "baseline.typography"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "`typography` re-injected from the baseline"
+            ],
+            "why": "a variant diff dropped it, but with no named style the values are the only record"
+          },
+          {
+            "when": {
+              "operation": "isNull",
+              "args": {
+                "value": "node.textStyleId"
+              }
+            },
+            "emit": [
+              "`typography` as resolved values"
+            ]
+          }
+        ],
+        "otherwise": {
+          "emit": []
+        },
+        "basis": "intent"
+      }
+    }
+  },
+  "valueForms": {
+    "summary": "Every style value may be a literal, a TokenReference, a PropBinding, or a Conditional. A disposition for a key means little without saying what happens to each form (DSPEC-42).",
+    "literal": "bound",
+    "literalNote": "The ordinary case.",
+    "tokenReference": "bound",
+    "tokenReferenceNote": "Recognised by its `$token` key and resolved to a Figma variable. Where the variable cannot be resolved, the value falls back to the cached raw value the document carries, which is a degradation using only data the document holds (DSPEC-43).",
+    "propBinding": "bound",
+    "propBindingNote": "A dedicated binding path parses `{ $binding: \"#/props/NAME\" }` and wires the corresponding Figma node field to the component property.",
+    "propBindingVerified": false,
+    "conditional": "bound",
+    "conditionalNote": "The ADR-018 conditional form is implemented on the render path: the condition’s binding target is resolved dynamically and the then/else branch applied. This is the one platform that honours it.",
+    "conditionalVerified": false
+  },
+  "directions": {
+    "figma-to-spec": "Capture. A Figma file becomes a document.",
+    "spec-to-figma": "Render. A document becomes nodes on the canvas."
+  },
+  "onAbsentVocabulary": {
+    "declaredDefault": "Applies the value the schema declares for an absent key.",
+    "platformInitial": "Applies the platform's own initial value, which may differ from the schema's declared default.",
+    "warns": "Warns and applies nothing.",
+    "nothing": "Applies nothing, silently.",
+    "unverified": "Nobody has established what this platform does when the key is absent."
+  },
+  "onAbsentNote": "What this platform does when a style key is absent from a document. The schema declares the meaning of absence once (§4.1a); this records whether the platform honours it. A row whose onAbsent is not declaredDefault is a disagreement with the contract, and each one is a decision rather than an accident.",
+  "basisVocabulary": {
+    "implementation": "Verified against a citable implementation. The drift guard checks it, and a change to that implementation fails the build.",
+    "intent": "Asserted from the authoritative source for what the data means, which is not publicly citable. Nothing mechanical checks it; a reviewer must."
+  },
+  "basisNote": "Whether a claim is checked or asserted. Figma is bidirectional: a render claim is verified against a citable implementation, while a capture claim rests on the authoritative capture engine, which is private — so nothing mechanical can check it and a reader should know that.",
+  "decisionThemes": {
+    "colorSpace": {
+      "title": "A non-sRGB ColorObject renders as if it were sRGB",
+      "note": "The schema admits 14 colour spaces and the render path never reads `colorSpace` — components 0 through 2 are taken as red, green and blue regardless, so an `oklch` value is misread rather than approximated. A `none` component becomes 0, and components beyond the third are dropped.",
+      "decided": "Convert to sRGB at render time (#813). The schema keeps all 14 spaces; the render path gains a conversion with gamut mapping for values outside sRGB. Until that lands, a non-sRGB ColorObject renders wrong rather than degraded."
+    },
+    "explicitZero": {
+      "title": "Zero is not distinguishable from unset",
+      "note": "Both platforms currently treat a dimension of 0 as \"no constraint\" rather than \"a constraint of zero\".",
+      "decided": "Open. Deferred — see #814, and #812 on what an absent `width`/`height` means. The two interact and should be settled together."
+    },
+    "logicalToPhysical": {
+      "title": "Logical sides become physical without a direction",
+      "note": "The schema uses `start` and `end` so a document is direction-agnostic. The Figma render maps `start` to the left padding with no writing-direction branch.",
+      "decided": "Accepted as a platform limit. Figma cannot express a writing direction, so the mapping is left-to-right only and the loss is declared rather than fixed — which is what `approximated` means. CSS stays direction-safe by emitting `padding-block` and `padding-inline`."
+    },
+    "partialOnUnresolved": {
+      "title": "A value is dropped rather than degraded",
+      "note": "A gradient whose stops do not yield two resolvable colours is dropped whole. A `padding` side that is present but unresolvable is omitted while its siblings emit, whereas `cornerRadius` substitutes `0` for the same failure. DSPEC-43 says a degradation applies the spec's own recorded fallback, or applies nothing and warns — dropping part of a value silently is neither.",
+      "decided": "Open. See #816 on the disagreement between the composite types, and #815 on the gradient path."
+    }
+  }
+}

@@ -86,6 +86,17 @@ export default defineConfig({
             { label: 'Overview', slug: 'schema' },
             { label: 'Specification', slug: 'schema/specification' },
             { label: 'Platform Neutrality', slug: 'schema/platform-neutrality' },
+            {
+              label: 'Platform Mappings',
+              collapsed: true,
+              items: [
+                { label: 'Figma', slug: 'schema/mappings/figma' },
+                { label: 'CSS', slug: 'schema/mappings/css' },
+                { label: 'React', slug: 'schema/mappings/react' },
+                { label: 'Web Components', slug: 'schema/mappings/webcomponents' },
+                { label: 'Style Defaults', slug: 'schema/mappings/defaults' },
+              ],
+            },
             { label: 'Decision Records (ADRs)', slug: 'adr' },
             {
               label: 'Parts',
@@ -117,6 +128,11 @@ export default defineConfig({
                 { label: 'Typography', slug: 'schema/typography' },
                 { label: 'Variants', slug: 'schema/variants' },
               ],
+            },
+            {
+              label: 'Styles',
+              collapsed: true,
+              autogenerate: { directory: 'schema/styles' },
             },
             {
               label: 'Documents',
