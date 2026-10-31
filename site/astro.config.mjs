@@ -130,9 +130,9 @@ export default defineConfig({
               ],
             },
             {
-              label: 'Style Types',
+              label: 'Styles',
               collapsed: true,
-              autogenerate: { directory: 'schema/types' },
+              autogenerate: { directory: 'schema/styles' },
             },
             {
               label: 'Documents',
