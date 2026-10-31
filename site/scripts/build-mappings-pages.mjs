@@ -30,6 +30,26 @@ const DESCRIPTIONS = {
 
 const TITLES = { DEFAULTS: 'Style Defaults', CSS: 'CSS', WEBCOMPONENTS: 'Web Components' };
 
+const kebab = (s) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`).replace(/^-/, '');
+
+/**
+ * Style keys that have a generated reference page. Read from the page tree
+ * rather than the schema, so a key whose page is missing is never linked.
+ */
+const STYLE_KEYS = (() => {
+  const dir = resolve(root, 'src/content/docs/schema/styles');
+  if (!existsSync(dir)) return [];
+  const slugs = new Set(
+    readdirSync(dir).filter((f) => f.endsWith('.md')).map((f) => f.replace(/\.md$/, ''))
+  );
+  const schema = resolve(repo, 'packages/schema/schema/styles.schema.json');
+  if (!existsSync(schema)) return [];
+  return Object.keys(JSON.parse(readFileSync(schema, 'utf8')).definitions.Styles.properties)
+    .filter((k) => slugs.has(kebab(k)))
+    // Longest first, so `maxWidth` is not shadowed by a prefix match on `max`.
+    .sort((a, b) => b.length - a.length);
+})();
+
 if (!existsSync(srcDir)) {
   console.log('mappings pages: no packages/schema/mappings — nothing to render');
   process.exit(0);
@@ -62,6 +82,22 @@ for (const file of files) {
     /\]\(bindings\/([A-Za-z_.-]+)\)/g,
     (_, f) => `](https://github.com/DirectedEdges/spectacular/blob/main/packages/schema/mappings/bindings/${f})`
   );
+
+  /**
+   * A style key in backticks becomes a link to its reference page. These pages
+   * name the same 46 keys dozens of times each and every one was dead text,
+   * which made the mapping a dead end rather than a way into the reference.
+   *
+   * Only bare keys are rewritten. A key already carrying a link, or part of a
+   * dotted path like `styles.padding`, is left alone. A key whose own page does
+   * not exist is skipped rather than linked to a 404.
+   */
+  linked = (() => {
+    const keys = STYLE_KEYS.filter((k) => !linked.includes(`[\`${k}\``));
+    if (!keys.length) return linked;
+    const re = new RegExp(`(?<![\\[\`\\w.])\`(${keys.join('|')})\`(?![\\]\`.])`, 'g');
+    return linked.replace(re, (_, k) => `[\`${k}\`](/schema/styles/${kebab(k)}/)`);
+  })();
 
   const title = TITLES[platform] ?? platform.charAt(0) + platform.slice(1).toLowerCase();
   const page = `---

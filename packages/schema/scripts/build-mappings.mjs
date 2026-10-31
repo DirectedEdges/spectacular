@@ -214,7 +214,8 @@ const renderPlatform = (file) => {
     if (v.cluster && !(v.cluster in clusters)) failures.push(`${file}: \`${k}\` names cluster "${v.cluster}", which is not declared`);
   }
 
-  const rows = styleProps.map((k) => {
+  // Alphabetical, not schema order: this table is looked up by key name.
+  const rows = [...styleProps].sort().map((k) => {
     const v = styles[k] ?? { disposition: 'unverified' };
     const scope = isFigma
       ? (v.elements?.length === 12 ? 'all' : (v.elements?.length ? v.elements.join(', ') : '—'))
@@ -283,21 +284,16 @@ that is the reference at \`/schema\`.
 Generated from \`mappings/bindings/${platform}.json\` by \`scripts/build-mappings.mjs\`.
 Edit the binding file, never this page.
 
-## Disposition
+## Styles
 
-Every style key carries one of four dispositions:
+${tally}, of ${styleProps.length} style keys. Dispositions are defined under
+[Dispositions](#dispositions) below.
 
-| Disposition | Meaning |
-|---|---|
-| \`bound\` | Realised, and confirmed against the implementation |
-| \`approximated\` | Realised with loss, and the loss is stated |
-| \`unsupported\` | Declared as not realised, with the resulting behaviour stated |
-| \`unverified\` | Coverage detected, mapping not yet confirmed by a human — **work, not a claim** |
+A key whose row says *cluster* does not map on its own — see the cluster below. Writing a
+per-key mapping for it would be false, not merely incomplete.
 
-A reader may rely on \`bound\`, \`approximated\` and \`unsupported\` rows. An \`unverified\`
-row asserts nothing.
-
-Current state: ${tally}, of ${styleProps.length} style keys.
+${header}
+${rows.join('\n')}
 
 ## Value forms
 
@@ -320,14 +316,6 @@ ${(() => {
       : ''
   }`;
 })()}
-
-## Styles
-
-A key whose row says *cluster* does not map on its own — see the cluster below. Writing a
-per-key mapping for it would be false, not merely incomplete.
-
-${header}
-${rows.join('\n')}
 
 ${(() => {
   const flagged = Object.entries(styles).filter(([, v]) => v.needsDecision);
@@ -383,6 +371,25 @@ ${Object.values(styles).some((v) => v.onAbsentVerified === false)
   ? '> Seeded from the transform’s documented policy and **not yet confirmed per key**. A seeded value is a starting point, not a finding.'
   : ''}
 
+## Dispositions
+
+${(() => {
+  // Only the dispositions this binding actually uses. Listing all four put an
+  // `unverified` row on pages that have no unverified key, which reads as
+  // outstanding work where there is none.
+  const meaning = {
+    bound: 'Realised, and confirmed against the implementation',
+    approximated: 'Realised with loss, and the loss is stated',
+    unsupported: 'Declared as not realised, with the resulting behaviour stated',
+    unverified: 'Coverage detected, mapping not yet confirmed by a human — **work, not a claim**',
+  };
+  const used = DISPOSITION_ORDER.filter((d) => counts[d]);
+  const rows = used.map((d) => `| \`${d}\` | ${counts[d]} | ${meaning[d]} |`).join('\n');
+  const reliance = used.includes('unverified')
+    ? '\nA reader may rely on every row above except `unverified`, which asserts nothing.\n'
+    : '\nEvery row above is a claim a reader may rely on.\n';
+  return `| Disposition | Keys | Meaning |\n|---|---|---|\n${rows}\n${reliance}`;
+})()}
 ## Concepts not yet bound
 
 Props, anatomy and elements, and layout have no declared binding yet. They are named

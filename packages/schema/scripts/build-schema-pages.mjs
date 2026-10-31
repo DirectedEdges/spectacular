@@ -92,6 +92,60 @@ const handWritten = new Set(
   readdirSync(docsSchema).filter((f) => f.endsWith('.md')).map((f) => f.replace(/\.md$/, ''))
 );
 
+/** The declared element tables the transforms ship. Absent when not checked out. */
+const elementTables = (() => {
+  const paths = {
+    capture: `${repo}/../specs-transforms/packages/specs-from-figma/src/Component/Styles/style-bindings.json`,
+    render: `${repo}/../specs-transforms/packages/figma-from-specs/src/Styles/style-bindings.json`,
+  };
+  const out = {};
+  for (const [name, p] of Object.entries(paths)) {
+    if (existsSync(p)) out[name] = JSON.parse(readFileSync(p, 'utf8')).elements;
+  }
+  return out;
+})();
+
+/**
+ * ADRs that *decide* a key — derived, not hand-listed.
+ *
+ * Scoped to the title, the Summary line, and the Decision section. A key
+ * appearing anywhere in an ADR's prose is usually incidental: scanning whole
+ * files listed six ADRs for `layoutSizingHorizontal`, including one about icon
+ * detection that merely quoted a YAML example. A decision about a key lives in
+ * the section named Decision.
+ */
+/**
+ * ADRs that have a page on the site. Four exist in `adr/` without one — a DRAFT
+ * among them — so linking every cited ADR produced links to pages that are not
+ * published. An unpublished ADR is still worth naming; it is just not a link.
+ */
+const publishedAdrs = (() => {
+  const dir = join(repo, 'site/src/content/docs/adr');
+  if (!existsSync(dir)) return null;
+  return new Set(readdirSync(dir).filter((f) => f.endsWith('.md')).map((f) => f.replace(/\.md$/, '')));
+})();
+
+const adrsFor = (key) => {
+  const dir = join(repo, 'adr');
+  if (!existsSync(dir)) return [];
+  const re = new RegExp(`\\b${key}\\b`);
+  const out = [];
+  for (const f of readdirSync(dir).filter((n) => /^\d{3}-.*\.md$/.test(n))) {
+    const src = readFileSync(join(dir, f), 'utf8');
+    if (!re.test(src)) continue;
+    const title = (src.match(/^#\s+(?:ADR[\s-]*\d*\s*:\s*)?(.+)$/m)?.[1] ?? f).trim();
+    const summary = src.match(/^\*\*Summary\*\*:\s*(.+)$/m)?.[1] ?? '';
+    const decision = src.match(/^## Decision\b[\s\S]*?(?=^## (?!Decision\b))/m)?.[0] ?? '';
+    out.push({
+      num: f.slice(0, 3),
+      title,
+      file: f,
+      decides: re.test(title) || re.test(summary) || re.test(decision),
+    });
+  }
+  return out;
+};
+
 /** Named definitions a node reaches, descending through wrappers and unions. */
 const refsOf = (n, depth = 0, out = new Set()) => {
   if (!n || depth > 6) return out;
@@ -157,10 +211,26 @@ const isDocumentable = (t) => Boolean(defs[t] && (defs[t].properties || defs[t].
  * A type reached by exactly one path still nests, because there the containment
  * path and the type are the same thing.
  */
+/**
+ * A node's children are its properties, or — for a union whose branches are
+ * named definitions — those branches. `GradientValue` is a `oneOf` over
+ * `LinearGradient`, `RadialGradient` and `AngularGradient`, each with its own
+ * properties and description. Without this they had no pages at all, and the
+ * union's own page could only name them as plain text.
+ */
+const childEntries = (node) => {
+  const own = Object.entries(node.properties ?? {});
+  if (own.length) return own;
+  return (node.oneOf ?? node.anyOf ?? [])
+    .map((b) => b.$ref?.replace('#/definitions/', ''))
+    .filter((t) => t && defs[t]?.properties)
+    .map((t) => [t, defs[t]]);
+};
+
 const pathsReaching = {};
 {
   const probe = (node, path, seen) => {
-    for (const [key, spec] of Object.entries(node.properties ?? {})) {
+    for (const [key, spec] of childEntries(node)) {
       const p = [...path, key];
       for (const t of refsOf(spec)) {
         if (!defs[t] || VALUE_FORMS.has(t)) continue;
@@ -176,7 +246,7 @@ const SHARED = new Set(Object.entries(pathsReaching).filter(([, s]) => s.size > 
 // ── Build the containment tree ───────────────────────────────────────────────
 const nodes = [];
 const walk = (node, path, seen) => {
-  for (const [key, spec] of Object.entries(node.properties ?? {})) {
+  for (const [key, spec] of childEntries(node)) {
     const p = [...path, key];
     nodes.push({ path: p, spec, parentDef: node, required: new Set(node.required ?? []) });
     for (const t of refsOf(spec)) {
@@ -215,7 +285,9 @@ let written = 0;
 for (const node of nodes) {
   const { path: p, spec, required } = node;
   const key = p[p.length - 1];
-  const isStyleKey = p.length === 1;
+  // A shared type's canonical page also sits at depth 1, but it is a type, not
+  // a style key: it has no disposition, no element scope, and no default.
+  const isStyleKey = p.length === 1 && !spec.$sharedType;
   const kept = isStyleKey
     ? (preserved.keys?.[key] ?? {})
     : (preserved.memberPages?.[p.join('.')] ?? {});
@@ -240,7 +312,30 @@ for (const node of nodes) {
   );
   const exampleHead = anySettings ? '| Type | Example | Settings |\n|---|---|---|' : '| Type | Example |\n|---|---|';
 
+  /**
+   * A union's branches, each with the description that distinguishes it.
+   * `Contains` cannot carry this: a `oneOf` has branches, not members, and
+   * `GradientValue` is exactly one of them at a time.
+   */
   const kids = childrenOf(p);
+
+  const oneOfBranches = (() => {
+    const branches = spec.oneOf ?? spec.anyOf;
+    if (!branches?.length) return null;
+    const rows = branches
+      .map((br) => {
+        const named = br.$ref?.replace('#/definitions/', '');
+        const child = kids.find((c) => c.path[c.path.length - 1] === named);
+        const label = child ? `[\`${named}\`](${urlOf(child.path)})` : namedTypes(br).join(', ') || '—';
+        // A bare `$ref` carries no description; the one that distinguishes the
+        // branch sits on the definition it points at.
+        const why = (br.description ?? (named ? defs[named]?.description : '') ?? '').replace(/\|/g, '\\|');
+        return `| ${label} | ${why} |`;
+      })
+      .join('\n');
+    return `| Form | When |\n|---|---|\n${rows}`;
+  })();
+
   const bindingRows = isStyleKey
     ? Object.entries(bindings).map(([platform, b]) => {
         const v = b.concepts.styles[key] ?? { disposition: 'unverified' };
@@ -269,6 +364,76 @@ for (const node of nodes) {
     ? `\n### Further reading\n\n${rehome(carried['Further Reading'])}\n`
     : '';
 
+  /**
+   * Which element types carry this key, as links. Capture versus render is an
+   * implementation detail of two particular transforms, not a fact about the
+   * contract, so the two tables are unioned rather than compared: a reader
+   * wants to know whether a glyph can carry this key, not which of two
+   * codebases agrees.
+   */
+  const supportedOn = (() => {
+    if (!isStyleKey || !Object.keys(elementTables).length) return null;
+    const union = new Set();
+    for (const table of Object.values(elementTables)) {
+      for (const [type, keys] of Object.entries(table)) if (keys.includes(key)) union.add(type);
+    }
+    if (!union.size) return '*No element type carries this key.*';
+    return [...union].sort().map((t) => `- [\`${t}\`](/schema/anatomy/#elementtype)`).join('\n');
+  })();
+
+  // Keys this one resolves alongside, per platform — a link list, not a sentence.
+  const siblingList = (() => {
+    if (!isStyleKey) return null;
+    const siblings = new Map();
+    for (const [platform, b] of Object.entries(bindings)) {
+      const cl = b.concepts.styles[key]?.cluster;
+      if (!cl) continue;
+      for (const k of b.concepts.styleClusters[cl].keys ?? []) {
+        if (k !== key) siblings.set(k, (siblings.get(k) ?? []).concat(PLATFORM[platform]));
+      }
+    }
+    if (!siblings.size) return null;
+    return [...siblings.entries()]
+      .sort()
+      .map(([k, ps]) => `- [\`${k}\`](/schema/styles/${kebab(k)}/) — ${ps.join(', ')}`)
+      .join('\n');
+  })();
+
+  /**
+   * Decision records. Status is omitted: a superseded ADR would not still be
+   * cited, so the column read ACCEPTED on every row and carried no information.
+   */
+  const decisionRecords = (() => {
+    if (!isStyleKey) return null;
+    const adrs = adrsFor(key);
+    // Said rather than left blank: three keys have no ADR, and a missing
+    // section reads as a render that failed instead of a fact about the key.
+    if (!adrs.length) return '**Decisions.** None.\n\n**Mentions.** None.\n';
+    const item = (a) => {
+      const slug = a.file.replace(/\.md$/, '');
+      const name = !publishedAdrs || publishedAdrs.has(slug) ? `[ADR-${a.num}](/adr/${slug}/)` : `ADR-${a.num}`;
+      return `- ${name} — ${a.title}${publishedAdrs && !publishedAdrs.has(slug) ? ' *(not published)*' : ''}`;
+    };
+    const decides = adrs.filter((a) => a.decides);
+    const mentions = adrs.filter((a) => !a.decides);
+    return `${decides.length ? `**Decisions**\n\n${decides.map(item).join('\n')}\n` : '**Decisions.** None.\n'}${
+      mentions.length ? `\n**Mentions**\n\n${mentions.map(item).join('\n')}\n` : ''
+    }`;
+  })();
+
+  /**
+   * The style keys that reach this type. Only shown on a shared type's own
+   * page, where it is the inverse of the decision to give it one page rather
+   * than a copy under each path.
+   */
+  const usedBy = (() => {
+    const t = spec.$sharedType;
+    if (!t) return null;
+    const paths = [...(pathsReaching[t] ?? [])].sort();
+    if (!paths.length) return null;
+    return paths.map((path) => `- [\`styles.${path}\`](/schema/styles/${path.split('.').map(kebab).join('/')}/)`).join('\n');
+  })();
+
   const trail = p.length > 1
     ? `Reached as \`styles.${p.join('.')}\`, within ${p.slice(0, -1).map((seg, i) => `[\`${seg}\`](${urlOf(p.slice(0, i + 1))})`).join(' → ')}.\n`
     : '';
@@ -288,12 +453,33 @@ ${trail}
 ### Type
 
 ${types}${required.has(key) ? ' · required' : ''}
-${defaultText ? `\n### Default\n\n${defaultText}\n` : ''}${examples.length ? `\n### Examples\n\n${exampleHead}\n${examples.join('\n')}\n` : ''}${kids.length ? `\n### Contains\n\n${kids.map((c) => `- [\`${c.path[c.path.length - 1]}\`](${urlOf(c.path)})`).join("\n")}\n` : ''}${bindingRows ? `\n### Platform bindings\n\n| Platform | Disposition | Realised by |\n|---|---|---|\n${bindingRows}\n` : ''}${kept.figmaKeyNote ? `\n### Figma key\n\n${kept.figmaKeyNote}\n` : ''}${carriedSections.join('')}${furtherReading}
+${defaultText ? `\n### Default\n\n${defaultText}\n` : ''}${examples.length ? `\n### Examples\n\n${exampleHead}\n${examples.join('\n')}\n` : ''}${oneOfBranches ? `\n### One of\n\n${oneOfBranches}\n` : ''}${
+    // On a union page the branches ARE the children, so `One of` has already
+    // listed them with the description that tells them apart.
+    kids.length && !oneOfBranches
+      ? `\n### Contains\n\n${kids.map((c) => `- [\`${c.path[c.path.length - 1]}\`](${urlOf(c.path)})`).join('\n')}\n`
+      : ''
+  }${bindingRows ? `\n### Platform bindings\n\n| Platform | Disposition | Realised by |\n|---|---|---|\n${bindingRows}\n` : ''}${usedBy ? `\n### Used by\n\n${usedBy}\n` : ''}${supportedOn ? `\n### Supported on\n\n${supportedOn}\n` : ''}${
+    siblingList
+      ? `\n### Resolved jointly with\n\nThis key does not map on its own. Its cluster's ordered case table is linked above.\n\n${siblingList}\n`
+      : ''
+  }${kept.figmaKeyNote ? `\n### Figma key\n\n${rehome(kept.figmaKeyNote)}\n` : ''}${carriedSections.join('')}${
+    decisionRecords ? `\n### Decision records\n\n${decisionRecords}` : ''
+  }${furtherReading}${
+    isStyleKey
+      ? `\n### Rules\n\n| Rule | Statement |\n|---|---|\n| [DSPEC-44](/schema/specification/#9-rule-catalogue) | Every \`Styles\` property declares a \`default\` valid against its own schema |\n| [DSPEC-45](/schema/specification/#9-rule-catalogue) | A declared \`default\` is a literal, never a reference or conditional |\n${
+          siblingList
+            ? '| [DSPEC-47](/schema/specification/#9-rule-catalogue) | Jointly resolved keys are stated as an ordered case table, not prose |\n'
+            : ''
+        }`
+      : ''
+  }
 ### Source
 
 | Format | File |
 |---|---|
 | JSON Schema | [\`packages/schema/schema/styles.schema.json\`](https://github.com/DirectedEdges/spectacular/blob/main/packages/schema/schema/styles.schema.json) |
+| TypeScript | [\`packages/schema/types/Styles.ts\`](https://github.com/DirectedEdges/spectacular/blob/main/packages/schema/types/Styles.ts) |
 | Specification | [§4.1a](/schema/specification/), [§11](/schema/specification/) |
 `;
 
