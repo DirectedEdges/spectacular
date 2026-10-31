@@ -27,14 +27,14 @@ Current state: 26 bound, 20 unverified, of 46 style keys.
 
 ## Value forms
 
-Every style value may be a literal, a TokenReference, a PropBinding, or a Conditional. A binding must say what it does with each.
+Every style value may be a literal, a TokenReference, a PropBinding, or a Conditional. A disposition for a key means little without saying what happens to each form (DSPEC-42).
 
-| Form | Disposition |
-|---|---|
-| Literal | bound |
-| `TokenReference` | bound — resolves the Figma variable; falls back to $extensions[com.figma].rawValue where the variable is unavailable |
-| `PropBinding` | unverified |
-| `Conditional` | unverified |
+| Form | Disposition | Behaviour |
+|---|---|---|
+| Literal | bound | The ordinary case. |
+| `TokenReference` | bound | Recognised by its `$token` key and resolved to a Figma variable. Where the variable cannot be resolved, the value falls back to the cached raw value the document carries, which is a degradation using only data the document holds (DSPEC-43). |
+| `PropBinding` | bound *(not confirmed per key)* | A dedicated binding path parses `{ $binding: "#/props/NAME" }` and wires the corresponding Figma node field to the component property. |
+| `Conditional` | bound *(not confirmed per key)* | The ADR-018 conditional form is implemented on the render path: the condition’s binding target is resolved dynamically and the then/else branch applied. This is the one platform that honours it. |
 
 ## Styles
 

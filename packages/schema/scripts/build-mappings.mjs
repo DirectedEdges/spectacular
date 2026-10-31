@@ -296,12 +296,23 @@ Current state: ${tally}, of ${styleProps.length} style keys.
 
 ${b.valueForms?.summary ?? ''}
 
-| Form | Disposition |
-|---|---|
-| Literal | ${b.valueForms?.literal ?? 'unverified'} |
-| \`TokenReference\` | ${b.valueForms?.tokenReference ?? 'unverified'} |
-| \`PropBinding\` | ${b.valueForms?.propBinding ?? 'unverified'} |
-| \`Conditional\` | ${b.valueForms?.conditional ?? 'unverified'} |
+${(() => {
+  const vf = b.valueForms ?? {};
+  const forms = [['literal', 'Literal'], ['tokenReference', '`TokenReference`'], ['propBinding', '`PropBinding`'], ['conditional', '`Conditional`']];
+  const rows = forms.map(([k, label]) => {
+    const d = vf[k] ?? 'unverified';
+    const flag = vf[`${k}Verified`] === false ? ' *(not confirmed per key)*' : '';
+    return `| ${label} | ${badge(d)}${flag} | ${vf[`${k}Note`] ?? ''} |`;
+  }).join('\n');
+  const decisions = forms
+    .filter(([k]) => vf[`${k}NeedsDecision`])
+    .map(([k, label]) => `**${label}.** ${vf[`${k}DecisionNote`] ?? ''}`);
+  return `| Form | Disposition | Behaviour |\n|---|---|---|\n${rows}${
+    decisions.length
+      ? `\n\n### Needs a decision\n\nThese are not open questions about what the platform does — that is settled above. They are open questions about what it *should* do, which is not a specification's call to make alone.\n\n${decisions.join('\n\n')}`
+      : ''
+  }`;
+})()}
 
 ## Styles
 
