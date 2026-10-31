@@ -99,49 +99,87 @@ resolution rule is the mapping rather than a row in the table above.
 
 bound — keys: `position`, `top`, `bottom`, `start`, `end`, `centerHorizontalOffset`, `centerVerticalOffset`, `layoutSizingHorizontal`, `layoutSizingVertical`, `width`, `height`
 
-**Outputs.** `node.layoutPositioning`, `node.x`, `node.y`, `node.constraints`, `node.layoutSizingHorizontal`, `node.layoutSizingVertical`
+**Operands.** Every fact the cluster reads. Nothing outside this set participates.
 
-**Resolution.** On the READ side these keys are not read from single Figma properties at all. relateAutoVsAbsoluteLayout computes position, the four insets and the two centre offsets from node.constraints plus geometry and parent dimensions (ADR-041). width and height are nulled when the matching layoutSizing is HUG or FILL; layoutSizing is nulled for an absolutely positioned child.
+| Operand | From |
+|---|---|
+| `node.constraints.horizontal` | Figma node |
+| `node.constraints.vertical` | Figma node |
+| `node.position` | Figma node geometry |
+| `node.dimension` | Figma node geometry |
+| `parent.dimension` | Figma parent geometry |
+| `parent.layoutMode` | Figma parent |
+| `self.layoutSizing` | the axis-matching sizing key |
+| `context.isRoot` | capture context |
 
-**Partially present.** A STRETCH constraint emits both edges and suppresses the dimension. SCALE emits both edges as percentage strings.
+**Cases** — ordered, first match wins.
+
+| # | When | Emits | Why |
+|---|---|---|---|
+| 1 | `node.constraints` = `MIN` | the leading edge offset — `start` or `top` — set to the node position |  |
+| 2 | `node.constraints` = `MAX` | the trailing edge offset — `end` or `bottom` — set to parent dimension less node position less node dimension |  |
+| 3 | `node.constraints` = `CENTER` | `the matching centre offset, set to node position plus half the node dimension less half the parent dimension` |  |
+| 4 | `node.constraints` = `STRETCH` | `both edge offsets on the axis`<br>`the axis dimension suppressed` | a stretched node is defined by its edges, not its size |
+| 5 | `node.constraints` = `SCALE` | `both edge offsets on the axis, as percentage strings` |  |
+
+**Otherwise.** *nothing* — a flow-placed child in auto-layout records no positioning offsets
 
 **Stage.** `postEvaluate` — produced by a later pass, not read directly.
 
-*specs-from-figma StylesProcessor.ts:108-274. These keys are POST-PROCESSED, not read — a binding presenting them as direct reads misleads anyone implementing a second time.*
-
-> Stated as prose. Not yet converted to a case table, so it cannot be mechanically checked.
+*Per axis. These keys are computed from constraints and geometry, never read from a single Figma property — a binding presenting them as direct reads misleads anyone implementing a second time. ADR-041 governs the constraint mapping.*
 
 ### wrapping
 
 bound — keys: `wrap`, `wrapAlignment`, `itemSpacing`, `layoutMode`
 
-**Outputs.** `node.layoutWrap`, `node.counterAxisAlignContent`, `node.itemSpacing`, `node.counterAxisSpacing`
+**Operands.** Every fact the cluster reads. Nothing outside this set participates.
 
-**Resolution.** wrapAlignment is REMOVED entirely when layoutWrap is not WRAP — a dead property otherwise. itemSpacing becomes a biaxial composite only when layoutMode is HORIZONTAL or VERTICAL and wrap is active, mapping Figma primary/counter axis onto absolute horizontal/vertical.
+| Operand | From |
+|---|---|
+| `node.layoutMode` | Figma node |
+| `node.layoutWrap` | Figma node |
+| `node.itemSpacing` | Figma node |
+| `node.counterAxisSpacing` | Figma node |
 
-**Partially present.** With no auto-layout, wrap is forced false and mainAxisAlignment, crossAxisAlignment and wrapAlignment are forced null.
+**Cases** — ordered, first match wins.
+
+| # | When | Emits | Why |
+|---|---|---|---|
+| 1 | (`node.layoutMode` absent **or** `node.layoutMode` = `NONE`) | `wrap` false<br>`mainAxisAlignment` null<br>`crossAxisAlignment` null<br>`wrapAlignment` null | none of them mean anything without auto-layout |
+| 2 | `node.layoutWrap` ≠ `WRAP` | `wrapAlignment` removed entirely | a dead property otherwise — removed, not nulled |
+| 3 | (`node.layoutMode` = `HORIZONTAL` **or** `node.layoutMode` = `VERTICAL`) **and** `node.layoutWrap` = `WRAP` | `itemSpacing` as a biaxial composite, mapping the Figma primary and counter axes onto absolute horizontal and vertical |  |
+| 4 | `node.itemSpacing` present | `itemSpacing` as a scalar |  |
+
+**Otherwise.** *nothing*
 
 **Stage.** `postEvaluate` — produced by a later pass, not read directly.
 
-*specs-from-figma StylesProcessor.ts:291-300; Style.ts:489-564; BiaxialComposite.ts:29-45*
-
-> Stated as prose. Not yet converted to a case table, so it cannot be mechanically checked.
+*A property that cannot apply is removed rather than recorded as null, so a reader never sees a dead key.*
 
 ### namedStyleVersusInline
 
 bound — keys: `typography`
 
-**Outputs.** `node.textStyleId`, `~13 inline text properties`
+**Operands.** Every fact the cluster reads. Nothing outside this set participates.
 
-**Resolution.** A named Figma text style produces a style reference and REMOVES typography. With no named style, typography is re-injected from the unvaried baseline when the variant diff dropped it.
+| Operand | From |
+|---|---|
+| `node.textStyleId` | Figma node |
+| `baseline.typography` | the unvaried baseline for this element |
 
-**Partially present.** Typography sub-fields are separately compared against their own TYPOGRAPHY_DEFAULTS constant, a second and distinct default source.
+**Cases** — ordered, first match wins.
+
+| # | When | Emits | Why |
+|---|---|---|---|
+| 1 | `node.textStyleId` present | `a style reference`<br>`typography` removed | the named style is the source; resolved values beside it would be a second copy |
+| 2 | `node.textStyleId` absent **and** `self.typography` absent **and** `baseline.typography` present | `typography` re-injected from the baseline | a variant diff dropped it, but with no named style the values are the only record |
+| 3 | `node.textStyleId` absent | `typography` as resolved values |  |
+
+**Otherwise.** *nothing*
 
 **Stage.** `postProcess` — produced by a later pass, not read directly.
 
-*specs-from-figma StylesProcessor.ts relateTextStyleAndTextProperties; TypographyProcessor.ts:74-80*
-
-> Stated as prose. Not yet converted to a case table, so it cannot be mechanically checked.
+*A named text style and inline typography are mutually exclusive in a document: one is a reference, the other is the resolved values. Typography sub-fields are additionally compared against their own defaults, a second and distinct default source from the style keys.*
 
 ## Absent keys
 

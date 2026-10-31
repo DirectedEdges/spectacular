@@ -711,10 +711,164 @@
           "node.layoutSizingHorizontal",
           "node.layoutSizingVertical"
         ],
-        "resolution": "On the READ side these keys are not read from single Figma properties at all. relateAutoVsAbsoluteLayout computes position, the four insets and the two centre offsets from node.constraints plus geometry and parent dimensions (ADR-041). width and height are nulled when the matching layoutSizing is HUG or FILL; layoutSizing is nulled for an absolutely positioned child.",
-        "partial": "A STRETCH constraint emits both edges and suppresses the dimension. SCALE emits both edges as percentage strings.",
         "stage": "postEvaluate",
-        "notes": "specs-from-figma StylesProcessor.ts:108-274. These keys are POST-PROCESSED, not read — a binding presenting them as direct reads misleads anyone implementing a second time."
+        "notes": "Per axis. These keys are computed from constraints and geometry, never read from a single Figma property — a binding presenting them as direct reads misleads anyone implementing a second time. ADR-041 governs the constraint mapping.",
+        "direction": "figma-to-spec",
+        "form": "cases",
+        "inputs": [
+          {
+            "ref": "node.constraints.horizontal",
+            "from": "Figma node"
+          },
+          {
+            "ref": "node.constraints.vertical",
+            "from": "Figma node"
+          },
+          {
+            "ref": "node.position",
+            "from": "Figma node geometry"
+          },
+          {
+            "ref": "node.dimension",
+            "from": "Figma node geometry"
+          },
+          {
+            "ref": "parent.dimension",
+            "from": "Figma parent geometry"
+          },
+          {
+            "ref": "parent.layoutMode",
+            "from": "Figma parent"
+          },
+          {
+            "ref": "self.layoutSizing",
+            "from": "the axis-matching sizing key"
+          },
+          {
+            "ref": "context.isRoot",
+            "from": "capture context"
+          }
+        ],
+        "cases": [
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "node.constraints",
+                "compareTo": "MIN"
+              }
+            },
+            "emit": [
+              "the leading edge offset — `start` or `top` — set to the node position"
+            ]
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "node.constraints",
+                "compareTo": "MAX"
+              }
+            },
+            "emit": [
+              "the trailing edge offset — `end` or `bottom` — set to parent dimension less node position less node dimension"
+            ]
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "node.constraints",
+                "compareTo": "CENTER"
+              }
+            },
+            "emit": [
+              "the matching centre offset, set to node position plus half the node dimension less half the parent dimension"
+            ]
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "node.constraints",
+                "compareTo": "STRETCH"
+              }
+            },
+            "emit": [
+              "both edge offsets on the axis",
+              "the axis dimension suppressed"
+            ],
+            "why": "a stretched node is defined by its edges, not its size"
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "node.constraints",
+                "compareTo": "SCALE"
+              }
+            },
+            "emit": [
+              "both edge offsets on the axis, as percentage strings"
+            ]
+          }
+        ],
+        "relationCases": [
+          {
+            "when": {
+              "operation": "any",
+              "args": [
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "self.layoutSizing",
+                    "compareTo": "HUG"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "self.layoutSizing",
+                    "compareTo": "FILL"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "the matching `width` or `height` nulled"
+            ],
+            "why": "a hugged or filled axis has no fixed dimension to record"
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "self.layoutSizing",
+                "compareTo": "FIXED"
+              }
+            },
+            "emit": [
+              "the matching `width` or `height` present"
+            ]
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "self.position",
+                "compareTo": "ABSOLUTE"
+              }
+            },
+            "emit": [
+              "`layoutSizingHorizontal` and `layoutSizingVertical` nulled"
+            ],
+            "why": "an absolutely positioned child is not sized by the parent axis"
+          }
+        ],
+        "otherwise": {
+          "emit": [],
+          "why": "a flow-placed child in auto-layout records no positioning offsets"
+        }
       },
       "wrapping": {
         "disposition": "bound",
@@ -730,10 +884,120 @@
           "node.itemSpacing",
           "node.counterAxisSpacing"
         ],
-        "resolution": "wrapAlignment is REMOVED entirely when layoutWrap is not WRAP — a dead property otherwise. itemSpacing becomes a biaxial composite only when layoutMode is HORIZONTAL or VERTICAL and wrap is active, mapping Figma primary/counter axis onto absolute horizontal/vertical.",
-        "partial": "With no auto-layout, wrap is forced false and mainAxisAlignment, crossAxisAlignment and wrapAlignment are forced null.",
         "stage": "postEvaluate",
-        "notes": "specs-from-figma StylesProcessor.ts:291-300; Style.ts:489-564; BiaxialComposite.ts:29-45"
+        "notes": "A property that cannot apply is removed rather than recorded as null, so a reader never sees a dead key.",
+        "direction": "figma-to-spec",
+        "form": "cases",
+        "inputs": [
+          {
+            "ref": "node.layoutMode",
+            "from": "Figma node"
+          },
+          {
+            "ref": "node.layoutWrap",
+            "from": "Figma node"
+          },
+          {
+            "ref": "node.itemSpacing",
+            "from": "Figma node"
+          },
+          {
+            "ref": "node.counterAxisSpacing",
+            "from": "Figma node"
+          }
+        ],
+        "cases": [
+          {
+            "when": {
+              "operation": "any",
+              "args": [
+                {
+                  "operation": "isNull",
+                  "args": {
+                    "value": "node.layoutMode"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "node.layoutMode",
+                    "compareTo": "NONE"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "`wrap` false",
+              "`mainAxisAlignment` null",
+              "`crossAxisAlignment` null",
+              "`wrapAlignment` null"
+            ],
+            "why": "none of them mean anything without auto-layout"
+          },
+          {
+            "when": {
+              "operation": "notEquals",
+              "args": {
+                "value": "node.layoutWrap",
+                "compareTo": "WRAP"
+              }
+            },
+            "emit": [
+              "`wrapAlignment` removed entirely"
+            ],
+            "why": "a dead property otherwise — removed, not nulled"
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "any",
+                  "args": [
+                    {
+                      "operation": "equals",
+                      "args": {
+                        "value": "node.layoutMode",
+                        "compareTo": "HORIZONTAL"
+                      }
+                    },
+                    {
+                      "operation": "equals",
+                      "args": {
+                        "value": "node.layoutMode",
+                        "compareTo": "VERTICAL"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "node.layoutWrap",
+                    "compareTo": "WRAP"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "`itemSpacing` as a biaxial composite, mapping the Figma primary and counter axes onto absolute horizontal and vertical"
+            ]
+          },
+          {
+            "when": {
+              "operation": "isNotNull",
+              "args": {
+                "value": "node.itemSpacing"
+              }
+            },
+            "emit": [
+              "`itemSpacing` as a scalar"
+            ]
+          }
+        ],
+        "otherwise": {
+          "emit": []
+        }
       },
       "namedStyleVersusInline": {
         "disposition": "bound",
@@ -744,10 +1008,78 @@
           "node.textStyleId",
           "~13 inline text properties"
         ],
-        "resolution": "A named Figma text style produces a style reference and REMOVES typography. With no named style, typography is re-injected from the unvaried baseline when the variant diff dropped it.",
-        "partial": "Typography sub-fields are separately compared against their own TYPOGRAPHY_DEFAULTS constant, a second and distinct default source.",
         "stage": "postProcess",
-        "notes": "specs-from-figma StylesProcessor.ts relateTextStyleAndTextProperties; TypographyProcessor.ts:74-80"
+        "notes": "A named text style and inline typography are mutually exclusive in a document: one is a reference, the other is the resolved values. Typography sub-fields are additionally compared against their own defaults, a second and distinct default source from the style keys.",
+        "direction": "figma-to-spec",
+        "form": "cases",
+        "inputs": [
+          {
+            "ref": "node.textStyleId",
+            "from": "Figma node"
+          },
+          {
+            "ref": "baseline.typography",
+            "from": "the unvaried baseline for this element"
+          }
+        ],
+        "cases": [
+          {
+            "when": {
+              "operation": "isNotNull",
+              "args": {
+                "value": "node.textStyleId"
+              }
+            },
+            "emit": [
+              "a style reference",
+              "`typography` removed"
+            ],
+            "why": "the named style is the source; resolved values beside it would be a second copy"
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "isNull",
+                  "args": {
+                    "value": "node.textStyleId"
+                  }
+                },
+                {
+                  "operation": "isNull",
+                  "args": {
+                    "value": "self.typography"
+                  }
+                },
+                {
+                  "operation": "isNotNull",
+                  "args": {
+                    "value": "baseline.typography"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "`typography` re-injected from the baseline"
+            ],
+            "why": "a variant diff dropped it, but with no named style the values are the only record"
+          },
+          {
+            "when": {
+              "operation": "isNull",
+              "args": {
+                "value": "node.textStyleId"
+              }
+            },
+            "emit": [
+              "`typography` as resolved values"
+            ]
+          }
+        ],
+        "otherwise": {
+          "emit": []
+        }
       }
     }
   },
@@ -757,5 +1089,9 @@
     "tokenReference": "bound — resolves the Figma variable; falls back to $extensions[com.figma].rawValue where the variable is unavailable",
     "propBinding": "unverified",
     "conditional": "unverified"
+  },
+  "directions": {
+    "figma-to-spec": "Capture. A Figma file becomes a document.",
+    "spec-to-figma": "Render. A document becomes nodes on the canvas."
   }
 }

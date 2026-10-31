@@ -128,7 +128,7 @@ bound — keys: `layoutMode`, `mainAxisAlignment`, `crossAxisAlignment`, `wrap`,
 | 4 | `self.wrap` = `false` | `flex-wrap: nowrap` |  |
 | 5 | `self.wrapAlignment` present | `align-content: <mapped>` |  |
 | 6 | `self.itemSpacing` present **and** `self.itemSpacing.sign` = `nonNegative` | `gap: <self.itemSpacing>` |  |
-| 7 | `self.itemSpacing` present **and** `self.itemSpacing.sign` = `negative` | `NOT on this element — a negative margin on `<selector> > * + *`, emitted by elementRules` | gap does not accept negative values; overlap is a sibling margin |
+| 7 | `self.itemSpacing` present **and** `self.itemSpacing.sign` = `negative` | NOT on this element — a negative margin on `<selector> > * + *`, emitted by elementRules | gap does not accept negative values; overlap is a sibling margin |
 
 *css/style/layoutToCSS.ts:39-96; css/sheet/elementRules.ts:254-268. `cases` decides display and direction; `memberCases` apply only when a case above emitted a display.*
 

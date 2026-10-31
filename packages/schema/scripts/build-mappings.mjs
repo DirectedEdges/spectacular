@@ -40,6 +40,35 @@ const badge = (d) =>
 const failures = [];
 
 /**
+ * The capture engine is commercial and stays private. A mapping specification
+ * may state the rule it implements — that is the contract — but must never name
+ * its package or modules, because these pages are published.
+ *
+ * The `*-from-specs` packages are deliberately exempt: they are candidates for
+ * open-sourcing, and citing them costs nothing.
+ */
+const FORBIDDEN_IN_PUBLISHED = [
+  /specs-from-figma/,
+  /StylesProcessor/,
+  /TypographyProcessor/,
+];
+
+/**
+ * An emitted output is either a literal — a CSS declaration, a node property —
+ * which wants code formatting, or a phrase describing what the document records,
+ * which already carries its own backticks. Wrapping the second kind again
+ * produces broken markdown.
+ */
+const emitCell = (e) => (e.includes('`') ? e : `\`${e}\``);
+
+const checkNoLeaks = (label, page) => {
+  for (const re of FORBIDDEN_IN_PUBLISHED) {
+    const hit = page.match(re);
+    if (hit) failures.push(`${label}: published page names the private capture engine — "${hit[0]}". State the rule, not the module.`);
+  }
+};
+
+/**
  * Render a predicate as compact, scannable text. The stored form reuses the
  * schema's ConditionExpression vocabulary — `operation` plus `args` — and
  * `operation` is a deliberately open string (DSPEC-28), so `all`, `any` and
@@ -213,7 +242,7 @@ ${c.stage ? `\n**Stage.** \`${c.stage}\` — produced by a later pass, not read 
 
     const caseTable = (label, list) =>
       `\n**${label}** — ordered, first match wins.\n\n| # | When | Emits | Why |\n|---|---|---|---|\n${list
-        .map((cs, i) => `| ${i + 1} | ${fmt(cs.when)} | ${cs.emit.length ? cs.emit.map((e) => `\`${e}\``).join('<br>') : '*nothing*'} | ${cs.why ?? ''} |`)
+        .map((cs, i) => `| ${i + 1} | ${fmt(cs.when)} | ${cs.emit.length ? cs.emit.map(emitCell).join('<br>') : '*nothing*'} | ${cs.why ?? ''} |`)
         .join('\n')}\n`;
 
     return `${head}
@@ -359,6 +388,8 @@ for (const file of files) {
   pages.push([join(pkg, `mappings/${platform.toUpperCase()}.md`), renderPlatform(file), `${platform.toUpperCase()}.md`]);
 }
 pages.push([join(pkg, 'mappings/DEFAULTS.md'), renderDefaults(), 'DEFAULTS.md']);
+
+for (const [, page, label] of pages) checkNoLeaks(label, page);
 
 if (!failures.length) {
   for (const [out, page, label] of pages) {

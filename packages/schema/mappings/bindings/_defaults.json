@@ -2,7 +2,7 @@
   "kind": "style-defaults",
   "seededFrom": "schema/styles.schema.json",
   "note": "What a consumer assumes when a style key is ABSENT from a document. Spec-level, not per-platform: platforms that disagree here disagree about what the same document says.",
-  "homeProblem": "Resolved by ADR-113: every Styles property declares a default, so the schema answers what an absent key means. STYLE_DEFAULTS in specs-from-figma is no longer an authority and should be derived from or asserted against the schema.",
+  "homeProblem": "Resolved by ADR-113: every Styles property declares a default, so the schema answers what an absent key means. The capture path no longer holds that answer and should be derived from or asserted against the schema.",
   "defaults": {
     "rotation": {
       "assumed": 0,

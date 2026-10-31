@@ -11,7 +11,7 @@ says.
 
 ## The problem
 
-Resolved by ADR-113: every Styles property declares a default, so the schema answers what an absent key means. STYLE_DEFAULTS in specs-from-figma is no longer an authority and should be derived from or asserted against the schema.
+Resolved by ADR-113: every Styles property declares a default, so the schema answers what an absent key means. The capture path no longer holds that answer and should be derived from or asserted against the schema.
 
 ## Absence is ambiguous
 
