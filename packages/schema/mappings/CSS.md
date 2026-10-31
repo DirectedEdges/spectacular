@@ -48,7 +48,7 @@ per-key mapping for it would be false, not merely incomplete.
 | `opacity` | bound | `opacity` | A literal ratio is emitted directly. A token is multiplied into a percentage — `calc(<var> * 1%)` — because an opacity variable is authored on a 0–100 scale. |
 | `locked` | unsupported | — | Not emitted. `locked` is a canvas-interaction concept with no CSS counterpart, and the transform has no awareness of the key. The value is dropped with no warning. |
 | `backgroundColor` | approximated | `fills` | Emits `background`. A gradient resolves to a CSS gradient function; a `null` becomes `transparent`. Loss: a gradient stop whose position is not a number silently becomes 0, and a gradient with fewer than two resolvable stops is dropped entirely rather than degraded. |
-| `backgroundImage` | approximated | — | Emitted from the sheet layer, outside the main style pipeline. `objectFit: CONTAIN` becomes `background-size: contain`; everything else, including absent, becomes `cover`. Loss: the source path is reduced to its basename, discarding any directory structure, and if the image registry does not resolve the reference the fit declarations still emit while the URL does not. |
+| `backgroundImage` | approximated | — | Emitted from the sheet layer, outside the main style pipeline. `background-position`, `background-repeat` and `background-size` are emitted independently of whether the image reference resolves — deliberately, so the fit behaviour is conveyed regardless. `objectFit: CONTAIN` becomes `background-size: contain`; everything else, including absent, becomes `cover`. Loss: the source path is reduced to its basename, discarding any directory structure. |
 | `fillColor` | approximated | `fills` | The CSS property depends on the element type: a glyph or vector takes `background-color`, an untyped legacy element takes `fill`, anything else takes `background`. Loss: a gradient fill on an untyped element is skipped entirely, because an inline SVG paint has no gradient equivalent. |
 | `textColor` | bound | `fills` | Emits `color`. A gradient becomes a four-declaration bundle — background, both background-clip prefixes, and a transparent colour — which is the standard way to paint text with a gradient. |
 | `effects` | approximated | `effects` | Emits `box-shadow`, `filter` and `backdrop-filter`. A `null` resets all three. Loss: a shadow whose offset, blur or spread cannot be resolved substitutes `0`, and an unresolvable colour substitutes `currentColor`, so an unresolved value is masked as a plausible one rather than reported. A blur whose radius fails to resolve emits nothing at all and no reset. |
@@ -86,21 +86,21 @@ per-key mapping for it would be false, not merely incomplete.
 | `wrapAlignment` | bound | cluster [autoLayout](#autolayout) |  |
 | `itemReverseZIndex` | unsupported | — | The key is never read. The semantic it names is approximated by a different mechanism: a variant whose layout reverses the default's child order emits `row-reverse` or `column-reverse`, derived from comparing the two layout trees. A partial reorder is not expressible that way and is handled by relocating the element instead. |
 | `itemSpacing` | bound | cluster [autoLayout](#autolayout) |  |
-| `padding` | approximated | `padding` | A uniform value emits `padding`; a `null` emits `padding: 0`. A per-side object emits a `padding-block` and `padding-inline` pair, deliberately avoiding the four-value shorthand so a logical side is never misread as a physical one — this is the direction-safe treatment Figma lacks. Loss: a side present but unresolvable is omitted with no fallback, unlike `cornerRadius` which substitutes zero. |
+| `padding` | approximated | `padding` | A uniform value emits `padding`; a `null` emits `padding: 0`. A per-side object emits a `padding-block` and `padding-inline` pair, deliberately avoiding the four-value shorthand so a logical side is never misread as a physical one — the direction-safe treatment Figma lacks. Defect: a side present but unresolvable is omitted with no fallback, while `cornerRadius` substitutes `0` for the same class of failure. Nothing should be dropped; the two disagree. |
 | `cornerSmoothing` | unsupported | — | Not emitted, and nothing attempts a substitute. CSS has no squircle primitive; a clip-path or mask approximation would change the element's box rather than its corner, so none is offered. |
 | `aspectRatio` | bound | cluster [intrinsicSize](#intrinsicsize) |  |
 
 ## Losses and decisions
 
-What this platform does is settled and stated above. Where a loss is real, its *acceptability* is a product question rather than a specification's to settle alone. 8 of 46 keys raise one of 2 such questions, of which 1 remains open.
+What this platform does is settled and stated above. Where a loss is real, its *acceptability* is a product question rather than a specification's to settle alone. 6 of 46 keys raise one of 2 such questions, of which 2 remain open.
 
-#### An unresolved reference produces partial output, silently
+#### A value is dropped rather than degraded
 
-Affects `backgroundColor`, `backgroundImage`, `effects`, `padding`.
+Affects `backgroundColor`, `effects`.
 
-Several paths emit part of a value when the rest cannot be resolved, with no warning. DSPEC-43 says a degradation applies the spec's own recorded fallback, or applies nothing and warns; these apply something and stay quiet, which is the one behaviour it rules out.
+A gradient whose stops do not yield two resolvable colours is dropped whole. A `padding` side that is present but unresolvable is omitted while its siblings emit, whereas `cornerRadius` substitutes `0` for the same failure. DSPEC-43 says a degradation applies the spec's own recorded fallback, or applies nothing and warns — dropping part of a value silently is neither.
 
-**Open.** See #815, which sets out the three affected paths and what each could do instead.
+**Open.** See #816 on the disagreement between the composite types, and #815 on the gradient path.
 
 #### Zero is not distinguishable from unset
 
@@ -108,7 +108,7 @@ Affects `minWidth`, `minHeight`, `maxWidth`, `maxHeight`.
 
 Both platforms currently treat a dimension of 0 as "no constraint" rather than "a constraint of zero".
 
-**Decided.** Split by direction (#814). A zero *minimum* means no constraint — the Plugin API forces that and CSS will keep matching it. A zero *maximum* is a real constraint: Figma already honours it, and CSS will stop suppressing it.
+**Open.** Deferred — see #814, and #812 on what an absent `width`/`height` means. The two interact and should be settled together.
 
 ## Clusters
 

@@ -64,11 +64,10 @@
         "disposition": "approximated",
         "module": [],
         "declarations": null,
-        "notes": "Emitted from the sheet layer, outside the main style pipeline. `objectFit: CONTAIN` becomes `background-size: contain`; everything else, including absent, becomes `cover`. Loss: the source path is reduced to its basename, discarding any directory structure, and if the image registry does not resolve the reference the fit declarations still emit while the URL does not.",
+        "notes": "Emitted from the sheet layer, outside the main style pipeline. `background-position`, `background-repeat` and `background-size` are emitted independently of whether the image reference resolves — deliberately, so the fit behaviour is conveyed regardless. `objectFit: CONTAIN` becomes `background-size: contain`; everything else, including absent, becomes `cover`. Loss: the source path is reduced to its basename, discarding any directory structure.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
-        "basis": "implementation",
-        "needsDecision": "partialOnUnresolved"
+        "basis": "implementation"
       },
       "fillColor": {
         "disposition": "approximated",
@@ -511,11 +510,10 @@
           "padding"
         ],
         "declarations": null,
-        "notes": "A uniform value emits `padding`; a `null` emits `padding: 0`. A per-side object emits a `padding-block` and `padding-inline` pair, deliberately avoiding the four-value shorthand so a logical side is never misread as a physical one — this is the direction-safe treatment Figma lacks. Loss: a side present but unresolvable is omitted with no fallback, unlike `cornerRadius` which substitutes zero.",
+        "notes": "A uniform value emits `padding`; a `null` emits `padding: 0`. A per-side object emits a `padding-block` and `padding-inline` pair, deliberately avoiding the four-value shorthand so a logical side is never misread as a physical one — the direction-safe treatment Figma lacks. Defect: a side present but unresolvable is omitted with no fallback, while `cornerRadius` substitutes `0` for the same class of failure. Nothing should be dropped; the two disagree.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
-        "basis": "implementation",
-        "needsDecision": "partialOnUnresolved"
+        "basis": "implementation"
       },
       "cornerSmoothing": {
         "disposition": "unsupported",
@@ -2179,7 +2177,7 @@
     "explicitZero": {
       "title": "Zero is not distinguishable from unset",
       "note": "Both platforms currently treat a dimension of 0 as \"no constraint\" rather than \"a constraint of zero\".",
-      "decided": "Split by direction (#814). A zero *minimum* means no constraint — the Plugin API forces that and CSS will keep matching it. A zero *maximum* is a real constraint: Figma already honours it, and CSS will stop suppressing it."
+      "decided": "Open. Deferred — see #814, and #812 on what an absent `width`/`height` means. The two interact and should be settled together."
     },
     "logicalToPhysical": {
       "title": "Logical sides become physical without a direction",
@@ -2187,9 +2185,9 @@
       "decided": "Accepted as a platform limit. Figma cannot express a writing direction, so the mapping is left-to-right only and the loss is declared rather than fixed — which is what `approximated` means. CSS stays direction-safe by emitting `padding-block` and `padding-inline`."
     },
     "partialOnUnresolved": {
-      "title": "An unresolved reference produces partial output, silently",
-      "note": "Several paths emit part of a value when the rest cannot be resolved, with no warning. DSPEC-43 says a degradation applies the spec's own recorded fallback, or applies nothing and warns; these apply something and stay quiet, which is the one behaviour it rules out.",
-      "decided": "Open. See #815, which sets out the three affected paths and what each could do instead."
+      "title": "A value is dropped rather than degraded",
+      "note": "A gradient whose stops do not yield two resolvable colours is dropped whole. A `padding` side that is present but unresolvable is omitted while its siblings emit, whereas `cornerRadius` substitutes `0` for the same failure. DSPEC-43 says a degradation applies the spec's own recorded fallback, or applies nothing and warns — dropping part of a value silently is neither.",
+      "decided": "Open. See #816 on the disagreement between the composite types, and #815 on the gradient path."
     }
   }
 }

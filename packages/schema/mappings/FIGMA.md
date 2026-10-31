@@ -92,15 +92,23 @@ per-key mapping for it would be false, not merely incomplete.
 
 ## Losses and decisions
 
-What this platform does is settled and stated above. Where a loss is real, its *acceptability* is a product question rather than a specification's to settle alone. 8 of 46 keys raise one of 4 such questions, of which 1 remains open.
+What this platform does is settled and stated above. Where a loss is real, its *acceptability* is a product question rather than a specification's to settle alone. 8 of 46 keys raise one of 4 such questions, of which 2 remain open.
 
-#### An unresolved reference produces partial output, silently
+#### A value is dropped rather than degraded
 
 Affects `backgroundImage`.
 
-Several paths emit part of a value when the rest cannot be resolved, with no warning. DSPEC-43 says a degradation applies the spec's own recorded fallback, or applies nothing and warns; these apply something and stay quiet, which is the one behaviour it rules out.
+A gradient whose stops do not yield two resolvable colours is dropped whole. A `padding` side that is present but unresolvable is omitted while its siblings emit, whereas `cornerRadius` substitutes `0` for the same failure. DSPEC-43 says a degradation applies the spec's own recorded fallback, or applies nothing and warns — dropping part of a value silently is neither.
 
-**Open.** See #815, which sets out the three affected paths and what each could do instead.
+**Open.** See #816 on the disagreement between the composite types, and #815 on the gradient path.
+
+#### Zero is not distinguishable from unset
+
+Affects `minWidth`, `minHeight`.
+
+Both platforms currently treat a dimension of 0 as "no constraint" rather than "a constraint of zero".
+
+**Open.** Deferred — see #814, and #812 on what an absent `width`/`height` means. The two interact and should be settled together.
 
 #### A non-sRGB ColorObject renders as if it were sRGB
 
@@ -109,14 +117,6 @@ Affects `backgroundColor`, `fillColor`, `textColor`, `strokes`.
 The schema admits 14 colour spaces and the render path never reads `colorSpace` — components 0 through 2 are taken as red, green and blue regardless, so an `oklch` value is misread rather than approximated. A `none` component becomes 0, and components beyond the third are dropped.
 
 **Decided.** Convert to sRGB at render time (#813). The schema keeps all 14 spaces; the render path gains a conversion with gamut mapping for values outside sRGB. Until that lands, a non-sRGB ColorObject renders wrong rather than degraded.
-
-#### Zero is not distinguishable from unset
-
-Affects `minWidth`, `minHeight`.
-
-Both platforms currently treat a dimension of 0 as "no constraint" rather than "a constraint of zero".
-
-**Decided.** Split by direction (#814). A zero *minimum* means no constraint — the Plugin API forces that and CSS will keep matching it. A zero *maximum* is a real constraint: Figma already honours it, and CSS will stop suppressing it.
 
 #### Logical sides become physical without a direction
 
