@@ -45,7 +45,7 @@ Dash pattern for a stroke. Present (non-null) when the stroke is dashed; null or
 | Platform | Disposition | Realised by |
 |---|---|---|
 | [Figma](/schema/mappings/figma/) | **unverified** | — |
-| [React](/schema/mappings/react/) | **unverified** | — |
+| [CSS](/schema/mappings/css/) | **unverified** | — |
 
 
 #### Decision records

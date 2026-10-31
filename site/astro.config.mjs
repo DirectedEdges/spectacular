@@ -91,7 +91,9 @@ export default defineConfig({
               collapsed: true,
               items: [
                 { label: 'Figma', slug: 'schema/mappings/figma' },
+                { label: 'CSS', slug: 'schema/mappings/css' },
                 { label: 'React', slug: 'schema/mappings/react' },
+                { label: 'Web Components', slug: 'schema/mappings/webcomponents' },
                 { label: 'Style Defaults', slug: 'schema/mappings/defaults' },
               ],
             },

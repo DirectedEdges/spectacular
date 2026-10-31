@@ -22,11 +22,13 @@ const outDir = resolve(root, 'src/content/docs/schema/mappings');
 
 const DESCRIPTIONS = {
   FIGMA: 'How the Figma binding realises the Specs schema — per-style-key disposition, value forms, and declared degradation',
-  REACT: 'How the React binding realises the Specs schema — per-style-key disposition, value forms, and declared degradation',
+  CSS: 'How the CSS binding realises the Specs schema — per-style-key disposition, ordered case tables for jointly resolved keys, and declared degradation',
+  REACT: 'What the React binding adds to the CSS binding — platform surfaces and style overrides',
+  WEBCOMPONENTS: 'What the Web Components binding adds to the CSS binding — platform surfaces and style overrides',
   DEFAULTS: 'What a consumer assumes when a style key is absent from a document — the spec-level default table, and why absence is ambiguous',
 };
 
-const TITLES = { DEFAULTS: 'Style Defaults' };
+const TITLES = { DEFAULTS: 'Style Defaults', CSS: 'CSS', WEBCOMPONENTS: 'Web Components' };
 
 if (!existsSync(srcDir)) {
   console.log('mappings pages: no packages/schema/mappings — nothing to render');
@@ -49,7 +51,17 @@ for (const file of files) {
   const body = md.replace(/^# .+\n/, '');
 
   // The package file links to ../SPECIFICATION.md, which is not the site's shape.
-  const linked = body.replace(/\]\(\.\.\/SPECIFICATION\.md\)/g, '](/schema/specification/)');
+  let linked = body.replace(/\]\(\.\.\/SPECIFICATION\.md\)/g, '](/schema/specification/)');
+
+  // A dependent binding links its base as CSS.md, and every page links
+  // DEFAULTS.md. On the site those are routes under /schema/mappings/.
+  linked = linked.replace(/\]\(([A-Z]+)\.md\)/g, (_, p) => `](/schema/mappings/${p.toLowerCase()}/)`);
+
+  // Binding data files are not published; point at the repo instead.
+  linked = linked.replace(
+    /\]\(bindings\/([A-Za-z_.-]+)\)/g,
+    (_, f) => `](https://github.com/DirectedEdges/spectacular/blob/main/packages/schema/mappings/bindings/${f})`
+  );
 
   const title = TITLES[platform] ?? platform.charAt(0) + platform.slice(1).toLowerCase();
   const page = `---

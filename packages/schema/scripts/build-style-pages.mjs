@@ -32,11 +32,11 @@ const defs = styles.definitions;
 const props = defs.Styles.properties;
 
 const bindings = Object.fromEntries(
-  ['figma', 'react'].map((p) => [p, JSON.parse(readFileSync(join(pkg, `mappings/bindings/${p}.json`), 'utf8'))])
+  ['figma', 'css'].map((p) => [p, JSON.parse(readFileSync(join(pkg, `mappings/bindings/${p}.json`), 'utf8'))])
 );
 
 const kebab = (s) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
-const PLATFORM = { figma: 'Figma', react: 'React' };
+const PLATFORM = { figma: 'Figma', css: 'CSS' };
 
 /** The declared element tables the transforms ship. Absent when not checked out. */
 const elementTables = () => {

@@ -88,9 +88,9 @@ const verifyFigma = () => {
  * partial: a module reading its keys indirectly yields nothing. So a declared module
  * that the scan cannot see is reported as unconfirmable, not as drift.
  */
-const verifyReact = () => {
+const verifyCss = () => {
   const dir = resolve(pkg, '../cli/src/transforms/css/style');
-  if (!existsSync(dir)) return skipped.push('react — css transform not found');
+  if (!existsSync(dir)) return skipped.push('css — transform not found');
   checked++;
 
   const found = {};
@@ -101,33 +101,33 @@ const verifyReact = () => {
     }
   }
 
-  const declared = bindings('react').concepts.styles;
+  const declared = bindings('css').concepts.styles;
   let unconfirmable = 0;
   for (const k of styleProps) {
     const d = (declared[k]?.module ?? []).slice().sort();
     const a = (found[k] ?? []).slice().sort();
     if (declared[k]?.disposition === 'bound' && a.length === 0) {
       unconfirmable++;
-      console.error(`UNCONFIRMABLE react \`${k}\`: declared bound, but no module literal matched — confirm by hand or declare the module`);
+      console.error(`UNCONFIRMABLE css \`${k}\`: declared bound, but no module literal matched — confirm by hand or declare the module`);
     }
     if (declared[k]?.disposition === 'unsupported' && a.length > 0) {
       drift++;
-      console.error(`DRIFT react \`${k}\`: declared unsupported but matched in ${a.join(', ')}`);
+      console.error(`DRIFT css \`${k}\`: declared unsupported but matched in ${a.join(', ')}`);
     }
     if (d.length && JSON.stringify(d) !== JSON.stringify(a) && a.length) {
       drift++;
-      console.error(`DRIFT react \`${k}\`: declared ${d.join(', ')}, scan found ${a.join(', ')}`);
+      console.error(`DRIFT css \`${k}\`: declared ${d.join(', ')}, scan found ${a.join(', ')}`);
     }
   }
   if (unconfirmable) {
-    console.error(`\nreact: ${unconfirmable} declared-bound keys the scan cannot confirm.`);
+    console.error(`\ncss: ${unconfirmable} declared-bound keys the scan cannot confirm.`);
     console.error('This is the cost of a transform that declares no key table — contrast');
     console.error('figma-from-specs/src/Styles/keys.ts, which does and is checkable.\n');
   }
 };
 
 verifyFigma();
-verifyReact();
+verifyCss();
 
 for (const s of skipped) console.log(`skipped: ${s}`);
 

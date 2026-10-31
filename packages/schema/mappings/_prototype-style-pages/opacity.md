@@ -46,7 +46,7 @@ Opacity 0-1
 | Platform | Disposition | Realised by |
 |---|---|---|
 | [Figma](/schema/mappings/figma/) | bound | `node.opacity` |
-| [React](/schema/mappings/react/) | **unverified** | `opacity` |
+| [CSS](/schema/mappings/css/) | **unverified** | `opacity` |
 
 
 #### Decision records

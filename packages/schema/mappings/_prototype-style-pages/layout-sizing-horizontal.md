@@ -46,7 +46,7 @@ Horizontal sizing mode
 | Platform | Disposition | Realised by |
 |---|---|---|
 | [Figma](/schema/mappings/figma/) | bound | [`autoVsAbsoluteLayout`](/schema/mappings/figma/#autovsabsolutelayout) |
-| [React](/schema/mappings/react/) | bound | [`autoLayoutSizing`](/schema/mappings/react/#autolayoutsizing) |
+| [CSS](/schema/mappings/css/) | bound | [`autoLayoutSizing`](/schema/mappings/css/#autolayoutsizing) |
 
 #### Resolved jointly with
 
@@ -59,7 +59,7 @@ This key does not map on its own. Its cluster's ordered case table is linked abo
 | [`centerVerticalOffset`](/schema/styles/center-vertical-offset/) | Figma |
 | [`end`](/schema/styles/end/) | Figma |
 | [`height`](/schema/styles/height/) | Figma |
-| [`layoutSizingVertical`](/schema/styles/layout-sizing-vertical/) | Figma, React |
+| [`layoutSizingVertical`](/schema/styles/layout-sizing-vertical/) | Figma, CSS |
 | [`position`](/schema/styles/position/) | Figma |
 | [`start`](/schema/styles/start/) | Figma |
 | [`top`](/schema/styles/top/) | Figma |

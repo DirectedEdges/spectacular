@@ -31,7 +31,7 @@ const styleProps = Object.keys(schema.definitions.Styles.properties);
 const styleDescription = (key) =>
   schema.definitions.Styles.properties[key]?.description ?? '';
 
-const TITLES = { figma: 'Figma', react: 'React' };
+const TITLES = { figma: 'Figma', css: 'CSS', react: 'React', webcomponents: 'Web Components' };
 const DISPOSITION_ORDER = ['bound', 'approximated', 'unsupported', 'unverified'];
 
 const badge = (d) =>
@@ -64,16 +64,77 @@ const fmt = (p) => {
   }
 };
 
+/**
+ * A binding that inherits its style surface from another. It states only
+ * overrides plus the platform-shaped concerns the base binding cannot carry —
+ * how props become parameters, slots become children, variants become
+ * selection, and how styles attach.
+ */
+const renderDependent = ({ platform, title, b, styles, dependsOn, file }) => {
+  const base = dependsOn.map((d) => `[${TITLES[d] ?? d}](${d.toUpperCase()}.md)`).join(", ");
+  const overrides = Object.entries(styles);
+
+  for (const [k, v] of overrides) {
+    if (!v.why) failures.push(`${file}: override \`${k}\` does not say why it differs from ${dependsOn.join(', ')} — an override without a reason is a restatement`);
+  }
+
+  const surfaces = b.surfaces ?? {};
+  const surfaceRows = Object.entries(surfaces)
+    .filter(([k]) => k !== 'note')
+    .map(([k, v]) => `| \`${k}\` | ${v === 'unverified' ? '**unverified**' : v} |`)
+    .join('\n');
+
+  return `# ${title} binding
+
+**Platform binding for the Specs document format — draft.**
+
+Normative frame: [\`SPECIFICATION.md\`](../SPECIFICATION.md) §11.
+
+## Inherits from ${base}
+
+${b.realises ?? ''}
+
+**Every style key is bound exactly as the ${base} binding states**, unless overridden below. This binding never restates an inherited mapping: a second copy of a rule is a second thing to keep true.
+
+## Style overrides
+
+${overrides.length
+  ? `| Style key | Disposition | Realised by | Why it differs |\n|---|---|---|---|\n${overrides
+      .map(([k, v]) => `| \`${k}\` | ${badge(v.disposition)} | ${v.target ?? v.module?.join(', ') ?? '—'} | ${v.why ?? ''} |`)
+      .join('\n')}`
+  : '**None.** Every style key is inherited unchanged.'}
+
+## Platform surfaces
+
+${surfaces.note ?? ''}
+
+${surfaceRows ? `| Surface | Disposition |\n|---|---|\n${surfaceRows}` : '*None declared.*'}
+
+## Absent keys
+
+Inherited. See [Style defaults](DEFAULTS.md).
+`;
+};
+
 const renderPlatform = (file) => {
   const platform = file.replace(/\.json$/, '');
   const b = JSON.parse(readFileSync(join(bindingsDir, file), 'utf8'));
   const styles = b.concepts?.styles ?? {};
   const title = TITLES[platform] ?? platform;
+  const dependsOn = b.dependsOn ?? [];
+
+  const extra = Object.keys(styles).filter((k) => !styleProps.includes(k));
+  if (extra.length) failures.push(`${file}: style keys not in the schema — ${extra.join(', ')}`);
+
+  // A dependent binding declares only what it changes, so completeness is the
+  // base binding's obligation, not its. What it must not do is silently restate
+  // a key identically — that recreates the second source the dependency removed.
+  if (dependsOn.length) {
+    return renderDependent({ platform, title, b, styles, dependsOn, file });
+  }
 
   const missing = styleProps.filter((k) => !(k in styles));
-  const extra = Object.keys(styles).filter((k) => !styleProps.includes(k));
   if (missing.length) failures.push(`${file}: missing style keys — ${missing.join(', ')}`);
-  if (extra.length) failures.push(`${file}: style keys not in the schema — ${extra.join(', ')}`);
 
   const counts = {};
   for (const v of Object.values(styles)) counts[v.disposition] = (counts[v.disposition] ?? 0) + 1;
