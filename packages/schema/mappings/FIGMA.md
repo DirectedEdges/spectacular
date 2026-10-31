@@ -53,7 +53,7 @@ per-key mapping for it would be false, not merely incomplete.
 | `textColor` | **unverified** | — | text |  |
 | `effects` | bound | `Effects.apply` | component, frame, slot, text, vector, ellipse, star, polygon, rectangle, line, glyph | Accepts Effects, TokenReference, or null. |
 | `clipsContent` | bound | `node.clipsContent` | component, frame, slot | Container types only; the key never reaches another type because no other key list admits it. |
-| `cornerRadius` | **unverified** | — | component, frame, slot |  |
+| `cornerRadius` | **unverified** | — | component, frame, rectangle, slot |  |
 | `width` | bound | cluster [autoVsAbsoluteLayout](#autovsabsolutelayout) | all |  |
 | `height` | bound | cluster [autoVsAbsoluteLayout](#autovsabsolutelayout) | component, frame, slot, instance, text, vector, ellipse, star, polygon, rectangle, glyph |  |
 | `minWidth` | **unverified** | — | all |  |
@@ -183,10 +183,19 @@ bound — keys: `typography`
 
 ## Absent keys
 
-What a consumer assumes when a style key is **absent** is spec-level, not per-platform:
-two platforms that answer differently disagree about what the same document says. It is
-declared once, in [`bindings/_defaults.json`](bindings/_defaults.json), and summarised in
-[`DEFAULTS.md`](DEFAULTS.md).
+What an absent style key **means** is spec-level, not per-platform: two platforms that
+answer differently disagree about what the same document says. It is declared once in the
+schema and summarised in [`DEFAULTS.md`](DEFAULTS.md).
+
+What this platform **does** on absence is its own fact, and is recorded per key below.
+A key whose behaviour is not `declaredDefault` disagrees with the contract — visibly,
+and as a decision rather than an accident.
+
+| Behaviour | Keys | Meaning |
+|---|---|---|
+| `unverified` | 46 | Nobody has established what this platform does when the key is absent. |
+
+
 
 ## Concepts not yet bound
 

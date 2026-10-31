@@ -165,6 +165,17 @@ const renderPlatform = (file) => {
   const missing = styleProps.filter((k) => !(k in styles));
   if (missing.length) failures.push(`${file}: missing style keys — ${missing.join(', ')}`);
 
+  // Every row must say what the platform does when the key is absent. The
+  // schema declares the meaning of absence once (§4.1a); a binding that is
+  // silent on whether it honours that is the gap DSPEC-46 exists to close.
+  const ONABSENT = ['declaredDefault', 'platformInitial', 'warns', 'nothing', 'unverified'];
+  const noOnAbsent = Object.entries(styles).filter(([, v]) => !('onAbsent' in v)).map(([k]) => k);
+  if (noOnAbsent.length) failures.push(`${file}: no onAbsent declared — ${noOnAbsent.join(', ')}`);
+  const badOnAbsent = Object.entries(styles)
+    .filter(([, v]) => 'onAbsent' in v && !ONABSENT.includes(v.onAbsent))
+    .map(([k, v]) => `${k}=${v.onAbsent}`);
+  if (badOnAbsent.length) failures.push(`${file}: onAbsent outside the vocabulary — ${badOnAbsent.join(', ')}`);
+
   const counts = {};
   for (const v of Object.values(styles)) counts[v.disposition] = (counts[v.disposition] ?? 0) + 1;
   const tally = DISPOSITION_ORDER
@@ -308,10 +319,27 @@ resolution rule is the mapping rather than a row in the table above.
 ${clusterSections}
 ## Absent keys
 
-What a consumer assumes when a style key is **absent** is spec-level, not per-platform:
-two platforms that answer differently disagree about what the same document says. It is
-declared once, in [\`bindings/_defaults.json\`](bindings/_defaults.json), and summarised in
-[\`DEFAULTS.md\`](DEFAULTS.md).
+What an absent style key **means** is spec-level, not per-platform: two platforms that
+answer differently disagree about what the same document says. It is declared once in the
+schema and summarised in [\`DEFAULTS.md\`](DEFAULTS.md).
+
+What this platform **does** on absence is its own fact, and is recorded per key below.
+A key whose behaviour is not \`declaredDefault\` disagrees with the contract — visibly,
+and as a decision rather than an accident.
+
+${(() => {
+  const counts = {};
+  for (const v of Object.values(styles)) counts[v.onAbsent] = (counts[v.onAbsent] ?? 0) + 1;
+  const rows = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([k, n]) => `| \`${k}\` | ${n} | ${b.onAbsentVocabulary?.[k] ?? ''} |`)
+    .join('\n');
+  return `| Behaviour | Keys | Meaning |\n|---|---|---|\n${rows}`;
+})()}
+
+${Object.values(styles).some((v) => v.onAbsentVerified === false)
+  ? '> Seeded from the transform’s documented policy and **not yet confirmed per key**. A seeded value is a starting point, not a finding.'
+  : ''}
 
 ## Concepts not yet bound
 

@@ -21,7 +21,8 @@
           "glyph"
         ],
         "target": "node.rotation",
-        "notes": "Degrees, written directly."
+        "notes": "Degrees, written directly.",
+        "onAbsent": "unverified"
       },
       "visible": {
         "disposition": "unverified",
@@ -40,7 +41,8 @@
           "glyph"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "opacity": {
         "disposition": "bound",
@@ -59,7 +61,8 @@
           "glyph"
         ],
         "target": "node.opacity",
-        "notes": "A TokenReference binds the variable; otherwise the raw number is written."
+        "notes": "A TokenReference binds the variable; otherwise the raw number is written.",
+        "onAbsent": "unverified"
       },
       "locked": {
         "disposition": "bound",
@@ -78,7 +81,8 @@
           "glyph"
         ],
         "target": "node.locked",
-        "notes": "Canvas interaction only — the Plugin API can still mutate a locked node, so it applies wherever it is reached, children included."
+        "notes": "Canvas interaction only — the Plugin API can still mutate a locked node, so it applies wherever it is reached, children included.",
+        "onAbsent": "unverified"
       },
       "backgroundColor": {
         "disposition": "unverified",
@@ -89,7 +93,8 @@
           "rectangle"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "backgroundImage": {
         "disposition": "unverified",
@@ -99,7 +104,8 @@
           "slot"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "fillColor": {
         "disposition": "unverified",
@@ -112,7 +118,8 @@
           "glyph"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "textColor": {
         "disposition": "unverified",
@@ -120,7 +127,8 @@
           "text"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "effects": {
         "disposition": "bound",
@@ -138,7 +146,8 @@
           "glyph"
         ],
         "target": "Effects.apply",
-        "notes": "Accepts Effects, TokenReference, or null."
+        "notes": "Accepts Effects, TokenReference, or null.",
+        "onAbsent": "unverified"
       },
       "clipsContent": {
         "disposition": "bound",
@@ -148,17 +157,20 @@
           "slot"
         ],
         "target": "node.clipsContent",
-        "notes": "Container types only; the key never reaches another type because no other key list admits it."
+        "notes": "Container types only; the key never reaches another type because no other key list admits it.",
+        "onAbsent": "unverified"
       },
       "cornerRadius": {
         "disposition": "unverified",
         "elements": [
           "component",
           "frame",
+          "rectangle",
           "slot"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "width": {
         "disposition": "bound",
@@ -178,7 +190,8 @@
         ],
         "target": null,
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout"
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified"
       },
       "height": {
         "disposition": "bound",
@@ -197,7 +210,8 @@
         ],
         "target": null,
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout"
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified"
       },
       "minWidth": {
         "disposition": "unverified",
@@ -216,7 +230,8 @@
           "glyph"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "minHeight": {
         "disposition": "unverified",
@@ -235,7 +250,8 @@
           "glyph"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "maxWidth": {
         "disposition": "unverified",
@@ -254,7 +270,8 @@
           "glyph"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "maxHeight": {
         "disposition": "unverified",
@@ -273,7 +290,8 @@
           "glyph"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "position": {
         "disposition": "bound",
@@ -293,7 +311,8 @@
         ],
         "target": null,
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout"
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified"
       },
       "top": {
         "disposition": "bound",
@@ -313,7 +332,8 @@
         ],
         "target": null,
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout"
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified"
       },
       "bottom": {
         "disposition": "bound",
@@ -333,7 +353,8 @@
         ],
         "target": null,
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout"
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified"
       },
       "start": {
         "disposition": "bound",
@@ -353,7 +374,8 @@
         ],
         "target": null,
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout"
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified"
       },
       "end": {
         "disposition": "bound",
@@ -373,7 +395,8 @@
         ],
         "target": null,
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout"
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified"
       },
       "centerHorizontalOffset": {
         "disposition": "bound",
@@ -393,7 +416,8 @@
         ],
         "target": null,
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout"
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified"
       },
       "centerVerticalOffset": {
         "disposition": "bound",
@@ -413,7 +437,8 @@
         ],
         "target": null,
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout"
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified"
       },
       "layoutSizingHorizontal": {
         "disposition": "bound",
@@ -433,7 +458,8 @@
         ],
         "target": null,
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout"
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified"
       },
       "layoutSizingVertical": {
         "disposition": "bound",
@@ -453,7 +479,8 @@
         ],
         "target": null,
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout"
+        "cluster": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified"
       },
       "strokes": {
         "disposition": "unverified",
@@ -469,7 +496,8 @@
           "line"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "strokeAlign": {
         "disposition": "unverified",
@@ -485,7 +513,8 @@
           "line"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "strokeWeight": {
         "disposition": "unverified",
@@ -501,7 +530,8 @@
           "line"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "strokeDashPattern": {
         "disposition": "unverified",
@@ -517,7 +547,8 @@
           "line"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "typography": {
         "disposition": "bound",
@@ -526,7 +557,8 @@
         ],
         "target": "Typography.apply",
         "notes": "Accepts Typography or TokenReference. A font that fails to load degrades to Inter Regular with a warning, never aborts.",
-        "cluster": "namedStyleVersusInline"
+        "cluster": "namedStyleVersusInline",
+        "onAbsent": "unverified"
       },
       "textAlignHorizontal": {
         "disposition": "unverified",
@@ -534,7 +566,8 @@
           "text"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "textAlignVertical": {
         "disposition": "unverified",
@@ -542,7 +575,8 @@
           "text"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "textOverflow": {
         "disposition": "unverified",
@@ -550,7 +584,8 @@
           "text"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "maxLines": {
         "disposition": "bound",
@@ -558,7 +593,8 @@
           "text"
         ],
         "target": "node.maxLines",
-        "notes": "Deferred to last — honoured only while textTruncation is ENDING, so textOverflow must land first."
+        "notes": "Deferred to last — honoured only while textTruncation is ENDING, so textOverflow must land first.",
+        "onAbsent": "unverified"
       },
       "mainAxisAlignment": {
         "disposition": "unverified",
@@ -568,7 +604,8 @@
           "slot"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "primaryAxisSizingMode": {
         "disposition": "bound",
@@ -578,7 +615,8 @@
           "slot"
         ],
         "target": "node.primaryAxisSizingMode",
-        "notes": "Deferred after layoutSizingHorizontal/Vertical, which themselves write it — the shorthand would otherwise clobber the explicit primitive."
+        "notes": "Deferred after layoutSizingHorizontal/Vertical, which themselves write it — the shorthand would otherwise clobber the explicit primitive.",
+        "onAbsent": "unverified"
       },
       "crossAxisAlignment": {
         "disposition": "unverified",
@@ -588,7 +626,8 @@
           "slot"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "layoutMode": {
         "disposition": "bound",
@@ -599,7 +638,8 @@
         ],
         "target": null,
         "notes": null,
-        "cluster": "wrapping"
+        "cluster": "wrapping",
+        "onAbsent": "unverified"
       },
       "wrap": {
         "disposition": "bound",
@@ -610,7 +650,8 @@
         ],
         "target": null,
         "notes": null,
-        "cluster": "wrapping"
+        "cluster": "wrapping",
+        "onAbsent": "unverified"
       },
       "wrapAlignment": {
         "disposition": "bound",
@@ -621,7 +662,8 @@
         ],
         "target": null,
         "notes": null,
-        "cluster": "wrapping"
+        "cluster": "wrapping",
+        "onAbsent": "unverified"
       },
       "itemReverseZIndex": {
         "disposition": "bound",
@@ -631,7 +673,8 @@
           "slot"
         ],
         "target": "node.itemReverseZIndex",
-        "notes": "Auto-layout only — a frame with no layoutMode has nothing to reverse. layoutMode is structural and applied first."
+        "notes": "Auto-layout only — a frame with no layoutMode has nothing to reverse. layoutMode is structural and applied first.",
+        "onAbsent": "unverified"
       },
       "itemSpacing": {
         "disposition": "bound",
@@ -642,7 +685,8 @@
         ],
         "target": null,
         "notes": null,
-        "cluster": "wrapping"
+        "cluster": "wrapping",
+        "onAbsent": "unverified"
       },
       "padding": {
         "disposition": "unverified",
@@ -652,7 +696,8 @@
           "slot"
         ],
         "target": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "unverified"
       },
       "cornerSmoothing": {
         "disposition": "bound",
@@ -667,7 +712,8 @@
           "rectangle"
         ],
         "target": "CornerStyle.applySmoothing",
-        "notes": "Skipped on TEXT nodes."
+        "notes": "Skipped on TEXT nodes.",
+        "onAbsent": "unverified"
       },
       "aspectRatio": {
         "disposition": "bound",
@@ -684,7 +730,8 @@
           "glyph"
         ],
         "target": "node.targetAspectRatio",
-        "notes": "Deferred to last — the lock reads the node final dimensions, so an earlier resize would be clobbered by later sizing keys."
+        "notes": "Deferred to last — the lock reads the node final dimensions, so an earlier resize would be clobbered by later sizing keys.",
+        "onAbsent": "unverified"
       }
     },
     "styleClusters": {
@@ -1093,5 +1140,13 @@
   "directions": {
     "figma-to-spec": "Capture. A Figma file becomes a document.",
     "spec-to-figma": "Render. A document becomes nodes on the canvas."
-  }
+  },
+  "onAbsentVocabulary": {
+    "declaredDefault": "Applies the value the schema declares for an absent key.",
+    "platformInitial": "Applies the platform's own initial value, which may differ from the schema's declared default.",
+    "warns": "Warns and applies nothing.",
+    "nothing": "Applies nothing, silently.",
+    "unverified": "Nobody has established what this platform does when the key is absent."
+  },
+  "onAbsentNote": "What this platform does when a style key is absent from a document. The schema declares the meaning of absence once (§4.1a); this records whether the platform honours it. A row whose onAbsent is not declaredDefault is a disagreement with the contract, and each one is a decision rather than an accident."
 }

@@ -318,10 +318,19 @@ bound — keys: `textOverflow`, `maxLines`
 
 ## Absent keys
 
-What a consumer assumes when a style key is **absent** is spec-level, not per-platform:
-two platforms that answer differently disagree about what the same document says. It is
-declared once, in [`bindings/_defaults.json`](bindings/_defaults.json), and summarised in
-[`DEFAULTS.md`](DEFAULTS.md).
+What an absent style key **means** is spec-level, not per-platform: two platforms that
+answer differently disagree about what the same document says. It is declared once in the
+schema and summarised in [`DEFAULTS.md`](DEFAULTS.md).
+
+What this platform **does** on absence is its own fact, and is recorded per key below.
+A key whose behaviour is not `declaredDefault` disagrees with the contract — visibly,
+and as a decision rather than an accident.
+
+| Behaviour | Keys | Meaning |
+|---|---|---|
+| `platformInitial` | 46 | Applies the platform's own initial value, which may differ from the schema's declared default. |
+
+> Seeded from the transform’s documented policy and **not yet confirmed per key**. A seeded value is a starting point, not a finding.
 
 ## Concepts not yet bound
 

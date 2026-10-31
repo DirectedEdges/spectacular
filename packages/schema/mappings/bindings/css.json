@@ -10,7 +10,9 @@
           "transform"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "visible": {
         "disposition": "unverified",
@@ -20,7 +22,9 @@
           "visibility"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "opacity": {
         "disposition": "unverified",
@@ -28,13 +32,17 @@
           "opacity"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "locked": {
         "disposition": "unverified",
         "module": [],
         "declarations": null,
-        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand."
+        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "backgroundColor": {
         "disposition": "unverified",
@@ -42,13 +50,17 @@
           "fills"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "backgroundImage": {
         "disposition": "unverified",
         "module": [],
         "declarations": null,
-        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand."
+        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "fillColor": {
         "disposition": "unverified",
@@ -56,7 +68,9 @@
           "fills"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "textColor": {
         "disposition": "unverified",
@@ -64,7 +78,9 @@
           "fills"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "effects": {
         "disposition": "unverified",
@@ -72,7 +88,9 @@
           "effects"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "clipsContent": {
         "disposition": "unverified",
@@ -82,7 +100,9 @@
           "truncation"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "cornerRadius": {
         "disposition": "unverified",
@@ -90,7 +110,9 @@
           "cornerRadius"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "width": {
         "disposition": "bound",
@@ -100,7 +122,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "intrinsicSize"
+        "cluster": "intrinsicSize",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "height": {
         "disposition": "bound",
@@ -110,7 +134,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "intrinsicSize"
+        "cluster": "intrinsicSize",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "minWidth": {
         "disposition": "unverified",
@@ -118,7 +144,9 @@
           "size"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "minHeight": {
         "disposition": "unverified",
@@ -126,7 +154,9 @@
           "size"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "maxWidth": {
         "disposition": "unverified",
@@ -134,7 +164,9 @@
           "size"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "maxHeight": {
         "disposition": "unverified",
@@ -142,7 +174,9 @@
           "size"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "position": {
         "disposition": "bound",
@@ -152,7 +186,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "absolutePositioning"
+        "cluster": "absolutePositioning",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "top": {
         "disposition": "bound",
@@ -161,7 +197,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "absolutePositioning"
+        "cluster": "absolutePositioning",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "bottom": {
         "disposition": "bound",
@@ -170,7 +208,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "absolutePositioning"
+        "cluster": "absolutePositioning",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "start": {
         "disposition": "bound",
@@ -180,7 +220,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "absolutePositioning"
+        "cluster": "absolutePositioning",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "end": {
         "disposition": "bound",
@@ -190,7 +232,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "absolutePositioning"
+        "cluster": "absolutePositioning",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "centerHorizontalOffset": {
         "disposition": "bound",
@@ -199,7 +243,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "absolutePositioning"
+        "cluster": "absolutePositioning",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "centerVerticalOffset": {
         "disposition": "bound",
@@ -208,7 +254,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "absolutePositioning"
+        "cluster": "absolutePositioning",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "layoutSizingHorizontal": {
         "disposition": "bound",
@@ -217,7 +265,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "autoLayoutSizing"
+        "cluster": "autoLayoutSizing",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "layoutSizingVertical": {
         "disposition": "bound",
@@ -226,7 +276,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "autoLayoutSizing"
+        "cluster": "autoLayoutSizing",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "strokes": {
         "disposition": "bound",
@@ -236,7 +288,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "strokeRendering"
+        "cluster": "strokeRendering",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "strokeAlign": {
         "disposition": "bound",
@@ -245,7 +299,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "strokeRendering"
+        "cluster": "strokeRendering",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "strokeWeight": {
         "disposition": "bound",
@@ -254,13 +310,17 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "strokeRendering"
+        "cluster": "strokeRendering",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "strokeDashPattern": {
         "disposition": "unverified",
         "module": [],
         "declarations": null,
-        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand."
+        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "typography": {
         "disposition": "unverified",
@@ -268,7 +328,9 @@
           "typography"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "textAlignHorizontal": {
         "disposition": "unverified",
@@ -276,13 +338,17 @@
           "textAlign"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "textAlignVertical": {
         "disposition": "unverified",
         "module": [],
         "declarations": null,
-        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand."
+        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "textOverflow": {
         "disposition": "bound",
@@ -291,7 +357,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "textTruncation"
+        "cluster": "textTruncation",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "maxLines": {
         "disposition": "bound",
@@ -301,7 +369,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "textTruncation"
+        "cluster": "textTruncation",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "mainAxisAlignment": {
         "disposition": "bound",
@@ -310,13 +380,17 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "autoLayout"
+        "cluster": "autoLayout",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "primaryAxisSizingMode": {
         "disposition": "unverified",
         "module": [],
         "declarations": null,
-        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand."
+        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "crossAxisAlignment": {
         "disposition": "bound",
@@ -325,7 +399,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "autoLayout"
+        "cluster": "autoLayout",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "layoutMode": {
         "disposition": "bound",
@@ -334,7 +410,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "autoLayout"
+        "cluster": "autoLayout",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "wrap": {
         "disposition": "bound",
@@ -343,7 +421,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "autoLayout"
+        "cluster": "autoLayout",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "wrapAlignment": {
         "disposition": "bound",
@@ -352,13 +432,17 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "autoLayout"
+        "cluster": "autoLayout",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "itemReverseZIndex": {
         "disposition": "unverified",
         "module": [],
         "declarations": null,
-        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand."
+        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "itemSpacing": {
         "disposition": "bound",
@@ -367,7 +451,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "autoLayout"
+        "cluster": "autoLayout",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "padding": {
         "disposition": "unverified",
@@ -375,13 +461,17 @@
           "padding"
         ],
         "declarations": null,
-        "notes": null
+        "notes": null,
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "cornerSmoothing": {
         "disposition": "unverified",
         "module": [],
         "declarations": null,
-        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand."
+        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand.",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       },
       "aspectRatio": {
         "disposition": "bound",
@@ -390,7 +480,9 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "intrinsicSize"
+        "cluster": "intrinsicSize",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false
       }
     },
     "styleClusters": {
@@ -2000,5 +2092,13 @@
   "dependedOnBy": [
     "react",
     "webcomponents"
-  ]
+  ],
+  "onAbsentVocabulary": {
+    "declaredDefault": "Applies the value the schema declares for an absent key.",
+    "platformInitial": "Applies the platform's own initial value, which may differ from the schema's declared default.",
+    "warns": "Warns and applies nothing.",
+    "nothing": "Applies nothing, silently.",
+    "unverified": "Nobody has established what this platform does when the key is absent."
+  },
+  "onAbsentNote": "What this platform does when a style key is absent from a document. The schema declares the meaning of absence once (§4.1a); this records whether the platform honours it. A row whose onAbsent is not declaredDefault is a disagreement with the contract, and each one is a decision rather than an accident."
 }
