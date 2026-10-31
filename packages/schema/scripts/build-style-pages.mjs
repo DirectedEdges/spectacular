@@ -60,6 +60,38 @@ const elementTables = () => {
 };
 const tables = elementTables();
 
+/** Every primitive JSON type a node admits, following refs and unions. */
+const admits = (n, depth = 0, acc = new Set()) => {
+  if (!n || depth > 5) return acc;
+  if (n.$ref) return admits(defs[n.$ref.replace('#/definitions/', '')], depth + 1, acc);
+  if (typeof n.type === 'string') acc.add(n.type);
+  if (Array.isArray(n.type)) n.type.forEach((t) => acc.add(t));
+  if (n.properties || n.patternProperties) acc.add('object');
+  for (const b of ['oneOf', 'anyOf', 'allOf']) if (Array.isArray(n[b])) n[b].forEach((x) => admits(x, depth + 1, acc));
+  return acc;
+};
+
+/**
+ * Whether a composite is one value with facets, or a set of distinct properties.
+ *
+ * The discriminant is whether its members all admit the same value shape.
+ * `Sides` and `Corners` hold four members of one shape: `top` is not a concept,
+ * it is a side, so the whole object reads inline and a link would cost a hop for
+ * nothing. `Typography` holds thirteen members across five different shapes —
+ * `fontFamily` is a string, `fontSize` a number, `textCase` an enum — and each
+ * is a property with its own semantics worth its own row.
+ *
+ * Member count alone would misclassify: `Effects` has three members and must
+ * link, `Corners` has four and must not.
+ */
+const memberShape = (name) => {
+  const def = defs[name];
+  if (!def?.properties) return null;
+  const members = Object.entries(def.properties);
+  const shapes = new Set(members.map(([, v]) => [...admits(v)].sort().join('+')));
+  return { members, homogeneous: shapes.size === 1 };
+};
+
 /** Flatten a value union into named types, following local $refs one hop. */
 const typeRows = (node) => {
   const rows = [];
@@ -144,12 +176,62 @@ for (const key of Object.keys(props)) {
    */
   const matched = new Set(derived.filter((t) => byType.has(t)));
   const extra = [...byType.entries()].filter(([t]) => !matched.has(t));
+
+  /**
+   * An example of an object shape reads as an object. The replaced pages showed
+   * members line by line with no braces, which reads as a list of unrelated
+   * values rather than one value.
+   */
+  const asObject = (e) =>
+    e.includes('<br>') && /`[A-Za-z$]+:/.test(e)
+      ? `\`{ ${e.split('<br>').map((part) => part.replace(/`/g, '').trim()).join(', ')} }\``
+      : e;
+
   const types = byType.size
     ? `| Type | Example |\n|---|---|\n${[
-        ...derived.map((t) => `| ${t} | ${byType.get(t) ?? ''} |`),
-        ...extra.map(([t, e]) => `| ${t} | ${e} |`),
+        ...derived.map((t) => `| ${t} | ${byType.has(t) ? asObject(byType.get(t)) : ''} |`),
+        ...extra.map(([t, e]) => `| ${t} | ${asObject(e)} |`),
       ].join('\n')}`
     : derived.join(', ');
+
+  /**
+   * A composite whose members are distinct properties gets them listed and
+   * linked. One whose members are facets of a single value does not — the shape
+   * is already visible in the example above.
+   */
+  const memberList = (() => {
+    /**
+     * `TokenReference`, `PropBinding` and `Conditional` appear in nearly every
+     * key's union because nearly every value is bindable. They are value
+     * *forms*, documented once on their own pages, not the key's own composite —
+     * and they are heterogeneous, so without this exclusion every key would
+     * expand `TokenReference`'s members instead of its own.
+     */
+    const VALUE_FORMS = ['TokenReference', 'PropBinding', 'Conditional', 'ImageValue'];
+    const named = typeRows(prop)
+      .map(([label]) => label.replace(/^\[?`([^`]+)`.*$/, '$1'))
+      .filter((n) => defs[n] && !VALUE_FORMS.includes(n));
+    for (const name of named) {
+      const shape = memberShape(name);
+      if (!shape || shape.homogeneous) continue;
+      /**
+       * A member has no page of its own, so it links to its composite's
+       * reference page, where the Properties table documents it. The member's
+       * *type* links separately when that type is itself a named definition.
+       */
+      const composite = `/schema/${kebab(name).replace(/^-/, '')}/`;
+      return `### Members\n\n\`${name}\` carries these. See [\`${name}\`](${composite}) for the full reference.\n\n${shape.members
+        .map(([m, v]) => {
+          const ref = v.$ref?.replace('#/definitions/', '');
+          const type = ref && defs[ref]
+            ? `[\`${ref}\`](/schema/${kebab(ref).replace(/^-/, '')}/)`
+            : [...admits(v)].sort().join(', ');
+          return `- [\`${m}\`](${composite}#properties) — ${type}${v.description ? `. ${v.description}` : ''}`;
+        })
+        .join('\n')}\n`;
+    }
+    return '';
+  })();
 
   /**
    * Which element types carry this key, as links. Capture versus render is an
@@ -221,6 +303,7 @@ ${kept.intro ?? prop.description ?? ''}
 ### Type
 
 ${types}
+${memberList}
 
 ### Default
 
