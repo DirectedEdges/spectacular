@@ -238,18 +238,17 @@ for (const key of Object.keys(props)) {
        * reference page, where the Properties table documents it. The member's
        * *type* links separately when that type is itself a named definition.
        */
-      // Each member has its own generated page, slug-qualified by its composite
-      // because member names collide — `visible` belongs to Shadow and to Blur.
-      const composite = linkTo(name);
+      /**
+       * A list, not a table. The type belongs on the member's own page; naming
+       * it here duplicates that page's job and leaves two places to keep true.
+       *
+       * No "documented in full on X" line either: where the composite shares its
+       * name with this style key — `typography`, `effects` — X *is* this page,
+       * and the sentence was a self-reference.
+       */
       const memberLink = (m) => `/schema/types/${kebab(name)}-${kebab(m).replace(/^\$/, '')}/`;
-      return `### Members\n\n\`${name}\` carries these, and is documented in full on [\`${name}\`](${composite}).\n\n| Member | Type | Description |\n|---|---|---|\n${shape.members
-        .map(([m, v]) => {
-          const ref = v.$ref?.replace('#/definitions/', '');
-          const type = ref && defs[ref] && !/StyleValue$/.test(ref)
-            ? `[\`${ref}\`](${linkTo(ref)})`
-            : [...admits(v)].sort().map((t) => `\`${t}\``).join(', ');
-          return `| [\`${m}\`](${memberLink(m)}) | ${type} | ${(v.description ?? '').replace(/\|/g, '\\|')} |`;
-        })
+      return `### Members\n\n${shape.members
+        .map(([m, v]) => `- [\`${m}\`](${memberLink(m)})${v.description ? ` — ${v.description}` : ''}`)
         .join('\n')}\n`;
     }
     return '';
@@ -301,11 +300,11 @@ for (const key of Object.keys(props)) {
   const adrRows = adrs.length
     ? `${
         decides.length
-          ? `**Decides this key** — named in the ADR's title, summary, or Decision section.\n\n${decides.map(item).join('\n')}\n`
-          : '**Decides this key.** None.\n'
+          ? `**Decisions**\n\n${decides.map(item).join('\n')}\n`
+          : '**Decisions.** None.\n'
       }${
         mentions.length
-          ? `\n**Mentions it elsewhere** — context or an example, not a decision.\n\n${mentions.map(item).join('\n')}\n`
+          ? `\n**Mentions**\n\n${mentions.map(item).join('\n')}\n`
           : ''
       }`
     : null;

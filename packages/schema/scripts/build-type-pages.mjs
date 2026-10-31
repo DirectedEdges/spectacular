@@ -49,12 +49,33 @@ const admits = (n, depth = 0, acc = new Set()) => {
 const linkTo = (name) =>
   handWritten.has(kebab(name)) ? `/schema/${kebab(name)}/` : `/schema/types/${kebab(name)}/`;
 
-const typeCell = (v) => {
-  const ref = v.$ref?.replace('#/definitions/', '');
-  if (ref && defs[ref] && !isWrapper(ref)) return `[\`${ref}\`](${linkTo(ref)})`;
-  if (Array.isArray(v.enum)) return v.enum.map((e) => `\`${JSON.stringify(e)}\``).join(' · ');
-  return [...admits(v)].sort().map((t) => `\`${t}\``).join(', ') || '—';
+/**
+ * The types a value admits, **named**. Collapsing a union to its primitives
+ * hides the useful half: `Typography.fontSize` is
+ * `oneOf: [number, "mixed", TokenReference]`, and reporting that as
+ * `number, object, string` loses the fact that a font size is token-bindable —
+ * which is most of what a reader wants to know.
+ */
+const namedTypes = (node, depth = 0, out = []) => {
+  if (!node || depth > 4) return out;
+  const push = (s) => { if (!out.includes(s)) out.push(s); };
+  if (node.$ref) {
+    const name = node.$ref.replace('#/definitions/', '');
+    if (isWrapper(name) && defs[name]) return namedTypes(defs[name], depth + 1, out);
+    push(`[\`${name}\`](${linkTo(name)})`);
+    return out;
+  }
+  if (node.const !== undefined) push(`\`${JSON.stringify(node.const)}\``);
+  else if (Array.isArray(node.enum)) node.enum.forEach((e) => push(`\`${JSON.stringify(e)}\``));
+  else if (typeof node.type === 'string') push(`\`${node.type}\``);
+  else if (Array.isArray(node.type)) node.type.forEach((t) => push(`\`${t}\``));
+  for (const b of ['oneOf', 'anyOf', 'allOf']) {
+    if (Array.isArray(node[b])) node[b].forEach((x) => namedTypes(x, depth + 1, out));
+  }
+  return out;
 };
+
+const typeCell = (v) => namedTypes(v).join(', ') || '—';
 
 mkdirSync(outDir, { recursive: true });
 
@@ -145,12 +166,7 @@ for (const [name, def] of Object.entries(defs)) {
 
   for (const [member, spec] of Object.entries(def.properties)) {
     const slug = `${kebab(name)}-${kebab(member).replace(/^\$/, '')}`;
-    const ref = spec.$ref?.replace('#/definitions/', '');
-    const type = ref && defs[ref] && !isWrapper(ref)
-      ? `[\`${ref}\`](${linkTo(ref)})`
-      : Array.isArray(spec.enum)
-        ? spec.enum.map((e) => `\`${JSON.stringify(e)}\``).join(' · ')
-        : [...admits(spec)].sort().map((t) => `\`${t}\``).join(', ') || '—';
+    const type = namedTypes(spec).join(", ") || "—";
 
     const page = `---
 title: "${name}.${member}"
