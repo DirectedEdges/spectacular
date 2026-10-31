@@ -43,7 +43,10 @@ const bindings = Object.fromEntries(
   ['figma', 'css'].map((p) => [p, JSON.parse(readFileSync(join(pkg, `mappings/bindings/${p}.json`), 'utf8'))])
 );
 
-const kebab = (s) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
+// Strips the leading hyphen a capitalised name would otherwise produce. The two
+// page generators defined this differently once, which put a stray `-` in front
+// of every member slug and broke 20 links.
+const kebab = (s) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`).replace(/^-/, '');
 const PLATFORM = { figma: 'Figma', css: 'CSS' };
 
 /**
@@ -235,14 +238,17 @@ for (const key of Object.keys(props)) {
        * reference page, where the Properties table documents it. The member's
        * *type* links separately when that type is itself a named definition.
        */
-      const composite = `/schema/${kebab(name).replace(/^-/, '')}/`;
-      return `### Members\n\n\`${name}\` carries these. See [\`${name}\`](${composite}) for the full reference.\n\n${shape.members
+      // Each member has its own generated page, slug-qualified by its composite
+      // because member names collide — `visible` belongs to Shadow and to Blur.
+      const composite = linkTo(name);
+      const memberLink = (m) => `/schema/types/${kebab(name)}-${kebab(m).replace(/^\$/, '')}/`;
+      return `### Members\n\n\`${name}\` carries these, and is documented in full on [\`${name}\`](${composite}).\n\n| Member | Type | Description |\n|---|---|---|\n${shape.members
         .map(([m, v]) => {
           const ref = v.$ref?.replace('#/definitions/', '');
-          const type = ref && defs[ref]
+          const type = ref && defs[ref] && !/StyleValue$/.test(ref)
             ? `[\`${ref}\`](${linkTo(ref)})`
-            : [...admits(v)].sort().join(', ');
-          return `- [\`${m}\`](${composite}#properties) — ${type}${v.description ? `. ${v.description}` : ''}`;
+            : [...admits(v)].sort().map((t) => `\`${t}\``).join(', ');
+          return `| [\`${m}\`](${memberLink(m)}) | ${type} | ${(v.description ?? '').replace(/\|/g, '\\|')} |`;
         })
         .join('\n')}\n`;
     }
