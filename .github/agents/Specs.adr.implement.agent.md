@@ -123,9 +123,18 @@ Do not reorder these, and do not fold two steps into one pass. A tier-3 or tier-
       - **Done** — implemented in this pass. Nothing to file.
       - **Deliberate non-goal** — the ADR states it is out of scope, in those words. Nothing to file.
       - **Deferred** — asserted as an effect, or named as downstream impact, but not implemented. **This needs an issue.**
-    - For each deferred item, file an issue using the `create-issue` skill's **small form** — what, why, files, under 100 words. Label it with the territories it touches and make it a subissue of the ADR's own tracking issue where one exists.
+    - **A downstream platform implementation is a deferred consequence.** An ADR that changes the contract and names a transform, emitter or plugin surface that must adopt it has deferred that work, whether or not the Downstream Impact row says so in those words. One issue per package, not one for all of them: they land in different repos and move independently.
+
+    **How to file them.**
+
+    - Invoke the `create-issue` skill. Use its **small form** — what, why, files, under 100 words, no section headings. These are follow-ups, not briefs; a deferred consequence described at length costs more to read than to do.
+    - Labels are the territories the work touches, per that skill's table. A platform-adoption issue takes the label of the package that adopts it.
+    - **One parent, chosen by how this ADR was reached:**
+      - **Invoked from a broader plan or lane** — a lane issue, an epic, or a tracking issue already exists for the work that led here. Parent every filed issue to it, and do **not** board them: subissues are never boarded.
+      - **Standalone ADR** — nothing broader invoked it. File one issue for the ADR's adoption as a **top-level, boarded** issue set to **In progress**, and parent the per-consequence issues to that. The ADR then has exactly one thing on the board, not none and not seven.
+    - GitHub permits **one parent per sub-issue**. Re-parenting means `removeSubIssue` from the old parent before `addSubIssue` to the new one; `addSubIssue` alone fails with *"Sub issue may only have one parent"*.
     - **Do not record the issue numbers in the ADR.** ADRs are not trackers and not plans: an ADR states a decision and its consequences, and what remains lives in issues. Report the numbers in step 14 instead.
-    - **Gate**: if a statement in Consequences or Downstream Impact is neither implemented nor an explicitly stated non-goal nor filed as an issue, halt and report it. An ADR that claims an effect nothing produced is a false record, and the claim is what a reader will rely on.
+    - **Gate**: if a statement in Consequences or Downstream Impact is neither implemented, nor an explicitly stated non-goal, nor filed as an issue, halt and report it. An ADR that claims an effect nothing produced is a false record, and the claim is what a reader will rely on.
 
 12. **Update CHANGELOG.md**:
     - The release branch scaffolds an `## [X.Y.Z] - Unreleased` heading with empty sections. Add entries into the existing scaffold — do **not** replace `Unreleased` with a date (the date is set at release time). If no scaffold heading exists, prepend one using `Unreleased` as the date.
