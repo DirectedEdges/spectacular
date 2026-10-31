@@ -26,7 +26,7 @@
         "basis": "implementation"
       },
       "visible": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "elements": [
           "component",
           "frame",
@@ -42,7 +42,7 @@
           "glyph"
         ],
         "target": null,
-        "notes": null,
+        "notes": "Sets `node.visible` from a boolean. A `$binding` value is skipped by an earlier guard, and the conditional form is deferred to the paired-visibility feature — both are declared at the value-form level.",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -89,7 +89,7 @@
         "basis": "implementation"
       },
       "backgroundColor": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "elements": [
           "component",
           "frame",
@@ -97,24 +97,26 @@
           "rectangle"
         ],
         "target": null,
-        "notes": null,
+        "notes": "Resolves in four steps — gradient, resolved style, bound variable, cached raw value — and writes a single solid paint. A token with neither a resolvable variable nor a cached raw value is skipped with a warning, which is the degradation DSPEC-43 permits. Loss: `colorSpace` is never read, so components are taken as sRGB regardless; a `none` component becomes 0; components beyond the third are dropped. Never applied to a text node.",
         "onAbsent": "unverified",
-        "basis": "implementation"
+        "basis": "implementation",
+        "needsDecision": "colorSpace"
       },
       "backgroundImage": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "elements": [
           "component",
           "frame",
           "slot"
         ],
         "target": null,
-        "notes": null,
+        "notes": "Appends an image paint rather than replacing existing fills. Loss: `objectFit` is binary — `CONTAIN` becomes Figma's FIT and everything else, including absent, becomes FILL. An image whose hash does not resolve is dropped with no warning. Container types only.",
         "onAbsent": "unverified",
-        "basis": "implementation"
+        "basis": "implementation",
+        "needsDecision": "partialOnUnresolved"
       },
       "fillColor": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "elements": [
           "vector",
           "ellipse",
@@ -124,19 +126,21 @@
           "glyph"
         ],
         "target": null,
-        "notes": null,
+        "notes": "A gradient takes its own path; otherwise the same four-step paint resolution. On an instance the target is the first fillable descendant, found by walking the subtree. Loss: the colour-space issue above, and an instance with no fillable descendant drops the value silently.",
         "onAbsent": "unverified",
-        "basis": "implementation"
+        "basis": "implementation",
+        "needsDecision": "colorSpace"
       },
       "textColor": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "elements": [
           "text"
         ],
         "target": null,
-        "notes": null,
+        "notes": "Text nodes only, using the same four-step paint resolution. Loss: the colour-space issue above.",
         "onAbsent": "unverified",
-        "basis": "implementation"
+        "basis": "implementation",
+        "needsDecision": "colorSpace"
       },
       "effects": {
         "disposition": "bound",
@@ -171,7 +175,7 @@
         "basis": "implementation"
       },
       "cornerRadius": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "elements": [
           "component",
           "frame",
@@ -179,7 +183,7 @@
           "slot"
         ],
         "target": null,
-        "notes": null,
+        "notes": "A uniform value sets the node radius; a token also binds the variable to all four corner fields; a per-corner object expands to Figma's physical corner properties. Not applied to a text node.",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -227,7 +231,7 @@
         "basis": "implementation"
       },
       "minWidth": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "elements": [
           "component",
           "frame",
@@ -243,12 +247,13 @@
           "glyph"
         ],
         "target": null,
-        "notes": null,
+        "notes": "Loss: a value of 0 is written as `null`, because the Plugin API rejects zero for a minimum. An explicit zero minimum and an absent one are therefore indistinguishable on the canvas. Skipped on text nodes.",
         "onAbsent": "unverified",
-        "basis": "implementation"
+        "basis": "implementation",
+        "needsDecision": "explicitZero"
       },
       "minHeight": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "elements": [
           "component",
           "frame",
@@ -264,12 +269,13 @@
           "glyph"
         ],
         "target": null,
-        "notes": null,
+        "notes": "Same zero-to-null remap as `minWidth`, for the same API reason.",
         "onAbsent": "unverified",
-        "basis": "implementation"
+        "basis": "implementation",
+        "needsDecision": "explicitZero"
       },
       "maxWidth": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "elements": [
           "component",
           "frame",
@@ -285,12 +291,12 @@
           "glyph"
         ],
         "target": null,
-        "notes": null,
+        "notes": "Written as resolved. Zero is preserved, because a maximum of zero is a real if unusual constraint and the API accepts it. Skipped on text nodes.",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
       "maxHeight": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "elements": [
           "component",
           "frame",
@@ -306,7 +312,7 @@
           "glyph"
         ],
         "target": null,
-        "notes": null,
+        "notes": "Written as resolved, preserving zero, as `maxWidth`.",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -509,7 +515,7 @@
         "basis": "implementation"
       },
       "strokes": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "elements": [
           "component",
           "frame",
@@ -522,12 +528,13 @@
           "line"
         ],
         "target": null,
-        "notes": null,
+        "notes": "The same four-step paint resolution, written to the node's strokes. Loss: the colour-space issue above. Never applied to a text node, and absent from an instance's key list.",
         "onAbsent": "unverified",
-        "basis": "implementation"
+        "basis": "implementation",
+        "needsDecision": "colorSpace"
       },
       "strokeAlign": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "elements": [
           "component",
           "frame",
@@ -540,12 +547,12 @@
           "line"
         ],
         "target": null,
-        "notes": null,
+        "notes": "Passed through unchanged. The schema types this as an open string rather than an enum, so there is no mapping to lose. A `null` is skipped rather than resetting the node's current alignment.",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
       "strokeWeight": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "elements": [
           "component",
           "frame",
@@ -558,12 +565,12 @@
           "line"
         ],
         "target": null,
-        "notes": null,
+        "notes": "A number sets the weight; a token also binds the variable to all four per-side fields; a per-side object expands to Figma's physical stroke-weight properties.",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
       "strokeDashPattern": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "elements": [
           "component",
           "frame",
@@ -576,7 +583,7 @@
           "line"
         ],
         "target": null,
-        "notes": null,
+        "notes": "The schema's `{ dash, gap }` becomes Figma's two-element dash array, which is exactly what the property takes. The schema permits no longer pattern — both members are required and no others are allowed — so nothing is truncated.",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -592,32 +599,32 @@
         "basis": "implementation"
       },
       "textAlignHorizontal": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "elements": [
           "text"
         ],
         "target": null,
-        "notes": null,
+        "notes": "Inverts the capture mapping: the schema's logical `START`, `CENTER`, `END` and `JUSTIFY` become Figma's physical `LEFT`, `CENTER`, `RIGHT` and `JUSTIFIED`. All four schema values are covered, so the fallback is unreachable for valid input. Requires the node's font to be loaded first.",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
       "textAlignVertical": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "elements": [
           "text"
         ],
         "target": null,
-        "notes": null,
+        "notes": "Passed through unchanged. The schema types this as an open string, and Figma's own values match, so the identity mapping loses nothing. Text nodes only.",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
       "textOverflow": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "elements": [
           "text"
         ],
         "target": null,
-        "notes": null,
+        "notes": "Remaps the schema's two values to Figma's truncation vocabulary: `ELLIPSIS` becomes ENDING and `CLIP` becomes DISABLED. Both schema values are covered. Ordering matters — `maxLines` is honoured only while truncation is ENDING, so it is deliberately applied after this key.",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -632,14 +639,14 @@
         "basis": "implementation"
       },
       "mainAxisAlignment": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "elements": [
           "component",
           "frame",
           "slot"
         ],
         "target": null,
-        "notes": null,
+        "notes": "Remaps all four schema values to Figma's primary-axis vocabulary. Gated on the node actually having the property, which effectively means an auto-layout container.",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -656,14 +663,14 @@
         "basis": "implementation"
       },
       "crossAxisAlignment": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "elements": [
           "component",
           "frame",
           "slot"
         ],
         "target": null,
-        "notes": null,
+        "notes": "Remaps `START`, `END`, `CENTER` and `BASELINE`. Loss: `STRETCH` is a schema value Figma's counter-axis property cannot express, and it is skipped with a warning — a declared degradation that applies nothing and says so, which is exactly what DSPEC-43 asks for.",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -732,16 +739,17 @@
         "basis": "implementation"
       },
       "padding": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "elements": [
           "component",
           "frame",
           "slot"
         ],
         "target": null,
-        "notes": null,
+        "notes": "A uniform value or token sets all four sides; a per-side object expands to Figma's physical padding properties. Loss: `start` always becomes the left padding and `end` the right, with no writing-direction branch, so a right-to-left context renders mirrored. A side omitted from the object is left at its current value rather than reset.",
         "onAbsent": "unverified",
-        "basis": "implementation"
+        "basis": "implementation",
+        "needsDecision": "logicalToPhysical"
       },
       "cornerSmoothing": {
         "disposition": "bound",
@@ -1208,5 +1216,23 @@
     "implementation": "Verified against a citable implementation. The drift guard checks it, and a change to that implementation fails the build.",
     "intent": "Asserted from the authoritative source for what the data means, which is not publicly citable. Nothing mechanical checks it; a reviewer must."
   },
-  "basisNote": "Whether a claim is checked or asserted. Figma is bidirectional: a render claim is verified against a citable implementation, while a capture claim rests on the authoritative capture engine, which is private — so nothing mechanical can check it and a reader should know that."
+  "basisNote": "Whether a claim is checked or asserted. Figma is bidirectional: a render claim is verified against a citable implementation, while a capture claim rests on the authoritative capture engine, which is private — so nothing mechanical can check it and a reader should know that.",
+  "decisionThemes": {
+    "colorSpace": {
+      "title": "A non-sRGB ColorObject renders as if it were sRGB",
+      "note": "The schema admits 14 colour spaces — `oklch`, `display-p3`, `lab` among them — and the render path never reads `colorSpace`. It takes components 0 through 2 as red, green and blue. An `oklch` colour therefore renders wrong rather than degraded, and a `none` component becomes 0. Three ways this could go: reject a non-sRGB ColorObject at validation so it cannot reach a renderer; convert to sRGB at render, which needs a colour-conversion dependency; or declare sRGB the only supported space and say so in the schema, narrowing `colorSpace` to match. The third is the cheapest and the most honest about what is implemented."
+    },
+    "explicitZero": {
+      "title": "Zero is not distinguishable from unset",
+      "note": "Both platforms treat a dimension of 0 as \"no constraint\" rather than \"a constraint of zero\". Figma must: its API rejects 0 for a minimum and requires null. CSS chooses to: the emitter suppresses any resolved value of `0`. So a spec stating an explicit zero minimum cannot be expressed on either platform, and `maxWidth: 0` — which the schema permits and Figma accepts — is dropped by CSS. Either accept that zero means unset and say so in the schema, or keep the distinction and have CSS emit it."
+    },
+    "logicalToPhysical": {
+      "title": "Logical sides become physical without a direction",
+      "note": "The schema uses `start` and `end` precisely so a document is direction-agnostic. The Figma render maps `start` to `paddingLeft` and `end` to `paddingRight` with no writing-direction branch, so a right-to-left context renders mirrored. CSS gets this right by emitting `padding-block` and `padding-inline` and deliberately avoiding the four-value shorthand. Either Figma gains a direction-aware mapping, or the binding states that Figma output is left-to-right only."
+    },
+    "partialOnUnresolved": {
+      "title": "An unresolved reference produces partial output, silently",
+      "note": "Several paths emit some of a value when part of it cannot be resolved, with no warning. CSS emits background position, repeat and size for an image whose registry entry is missing — a background-image with no image. A gradient with fewer than two resolvable stops is dropped whole. A padding side that fails to resolve is omitted while its siblings emit. Figma drops an image whose hash does not resolve. DSPEC-43 already says a degradation applies the spec own fallback or applies nothing and warns; these apply something and stay quiet, which is the one behaviour it rules out."
+    }
+  }
 }

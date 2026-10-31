@@ -23,7 +23,7 @@ Every style key carries one of four dispositions:
 A reader may rely on `bound`, `approximated` and `unsupported` rows. An `unverified`
 row asserts nothing.
 
-Current state: 23 bound, 23 unverified, of 46 style keys.
+Current state: 29 bound, 11 approximated, 6 unsupported, of 46 style keys.
 
 ## Value forms
 
@@ -43,23 +43,23 @@ per-key mapping for it would be false, not merely incomplete.
 
 | Style key | Disposition | CSS module | Notes |
 |---|---|---|---|
-| `rotation` | **unverified** | `transform` |  |
-| `visible` | **unverified** | `effects`, `layoutToCSS`, `visibility` |  |
-| `opacity` | **unverified** | `opacity` |  |
-| `locked` | **unverified** | — | No module literal matched — coverage not recoverable by scan; confirm by hand. |
-| `backgroundColor` | **unverified** | `fills` |  |
-| `backgroundImage` | **unverified** | — | No module literal matched — coverage not recoverable by scan; confirm by hand. |
-| `fillColor` | **unverified** | `fills` |  |
-| `textColor` | **unverified** | `fills` |  |
-| `effects` | **unverified** | `effects` |  |
-| `clipsContent` | **unverified** | `layoutToCSS`, `overflow`, `truncation` |  |
-| `cornerRadius` | **unverified** | `cornerRadius` |  |
+| `rotation` | bound | `transform` | Emits `transform: rotate(<n>deg)`. A rotation of 0 is suppressed because it matches the CSS initial value and a transform would otherwise create a containing block for absolute descendants. |
+| `visible` | bound | `effects`, `layoutToCSS`, `visibility` | Only `false` emits, as `display: none`. A visible element says nothing, so the display its layout chose is not overridden. A variant revealing an element hidden in the default restores display from the default element's own layout mode. |
+| `opacity` | bound | `opacity` | A literal ratio is emitted directly. A token is multiplied into a percentage — `calc(<var> * 1%)` — because an opacity variable is authored on a 0–100 scale. |
+| `locked` | unsupported | — | Not emitted. `locked` is a canvas-interaction concept with no CSS counterpart, and the transform has no awareness of the key. The value is dropped with no warning. |
+| `backgroundColor` | approximated | `fills` | Emits `background`. A gradient resolves to a CSS gradient function; a `null` becomes `transparent`. Loss: a gradient stop whose position is not a number silently becomes 0, and a gradient with fewer than two resolvable stops is dropped entirely rather than degraded. |
+| `backgroundImage` | approximated | — | Emitted from the sheet layer, outside the main style pipeline. `objectFit: CONTAIN` becomes `background-size: contain`; everything else, including absent, becomes `cover`. Loss: the source path is reduced to its basename, discarding any directory structure, and if the image registry does not resolve the reference the fit declarations still emit while the URL does not. |
+| `fillColor` | approximated | `fills` | The CSS property depends on the element type: a glyph or vector takes `background-color`, an untyped legacy element takes `fill`, anything else takes `background`. Loss: a gradient fill on an untyped element is skipped entirely, because an inline SVG paint has no gradient equivalent. |
+| `textColor` | bound | `fills` | Emits `color`. A gradient becomes a four-declaration bundle — background, both background-clip prefixes, and a transparent colour — which is the standard way to paint text with a gradient. |
+| `effects` | approximated | `effects` | Emits `box-shadow`, `filter` and `backdrop-filter`. A `null` resets all three. Loss: a shadow whose offset, blur or spread cannot be resolved substitutes `0`, and an unresolvable colour substitutes `currentColor`, so an unresolved value is masked as a plausible one rather than reported. A blur whose radius fails to resolve emits nothing at all and no reset. |
+| `clipsContent` | bound | `layoutToCSS`, `overflow`, `truncation` | Emits `overflow: hidden` or `overflow: visible`. A non-boolean is dropped. |
+| `cornerRadius` | approximated | `cornerRadius` | Emits `border-radius`, reordering a per-corner object from the schema's logical order into CSS's. Loss: a corner that cannot be resolved substitutes `0` rather than being reported, and an unresolved token radius with no cached fallback degrades to the keyword `unset`. An ellipse receives `border-radius: 50%` only when this key produced nothing. |
 | `width` | bound | cluster [intrinsicSize](#intrinsicsize) |  |
 | `height` | bound | cluster [intrinsicSize](#intrinsicsize) |  |
-| `minWidth` | **unverified** | `size` |  |
-| `minHeight` | **unverified** | `size` |  |
-| `maxWidth` | **unverified** | `size` |  |
-| `maxHeight` | **unverified** | `size` |  |
+| `minWidth` | approximated | `size` | Emits `min-width`. Loss: a resolved value of `0` is suppressed, so an explicit zero minimum is indistinguishable from an unstated one. |
+| `minHeight` | approximated | `size` | Emits `min-height`, with the same zero suppression as `minWidth`. Unlike `height`, it is not suppressed when an aspect ratio is stated. |
+| `maxWidth` | approximated | `size` | Emits `max-width`. Loss: a resolved value of `0` is suppressed — and unlike a minimum, a maximum of zero is a constraint the schema permits and Figma accepts, so this one is a CSS-side choice rather than a platform limit. |
+| `maxHeight` | approximated | `size` | Emits `max-height`, with the same zero suppression as `maxWidth`. |
 | `position` | bound | cluster [absolutePositioning](#absolutepositioning) |  |
 | `top` | bound | cluster [absolutePositioning](#absolutepositioning) |  |
 | `bottom` | bound | cluster [absolutePositioning](#absolutepositioning) |  |
@@ -72,23 +72,39 @@ per-key mapping for it would be false, not merely incomplete.
 | `strokes` | bound | cluster [strokeRendering](#strokerendering) |  |
 | `strokeAlign` | bound | cluster [strokeRendering](#strokerendering) |  |
 | `strokeWeight` | bound | cluster [strokeRendering](#strokerendering) |  |
-| `strokeDashPattern` | **unverified** | — | No module literal matched — coverage not recoverable by scan; confirm by hand. |
-| `typography` | **unverified** | `typography` |  |
-| `textAlignHorizontal` | **unverified** | `textAlign` |  |
-| `textAlignVertical` | **unverified** | — | No module literal matched — coverage not recoverable by scan; confirm by hand. |
+| `strokeDashPattern` | unsupported | — | Not emitted. CSS offers no control over border dash geometry — `border-style: dashed` exists but its dash and gap lengths are chosen by the user agent — so the schema's explicit `{ dash, gap }` in pixels cannot be honoured. A dashed stroke currently renders solid, because the border style the transform emits is always `solid`. |
+| `typography` | approximated | `typography` | A resolvable token emits the `font` shorthand plus a companion `letter-spacing`, since the shorthand cannot carry tracking. Otherwise each member emits its own property, and `fontStyle` is split into `font-weight` and `font-style`. Loss: a weight word absent from the recognised map loses `font-weight` while italic detection still succeeds; `textCase` and `textDecoration` values outside their maps are dropped silently; and the companion letter-spacing depends on a pattern match against the resolved variable name, which if it fails loses tracking. |
+| `textAlignHorizontal` | bound | `textAlign` | Remaps the schema's logical values to CSS logical keywords: `START` to `start`, `END` to `end`, `JUSTIFY` to `justify`. All four schema values are covered, so the fallback is unreachable for valid input. |
+| `textAlignVertical` | unsupported | — | Not emitted for an element's `styles`. The key is absent from the style pipeline entirely, so a plain element carrying it produces nothing. The separate `contentStyles` member of the same name IS handled for a text primitive filling a slot, and only where that slot admits no components — two different members with one name, and only one of them is realised. |
 | `textOverflow` | bound | cluster [textTruncation](#texttruncation) |  |
 | `maxLines` | bound | cluster [textTruncation](#texttruncation) |  |
 | `mainAxisAlignment` | bound | cluster [autoLayout](#autolayout) |  |
-| `primaryAxisSizingMode` | **unverified** | — | No module literal matched — coverage not recoverable by scan; confirm by hand. |
+| `primaryAxisSizingMode` | unsupported | — | Not emitted. Sizing is derived instead from `layoutSizingHorizontal` and `layoutSizingVertical` against the parent axis, which the `autoLayoutSizing` cluster states. This key is never read. |
 | `crossAxisAlignment` | bound | cluster [autoLayout](#autolayout) |  |
 | `layoutMode` | bound | cluster [autoLayout](#autolayout) |  |
 | `wrap` | bound | cluster [autoLayout](#autolayout) |  |
 | `wrapAlignment` | bound | cluster [autoLayout](#autolayout) |  |
-| `itemReverseZIndex` | **unverified** | — | No module literal matched — coverage not recoverable by scan; confirm by hand. |
+| `itemReverseZIndex` | unsupported | — | The key is never read. The semantic it names is approximated by a different mechanism: a variant whose layout reverses the default's child order emits `row-reverse` or `column-reverse`, derived from comparing the two layout trees. A partial reorder is not expressible that way and is handled by relocating the element instead. |
 | `itemSpacing` | bound | cluster [autoLayout](#autolayout) |  |
-| `padding` | **unverified** | `padding` |  |
-| `cornerSmoothing` | **unverified** | — | No module literal matched — coverage not recoverable by scan; confirm by hand. |
+| `padding` | approximated | `padding` | A uniform value emits `padding`; a `null` emits `padding: 0`. A per-side object emits a `padding-block` and `padding-inline` pair, deliberately avoiding the four-value shorthand so a logical side is never misread as a physical one — this is the direction-safe treatment Figma lacks. Loss: a side present but unresolvable is omitted with no fallback, unlike `cornerRadius` which substitutes zero. |
+| `cornerSmoothing` | unsupported | — | Not emitted, and nothing attempts a substitute. CSS has no squircle primitive; a clip-path or mask approximation would change the element's box rather than its corner, so none is offered. |
 | `aspectRatio` | bound | cluster [intrinsicSize](#intrinsicsize) |  |
+
+## Needs a decision
+
+What this platform does is settled and stated above. What it *should* do, where a loss is real and its acceptability is a product question, is not a specification's call to make alone. 8 of 46 keys raise one of 2.
+
+#### An unresolved reference produces partial output, silently
+
+Affects `backgroundColor`, `backgroundImage`, `effects`, `padding`.
+
+Several paths emit some of a value when part of it cannot be resolved, with no warning. CSS emits background position, repeat and size for an image whose registry entry is missing — a background-image with no image. A gradient with fewer than two resolvable stops is dropped whole. A padding side that fails to resolve is omitted while its siblings emit. Figma drops an image whose hash does not resolve. DSPEC-43 already says a degradation applies the spec own fallback or applies nothing and warns; these apply something and stay quiet, which is the one behaviour it rules out.
+
+#### Zero is not distinguishable from unset
+
+Affects `minWidth`, `minHeight`, `maxWidth`, `maxHeight`.
+
+Both platforms treat a dimension of 0 as "no constraint" rather than "a constraint of zero". Figma must: its API rejects 0 for a minimum and requires null. CSS chooses to: the emitter suppresses any resolved value of `0`. So a spec stating an explicit zero minimum cannot be expressed on either platform, and `maxWidth: 0` — which the schema permits and Figma accepts — is dropped by CSS. Either accept that zero means unset and say so in the schema, or keep the distinction and have CSS emit it.
 
 ## Clusters
 

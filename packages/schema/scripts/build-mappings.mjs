@@ -329,7 +329,24 @@ per-key mapping for it would be false, not merely incomplete.
 ${header}
 ${rows.join('\n')}
 
-## Clusters
+${(() => {
+  const flagged = Object.entries(styles).filter(([, v]) => v.needsDecision);
+  if (!flagged.length) return '';
+  const themes = b.decisionThemes ?? {};
+  const byTheme = {};
+  for (const [k, v] of flagged) (byTheme[v.needsDecision] ??= []).push(k);
+  const sections = Object.entries(byTheme).map(([t, keys]) => {
+    const theme = themes[t] ?? {};
+    return `#### ${theme.title ?? t}\n\nAffects ${keys.map((k) => `\`${k}\``).join(', ')}.\n\n${theme.note ?? ''}`;
+  });
+  return `## Needs a decision
+
+What this platform does is settled and stated above. What it *should* do, where a loss is real and its acceptability is a product question, is not a specification's call to make alone. ${flagged.length} of ${styleProps.length} keys raise one of ${sections.length}.
+
+${sections.join('\n\n')}
+
+`;
+})()}## Clusters
 
 Keys that resolve jointly. No single key in a cluster determines any single output, so the
 resolution rule is the mapping rather than a row in the table above.

@@ -5,122 +5,125 @@
   "concepts": {
     "styles": {
       "rotation": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "transform"
         ],
         "declarations": null,
-        "notes": null,
+        "notes": "Emits `transform: rotate(<n>deg)`. A rotation of 0 is suppressed because it matches the CSS initial value and a transform would otherwise create a containing block for absolute descendants.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
       },
       "visible": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "effects",
           "layoutToCSS",
           "visibility"
         ],
         "declarations": null,
-        "notes": null,
+        "notes": "Only `false` emits, as `display: none`. A visible element says nothing, so the display its layout chose is not overridden. A variant revealing an element hidden in the default restores display from the default element's own layout mode.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
       },
       "opacity": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "opacity"
         ],
         "declarations": null,
-        "notes": null,
+        "notes": "A literal ratio is emitted directly. A token is multiplied into a percentage — `calc(<var> * 1%)` — because an opacity variable is authored on a 0–100 scale.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
       },
       "locked": {
-        "disposition": "unverified",
+        "disposition": "unsupported",
         "module": [],
         "declarations": null,
-        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand.",
+        "notes": "Not emitted. `locked` is a canvas-interaction concept with no CSS counterpart, and the transform has no awareness of the key. The value is dropped with no warning.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
       },
       "backgroundColor": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "module": [
           "fills"
         ],
         "declarations": null,
-        "notes": null,
+        "notes": "Emits `background`. A gradient resolves to a CSS gradient function; a `null` becomes `transparent`. Loss: a gradient stop whose position is not a number silently becomes 0, and a gradient with fewer than two resolvable stops is dropped entirely rather than degraded.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
-        "basis": "implementation"
+        "basis": "implementation",
+        "needsDecision": "partialOnUnresolved"
       },
       "backgroundImage": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "module": [],
         "declarations": null,
-        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand.",
+        "notes": "Emitted from the sheet layer, outside the main style pipeline. `objectFit: CONTAIN` becomes `background-size: contain`; everything else, including absent, becomes `cover`. Loss: the source path is reduced to its basename, discarding any directory structure, and if the image registry does not resolve the reference the fit declarations still emit while the URL does not.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
-        "basis": "implementation"
+        "basis": "implementation",
+        "needsDecision": "partialOnUnresolved"
       },
       "fillColor": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "module": [
           "fills"
         ],
         "declarations": null,
-        "notes": null,
+        "notes": "The CSS property depends on the element type: a glyph or vector takes `background-color`, an untyped legacy element takes `fill`, anything else takes `background`. Loss: a gradient fill on an untyped element is skipped entirely, because an inline SVG paint has no gradient equivalent.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
       },
       "textColor": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "fills"
         ],
         "declarations": null,
-        "notes": null,
+        "notes": "Emits `color`. A gradient becomes a four-declaration bundle — background, both background-clip prefixes, and a transparent colour — which is the standard way to paint text with a gradient.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
       },
       "effects": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "module": [
           "effects"
         ],
         "declarations": null,
-        "notes": null,
+        "notes": "Emits `box-shadow`, `filter` and `backdrop-filter`. A `null` resets all three. Loss: a shadow whose offset, blur or spread cannot be resolved substitutes `0`, and an unresolvable colour substitutes `currentColor`, so an unresolved value is masked as a plausible one rather than reported. A blur whose radius fails to resolve emits nothing at all and no reset.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
-        "basis": "implementation"
+        "basis": "implementation",
+        "needsDecision": "partialOnUnresolved"
       },
       "clipsContent": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "layoutToCSS",
           "overflow",
           "truncation"
         ],
         "declarations": null,
-        "notes": null,
+        "notes": "Emits `overflow: hidden` or `overflow: visible`. A non-boolean is dropped.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
       },
       "cornerRadius": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "module": [
           "cornerRadius"
         ],
         "declarations": null,
-        "notes": null,
+        "notes": "Emits `border-radius`, reordering a per-corner object from the schema's logical order into CSS's. Loss: a corner that cannot be resolved substitutes `0` rather than being reported, and an unresolved token radius with no cached fallback degrades to the keyword `unset`. An ellipse receives `border-radius: 50%` only when this key produced nothing.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -152,48 +155,52 @@
         "basis": "implementation"
       },
       "minWidth": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "module": [
           "size"
         ],
         "declarations": null,
-        "notes": null,
+        "notes": "Emits `min-width`. Loss: a resolved value of `0` is suppressed, so an explicit zero minimum is indistinguishable from an unstated one.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
-        "basis": "implementation"
+        "basis": "implementation",
+        "needsDecision": "explicitZero"
       },
       "minHeight": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "module": [
           "size"
         ],
         "declarations": null,
-        "notes": null,
+        "notes": "Emits `min-height`, with the same zero suppression as `minWidth`. Unlike `height`, it is not suppressed when an aspect ratio is stated.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
-        "basis": "implementation"
+        "basis": "implementation",
+        "needsDecision": "explicitZero"
       },
       "maxWidth": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "module": [
           "size"
         ],
         "declarations": null,
-        "notes": null,
+        "notes": "Emits `max-width`. Loss: a resolved value of `0` is suppressed — and unlike a minimum, a maximum of zero is a constraint the schema permits and Figma accepts, so this one is a CSS-side choice rather than a platform limit.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
-        "basis": "implementation"
+        "basis": "implementation",
+        "needsDecision": "explicitZero"
       },
       "maxHeight": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "module": [
           "size"
         ],
         "declarations": null,
-        "notes": null,
+        "notes": "Emits `max-height`, with the same zero suppression as `maxWidth`.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
-        "basis": "implementation"
+        "basis": "implementation",
+        "needsDecision": "explicitZero"
       },
       "position": {
         "disposition": "bound",
@@ -344,41 +351,41 @@
         "basis": "implementation"
       },
       "strokeDashPattern": {
-        "disposition": "unverified",
+        "disposition": "unsupported",
         "module": [],
         "declarations": null,
-        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand.",
+        "notes": "Not emitted. CSS offers no control over border dash geometry — `border-style: dashed` exists but its dash and gap lengths are chosen by the user agent — so the schema's explicit `{ dash, gap }` in pixels cannot be honoured. A dashed stroke currently renders solid, because the border style the transform emits is always `solid`.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
       },
       "typography": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "module": [
           "typography"
         ],
         "declarations": null,
-        "notes": null,
+        "notes": "A resolvable token emits the `font` shorthand plus a companion `letter-spacing`, since the shorthand cannot carry tracking. Otherwise each member emits its own property, and `fontStyle` is split into `font-weight` and `font-style`. Loss: a weight word absent from the recognised map loses `font-weight` while italic detection still succeeds; `textCase` and `textDecoration` values outside their maps are dropped silently; and the companion letter-spacing depends on a pattern match against the resolved variable name, which if it fails loses tracking.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
       },
       "textAlignHorizontal": {
-        "disposition": "unverified",
+        "disposition": "bound",
         "module": [
           "textAlign"
         ],
         "declarations": null,
-        "notes": null,
+        "notes": "Remaps the schema's logical values to CSS logical keywords: `START` to `start`, `END` to `end`, `JUSTIFY` to `justify`. All four schema values are covered, so the fallback is unreachable for valid input.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
       },
       "textAlignVertical": {
-        "disposition": "unverified",
+        "disposition": "unsupported",
         "module": [],
         "declarations": null,
-        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand.",
+        "notes": "Not emitted for an element's `styles`. The key is absent from the style pipeline entirely, so a plain element carrying it produces nothing. The separate `contentStyles` member of the same name IS handled for a text primitive filling a slot, and only where that slot admits no components — two different members with one name, and only one of them is realised.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -421,10 +428,10 @@
         "basis": "implementation"
       },
       "primaryAxisSizingMode": {
-        "disposition": "unverified",
+        "disposition": "unsupported",
         "module": [],
         "declarations": null,
-        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand.",
+        "notes": "Not emitted. Sizing is derived instead from `layoutSizingHorizontal` and `layoutSizingVertical` against the parent axis, which the `autoLayoutSizing` cluster states. This key is never read.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -478,10 +485,10 @@
         "basis": "implementation"
       },
       "itemReverseZIndex": {
-        "disposition": "unverified",
+        "disposition": "unsupported",
         "module": [],
         "declarations": null,
-        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand.",
+        "notes": "The key is never read. The semantic it names is approximated by a different mechanism: a variant whose layout reverses the default's child order emits `row-reverse` or `column-reverse`, derived from comparing the two layout trees. A partial reorder is not expressible that way and is handled by relocating the element instead.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -499,21 +506,22 @@
         "basis": "implementation"
       },
       "padding": {
-        "disposition": "unverified",
+        "disposition": "approximated",
         "module": [
           "padding"
         ],
         "declarations": null,
-        "notes": null,
+        "notes": "A uniform value emits `padding`; a `null` emits `padding: 0`. A per-side object emits a `padding-block` and `padding-inline` pair, deliberately avoiding the four-value shorthand so a logical side is never misread as a physical one — this is the direction-safe treatment Figma lacks. Loss: a side present but unresolvable is omitted with no fallback, unlike `cornerRadius` which substitutes zero.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
-        "basis": "implementation"
+        "basis": "implementation",
+        "needsDecision": "partialOnUnresolved"
       },
       "cornerSmoothing": {
-        "disposition": "unverified",
+        "disposition": "unsupported",
         "module": [],
         "declarations": null,
-        "notes": "No module literal matched — coverage not recoverable by scan; confirm by hand.",
+        "notes": "Not emitted, and nothing attempts a substitute. CSS has no squircle primitive; a clip-path or mask approximation would change the element's box rather than its corner, so none is offered.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -2161,5 +2169,23 @@
     "implementation": "Verified against a citable implementation. The drift guard checks it, and a change to that implementation fails the build.",
     "intent": "Asserted from the authoritative source for what the data means, which is not publicly citable. Nothing mechanical checks it; a reviewer must."
   },
-  "basisNote": "Every claim here is verified against a citable implementation in this repository."
+  "basisNote": "Every claim here is verified against a citable implementation in this repository.",
+  "decisionThemes": {
+    "colorSpace": {
+      "title": "A non-sRGB ColorObject renders as if it were sRGB",
+      "note": "The schema admits 14 colour spaces — `oklch`, `display-p3`, `lab` among them — and the render path never reads `colorSpace`. It takes components 0 through 2 as red, green and blue. An `oklch` colour therefore renders wrong rather than degraded, and a `none` component becomes 0. Three ways this could go: reject a non-sRGB ColorObject at validation so it cannot reach a renderer; convert to sRGB at render, which needs a colour-conversion dependency; or declare sRGB the only supported space and say so in the schema, narrowing `colorSpace` to match. The third is the cheapest and the most honest about what is implemented."
+    },
+    "explicitZero": {
+      "title": "Zero is not distinguishable from unset",
+      "note": "Both platforms treat a dimension of 0 as \"no constraint\" rather than \"a constraint of zero\". Figma must: its API rejects 0 for a minimum and requires null. CSS chooses to: the emitter suppresses any resolved value of `0`. So a spec stating an explicit zero minimum cannot be expressed on either platform, and `maxWidth: 0` — which the schema permits and Figma accepts — is dropped by CSS. Either accept that zero means unset and say so in the schema, or keep the distinction and have CSS emit it."
+    },
+    "logicalToPhysical": {
+      "title": "Logical sides become physical without a direction",
+      "note": "The schema uses `start` and `end` precisely so a document is direction-agnostic. The Figma render maps `start` to `paddingLeft` and `end` to `paddingRight` with no writing-direction branch, so a right-to-left context renders mirrored. CSS gets this right by emitting `padding-block` and `padding-inline` and deliberately avoiding the four-value shorthand. Either Figma gains a direction-aware mapping, or the binding states that Figma output is left-to-right only."
+    },
+    "partialOnUnresolved": {
+      "title": "An unresolved reference produces partial output, silently",
+      "note": "Several paths emit some of a value when part of it cannot be resolved, with no warning. CSS emits background position, repeat and size for an image whose registry entry is missing — a background-image with no image. A gradient with fewer than two resolvable stops is dropped whole. A padding side that fails to resolve is omitted while its siblings emit. Figma drops an image whose hash does not resolve. DSPEC-43 already says a degradation applies the spec own fallback or applies nothing and warns; these apply something and stay quiet, which is the one behaviour it rules out."
+    }
+  }
 }

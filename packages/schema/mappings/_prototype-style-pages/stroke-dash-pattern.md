@@ -34,8 +34,8 @@ Dash pattern for a stroke. Present (non-null) when the stroke is dashed; null or
 
 | Platform | Disposition | Realised by |
 |---|---|---|
-| [Figma](/schema/mappings/figma/) | **unverified** | — |
-| [CSS](/schema/mappings/css/) | **unverified** | — |
+| [Figma](/schema/mappings/figma/) | bound | — |
+| [CSS](/schema/mappings/css/) | unsupported | — |
 
 
 ### Decision records
