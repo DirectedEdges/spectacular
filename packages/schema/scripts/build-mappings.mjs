@@ -335,15 +335,22 @@ ${(() => {
   const themes = b.decisionThemes ?? {};
   const byTheme = {};
   for (const [k, v] of flagged) (byTheme[v.needsDecision] ??= []).push(k);
-  const sections = Object.entries(byTheme).map(([t, keys]) => {
+  const section = ([t, keys]) => {
     const theme = themes[t] ?? {};
-    return `#### ${theme.title ?? t}\n\nAffects ${keys.map((k) => `\`${k}\``).join(', ')}.\n\n${theme.note ?? ''}`;
-  });
-  return `## Needs a decision
+    const status = theme.decided
+      ? (theme.decided.startsWith('Open') ? `**Open.** ${theme.decided.replace(/^Open\.?\s*/, '')}` : `**Decided.** ${theme.decided}`)
+      : '**Open.**';
+    return `#### ${theme.title ?? t}\n\nAffects ${keys.map((k) => `\`${k}\``).join(', ')}.\n\n${theme.note ?? ''}\n\n${status}`;
+  };
+  const entries = Object.entries(byTheme);
+  const decided = entries.filter(([t]) => themes[t]?.decided && !themes[t].decided.startsWith('Open'));
+  const open = entries.filter(([t]) => !themes[t]?.decided || themes[t].decided.startsWith('Open'));
 
-What this platform does is settled and stated above. What it *should* do, where a loss is real and its acceptability is a product question, is not a specification's call to make alone. ${flagged.length} of ${styleProps.length} keys raise one of ${sections.length}.
+  return `## Losses and decisions
 
-${sections.join('\n\n')}
+What this platform does is settled and stated above. Where a loss is real, its *acceptability* is a product question rather than a specification's to settle alone. ${flagged.length} of ${styleProps.length} keys raise one of ${entries.length} such questions${open.length ? `, of which ${open.length} ${open.length === 1 ? 'remains' : 'remain'} open` : ' — all decided'}.
+
+${[...open, ...decided].map(section).join('\n\n')}
 
 `;
 })()}## Clusters

@@ -90,21 +90,25 @@ per-key mapping for it would be false, not merely incomplete.
 | `cornerSmoothing` | unsupported | — | Not emitted, and nothing attempts a substitute. CSS has no squircle primitive; a clip-path or mask approximation would change the element's box rather than its corner, so none is offered. |
 | `aspectRatio` | bound | cluster [intrinsicSize](#intrinsicsize) |  |
 
-## Needs a decision
+## Losses and decisions
 
-What this platform does is settled and stated above. What it *should* do, where a loss is real and its acceptability is a product question, is not a specification's call to make alone. 8 of 46 keys raise one of 2.
+What this platform does is settled and stated above. Where a loss is real, its *acceptability* is a product question rather than a specification's to settle alone. 8 of 46 keys raise one of 2 such questions, of which 1 remains open.
 
 #### An unresolved reference produces partial output, silently
 
 Affects `backgroundColor`, `backgroundImage`, `effects`, `padding`.
 
-Several paths emit some of a value when part of it cannot be resolved, with no warning. CSS emits background position, repeat and size for an image whose registry entry is missing — a background-image with no image. A gradient with fewer than two resolvable stops is dropped whole. A padding side that fails to resolve is omitted while its siblings emit. Figma drops an image whose hash does not resolve. DSPEC-43 already says a degradation applies the spec own fallback or applies nothing and warns; these apply something and stay quiet, which is the one behaviour it rules out.
+Several paths emit part of a value when the rest cannot be resolved, with no warning. DSPEC-43 says a degradation applies the spec's own recorded fallback, or applies nothing and warns; these apply something and stay quiet, which is the one behaviour it rules out.
+
+**Open.** See #815, which sets out the three affected paths and what each could do instead.
 
 #### Zero is not distinguishable from unset
 
 Affects `minWidth`, `minHeight`, `maxWidth`, `maxHeight`.
 
-Both platforms treat a dimension of 0 as "no constraint" rather than "a constraint of zero". Figma must: its API rejects 0 for a minimum and requires null. CSS chooses to: the emitter suppresses any resolved value of `0`. So a spec stating an explicit zero minimum cannot be expressed on either platform, and `maxWidth: 0` — which the schema permits and Figma accepts — is dropped by CSS. Either accept that zero means unset and say so in the schema, or keep the distinction and have CSS emit it.
+Both platforms currently treat a dimension of 0 as "no constraint" rather than "a constraint of zero".
+
+**Decided.** Split by direction (#814). A zero *minimum* means no constraint — the Plugin API forces that and CSS will keep matching it. A zero *maximum* is a real constraint: Figma already honours it, and CSS will stop suppressing it.
 
 ## Clusters
 

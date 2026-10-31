@@ -90,33 +90,41 @@ per-key mapping for it would be false, not merely incomplete.
 | `cornerSmoothing` | bound | `CornerStyle.applySmoothing` | component, frame, slot, vector, ellipse, star, polygon, rectangle | Skipped on TEXT nodes. |
 | `aspectRatio` | bound | `node.targetAspectRatio` | component, frame, slot, text, vector, ellipse, star, polygon, rectangle, glyph | Deferred to last — the lock reads the node final dimensions, so an earlier resize would be clobbered by later sizing keys. |
 
-## Needs a decision
+## Losses and decisions
 
-What this platform does is settled and stated above. What it *should* do, where a loss is real and its acceptability is a product question, is not a specification's call to make alone. 8 of 46 keys raise one of 4.
-
-#### A non-sRGB ColorObject renders as if it were sRGB
-
-Affects `backgroundColor`, `fillColor`, `textColor`, `strokes`.
-
-The schema admits 14 colour spaces — `oklch`, `display-p3`, `lab` among them — and the render path never reads `colorSpace`. It takes components 0 through 2 as red, green and blue. An `oklch` colour therefore renders wrong rather than degraded, and a `none` component becomes 0. Three ways this could go: reject a non-sRGB ColorObject at validation so it cannot reach a renderer; convert to sRGB at render, which needs a colour-conversion dependency; or declare sRGB the only supported space and say so in the schema, narrowing `colorSpace` to match. The third is the cheapest and the most honest about what is implemented.
+What this platform does is settled and stated above. Where a loss is real, its *acceptability* is a product question rather than a specification's to settle alone. 8 of 46 keys raise one of 4 such questions, of which 1 remains open.
 
 #### An unresolved reference produces partial output, silently
 
 Affects `backgroundImage`.
 
-Several paths emit some of a value when part of it cannot be resolved, with no warning. CSS emits background position, repeat and size for an image whose registry entry is missing — a background-image with no image. A gradient with fewer than two resolvable stops is dropped whole. A padding side that fails to resolve is omitted while its siblings emit. Figma drops an image whose hash does not resolve. DSPEC-43 already says a degradation applies the spec own fallback or applies nothing and warns; these apply something and stay quiet, which is the one behaviour it rules out.
+Several paths emit part of a value when the rest cannot be resolved, with no warning. DSPEC-43 says a degradation applies the spec's own recorded fallback, or applies nothing and warns; these apply something and stay quiet, which is the one behaviour it rules out.
+
+**Open.** See #815, which sets out the three affected paths and what each could do instead.
+
+#### A non-sRGB ColorObject renders as if it were sRGB
+
+Affects `backgroundColor`, `fillColor`, `textColor`, `strokes`.
+
+The schema admits 14 colour spaces and the render path never reads `colorSpace` — components 0 through 2 are taken as red, green and blue regardless, so an `oklch` value is misread rather than approximated. A `none` component becomes 0, and components beyond the third are dropped.
+
+**Decided.** Convert to sRGB at render time (#813). The schema keeps all 14 spaces; the render path gains a conversion with gamut mapping for values outside sRGB. Until that lands, a non-sRGB ColorObject renders wrong rather than degraded.
 
 #### Zero is not distinguishable from unset
 
 Affects `minWidth`, `minHeight`.
 
-Both platforms treat a dimension of 0 as "no constraint" rather than "a constraint of zero". Figma must: its API rejects 0 for a minimum and requires null. CSS chooses to: the emitter suppresses any resolved value of `0`. So a spec stating an explicit zero minimum cannot be expressed on either platform, and `maxWidth: 0` — which the schema permits and Figma accepts — is dropped by CSS. Either accept that zero means unset and say so in the schema, or keep the distinction and have CSS emit it.
+Both platforms currently treat a dimension of 0 as "no constraint" rather than "a constraint of zero".
+
+**Decided.** Split by direction (#814). A zero *minimum* means no constraint — the Plugin API forces that and CSS will keep matching it. A zero *maximum* is a real constraint: Figma already honours it, and CSS will stop suppressing it.
 
 #### Logical sides become physical without a direction
 
 Affects `padding`.
 
-The schema uses `start` and `end` precisely so a document is direction-agnostic. The Figma render maps `start` to `paddingLeft` and `end` to `paddingRight` with no writing-direction branch, so a right-to-left context renders mirrored. CSS gets this right by emitting `padding-block` and `padding-inline` and deliberately avoiding the four-value shorthand. Either Figma gains a direction-aware mapping, or the binding states that Figma output is left-to-right only.
+The schema uses `start` and `end` so a document is direction-agnostic. The Figma render maps `start` to the left padding with no writing-direction branch.
+
+**Decided.** Accepted as a platform limit. Figma cannot express a writing direction, so the mapping is left-to-right only and the loss is declared rather than fixed — which is what `approximated` means. CSS stays direction-safe by emitting `padding-block` and `padding-inline`.
 
 ## Clusters
 
