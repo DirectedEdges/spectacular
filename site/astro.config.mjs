@@ -12,6 +12,19 @@ export default defineConfig({
     '/settings/glyph-name-pattern/': '/settings/glyphs/',
     // Retired — content merged into the schema overview
     '/schema/document-map/': '/schema/',
+    // The style reference became a tree mirroring the schema's own containment,
+    // so a type's page now sits at the path that reaches it. These six had a
+    // page at the schema root as well, documenting the same thing twice.
+    '/schema/color-object/': '/schema/styles/color-object/',
+    '/schema/gradient-value/': '/schema/styles/gradient-value/',
+    '/schema/sides/': '/schema/styles/sides/',
+    '/schema/typography/': '/schema/styles/typography/',
+    '/schema/effects/': '/schema/styles/effects/',
+    '/schema/corners/': '/schema/styles/corner-radius/',
+    // Their member pages sat in sibling folders at the schema root and moved
+    // with them, so the whole subtree redirects rather than 16 pages one by one.
+    '/schema/typography/[...rest]': '/schema/styles/typography/[...rest]',
+    '/schema/effects/[...rest]': '/schema/styles/effects/[...rest]',
   },
   integrations: [
     starlight({
@@ -109,23 +122,18 @@ export default defineConfig({
                 { label: 'Conditional', slug: 'schema/conditional' },
                 { label: 'Conventions', slug: 'schema/conventions' },
                 { label: 'Settings', slug: 'schema/settings' },
-                { label: 'Corners', slug: 'schema/corners' },
-                { label: 'Effects', slug: 'schema/effects' },
                 { label: 'Elements', slug: 'schema/elements' },
-                { label: 'Gradient Value', slug: 'schema/gradient-value' },
                 { label: 'Instance Examples', slug: 'schema/instance-examples' },
                 { label: 'Layout', slug: 'schema/layout' },
                 { label: 'Metadata', slug: 'schema/metadata' },
                 { label: 'Prop Binding', slug: 'schema/prop-binding' },
                 { label: 'Prop Configurations', slug: 'schema/prop-configurations' },
                 { label: 'Props', slug: 'schema/props' },
-                { label: 'Sides', slug: 'schema/sides' },
                 { label: 'Slot Content', slug: 'schema/slot-content' },
                 { label: 'Slot Content Reference', slug: 'schema/slot-content-ref' },
                 { label: 'Styles', slug: 'schema/styles' },
                 { label: 'Subcomponents', slug: 'schema/subcomponents' },
                 { label: 'Token Reference', slug: 'schema/token-reference' },
-                { label: 'Typography', slug: 'schema/typography' },
                 { label: 'Variants', slug: 'schema/variants' },
               ],
             },

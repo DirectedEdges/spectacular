@@ -22,7 +22,7 @@ PropBindings are accepted on these element properties:
 | `visible` | Element visibility is controlled by a prop |
 | `content` | Text or glyph content is bound to a prop |
 
-PropBindings can also appear as style values anywhere a [`Style`](/schema/styles.md/#values) is accepted.
+PropBindings can also appear as style values anywhere a [`Style`](/schema/styles/#values) is accepted.
 
 ## Further Reading
 

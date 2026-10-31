@@ -34,7 +34,14 @@ import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const pkg = resolve(here, '..');
-const pagesDir = resolve(pkg, '../../site/src/content/docs/schema/styles');
+/**
+ * Defaults to the live pages, but takes a directory so the capture can be
+ * rebuilt from a `git archive` of the last commit that held the hand-written
+ * pages. That is how the lost `Settings` column below was repaired.
+ */
+const pagesDir = process.argv[2]
+  ? resolve(process.cwd(), process.argv[2])
+  : resolve(pkg, '../../site/src/content/docs/schema/styles');
 
 if (!existsSync(pagesDir)) {
   console.error(`not found: ${pagesDir}`);
@@ -48,7 +55,37 @@ const styleProps = Object.keys(
 
 /** The body of a `#### <name>` section, up to the next heading. */
 const section = (src, name) =>
-  src.match(new RegExp(`^#### ${name}\\s*\\n([\\s\\S]*?)(?=^#### |\\Z)`, 'm'))?.[1]?.trim() ?? null;
+  // `(?![\s\S])` is end-of-input. JavaScript has no `\Z`; writing one matches a
+  // literal Z, so the final section of every page went uncaptured.
+  src.match(new RegExp(`^#### ${name}\\s*\\n([\\s\\S]*?)(?=^#### |(?![\\s\\S]))`, 'm'))?.[1]?.trim() ?? null;
+
+/**
+ * The `Type(s)` table as rows. Cells are split on the pipe rather than matched
+ * with a two-group regex: many pages carry a third `Settings` column naming the
+ * config that selects between forms, and a non-greedy two-group pattern merged
+ * the last two cells — which is how 15 of 111 examples arrived with a settings
+ * link glued inside their braces.
+ */
+const typeRows = (src) => {
+  const types = section(src, 'Type\\(s\\)');
+  if (!types) return [];
+  return types
+    .split('\n')
+    .filter((l) => l.trim().startsWith('|'))
+    .map((l) => l.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim()))
+    .filter((cells) => cells.length >= 2 && !/^-+$/.test(cells[0]) && cells[0] !== 'Type')
+    .map(([type, example, settings]) => (settings && settings !== '—' ? { type, example, settings } : { type, example }))
+    .filter((r) => r.example);
+};
+
+/** The page's own one-sentence gloss, which may say more than the schema's. */
+const introOf = (src) =>
+  src
+    .replace(/^---[\s\S]*?^---\s*/m, '')
+    .trimStart()
+    .split('\n')
+    .find((l) => l.trim() && !l.startsWith('#') && !l.startsWith('|'))
+    ?.trim() ?? null;
 
 /**
  * Hand-written type pages that move under `schema/styles/`, where the schema
@@ -70,7 +107,7 @@ for (const slug of TYPE_PAGES_TO_MERGE) {
   const body = src.replace(/^---[\s\S]*?^---\s*/m, '').trimStart();
   // Capture every `##` section verbatim; the generator decides what to render.
   const sections = {};
-  for (const m of body.matchAll(/^## (.+?)\s*\n([\s\S]*?)(?=^## |\Z)/gm)) {
+  for (const m of body.matchAll(/^## (.+?)\s*\n([\s\S]*?)(?=^## |(?![\s\S]))/gm)) {
     sections[m[1].trim()] = m[2].trim();
   }
   const intro = body.split(/^## /m)[0].trim();
@@ -89,26 +126,43 @@ for (const file of readdirSync(pagesDir).filter((f) => f.endsWith('.md'))) {
   const src = readFileSync(join(pagesDir, file), 'utf8');
   const entry = {};
 
-  // Type(s) table: rows of `| Type | Example |`, keeping both cells verbatim.
-  const types = section(src, 'Type\\(s\\)');
-  if (types) {
-    const rows = [...types.matchAll(/^\|\s*(.+?)\s*\|\s*(.*?)\s*\|\s*$/gm)]
-      .filter(([, t]) => !/^-+$/.test(t) && t !== 'Type')
-      .map(([, type, example]) => ({ type, example }))
-      .filter((r) => r.example);
-    if (rows.length) { entry.typeExamples = rows; examples += rows.length; }
-  }
+  const rows = typeRows(src);
+  if (rows.length) { entry.typeExamples = rows; examples += rows.length; }
 
   const figmaKey = section(src, 'Figma key');
   if (figmaKey) { entry.figmaKeyNote = figmaKey; figmaNotes++; }
 
-  // The intro line — the page's own one-sentence gloss, which may say more than
-  // the schema's description.
-  const body = src.replace(/^---[\s\S]*?^---\s*/m, '').trimStart();
-  const intro = body.split('\n').find((l) => l.trim() && !l.startsWith('#') && !l.startsWith('|'));
-  if (intro) entry.intro = intro.trim();
+  const intro = introOf(src);
+  if (intro) entry.intro = intro;
 
   if (Object.keys(entry).length) out[key] = entry;
+}
+
+/**
+ * Nested member pages that sat in sibling folders at the schema root —
+ * `schema/typography/font-size.md` documented the same value as the generated
+ * `schema/styles/typography/font-size.md`. The generated tree supersedes them,
+ * but they carry hand-written examples and declared defaults the schema does
+ * not, so those are captured keyed by the access path the generator walks.
+ */
+const MEMBER_FOLDERS = { typography: 'typography', effects: 'effects' };
+
+const memberPages = {};
+let memberExamples = 0;
+for (const [folder, pathPrefix] of Object.entries(MEMBER_FOLDERS)) {
+  const dir = resolve(pagesDir, `../${folder}`);
+  if (!existsSync(dir)) continue;
+  for (const file of readdirSync(dir).filter((f) => f.endsWith('.md'))) {
+    const src = readFileSync(join(dir, file), 'utf8');
+    const entry = {};
+    const rows = typeRows(src);
+    if (rows.length) { entry.typeExamples = rows; memberExamples += rows.length; }
+    const dflt = section(src, 'Default');
+    if (dflt) entry.handWrittenDefault = dflt;
+    const intro = introOf(src);
+    if (intro) entry.intro = intro;
+    if (Object.keys(entry).length) memberPages[`${pathPrefix}.${camel(file.replace(/\.md$/, ''))}`] = entry;
+  }
 }
 
 /**
@@ -119,10 +173,11 @@ for (const file of readdirSync(pagesDir).filter((f) => f.endsWith('.md'))) {
 const outPath = join(pkg, 'mappings/_style-page-content.json');
 if (existsSync(outPath)) {
   const prior = JSON.parse(readFileSync(outPath, 'utf8'));
-  const priorExamples = Object.values(prior.keys ?? {}).reduce((n, v) => n + (v.typeExamples?.length ?? 0), 0);
-  if (priorExamples > examples) {
+  const count = (o) => Object.values(o ?? {}).reduce((n, v) => n + (v.typeExamples?.length ?? 0), 0);
+  const priorExamples = count(prior.keys) + count(prior.memberPages);
+  if (priorExamples > examples + memberExamples) {
     console.error(
-      `REFUSING: the existing capture holds ${priorExamples} type examples and this run found only ${examples}.\n` +
+      `REFUSING: the existing capture holds ${priorExamples} type examples and this run found only ${examples + memberExamples}.\n` +
       `The hand-written pages these came from are gone, so there is nothing left to extract.\n` +
       `Delete the file deliberately if you really mean to discard it.`
     );
@@ -136,9 +191,11 @@ writeFileSync(
     {
       $comment:
         'Extracted from the hand-written site/src/content/docs/schema/styles/*.md pages so generating those pages loses nothing. typeExamples are DISPLAY STRINGS, not schema values — epic step 2 converts them into real `examples` on each Styles property, after which this file shrinks to whatever remains unmigrated.',
-      extractedFrom: 'site/src/content/docs/schema/styles/ and the hand-written type pages at the schema root',
+      extractedFrom:
+        'site/src/content/docs/schema/styles/, the hand-written type pages at the schema root, and the typography/ and effects/ member folders',
       keys: out,
       typePages,
+      memberPages,
     },
     null,
     2
@@ -146,6 +203,7 @@ writeFileSync(
 );
 
 console.log(`extracted ${Object.keys(out).length} keys: ${examples} type examples, ${figmaNotes} Figma-key notes`);
+console.log(`plus ${Object.keys(memberPages).length} member pages carrying ${memberExamples} examples`);
 const missing = styleProps.filter((k) => !out[k]);
 if (missing.length) console.log(`no page existed for: ${missing.join(', ')}`);
 if (unmatched.length) console.log(`page matched no style key: ${unmatched.join(', ')}`);

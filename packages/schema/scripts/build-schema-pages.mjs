@@ -47,8 +47,45 @@ const PLATFORM = { figma: 'Figma', css: 'CSS' };
 
 const isWrapper = (n) => /StyleValue$|^Style$|^StyleKey$/.test(n);
 
+/**
+ * Preserved content was written when the type pages lived at the schema root,
+ * so its links point at pages that no longer exist. Rewriting them here keeps
+ * the capture file verbatim — it is the archive of what those pages said, and
+ * editing it to track a move would make it a worse record.
+ */
+const REHOMED = {
+  'color-object': '/schema/styles/color-object/',
+  'gradient-value': '/schema/styles/gradient-value/',
+  sides: '/schema/styles/sides/',
+  typography: '/schema/styles/typography/',
+  effects: '/schema/styles/effects/',
+  corners: '/schema/styles/corner-radius/',
+};
+const rehome = (s) =>
+  typeof s === 'string'
+    ? s.replace(/\/schema\/([a-z-]+)\//g, (m, slug) => REHOMED[slug] ?? m)
+    : s;
+
 /** Documented once at the schema root; never nested. See the header. */
 const VALUE_FORMS = new Set(['TokenReference', 'PropBinding', 'Conditional', 'ReferenceValue', 'VariableStyle', 'StyleIdValue']);
+
+/**
+ * The hand-written type pages at the schema root were redundant with the
+ * generated tree — `/schema/typography/` and `/schema/styles/typography/`
+ * documented the same type. The generated page wins, so each hand-written
+ * page's non-derivable content (its decision records, and its examples where
+ * the schema carries none) is rendered onto the generated page that supersedes
+ * it. `corners` has no page of its own because `Corners` is reached by exactly
+ * one path, so its home is that path's page.
+ */
+const TYPE_PAGE_HOME = {
+  'color-object': ['ColorObject'],
+  'gradient-value': ['GradientValue'],
+  sides: ['Sides'],
+  typography: ['typography'],
+  effects: ['effects'],
+  corners: ['cornerRadius'],
+};
 
 /** Pages written by hand at the schema root, which this must not overwrite. */
 const handWritten = new Set(
@@ -97,7 +134,44 @@ const namedTypes = (node, depth = 0, out = []) => {
  * folder was removed.
  */
 const typeLabel = (name) =>
-  handWritten.has(kebab(name)) ? `[\`${name}\`](/schema/${kebab(name)}/)` : `\`${name}\``;
+  handWritten.has(kebab(name))
+    ? `[\`${name}\`](/schema/${kebab(name)}/)`
+    : SHARED.has(name) && isDocumentable(name)
+      ? `[\`${name}\`](/schema/styles/${kebab(name)}/)`
+      : `\`${name}\``;
+
+/**
+ * A shared type earns a page whether it is an object or a union. `GradientValue`
+ * and `PositionOffset` are `oneOf` with no direct properties, and requiring
+ * `properties` left both unpaged while four style pages still linked to them.
+ */
+const isDocumentable = (t) => Boolean(defs[t] && (defs[t].properties || defs[t].oneOf || defs[t].anyOf));
+
+/**
+ * A type reached by more than one path gets ONE page, not a copy under each
+ * path. `ColorObject` is reachable from `backgroundColor`, `fillColor`,
+ * `textColor`, `strokes` and `effects.shadows.color`; nesting it under all five
+ * put a `Contains` list on `backgroundColor` that was not backgroundColor's
+ * structure at all — it was ColorObject's, said five times.
+ *
+ * A type reached by exactly one path still nests, because there the containment
+ * path and the type are the same thing.
+ */
+const pathsReaching = {};
+{
+  const probe = (node, path, seen) => {
+    for (const [key, spec] of Object.entries(node.properties ?? {})) {
+      const p = [...path, key];
+      for (const t of refsOf(spec)) {
+        if (!defs[t] || VALUE_FORMS.has(t)) continue;
+        (pathsReaching[t] ??= new Set()).add(p.join('.'));
+        if (!seen.has(t)) probe(defs[t], p, new Set([...seen, t]));
+      }
+    }
+  };
+  probe(defs.Styles, [], new Set(['Styles']));
+}
+const SHARED = new Set(Object.entries(pathsReaching).filter(([, s]) => s.size > 1).map(([t]) => t));
 
 // ── Build the containment tree ───────────────────────────────────────────────
 const nodes = [];
@@ -106,12 +180,23 @@ const walk = (node, path, seen) => {
     const p = [...path, key];
     nodes.push({ path: p, spec, parentDef: node, required: new Set(node.required ?? []) });
     for (const t of refsOf(spec)) {
-      if (!defs[t] || seen.has(t) || VALUE_FORMS.has(t)) continue;
+      if (!defs[t] || seen.has(t) || VALUE_FORMS.has(t) || SHARED.has(t)) continue;
       walk(defs[t], p, new Set([...seen, t]));
     }
   }
 };
 walk(defs.Styles, [], new Set(['Styles']));
+
+/**
+ * A shared type without a hand-written page gets a canonical one under
+ * `styles/`, with its own children nested beneath it. One whose page already
+ * exists at the schema root is linked there instead.
+ */
+const sharedRoots = [...SHARED].filter((t) => !handWritten.has(kebab(t)) && isDocumentable(t));
+for (const t of sharedRoots) {
+  nodes.push({ path: [t], spec: { ...defs[t], $sharedType: t }, parentDef: defs.Styles, required: new Set() });
+  walk(defs[t], [t], new Set(['Styles', t]));
+}
 
 const slugPath = (p) => p.map(kebab).join('/');
 const urlOf = (p) => `/schema/styles/${slugPath(p)}/`;
@@ -119,27 +204,41 @@ const childrenOf = (p) => nodes.filter((n) => n.path.length === p.length + 1 && 
 
 // Replace the previous flat output wholesale, so a renamed page cannot linger.
 if (existsSync(outRoot)) rmSync(outRoot, { recursive: true, force: true });
-if (existsSync(join(docsSchema, 'types'))) rmSync(join(docsSchema, 'types'), { recursive: true, force: true });
+// Folders this tree supersedes. `types/` was the flat catch-all; `typography/`
+// and `effects/` were sibling folders holding the same member pages the tree
+// now emits under the path that reaches them.
+for (const stale of ['types', 'typography', 'effects']) {
+  if (existsSync(join(docsSchema, stale))) rmSync(join(docsSchema, stale), { recursive: true, force: true });
+}
 
 let written = 0;
 for (const node of nodes) {
   const { path: p, spec, required } = node;
   const key = p[p.length - 1];
   const isStyleKey = p.length === 1;
-  const kept = isStyleKey ? (preserved.keys?.[key] ?? {}) : {};
+  const kept = isStyleKey
+    ? (preserved.keys?.[key] ?? {})
+    : (preserved.memberPages?.[p.join('.')] ?? {});
 
   const types = namedTypes(spec).join(', ') || '—';
   const hasDefault = Object.prototype.hasOwnProperty.call(spec, 'default');
   const defaultText = !hasDefault
     ? null
-    : spec.default === null ? '`null` — apply nothing' : `\`${JSON.stringify(spec.default)}\``;
+    : spec.default === null ? '`null` (nothing)' : `\`${JSON.stringify(spec.default)}\``;
 
   // Examples preserved from the replaced pages, rendered as object literals.
   const asObject = (e) =>
     e.includes('<br>') && /`[A-Za-z$]+:/.test(e)
       ? `\`{ ${e.split('<br>').map((x) => x.replace(/`/g, '').trim()).join(', ')} }\``
       : e;
-  const examples = (kept.typeExamples ?? []).map((r) => `| ${r.type} | ${asObject(r.example)} |`);
+  // A `Settings` cell names the config that selects between forms, so the
+  // column appears only on the keys that have one.
+  const exampleRows = kept.typeExamples ?? [];
+  const anySettings = exampleRows.some((r) => r.settings);
+  const examples = exampleRows.map(
+    (r) => `| ${rehome(r.type)} | ${rehome(asObject(r.example))} |${anySettings ? ` ${rehome(r.settings) ?? '—'} |` : ''}`
+  );
+  const exampleHead = anySettings ? '| Type | Example | Settings |\n|---|---|---|' : '| Type | Example |\n|---|---|';
 
   const kids = childrenOf(p);
   const bindingRows = isStyleKey
@@ -151,6 +250,24 @@ for (const node of nodes) {
         return `| [${PLATFORM[platform]}](/schema/mappings/${platform}/) | ${v.disposition === 'unverified' ? '**unverified**' : v.disposition} | ${realises} |`;
       }).join('\n')
     : null;
+
+  /**
+   * Content carried over from the hand-written type page this page replaces.
+   * `Properties` is dropped because `Contains` already lists them from the
+   * schema; `Values` and the examples are rendered only when the schema
+   * produced none, so a page never shows the same thing twice.
+   */
+  const homedSlug = Object.entries(TYPE_PAGE_HOME).find(([, path]) => path.join('.') === p.join('.'))?.[0];
+  const carried = homedSlug ? (preserved.typePages?.[homedSlug]?.sections ?? {}) : {};
+  const carriedSections = [];
+  if (!examples.length) {
+    for (const name of ['Values', 'Examples', 'Example']) {
+      if (carried[name]) carriedSections.push(`\n### ${name}\n\n${rehome(carried[name])}\n`);
+    }
+  }
+  const furtherReading = carried['Further Reading']
+    ? `\n### Further reading\n\n${rehome(carried['Further Reading'])}\n`
+    : '';
 
   const trail = p.length > 1
     ? `Reached as \`styles.${p.join('.')}\`, within ${p.slice(0, -1).map((seg, i) => `[\`${seg}\`](${urlOf(p.slice(0, i + 1))})`).join(' → ')}.\n`
@@ -165,13 +282,13 @@ tableOfContents: false
 <!-- Generated by packages/schema/scripts/build-schema-pages.mjs from styles.schema.json,
      the platform binding data, and content preserved from the replaced pages. -->
 
-${kept.intro ?? spec.description ?? ''}
+${rehome(kept.intro) ?? spec.description ?? ''}
 
 ${trail}
 ### Type
 
 ${types}${required.has(key) ? ' · required' : ''}
-${defaultText ? `\n### Default\n\n${defaultText}, [declared by the schema](/schema/specification/#41a-an-absent-style-key-resolves-to-its-declared-default)\n` : ''}${examples.length ? `\n### Examples\n\n| Type | Example |\n|---|---|\n${examples.join('\n')}\n` : ''}${kids.length ? `\n### Contains\n\n${kids.map((c) => `- [\`${c.path[c.path.length - 1]}\`](${urlOf(c.path)})${c.spec.description ? ` — ${c.spec.description}` : ''}`).join('\n')}\n` : ''}${bindingRows ? `\n### Platform bindings\n\n| Platform | Disposition | Realised by |\n|---|---|---|\n${bindingRows}\n` : ''}${kept.figmaKeyNote ? `\n### Figma key\n\n${kept.figmaKeyNote}\n` : ''}
+${defaultText ? `\n### Default\n\n${defaultText}\n` : ''}${examples.length ? `\n### Examples\n\n${exampleHead}\n${examples.join('\n')}\n` : ''}${kids.length ? `\n### Contains\n\n${kids.map((c) => `- [\`${c.path[c.path.length - 1]}\`](${urlOf(c.path)})`).join("\n")}\n` : ''}${bindingRows ? `\n### Platform bindings\n\n| Platform | Disposition | Realised by |\n|---|---|---|\n${bindingRows}\n` : ''}${kept.figmaKeyNote ? `\n### Figma key\n\n${kept.figmaKeyNote}\n` : ''}${carriedSections.join('')}${furtherReading}
 ### Source
 
 | Format | File |
