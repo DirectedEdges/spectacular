@@ -169,7 +169,7 @@ for (const [name, def] of Object.entries(defs)) {
     const type = namedTypes(spec).join(", ") || "—";
 
     const page = `---
-title: "${name}.${member}"
+title: "${member}"
 description: "${(spec.description ?? `The ${member} member of ${name}`).replace(/"/g, '\\"').slice(0, 300)}"
 tableOfContents: false
 ---
