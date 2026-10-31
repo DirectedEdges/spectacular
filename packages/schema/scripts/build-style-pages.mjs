@@ -46,6 +46,22 @@ const bindings = Object.fromEntries(
 const kebab = (s) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 const PLATFORM = { figma: 'Figma', css: 'CSS' };
 
+/**
+ * Where a named type's page lives. Hand-written pages sit at the schema root;
+ * the rest are generated under `types/` by build-type-pages.mjs. Assuming one
+ * location for both is how six links came to point at pages that do not exist.
+ */
+const docsRoot = resolve(pkg, '../../site/src/content/docs/schema');
+const handWritten = new Set(
+  existsSync(docsRoot)
+    ? readdirSync(docsRoot).filter((f) => f.endsWith('.md')).map((f) => f.replace(/\.md$/, ''))
+    : []
+);
+const linkTo = (name) => {
+  const slug = kebab(name).replace(/^-/, '');
+  return handWritten.has(slug) ? `/schema/${slug}/` : `/schema/types/${slug}/`;
+};
+
 /** The declared element tables the transforms ship. Absent when not checked out. */
 const elementTables = () => {
   const paths = {
@@ -103,7 +119,7 @@ const typeRows = (node) => {
       const target = defs[name];
       // A *StyleValue wrapper is a union, not a type a reader names — descend.
       if (/StyleValue$/.test(name) && target) return visit(target, depth + 1);
-      push(`\`${name}\``, `/schema/${kebab(name).replace(/^-/, '')}/`);
+      push(`\`${name}\``, linkTo(name));
       return;
     }
     if (typeof n.type === 'string') push(`\`${n.type}\``, null);
@@ -224,7 +240,7 @@ for (const key of Object.keys(props)) {
         .map(([m, v]) => {
           const ref = v.$ref?.replace('#/definitions/', '');
           const type = ref && defs[ref]
-            ? `[\`${ref}\`](/schema/${kebab(ref).replace(/^-/, '')}/)`
+            ? `[\`${ref}\`](${linkTo(ref)})`
             : [...admits(v)].sort().join(', ');
           return `- [\`${m}\`](${composite}#properties) — ${type}${v.description ? `. ${v.description}` : ''}`;
         })
