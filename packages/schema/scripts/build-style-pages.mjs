@@ -1,16 +1,16 @@
 /**
- * PROTOTYPE. Generates a per-style-key reference page from the JSON Schema, the
+ * Generates the per-style-key reference pages from the JSON Schema, the
  * platform binding declarations, and the declared element tables the transforms
- * ship — the shape the hand-written site/src/content/docs/schema/styles/*.md
- * pages would become.
+ * ship, and the content preserved from the pages these replace.
+ *
  *
  * Structure first. Every section is a table or a link list; prose appears only
  * where the schema's own `description` carries it. Nothing here is written by
  * hand, so nothing here can drift from what it describes.
  *
- * Deliberately limited to PROTOTYPE_KEYS and written to
- * mappings/_prototype-style-pages/, so it can be read beside the existing pages
- * rather than over them.
+ * Writes all 46 pages into site/src/content/docs/schema/styles/, replacing the
+ * hand-written ones. Those pages held 111 type examples and 15 Figma-key notes
+ * that nothing else carried; extract-style-page-content.mjs captured them first.
  *
  * Usage:  node scripts/build-style-pages.mjs
  */
@@ -22,10 +22,18 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const pkg = resolve(here, '..');
 const repo = resolve(pkg, '../..');
-const outDir = join(pkg, 'mappings/_prototype-style-pages');
+const outDir = resolve(pkg, '../../site/src/content/docs/schema/styles');
 
-// One key per interesting shape: independent, cluster-resolved, and declared-unsupported.
-const PROTOTYPE_KEYS = ['opacity', 'layoutSizingHorizontal', 'strokeDashPattern'];
+/**
+ * Preserved content from the hand-written pages these replace: type examples,
+ * Figma-key divergence notes, and each page's own intro line. Extracted once by
+ * scripts/extract-style-page-content.mjs. `typeExamples` are display strings,
+ * not schema values — epic step 2 converts them into real `examples`.
+ */
+const preserved = (() => {
+  const p = join(pkg, 'mappings/_style-page-content.json');
+  return existsSync(p) ? JSON.parse(readFileSync(p, 'utf8')).keys : {};
+})();
 
 const styles = JSON.parse(readFileSync(join(pkg, 'schema/styles.schema.json'), 'utf8'));
 const defs = styles.definitions;
@@ -108,7 +116,7 @@ const adrsFor = (key) => {
 
 mkdirSync(outDir, { recursive: true });
 
-for (const key of PROTOTYPE_KEYS) {
+for (const key of Object.keys(props)) {
   const prop = props[key];
   if (!prop) { console.error(`unknown style key: ${key}`); process.exit(1); }
 
@@ -117,9 +125,31 @@ for (const key of PROTOTYPE_KEYS) {
     ? '**none declared**'
     : prop.default === null ? '`null` — apply nothing' : `\`${JSON.stringify(prop.default)}\``;
 
-  const types = typeRows(prop)
-    .map(([label, link]) => (link ? `[${label}](${link})` : label))
-    .join(', ');
+  const kept = preserved[key] ?? {};
+
+  /**
+   * Types with their examples where the replaced page carried them. A key with
+   * examples gets a table, because type-and-example is repeated shape; a key
+   * without gets the comma list, because a one-column table is noise.
+   */
+  const derived = typeRows(prop).map(([label, link]) => (link ? `[${label}](${link})` : label));
+  const byType = new Map((kept.typeExamples ?? []).map((r) => [r.type, r.example]));
+
+  /**
+   * An extracted example whose type label does not match a derived one is kept
+   * as its own row rather than dropped. The labels legitimately differ: a
+   * replaced page named the union type — `AspectRatioValue`, `Position` — while
+   * this derives the primitives inside it. Appending guarantees no example is
+   * lost to a label mismatch, which is how 18 of 111 went missing first time.
+   */
+  const matched = new Set(derived.filter((t) => byType.has(t)));
+  const extra = [...byType.entries()].filter(([t]) => !matched.has(t));
+  const types = byType.size
+    ? `| Type | Example |\n|---|---|\n${[
+        ...derived.map((t) => `| ${t} | ${byType.get(t) ?? ''} |`),
+        ...extra.map(([t, e]) => `| ${t} | ${e} |`),
+      ].join('\n')}`
+    : derived.join(', ');
 
   /**
    * Which element types carry this key, as links. Capture versus render is an
@@ -186,7 +216,7 @@ tableOfContents: false
      schema/styles.schema.json, mappings/bindings/*.json, the transforms' declared
      element tables, and the ADR corpus. Not wired into the site. -->
 
-${prop.description ?? ''}
+${kept.intro ?? prop.description ?? ''}
 
 ### Type
 
@@ -207,6 +237,7 @@ ${elementList ?? '*Not available in this checkout.*'}
 ${bindingRows}
 
 ${siblingList ? `### Resolved jointly with\n\nThis key does not map on its own. Its cluster's ordered case table is linked above.\n\n${siblingList}\n` : ''}
+${kept.figmaKeyNote ? `### Figma key\n\n${kept.figmaKeyNote}\n` : ''}
 ${adrRows ? `### Decision records\n\n${adrRows}` : ''}
 ### Rules
 
@@ -225,7 +256,7 @@ ${siblingList ? `| [DSPEC-47](/schema/specification/#9-rule-catalogue) | Jointly
 `;
 
   writeFileSync(join(outDir, `${kebab(key)}.md`), page);
-  console.log(`prototype style page: ${kebab(key)}.md — ${adrs.length} ADRs, ${siblings.size} sibling keys`);
+  console.log(`style page: ${kebab(key)}.md — ${adrs.length} ADRs, ${siblings.size} sibling keys`);
 }
 
-console.log(`\n${PROTOTYPE_KEYS.length} pages in mappings/_prototype-style-pages/`);
+console.log(`\n${Object.keys(props).length} pages written to site/src/content/docs/schema/styles/`);

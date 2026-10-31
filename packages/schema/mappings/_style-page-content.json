@@ -1,0 +1,683 @@
+{
+  "$comment": "Extracted from the hand-written site/src/content/docs/schema/styles/*.md pages so generating those pages loses nothing. typeExamples are DISPLAY STRINGS, not schema values — epic step 2 converts them into real `examples` on each Styles property, after which this file shrinks to whatever remains unmigrated.",
+  "extractedFrom": "site/src/content/docs/schema/styles/",
+  "keys": {
+    "aspectRatio": {
+      "typeExamples": [
+        {
+          "type": "`AspectRatioValue`",
+          "example": "`x: 16`<br>`y: 9`"
+        },
+        {
+          "type": "`null`",
+          "example": "`null` (unconstrained)"
+        }
+      ],
+      "intro": "Locked aspect ratio. Present only when the node has a locked ratio."
+    },
+    "backgroundColor": {
+      "typeExamples": [
+        {
+          "type": "`string`",
+          "example": "`\"#FF6600\"` (`HEX`)<br>`\"#FF6600FF\"` (`HEXA`)<br>`\"rgb(255, 102, 0)\"` (`RGB`)<br>`\"rgba(255, 102, 0, 1)\"` (`RGBA`)<br>`\"hsla(24, 100%, 50%, 1)\"` (`HSLA`)<br>`\"hsb(24, 100%, 100%)\"` (`HSB`)<br>`\"oklch(0.7 0.15 50 / 1)\"` (`OKLCH`)<br>`\"oklab(0.7 0.1 0.1 / 1)\"` (`OKLAB`) | [`settings.spec.color`](/schema/settings/#spec)"
+        },
+        {
+          "type": "[`ColorObject`](/schema/color-object/)",
+          "example": "`colorSpace: srgb`<br>`components: [1, 0.4, 0]` | [`settings.spec.color`](/schema/settings/#spec)"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: DS.Color.Surface.Muted`<br>`$type: color` | [`config.format.token`](/settings/tokens/)"
+        },
+        {
+          "type": "[`GradientValue`](/schema/gradient-value/)",
+          "example": "`type: LINEAR`<br>`angle: 180`<br>`stops: [...]` | —"
+        },
+        {
+          "type": "`null`",
+          "example": "`null` | —"
+        }
+      ],
+      "intro": "Background fill color, read from Figma's `fills` ([ADR 009](https://github.com/DirectedEdges/specs/blob/main/adr/009-color-values.md) explains why the name diverges)."
+    },
+    "backgroundImage": {
+      "typeExamples": [
+        {
+          "type": "`ImageValue`",
+          "example": "`$image: \"#/images/hero\"`<br>`objectFit: COVER`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: DS.Image.Hero`<br>`$type: image`"
+        },
+        {
+          "type": "`null`",
+          "example": "`null` (no image fill)"
+        }
+      ],
+      "figmaKeyNote": "Reads from `fills` (IMAGE paint). See [ADR 063 — Image Content](https://github.com/DirectedEdges/specs/blob/main/adr/063-image-content.md).",
+      "intro": "Image fill. Fallback representation used when no image component is configured."
+    },
+    "bottom": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`24` (pixels)"
+        },
+        {
+          "type": "`null`",
+          "example": "`null`"
+        }
+      ],
+      "figmaKeyNote": "Reads from `y` when the vertical constraint is `MAX` or `STRETCH`. See [ADR 041 — Layout Positioning](https://github.com/DirectedEdges/specs/blob/main/adr/041-layout-positioning.md).",
+      "intro": "Offset from the block-end (bottom) edge. Present when the vertical constraint is `MAX` or `STRETCH`."
+    },
+    "centerHorizontalOffset": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`0` (pixels)"
+        },
+        {
+          "type": "`null`",
+          "example": "`null`"
+        }
+      ],
+      "figmaKeyNote": "Reads from `x` when the horizontal constraint is `CENTER`. See [ADR 041 — Layout Positioning](https://github.com/DirectedEdges/specs/blob/main/adr/041-layout-positioning.md).",
+      "intro": "Horizontal offset from center. Present when the horizontal constraint is `CENTER`."
+    },
+    "centerVerticalOffset": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`0` (pixels)"
+        },
+        {
+          "type": "`null`",
+          "example": "`null`"
+        }
+      ],
+      "figmaKeyNote": "Reads from `y` when the vertical constraint is `CENTER`. See [ADR 041 — Layout Positioning](https://github.com/DirectedEdges/specs/blob/main/adr/041-layout-positioning.md).",
+      "intro": "Vertical offset from center. Present when the vertical constraint is `CENTER`."
+    },
+    "clipsContent": {
+      "typeExamples": [
+        {
+          "type": "`boolean`",
+          "example": "`true`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: ...`<br>`$type: boolean`"
+        }
+      ],
+      "intro": "Whether the container clips content that overflows its box."
+    },
+    "cornerRadius": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`16`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: DS.Radius.400`<br>`$type: dimension`"
+        },
+        {
+          "type": "[`Corners`](/schema/corners/)",
+          "example": "`topStart: 4`<br>`topEnd: 4`<br>`bottomEnd: 0`<br>`bottomStart: 0`"
+        },
+        {
+          "type": "`null`",
+          "example": "`null`"
+        }
+      ],
+      "intro": "Corner radius. Scalar when uniform; [`Corners`](/schema/corners/) object when per-corner values differ."
+    },
+    "cornerSmoothing": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`0.6`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: ...`<br>`$type: number`"
+        }
+      ],
+      "intro": "Corner smoothing amount (Figma's \"squircle\" effect), 0–1."
+    },
+    "crossAxisAlignment": {
+      "typeExamples": [
+        {
+          "type": "`CrossAxisAlignment`",
+          "example": "`\"START\"`, `\"END\"`, `\"CENTER\"`, `\"STRETCH\"`, `\"BASELINE\"`"
+        },
+        {
+          "type": "`null`",
+          "example": "`null`"
+        }
+      ],
+      "figmaKeyNote": "Reads from `counterAxisAlignItems`. See [ADR 040 — Layout Alignment](https://github.com/DirectedEdges/specs/blob/main/adr/040-layout-alignment.md).",
+      "intro": "Alignment along the cross axis (perpendicular to `layoutMode`)."
+    },
+    "end": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`24` (pixels)"
+        },
+        {
+          "type": "`null`",
+          "example": "`null`"
+        }
+      ],
+      "figmaKeyNote": "Reads from `x` when the horizontal constraint is `MAX` or `STRETCH`. See [ADR 041 — Layout Positioning](https://github.com/DirectedEdges/specs/blob/main/adr/041-layout-positioning.md).",
+      "intro": "Offset from the inline-end edge (right in LTR, left in RTL). Present when the horizontal constraint is `MAX` or `STRETCH`."
+    },
+    "fillColor": {
+      "typeExamples": [
+        {
+          "type": "`string`",
+          "example": "`\"#FF6600\"` (`HEX`)<br>`\"#FF6600FF\"` (`HEXA`)<br>`\"rgb(255, 102, 0)\"` (`RGB`)<br>`\"rgba(255, 102, 0, 1)\"` (`RGBA`)<br>`\"hsla(24, 100%, 50%, 1)\"` (`HSLA`)<br>`\"hsb(24, 100%, 100%)\"` (`HSB`)<br>`\"oklch(0.7 0.15 50 / 1)\"` (`OKLCH`)<br>`\"oklab(0.7 0.1 0.1 / 1)\"` (`OKLAB`) | [`settings.spec.color`](/schema/settings/#spec)"
+        },
+        {
+          "type": "[`ColorObject`](/schema/color-object/)",
+          "example": "`colorSpace: srgb`<br>`components: [1, 0.4, 0]` | [`settings.spec.color`](/schema/settings/#spec)"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: DS.Color.Surface.Muted`<br>`$type: color` | [`config.format.token`](/settings/tokens/)"
+        },
+        {
+          "type": "[`GradientValue`](/schema/gradient-value/)",
+          "example": "`type: LINEAR`<br>`angle: 180`<br>`stops: [...]` | —"
+        },
+        {
+          "type": "`null`",
+          "example": "`null` | —"
+        }
+      ],
+      "intro": "Glyph/vector fill color, read from Figma's `fills` ([ADR 013](https://github.com/DirectedEdges/specs/blob/main/adr/013-icon-fillColor.md) explains why the name diverges)."
+    },
+    "height": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`48`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: DS.Size.400`<br>`$type: dimension`"
+        }
+      ],
+      "intro": "Height."
+    },
+    "itemReverseZIndex": {
+      "typeExamples": [
+        {
+          "type": "`boolean`",
+          "example": "`true`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: ...`<br>`$type: boolean`"
+        }
+      ],
+      "intro": "Whether children stack in reverse z-index order."
+    },
+    "itemSpacing": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`16`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: DS.Space.400`<br>`$type: dimension`"
+        },
+        {
+          "type": "`ItemSpacing`",
+          "example": "`horizontal: 16`<br>`vertical: 8`"
+        },
+        {
+          "type": "`null`",
+          "example": "`null`"
+        }
+      ],
+      "intro": "Item spacing. Scalar when uniform; [`ItemSpacing`](#itemspacing) object when horizontal and vertical gaps differ."
+    },
+    "layoutMode": {
+      "intro": "Auto-layout direction."
+    },
+    "layoutSizingHorizontal": {
+      "typeExamples": [
+        {
+          "type": "`string`",
+          "example": "`\"FIXED\"`, `\"HUG\"`, `\"FILL\"`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: ...`<br>`$type: string`"
+        }
+      ],
+      "intro": "Horizontal sizing mode."
+    },
+    "layoutSizingVertical": {
+      "typeExamples": [
+        {
+          "type": "`string`",
+          "example": "`\"FIXED\"`, `\"HUG\"`, `\"FILL\"`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: ...`<br>`$type: string`"
+        }
+      ],
+      "intro": "Vertical sizing mode."
+    },
+    "locked": {
+      "typeExamples": [
+        {
+          "type": "`boolean`",
+          "example": "`true`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: ...`<br>`$type: boolean`"
+        }
+      ],
+      "intro": "Whether the element is locked from editing in Figma."
+    },
+    "mainAxisAlignment": {
+      "typeExamples": [
+        {
+          "type": "`MainAxisAlignment`",
+          "example": "`\"START\"`, `\"END\"`, `\"CENTER\"`, `\"SPACE_BETWEEN\"`"
+        },
+        {
+          "type": "`null`",
+          "example": "`null`"
+        }
+      ],
+      "figmaKeyNote": "Reads from `primaryAxisAlignItems`. See [ADR 040 — Layout Alignment](https://github.com/DirectedEdges/specs/blob/main/adr/040-layout-alignment.md).",
+      "intro": "Alignment along the main axis (depends on `layoutMode`)."
+    },
+    "maxHeight": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`120`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: DS.Size.400`<br>`$type: dimension`"
+        }
+      ],
+      "intro": "Maximum height constraint."
+    },
+    "maxLines": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`3`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: ...`<br>`$type: number`"
+        },
+        {
+          "type": "`null`",
+          "example": "`null` (no limit)"
+        }
+      ],
+      "intro": "Maximum number of lines before `textOverflow: \"ELLIPSIS\"` applies."
+    },
+    "maxWidth": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`480`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: DS.Size.400`<br>`$type: dimension`"
+        }
+      ],
+      "intro": "Maximum width constraint."
+    },
+    "minHeight": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`24`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: DS.Size.400`<br>`$type: dimension`"
+        }
+      ],
+      "intro": "Minimum height constraint."
+    },
+    "minWidth": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`24`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: DS.Size.400`<br>`$type: dimension`"
+        }
+      ],
+      "intro": "Minimum width constraint."
+    },
+    "opacity": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`0.5`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: ...`<br>`$type: number`"
+        }
+      ],
+      "intro": "Opacity, 0–1."
+    },
+    "padding": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`16`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: DS.Space.400`<br>`$type: dimension`"
+        },
+        {
+          "type": "[`Sides`](/schema/sides/)",
+          "example": "`top: 8`<br>`end: 16`<br>`bottom: 8`<br>`start: 16`"
+        },
+        {
+          "type": "`null`",
+          "example": "`null`"
+        }
+      ],
+      "intro": "Padding. Scalar when uniform; [`Sides`](/schema/sides/) object when per-side values differ."
+    },
+    "position": {
+      "typeExamples": [
+        {
+          "type": "`Position`",
+          "example": "`\"AUTO\"`, `\"ABSOLUTE\"`"
+        },
+        {
+          "type": "`null`",
+          "example": "`null`"
+        }
+      ],
+      "figmaKeyNote": "Reads from `layoutPositioning`. See [ADR 041 — Layout Positioning](https://github.com/DirectedEdges/specs/blob/main/adr/041-layout-positioning.md) for why `position` diverges from Figma's naming.",
+      "intro": "Layout positioning mode — whether the element participates in its parent's auto-layout flow or is positioned absolutely."
+    },
+    "primaryAxisSizingMode": {
+      "typeExamples": [
+        {
+          "type": "`string`",
+          "example": "`\"FIXED\"`, `\"AUTO\"`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: ...`<br>`$type: string`"
+        }
+      ],
+      "intro": "Main-axis sizing mode."
+    },
+    "rotation": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`45`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: ...`<br>`$type: number`"
+        }
+      ],
+      "intro": "Rotation in degrees."
+    },
+    "start": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`24` (pixels)"
+        },
+        {
+          "type": "`string`",
+          "example": "`\"25%\"` (`SCALE` constraint)"
+        },
+        {
+          "type": "`null`",
+          "example": "`null`"
+        }
+      ],
+      "figmaKeyNote": "Reads from `x` when the horizontal constraint is `MIN`, `STRETCH`, or `SCALE`. See [ADR 041 — Layout Positioning](https://github.com/DirectedEdges/specs/blob/main/adr/041-layout-positioning.md).",
+      "intro": "Offset from the inline-start edge (left in LTR, right in RTL). Present when the horizontal constraint is `MIN`, `STRETCH`, or `SCALE`."
+    },
+    "strokeAlign": {
+      "typeExamples": [
+        {
+          "type": "`string`",
+          "example": "`\"INSIDE\"`, `\"OUTSIDE\"`, `\"CENTER\"`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: ...`<br>`$type: string`"
+        }
+      ],
+      "intro": "Stroke alignment relative to the element's bounds."
+    },
+    "strokeDashPattern": {
+      "typeExamples": [
+        {
+          "type": "`StrokeDashPattern`",
+          "example": "`dash: 8`<br>`gap: 4`"
+        },
+        {
+          "type": "`null`",
+          "example": "`null` (solid)"
+        }
+      ],
+      "figmaKeyNote": "Reads from `strokeDashes`. See [ADR 059 — Border Style](https://github.com/DirectedEdges/specs/blob/main/adr/059-border-style.md).",
+      "intro": "Dash geometry for a dashed stroke. Presence signals a dashed stroke; null or absent signals solid."
+    },
+    "strokeWeight": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`2`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: DS.Border.Width.200`<br>`$type: dimension`"
+        },
+        {
+          "type": "[`Sides`](/schema/sides/)",
+          "example": "`top: 2`<br>`end: 1`<br>`bottom: 2`<br>`start: 1`"
+        },
+        {
+          "type": "`null`",
+          "example": "`null`"
+        }
+      ],
+      "intro": "Stroke weight. Scalar when uniform; [`Sides`](/schema/sides/) object when per-side values differ."
+    },
+    "strokes": {
+      "typeExamples": [
+        {
+          "type": "`string`",
+          "example": "`\"#FF6600\"` (`HEX`)<br>`\"#FF6600FF\"` (`HEXA`)<br>`\"rgb(255, 102, 0)\"` (`RGB`)<br>`\"rgba(255, 102, 0, 1)\"` (`RGBA`)<br>`\"hsla(24, 100%, 50%, 1)\"` (`HSLA`)<br>`\"hsb(24, 100%, 100%)\"` (`HSB`)<br>`\"oklch(0.7 0.15 50 / 1)\"` (`OKLCH`)<br>`\"oklab(0.7 0.1 0.1 / 1)\"` (`OKLAB`)"
+        },
+        {
+          "type": "[`ColorObject`](/schema/color-object/)",
+          "example": "`colorSpace: srgb`<br>`components: [1, 0.4, 0]`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: DS.Color.Border.Default`<br>`$type: color`"
+        },
+        {
+          "type": "[`GradientValue`](/schema/gradient-value/)",
+          "example": "`type: LINEAR`<br>`angle: 180`<br>`stops: [...]`"
+        },
+        {
+          "type": "`null`",
+          "example": "`null`"
+        }
+      ],
+      "intro": "Stroke color."
+    },
+    "textAlignHorizontal": {
+      "typeExamples": [
+        {
+          "type": "`TextAlignHorizontal`",
+          "example": "`\"START\"`, `\"CENTER\"`, `\"END\"`, `\"JUSTIFY\"`"
+        },
+        {
+          "type": "`null`",
+          "example": "`null`"
+        }
+      ],
+      "figmaKeyNote": "Reads from `textAlignHorizontal`, remapped to logical directions (`LEFT`→`START`, `RIGHT`→`END`, `JUSTIFIED`→`JUSTIFY`). See [ADR 064 — Text Align Horizontal](https://github.com/DirectedEdges/specs/blob/main/adr/064-text-align-horizontal.md).",
+      "intro": "Horizontal text alignment using logical inline-axis directions. `START` resolves to left in LTR and right in RTL; `END` is the inverse."
+    },
+    "textAlignVertical": {
+      "typeExamples": [
+        {
+          "type": "`string`",
+          "example": "`\"TOP\"`, `\"CENTER\"`, `\"BOTTOM\"`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: ...`<br>`$type: string`"
+        }
+      ],
+      "intro": "Vertical text alignment within the node's bounds."
+    },
+    "textColor": {
+      "typeExamples": [
+        {
+          "type": "`string`",
+          "example": "`\"#FF6600\"` (`HEX`)<br>`\"#FF6600FF\"` (`HEXA`)<br>`\"rgb(255, 102, 0)\"` (`RGB`)<br>`\"rgba(255, 102, 0, 1)\"` (`RGBA`)<br>`\"hsla(24, 100%, 50%, 1)\"` (`HSLA`)<br>`\"hsb(24, 100%, 100%)\"` (`HSB`)<br>`\"oklch(0.7 0.15 50 / 1)\"` (`OKLCH`)<br>`\"oklab(0.7 0.1 0.1 / 1)\"` (`OKLAB`) | [`settings.spec.color`](/schema/settings/#spec)"
+        },
+        {
+          "type": "[`ColorObject`](/schema/color-object/)",
+          "example": "`colorSpace: srgb`<br>`components: [1, 0.4, 0]` | [`settings.spec.color`](/schema/settings/#spec)"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: DS.Color.Surface.Muted`<br>`$type: color` | [`config.format.token`](/settings/tokens/)"
+        },
+        {
+          "type": "[`GradientValue`](/schema/gradient-value/)",
+          "example": "`type: LINEAR`<br>`angle: 180`<br>`stops: [...]` | —"
+        },
+        {
+          "type": "`null`",
+          "example": "`null` | —"
+        }
+      ],
+      "intro": "Text fill color, read from Figma's `fills` ([ADR 009](https://github.com/DirectedEdges/specs/blob/main/adr/009-color-values.md) explains why the name diverges)."
+    },
+    "textOverflow": {
+      "typeExamples": [
+        {
+          "type": "`TextOverflow`",
+          "example": "`\"CLIP\"`, `\"ELLIPSIS\"`"
+        },
+        {
+          "type": "`null`",
+          "example": "`null`"
+        }
+      ],
+      "figmaKeyNote": "Reads from `textTruncation` (`DISABLED`→`CLIP`, `ENDING`→`ELLIPSIS`). See [ADR 062 — Text Truncation](https://github.com/DirectedEdges/specs/blob/main/adr/062-text-truncation.md).",
+      "intro": "How overflowing text is handled — cut off or trailing ellipsis."
+    },
+    "top": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`24` (pixels)"
+        },
+        {
+          "type": "`string`",
+          "example": "`\"25%\"` (`SCALE` constraint)"
+        },
+        {
+          "type": "`null`",
+          "example": "`null`"
+        }
+      ],
+      "figmaKeyNote": "Reads from `y` when the vertical constraint is `MIN`, `STRETCH`, or `SCALE`. See [ADR 041 — Layout Positioning](https://github.com/DirectedEdges/specs/blob/main/adr/041-layout-positioning.md).",
+      "intro": "Offset from the block-start (top) edge. Present when the vertical constraint is `MIN`, `STRETCH`, or `SCALE`."
+    },
+    "visible": {
+      "typeExamples": [
+        {
+          "type": "`boolean`",
+          "example": "`true`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: ...`<br>`$type: boolean`"
+        },
+        {
+          "type": "[`PropBinding`](/schema/prop-binding/)",
+          "example": "`$binding: \"#/props/label\"`"
+        },
+        {
+          "type": "[`Conditional`](/schema/conditional/)",
+          "example": "`if: { condition: {op: isNotNull, args: [...]}, then: true, else: false }`"
+        }
+      ],
+      "intro": "Whether the element is visible."
+    },
+    "width": {
+      "typeExamples": [
+        {
+          "type": "`number`",
+          "example": "`48`"
+        },
+        {
+          "type": "[`TokenReference`](/schema/token-reference/)",
+          "example": "`$token: DS.Size.400`<br>`$type: dimension`"
+        }
+      ],
+      "intro": "Width."
+    },
+    "wrapAlignment": {
+      "typeExamples": [
+        {
+          "type": "`WrapAlignment`",
+          "example": "`\"START\"`, `\"SPACE_BETWEEN\"`"
+        },
+        {
+          "type": "`null`",
+          "example": "`null`"
+        }
+      ],
+      "figmaKeyNote": "Reads from `counterAxisAlignContent`. See [ADR 039 — Wrap Alignment](https://github.com/DirectedEdges/specs/blob/main/adr/039-wrap-alignment.md).",
+      "intro": "Space distribution between wrapped lines. Only meaningful when `wrap` is `true`."
+    },
+    "wrap": {
+      "typeExamples": [
+        {
+          "type": "`boolean`",
+          "example": "`true`"
+        }
+      ],
+      "figmaKeyNote": "Reads from `layoutWrap`. See [ADR 039 — Wrap Alignment](https://github.com/DirectedEdges/specs/blob/main/adr/039-wrap-alignment.md).",
+      "intro": "Whether auto-layout wrapping is enabled (default: `false`)."
+    }
+  }
+}
