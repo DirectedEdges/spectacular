@@ -10,38 +10,30 @@ tableOfContents: false
 
 Opacity 0-1
 
-#### Type(s)
+### Type
 
-| Type |
-|---|
-| `number` |
-| [`TokenReference`](/schema/token-reference/) |
-| `null` |
+`number`, [`TokenReference`](/schema/token-reference/), `null`
 
-#### Default
+### Default
 
-| Value | Declared by |
-|---|---|
-| `1` | [`styles.schema.json`](/schema/specification/#41a-an-absent-style-key-resolves-to-its-declared-default) |
+`1`, [declared by the schema](/schema/specification/#41a-an-absent-style-key-resolves-to-its-declared-default)
 
-#### Supported on
+### Supported on
 
-| Element | Captured | Rendered |
-|---|---|---|
-| `component` | yes | yes |
-| `ellipse` | yes | yes |
-| `frame` | yes | yes |
-| `glyph` | yes | yes |
-| `instance` | yes | yes |
-| `line` | yes | yes |
-| `polygon` | yes | yes |
-| `rectangle` | yes | yes |
-| `slot` | yes | yes |
-| `star` | yes | yes |
-| `text` | yes | yes |
-| `vector` | yes | yes |
+- [`component`](/schema/anatomy/#elementtype)
+- [`ellipse`](/schema/anatomy/#elementtype)
+- [`frame`](/schema/anatomy/#elementtype)
+- [`glyph`](/schema/anatomy/#elementtype)
+- [`instance`](/schema/anatomy/#elementtype)
+- [`line`](/schema/anatomy/#elementtype)
+- [`polygon`](/schema/anatomy/#elementtype)
+- [`rectangle`](/schema/anatomy/#elementtype)
+- [`slot`](/schema/anatomy/#elementtype)
+- [`star`](/schema/anatomy/#elementtype)
+- [`text`](/schema/anatomy/#elementtype)
+- [`vector`](/schema/anatomy/#elementtype)
 
-#### Platform bindings
+### Platform bindings
 
 | Platform | Disposition | Realised by |
 |---|---|---|
@@ -49,33 +41,29 @@ Opacity 0-1
 | [CSS](/schema/mappings/css/) | **unverified** | `opacity` |
 
 
-#### Decision records
+### Decision records
 
 **Decides this key** — named in the ADR's title, summary, or Decision section.
 
-| ADR | Title | Status |
-|---|---|---|
-| [ADR-063](/adr/063-image-content/) | Image content — `backgroundImage` fill, an `images` registry, `ImageProp`, and `ImageBinding` | ACCEPTED |
+- [ADR-063](/adr/063-image-content/) — Image content — `backgroundImage` fill, an `images` registry, `ImageProp`, and `ImageBinding`
 
 **Mentions it elsewhere** — context or an example, not a decision.
 
-| ADR | Title | Status |
-|---|---|---|
-| [ADR-009](/adr/009-color-values/) | Replace Hex String with DTCG Color Object in `ColorStyleValue` | ACCEPTED |
-| [ADR-011](/adr/011-icon-glyph-as-content/) | Icon Element Type Support and Detection Config | ACCEPTED |
-| [ADR-023](/adr/023-schema-compliance-fixes/) | Fix schema compliance gaps and improve schema URL metadata | ACCEPTED |
-| [ADR-062](/adr/062-text-truncation/) | Text overflow style keys (`textOverflow`, `maxLines`) | ACCEPTED |
-| [ADR-083](/adr/083-slot-wrapper-collapse/) | Collapsing a Slot-Only Wrapper | ACCEPTED |
-| [ADR-113](/adr/113-style-defaults-in-the-schema/) | Style defaults belong to the schema | DRAFT |
+- [ADR-009](/adr/009-color-values/) — Replace Hex String with DTCG Color Object in `ColorStyleValue`
+- [ADR-011](/adr/011-icon-glyph-as-content/) — Icon Element Type Support and Detection Config
+- [ADR-023](/adr/023-schema-compliance-fixes/) — Fix schema compliance gaps and improve schema URL metadata
+- [ADR-062](/adr/062-text-truncation/) — Text overflow style keys (`textOverflow`, `maxLines`)
+- [ADR-083](/adr/083-slot-wrapper-collapse/) — Collapsing a Slot-Only Wrapper
+- [ADR-113](/adr/113-style-defaults-in-the-schema/) — Style defaults belong to the schema
 
-#### Rules
+### Rules
 
 | Rule | Statement |
 |---|---|
 | [DSPEC-44](/schema/specification/#9-rule-catalogue) | Every `Styles` property declares a `default` valid against its own schema |
 | [DSPEC-45](/schema/specification/#9-rule-catalogue) | A declared `default` is a literal, never a reference or conditional |
 
-#### Source
+### Source
 
 | Format | File |
 |---|---|

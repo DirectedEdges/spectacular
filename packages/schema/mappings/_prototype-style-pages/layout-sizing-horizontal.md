@@ -10,77 +10,65 @@ tableOfContents: false
 
 Horizontal sizing mode
 
-#### Type(s)
+### Type
 
-| Type |
-|---|
-| `string` |
-| [`TokenReference`](/schema/token-reference/) |
-| `null` |
+`string`, [`TokenReference`](/schema/token-reference/), `null`
 
-#### Default
+### Default
 
-| Value | Declared by |
-|---|---|
-| `"FIXED"` | [`styles.schema.json`](/schema/specification/#41a-an-absent-style-key-resolves-to-its-declared-default) |
+`"FIXED"`, [declared by the schema](/schema/specification/#41a-an-absent-style-key-resolves-to-its-declared-default)
 
-#### Supported on
+### Supported on
 
-| Element | Captured | Rendered |
-|---|---|---|
-| `component` | yes | yes |
-| `ellipse` | yes | yes |
-| `frame` | yes | yes |
-| `glyph` | yes | yes |
-| `instance` | yes | yes |
-| `line` | yes | yes |
-| `polygon` | yes | yes |
-| `rectangle` | yes | yes |
-| `slot` | yes | yes |
-| `star` | yes | yes |
-| `text` | yes | yes |
-| `vector` | yes | yes |
+- [`component`](/schema/anatomy/#elementtype)
+- [`ellipse`](/schema/anatomy/#elementtype)
+- [`frame`](/schema/anatomy/#elementtype)
+- [`glyph`](/schema/anatomy/#elementtype)
+- [`instance`](/schema/anatomy/#elementtype)
+- [`line`](/schema/anatomy/#elementtype)
+- [`polygon`](/schema/anatomy/#elementtype)
+- [`rectangle`](/schema/anatomy/#elementtype)
+- [`slot`](/schema/anatomy/#elementtype)
+- [`star`](/schema/anatomy/#elementtype)
+- [`text`](/schema/anatomy/#elementtype)
+- [`vector`](/schema/anatomy/#elementtype)
 
-#### Platform bindings
+### Platform bindings
 
 | Platform | Disposition | Realised by |
 |---|---|---|
 | [Figma](/schema/mappings/figma/) | bound | [`autoVsAbsoluteLayout`](/schema/mappings/figma/#autovsabsolutelayout) |
 | [CSS](/schema/mappings/css/) | bound | [`autoLayoutSizing`](/schema/mappings/css/#autolayoutsizing) |
 
-#### Resolved jointly with
+### Resolved jointly with
 
 This key does not map on its own. Its cluster's ordered case table is linked above.
 
-| Key | On |
-|---|---|
-| [`bottom`](/schema/styles/bottom/) | Figma |
-| [`centerHorizontalOffset`](/schema/styles/center-horizontal-offset/) | Figma |
-| [`centerVerticalOffset`](/schema/styles/center-vertical-offset/) | Figma |
-| [`end`](/schema/styles/end/) | Figma |
-| [`height`](/schema/styles/height/) | Figma |
-| [`layoutSizingVertical`](/schema/styles/layout-sizing-vertical/) | Figma, CSS |
-| [`position`](/schema/styles/position/) | Figma |
-| [`start`](/schema/styles/start/) | Figma |
-| [`top`](/schema/styles/top/) | Figma |
-| [`width`](/schema/styles/width/) | Figma |
+- [`bottom`](/schema/styles/bottom/) — Figma
+- [`centerHorizontalOffset`](/schema/styles/center-horizontal-offset/) — Figma
+- [`centerVerticalOffset`](/schema/styles/center-vertical-offset/) — Figma
+- [`end`](/schema/styles/end/) — Figma
+- [`height`](/schema/styles/height/) — Figma
+- [`layoutSizingVertical`](/schema/styles/layout-sizing-vertical/) — Figma, CSS
+- [`position`](/schema/styles/position/) — Figma
+- [`start`](/schema/styles/start/) — Figma
+- [`top`](/schema/styles/top/) — Figma
+- [`width`](/schema/styles/width/) — Figma
 
-#### Decision records
+### Decision records
 
-**Decides this key.** None. No ADR names this key in its title, summary, or Decision section.
+**Decides this key.** None.
 
 **Mentions it elsewhere** — context or an example, not a decision.
 
-| ADR | Title | Status |
-|---|---|---|
-| [ADR-011](/adr/011-icon-glyph-as-content/) | Icon Element Type Support and Detection Config | ACCEPTED |
-| [ADR-075](/adr/075-primitive-style-prop-mapping/) | `conventions.primitives` — a Declared Table from Styles to a Component's Props | ACCEPTED |
-| [ADR-081](/adr/081-default-fill-width/) | `defaultFillWidth` — the Width a Fill-Width Root Fills | ACCEPTED |
-| [ADR-083](/adr/083-slot-wrapper-collapse/) | Collapsing a Slot-Only Wrapper | ACCEPTED |
-| [ADR-084](/adr/084-element-figma-extensions/) | `Element.$extensions` — Figma Provenance for a Promoted Element | ACCEPTED |
-| [ADR-090](/adr/090-container-promotion-sources/) | Container Promotion Sources Opened to Closed-Value Layout Properties | ACCEPTED |
+- [ADR-011](/adr/011-icon-glyph-as-content/) — Icon Element Type Support and Detection Config
+- [ADR-075](/adr/075-primitive-style-prop-mapping/) — `conventions.primitives` — a Declared Table from Styles to a Component's Props
+- [ADR-081](/adr/081-default-fill-width/) — `defaultFillWidth` — the Width a Fill-Width Root Fills
+- [ADR-083](/adr/083-slot-wrapper-collapse/) — Collapsing a Slot-Only Wrapper
+- [ADR-084](/adr/084-element-figma-extensions/) — `Element.$extensions` — Figma Provenance for a Promoted Element
+- [ADR-090](/adr/090-container-promotion-sources/) — Container Promotion Sources Opened to Closed-Value Layout Properties
 
-#### Rules
+### Rules
 
 | Rule | Statement |
 |---|---|
@@ -88,7 +76,7 @@ This key does not map on its own. Its cluster's ordered case table is linked abo
 | [DSPEC-45](/schema/specification/#9-rule-catalogue) | A declared `default` is a literal, never a reference or conditional |
 | [DSPEC-47](/schema/specification/#9-rule-catalogue) | Jointly resolved keys are stated as an ordered case table, not prose |
 
-#### Source
+### Source
 
 | Format | File |
 |---|---|

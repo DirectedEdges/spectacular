@@ -118,22 +118,23 @@ for (const key of PROTOTYPE_KEYS) {
     : prop.default === null ? '`null` — apply nothing' : `\`${JSON.stringify(prop.default)}\``;
 
   const types = typeRows(prop)
-    .map(([label, link]) => `| ${link ? `[${label}](${link})` : label} |`)
-    .join('\n');
+    .map(([label, link]) => (link ? `[${label}](${link})` : label))
+    .join(', ');
 
-  // Supported on — from the declared tables, showing any capture/render divergence.
-  let divergent = false;
-  const elementRows = (() => {
+  /**
+   * Which element types carry this key, as links. Capture versus render is an
+   * implementation detail of two particular transforms, not a fact about the
+   * contract, so it is deliberately not shown: a reader wants to know whether
+   * a glyph can carry this key, not which of two codebases agrees.
+   */
+  const elementList = (() => {
     if (!Object.keys(tables).length) return null;
-    const all = [...new Set(Object.keys(tables.capture ?? tables.render ?? {}))].sort();
-    return all.map((t) => {
-      const cap = tables.capture?.[t]?.includes(key);
-      const ren = tables.render?.[t]?.includes(key);
-      const mark = (b) => (b === undefined ? '—' : b ? 'yes' : 'no');
-      const flag = cap !== undefined && ren !== undefined && cap !== ren;
-      if (flag) divergent = true;
-      return `| \`${t}\` | ${mark(cap)} | ${mark(ren)}${flag ? ' ⚠' : ''} |`;
-    }).join('\n');
+    const union = new Set();
+    for (const table of Object.values(tables)) {
+      for (const [type, keys] of Object.entries(table)) if (keys.includes(key)) union.add(type);
+    }
+    if (!union.size) return '*No element type carries this key.*';
+    return [...union].sort().map((t) => `- [\`${t}\`](/schema/anatomy/#elementtype)`).join('\n');
   })();
 
   const bindingRows = Object.entries(bindings).map(([platform, b]) => {
@@ -154,21 +155,23 @@ for (const key of PROTOTYPE_KEYS) {
       if (k !== key) siblings.set(k, (siblings.get(k) ?? []).concat(PLATFORM[platform]));
     }
   }
-  const siblingRows = [...siblings.entries()].sort()
-    .map(([k, ps]) => `| [\`${k}\`](/schema/styles/${kebab(k)}/) | ${ps.join(', ')} |`).join('\n');
+  const siblingList = [...siblings.entries()].sort()
+    .map(([k, ps]) => `- [\`${k}\`](/schema/styles/${kebab(k)}/) — ${ps.join(', ')}`).join('\n');
 
   const adrs = adrsFor(key);
-  const row = (a) => `| [ADR-${a.num}](/adr/${a.file.replace(/\.md$/, '')}/) | ${a.title} | ${a.status} |`;
+  // Status is omitted: a superseded ADR would not still be cited, so the column
+  // read ACCEPTED on every row and carried no information.
+  const item = (a) => `- [ADR-${a.num}](/adr/${a.file.replace(/\.md$/, '')}/) — ${a.title}`;
   const decides = adrs.filter((a) => a.decides);
   const mentions = adrs.filter((a) => !a.decides);
   const adrRows = adrs.length
     ? `${
         decides.length
-          ? `**Decides this key** — named in the ADR's title, summary, or Decision section.\n\n| ADR | Title | Status |\n|---|---|---|\n${decides.map(row).join('\n')}\n`
-          : '**Decides this key.** None. No ADR names this key in its title, summary, or Decision section.\n'
+          ? `**Decides this key** — named in the ADR's title, summary, or Decision section.\n\n${decides.map(item).join('\n')}\n`
+          : '**Decides this key.** None.\n'
       }${
         mentions.length
-          ? `\n**Mentions it elsewhere** — context or an example, not a decision.\n\n| ADR | Title | Status |\n|---|---|---|\n${mentions.map(row).join('\n')}\n`
+          ? `\n**Mentions it elsewhere** — context or an example, not a decision.\n\n${mentions.map(item).join('\n')}\n`
           : ''
       }`
     : null;
@@ -185,40 +188,34 @@ tableOfContents: false
 
 ${prop.description ?? ''}
 
-#### Type(s)
+### Type
 
-| Type |
-|---|
 ${types}
 
-#### Default
+### Default
 
-| Value | Declared by |
-|---|---|
-| ${defaultCell} | ${hasDefault ? '[`styles.schema.json`](/schema/specification/#41a-an-absent-style-key-resolves-to-its-declared-default)' : '—'} |
+${defaultCell}${hasDefault ? ', [declared by the schema](/schema/specification/#41a-an-absent-style-key-resolves-to-its-declared-default)' : ''}
 
-#### Supported on
+### Supported on
 
-${elementRows
-  ? `| Element | Captured | Rendered |\n|---|---|---|\n${elementRows}${divergent ? '\n\n⚠ Capture and render disagree about this key on that element type.' : ''}`
-  : '*The transforms’ declared element tables are not available in this checkout.*'}
+${elementList ?? '*Not available in this checkout.*'}
 
-#### Platform bindings
+### Platform bindings
 
 | Platform | Disposition | Realised by |
 |---|---|---|
 ${bindingRows}
 
-${siblingRows ? `#### Resolved jointly with\n\nThis key does not map on its own. Its cluster's ordered case table is linked above.\n\n| Key | On |\n|---|---|\n${siblingRows}\n` : ''}
-${adrRows ? `#### Decision records\n\n${adrRows}` : ''}
-#### Rules
+${siblingList ? `### Resolved jointly with\n\nThis key does not map on its own. Its cluster's ordered case table is linked above.\n\n${siblingList}\n` : ''}
+${adrRows ? `### Decision records\n\n${adrRows}` : ''}
+### Rules
 
 | Rule | Statement |
 |---|---|
 | [DSPEC-44](/schema/specification/#9-rule-catalogue) | Every \`Styles\` property declares a \`default\` valid against its own schema |
 | [DSPEC-45](/schema/specification/#9-rule-catalogue) | A declared \`default\` is a literal, never a reference or conditional |
-${siblingRows ? `| [DSPEC-47](/schema/specification/#9-rule-catalogue) | Jointly resolved keys are stated as an ordered case table, not prose |\n` : ''}
-#### Source
+${siblingList ? `| [DSPEC-47](/schema/specification/#9-rule-catalogue) | Jointly resolved keys are stated as an ordered case table, not prose |\n` : ''}
+### Source
 
 | Format | File |
 |---|---|

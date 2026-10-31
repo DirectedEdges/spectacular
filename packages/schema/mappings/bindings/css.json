@@ -2088,13 +2088,9 @@
     "tokenReference": "bound",
     "tokenReferenceNote": "Emitted per `settings.spec.tokens`. A dedicated token-value path recognises `$token` and renders it in the configured notation.",
     "propBinding": "unsupported",
-    "propBindingNote": "No style module reads `$binding`. The only binding reads in the transform are for content and children, not for style values, so a style whose value is a PropBinding produces no declaration at all — silently. `visible` is the clearest case: the check is a literal `false` comparison, which a `{ $binding }` object fails, so a bound visibility emits nothing.",
-    "propBindingNeedsDecision": true,
-    "propBindingDecisionNote": "Two ways this could go. Treat it as a genuine gap and emit something — a variant selector or a custom property driven by the bound prop — which makes bound styles work but expands what the CSS layer owns. Or declare it out of scope for CSS and require the platform binding above to resolve bindings before styling, which keeps CSS literal-only and pushes the work to React and Web Components. The second matches how the transform is actually built today; the first is what a reader of the spec would expect from a binding that says it supports PropBinding.",
+    "propBindingNote": "A PropBinding is not applied to any style value. `visible` is the one possible exception and is not currently realised either: the check is a literal `false` comparison, which a `{ $binding }` object fails, so a bound visibility emits nothing. Declared scope, not an unfound gap.",
     "conditional": "unsupported",
-    "conditionalNote": "Not read anywhere in the transform — no module matches a conditional at all. A `visible` carrying the ADR-018 conditional form renders as permanently visible, because the literal `false` check fails on an `{ if }` object. The condition is silently discarded.",
-    "conditionalNeedsDecision": true,
-    "conditionalDecisionNote": "ADR-018 defines conditional visibility as part of the contract, and this platform ignores it. Either the conditional is evaluated at emit time where its operands are statically known, or it is declared permanently out of scope for CSS and the ADR should say so. Worth noting the asymmetry: the render path DOES implement the conditional visible binding, so a document round-trips through Figma correctly and loses the condition only on the way to CSS."
+    "conditionalNote": "Not yet implemented. Nothing in the transform matches a conditional, so a `visible` carrying the ADR-018 conditional form renders permanently visible and the condition is discarded. The render path does implement it, so a document survives a Figma round trip and loses the condition only on the way to CSS."
   },
   "realises": "The style surface. Every output in this binding is a CSS declaration, so it is shared by every platform that styles with CSS rather than belonging to any one of them.",
   "dependedOnBy": [

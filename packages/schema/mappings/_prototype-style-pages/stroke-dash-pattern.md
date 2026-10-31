@@ -10,37 +10,27 @@ tableOfContents: false
 
 Dash pattern for a stroke. Present (non-null) when the stroke is dashed; null or absent when solid.
 
-#### Type(s)
+### Type
 
-| Type |
-|---|
-| [`StrokeDashPattern`](/schema/stroke-dash-pattern/) |
-| `null` |
+[`StrokeDashPattern`](/schema/stroke-dash-pattern/), `null`
 
-#### Default
+### Default
 
-| Value | Declared by |
-|---|---|
-| `null` — apply nothing | [`styles.schema.json`](/schema/specification/#41a-an-absent-style-key-resolves-to-its-declared-default) |
+`null` — apply nothing, [declared by the schema](/schema/specification/#41a-an-absent-style-key-resolves-to-its-declared-default)
 
-#### Supported on
+### Supported on
 
-| Element | Captured | Rendered |
-|---|---|---|
-| `component` | yes | yes |
-| `ellipse` | yes | yes |
-| `frame` | yes | yes |
-| `glyph` | no | no |
-| `instance` | no | no |
-| `line` | yes | yes |
-| `polygon` | yes | yes |
-| `rectangle` | yes | yes |
-| `slot` | yes | yes |
-| `star` | yes | yes |
-| `text` | no | no |
-| `vector` | yes | yes |
+- [`component`](/schema/anatomy/#elementtype)
+- [`ellipse`](/schema/anatomy/#elementtype)
+- [`frame`](/schema/anatomy/#elementtype)
+- [`line`](/schema/anatomy/#elementtype)
+- [`polygon`](/schema/anatomy/#elementtype)
+- [`rectangle`](/schema/anatomy/#elementtype)
+- [`slot`](/schema/anatomy/#elementtype)
+- [`star`](/schema/anatomy/#elementtype)
+- [`vector`](/schema/anatomy/#elementtype)
 
-#### Platform bindings
+### Platform bindings
 
 | Platform | Disposition | Realised by |
 |---|---|---|
@@ -48,22 +38,20 @@ Dash pattern for a stroke. Present (non-null) when the stroke is dashed; null or
 | [CSS](/schema/mappings/css/) | **unverified** | — |
 
 
-#### Decision records
+### Decision records
 
 **Decides this key** — named in the ADR's title, summary, or Decision section.
 
-| ADR | Title | Status |
-|---|---|---|
-| [ADR-059](/adr/059-border-style/) | Stroke Dash Pattern | ACCEPTED |
+- [ADR-059](/adr/059-border-style/) — Stroke Dash Pattern
 
-#### Rules
+### Rules
 
 | Rule | Statement |
 |---|---|
 | [DSPEC-44](/schema/specification/#9-rule-catalogue) | Every `Styles` property declares a `default` valid against its own schema |
 | [DSPEC-45](/schema/specification/#9-rule-catalogue) | A declared `default` is a literal, never a reference or conditional |
 
-#### Source
+### Source
 
 | Format | File |
 |---|---|
