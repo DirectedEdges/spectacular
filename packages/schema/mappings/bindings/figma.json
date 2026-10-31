@@ -22,7 +22,8 @@
         ],
         "target": "node.rotation",
         "notes": "Degrees, written directly.",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "visible": {
         "disposition": "unverified",
@@ -42,7 +43,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "opacity": {
         "disposition": "bound",
@@ -62,7 +64,8 @@
         ],
         "target": "node.opacity",
         "notes": "A TokenReference binds the variable; otherwise the raw number is written.",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "locked": {
         "disposition": "bound",
@@ -82,7 +85,8 @@
         ],
         "target": "node.locked",
         "notes": "Canvas interaction only — the Plugin API can still mutate a locked node, so it applies wherever it is reached, children included.",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "backgroundColor": {
         "disposition": "unverified",
@@ -94,7 +98,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "backgroundImage": {
         "disposition": "unverified",
@@ -105,7 +110,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "fillColor": {
         "disposition": "unverified",
@@ -119,7 +125,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "textColor": {
         "disposition": "unverified",
@@ -128,7 +135,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "effects": {
         "disposition": "bound",
@@ -147,7 +155,8 @@
         ],
         "target": "Effects.apply",
         "notes": "Accepts Effects, TokenReference, or null.",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "clipsContent": {
         "disposition": "bound",
@@ -158,7 +167,8 @@
         ],
         "target": "node.clipsContent",
         "notes": "Container types only; the key never reaches another type because no other key list admits it.",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "cornerRadius": {
         "disposition": "unverified",
@@ -170,7 +180,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "width": {
         "disposition": "bound",
@@ -191,7 +202,8 @@
         "target": null,
         "notes": null,
         "cluster": "autoVsAbsoluteLayout",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "height": {
         "disposition": "bound",
@@ -211,7 +223,8 @@
         "target": null,
         "notes": null,
         "cluster": "autoVsAbsoluteLayout",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "minWidth": {
         "disposition": "unverified",
@@ -231,7 +244,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "minHeight": {
         "disposition": "unverified",
@@ -251,7 +265,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "maxWidth": {
         "disposition": "unverified",
@@ -271,7 +286,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "maxHeight": {
         "disposition": "unverified",
@@ -291,7 +307,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "position": {
         "disposition": "bound",
@@ -312,7 +329,8 @@
         "target": null,
         "notes": null,
         "cluster": "autoVsAbsoluteLayout",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "top": {
         "disposition": "bound",
@@ -333,7 +351,8 @@
         "target": null,
         "notes": null,
         "cluster": "autoVsAbsoluteLayout",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "bottom": {
         "disposition": "bound",
@@ -354,7 +373,8 @@
         "target": null,
         "notes": null,
         "cluster": "autoVsAbsoluteLayout",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "start": {
         "disposition": "bound",
@@ -375,7 +395,8 @@
         "target": null,
         "notes": null,
         "cluster": "autoVsAbsoluteLayout",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "end": {
         "disposition": "bound",
@@ -396,7 +417,8 @@
         "target": null,
         "notes": null,
         "cluster": "autoVsAbsoluteLayout",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "centerHorizontalOffset": {
         "disposition": "bound",
@@ -417,7 +439,8 @@
         "target": null,
         "notes": null,
         "cluster": "autoVsAbsoluteLayout",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "centerVerticalOffset": {
         "disposition": "bound",
@@ -438,7 +461,8 @@
         "target": null,
         "notes": null,
         "cluster": "autoVsAbsoluteLayout",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "layoutSizingHorizontal": {
         "disposition": "bound",
@@ -459,7 +483,8 @@
         "target": null,
         "notes": null,
         "cluster": "autoVsAbsoluteLayout",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "layoutSizingVertical": {
         "disposition": "bound",
@@ -480,7 +505,8 @@
         "target": null,
         "notes": null,
         "cluster": "autoVsAbsoluteLayout",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "strokes": {
         "disposition": "unverified",
@@ -497,7 +523,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "strokeAlign": {
         "disposition": "unverified",
@@ -514,7 +541,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "strokeWeight": {
         "disposition": "unverified",
@@ -531,7 +559,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "strokeDashPattern": {
         "disposition": "unverified",
@@ -548,7 +577,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "typography": {
         "disposition": "bound",
@@ -558,7 +588,8 @@
         "target": "Typography.apply",
         "notes": "Accepts Typography or TokenReference. A font that fails to load degrades to Inter Regular with a warning, never aborts.",
         "cluster": "namedStyleVersusInline",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "textAlignHorizontal": {
         "disposition": "unverified",
@@ -567,7 +598,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "textAlignVertical": {
         "disposition": "unverified",
@@ -576,7 +608,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "textOverflow": {
         "disposition": "unverified",
@@ -585,7 +618,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "maxLines": {
         "disposition": "bound",
@@ -594,7 +628,8 @@
         ],
         "target": "node.maxLines",
         "notes": "Deferred to last — honoured only while textTruncation is ENDING, so textOverflow must land first.",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "mainAxisAlignment": {
         "disposition": "unverified",
@@ -605,7 +640,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "primaryAxisSizingMode": {
         "disposition": "bound",
@@ -616,7 +652,8 @@
         ],
         "target": "node.primaryAxisSizingMode",
         "notes": "Deferred after layoutSizingHorizontal/Vertical, which themselves write it — the shorthand would otherwise clobber the explicit primitive.",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "crossAxisAlignment": {
         "disposition": "unverified",
@@ -627,7 +664,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "layoutMode": {
         "disposition": "bound",
@@ -639,7 +677,8 @@
         "target": null,
         "notes": null,
         "cluster": "wrapping",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "wrap": {
         "disposition": "bound",
@@ -651,7 +690,8 @@
         "target": null,
         "notes": null,
         "cluster": "wrapping",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "wrapAlignment": {
         "disposition": "bound",
@@ -663,7 +703,8 @@
         "target": null,
         "notes": null,
         "cluster": "wrapping",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "itemReverseZIndex": {
         "disposition": "bound",
@@ -674,7 +715,8 @@
         ],
         "target": "node.itemReverseZIndex",
         "notes": "Auto-layout only — a frame with no layoutMode has nothing to reverse. layoutMode is structural and applied first.",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "itemSpacing": {
         "disposition": "bound",
@@ -686,7 +728,8 @@
         "target": null,
         "notes": null,
         "cluster": "wrapping",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "padding": {
         "disposition": "unverified",
@@ -697,7 +740,8 @@
         ],
         "target": null,
         "notes": null,
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "cornerSmoothing": {
         "disposition": "bound",
@@ -713,7 +757,8 @@
         ],
         "target": "CornerStyle.applySmoothing",
         "notes": "Skipped on TEXT nodes.",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       },
       "aspectRatio": {
         "disposition": "bound",
@@ -731,7 +776,8 @@
         ],
         "target": "node.targetAspectRatio",
         "notes": "Deferred to last — the lock reads the node final dimensions, so an earlier resize would be clobbered by later sizing keys.",
-        "onAbsent": "unverified"
+        "onAbsent": "unverified",
+        "basis": "implementation"
       }
     },
     "styleClusters": {
@@ -915,7 +961,8 @@
         "otherwise": {
           "emit": [],
           "why": "a flow-placed child in auto-layout records no positioning offsets"
-        }
+        },
+        "basis": "intent"
       },
       "wrapping": {
         "disposition": "bound",
@@ -1044,7 +1091,8 @@
         ],
         "otherwise": {
           "emit": []
-        }
+        },
+        "basis": "intent"
       },
       "namedStyleVersusInline": {
         "disposition": "bound",
@@ -1126,7 +1174,8 @@
         ],
         "otherwise": {
           "emit": []
-        }
+        },
+        "basis": "intent"
       }
     }
   },
@@ -1154,5 +1203,10 @@
     "nothing": "Applies nothing, silently.",
     "unverified": "Nobody has established what this platform does when the key is absent."
   },
-  "onAbsentNote": "What this platform does when a style key is absent from a document. The schema declares the meaning of absence once (§4.1a); this records whether the platform honours it. A row whose onAbsent is not declaredDefault is a disagreement with the contract, and each one is a decision rather than an accident."
+  "onAbsentNote": "What this platform does when a style key is absent from a document. The schema declares the meaning of absence once (§4.1a); this records whether the platform honours it. A row whose onAbsent is not declaredDefault is a disagreement with the contract, and each one is a decision rather than an accident.",
+  "basisVocabulary": {
+    "implementation": "Verified against a citable implementation. The drift guard checks it, and a change to that implementation fails the build.",
+    "intent": "Asserted from the authoritative source for what the data means, which is not publicly citable. Nothing mechanical checks it; a reviewer must."
+  },
+  "basisNote": "Whether a claim is checked or asserted. Figma is bidirectional: a render claim is verified against a citable implementation, while a capture claim rests on the authoritative capture engine, which is private — so nothing mechanical can check it and a reader should know that."
 }

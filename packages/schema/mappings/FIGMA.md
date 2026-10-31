@@ -97,7 +97,7 @@ resolution rule is the mapping rather than a row in the table above.
 
 ### autoVsAbsoluteLayout
 
-bound — keys: `position`, `top`, `bottom`, `start`, `end`, `centerHorizontalOffset`, `centerVerticalOffset`, `layoutSizingHorizontal`, `layoutSizingVertical`, `width`, `height`
+bound · figma-to-spec · **asserted**, not mechanically checked — keys: `position`, `top`, `bottom`, `start`, `end`, `centerHorizontalOffset`, `centerVerticalOffset`, `layoutSizingHorizontal`, `layoutSizingVertical`, `width`, `height`
 
 **Operands.** Every fact the cluster reads. Nothing outside this set participates.
 
@@ -130,7 +130,7 @@ bound — keys: `position`, `top`, `bottom`, `start`, `end`, `centerHorizontalOf
 
 ### wrapping
 
-bound — keys: `wrap`, `wrapAlignment`, `itemSpacing`, `layoutMode`
+bound · figma-to-spec · **asserted**, not mechanically checked — keys: `wrap`, `wrapAlignment`, `itemSpacing`, `layoutMode`
 
 **Operands.** Every fact the cluster reads. Nothing outside this set participates.
 
@@ -158,7 +158,7 @@ bound — keys: `wrap`, `wrapAlignment`, `itemSpacing`, `layoutMode`
 
 ### namedStyleVersusInline
 
-bound — keys: `typography`
+bound · figma-to-spec · **asserted**, not mechanically checked — keys: `typography`
 
 **Operands.** Every fact the cluster reads. Nothing outside this set participates.
 

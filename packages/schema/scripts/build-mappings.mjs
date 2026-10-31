@@ -228,9 +228,16 @@ const renderPlatform = (file) => {
     : `| Style key | Disposition | ${col} | Notes |\n|---|---|---|---|`;
 
   const clusterSections = Object.entries(clusters).map(([name, c]) => {
+      const basisMark =
+      c.basis === 'intent'
+        ? ' · **asserted**, not mechanically checked'
+        : c.basis === 'implementation'
+          ? ' · verified against an implementation'
+          : '';
+
     const head = `### ${name}
 
-${badge(c.disposition)} — keys: ${c.keys.map((k) => `\`${k}\``).join(', ')}
+${badge(c.disposition)}${c.direction ? ` · ${c.direction}` : ''}${basisMark} — keys: ${c.keys.map((k) => `\`${k}\``).join(', ')}
 `;
 
     if (c.form !== 'cases') {

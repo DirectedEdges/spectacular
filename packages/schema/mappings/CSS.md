@@ -97,7 +97,7 @@ resolution rule is the mapping rather than a row in the table above.
 
 ### autoLayout
 
-bound — keys: `layoutMode`, `mainAxisAlignment`, `crossAxisAlignment`, `wrap`, `wrapAlignment`, `itemSpacing`
+bound · verified against an implementation — keys: `layoutMode`, `mainAxisAlignment`, `crossAxisAlignment`, `wrap`, `wrapAlignment`, `itemSpacing`
 
 **Operands.** Every fact the cluster reads. Nothing outside this set participates.
 
@@ -134,7 +134,7 @@ bound — keys: `layoutMode`, `mainAxisAlignment`, `crossAxisAlignment`, `wrap`,
 
 ### autoLayoutSizing
 
-bound — keys: `layoutSizingHorizontal`, `layoutSizingVertical`
+bound · verified against an implementation — keys: `layoutSizingHorizontal`, `layoutSizingVertical`
 
 **Operands.** Every fact the cluster reads. Nothing outside this set participates.
 
@@ -180,7 +180,7 @@ bound — keys: `layoutSizingHorizontal`, `layoutSizingVertical`
 
 ### absolutePositioning
 
-bound — keys: `position`, `top`, `bottom`, `start`, `end`, `centerHorizontalOffset`, `centerVerticalOffset`
+bound · verified against an implementation — keys: `position`, `top`, `bottom`, `start`, `end`, `centerHorizontalOffset`, `centerVerticalOffset`
 
 **Operands.** Every fact the cluster reads. Nothing outside this set participates.
 
@@ -233,7 +233,7 @@ bound — keys: `position`, `top`, `bottom`, `start`, `end`, `centerHorizontalOf
 
 ### strokeRendering
 
-bound — keys: `strokes`, `strokeAlign`, `strokeWeight`
+bound · verified against an implementation — keys: `strokes`, `strokeAlign`, `strokeWeight`
 
 **Operands.** Every fact the cluster reads. Nothing outside this set participates.
 
@@ -269,7 +269,7 @@ bound — keys: `strokes`, `strokeAlign`, `strokeWeight`
 
 ### intrinsicSize
 
-bound — keys: `width`, `height`, `aspectRatio`
+bound · verified against an implementation — keys: `width`, `height`, `aspectRatio`
 
 **Operands.** Every fact the cluster reads. Nothing outside this set participates.
 
@@ -294,7 +294,7 @@ bound — keys: `width`, `height`, `aspectRatio`
 
 ### textTruncation
 
-bound — keys: `textOverflow`, `maxLines`
+bound · verified against an implementation — keys: `textOverflow`, `maxLines`
 
 **Operands.** Every fact the cluster reads. Nothing outside this set participates.
 
