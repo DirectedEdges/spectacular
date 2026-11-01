@@ -115,7 +115,7 @@ No schema change, and the text is at least present. But it contradicts the const
 
 ## Decision
 
-**Option A.** A closed value set is declared as `oneOf` branches of `const` plus `description`, one branch per option. A branch also carries `title` where a readable label differs usefully from the value.
+**Option A.** A closed value set is declared as `oneOf` branches of `const` plus `description`, one branch per option.
 
 The set stays closed, and the option's meaning sits on the option.
 
@@ -123,6 +123,56 @@ Two things follow directly and are part of this decision:
 
 - A branch's `description` is subject to the constitution's description rule: it says what choosing that option does, not what the property is for.
 - Where a property's `description` currently carries option meanings, those move to their branches and the description keeps only the property's purpose. `position` is the worked example.
+
+### `title` is optional, and earns its place in two of three positions
+
+`title` is a standard annotation and the keyword the specification project's own example used. A branch is a full schema object, so it takes both. They answer different questions: `title` is what to call the option, `description` is what choosing it does. Where the value already says what to call it, `title` is a second copy and the constitution's delete-and-reread test removes it.
+
+**On a `const` branch — use it where the value does not say what it means.**
+
+```json
+"variantDepth": {
+  "oneOf": [
+    { "const": 1,    "title": "Direct children only" },
+    { "const": 2,    "title": "Two levels" },
+    { "const": 3,    "title": "Three levels" },
+    { "const": 9999, "title": "Unlimited", "description": "A sentinel, not a depth. Traverses to the leaves." }
+  ]
+}
+```
+
+`settings.spec.variantDepth` is declared `[1, 2, 3, 9999]` today. Nothing about `9999` says "unlimited", and a reader has no way to learn it from the schema. `ColorObject.colorSpace` is the other clear case: fourteen CSS Color 4 identifiers where `a98-rgb`, `prophoto-rgb` and `xyz-d50` are precise but not readable.
+
+The opposite case is most of `Styles`. `INSIDE` titled "Inside" and `SPACE_BETWEEN` titled "Space Between" add a word and no information — the constitution's naming rule already requires unabbreviated SCREAMING_CASE, which is why these values read as labels already. **So `title` is optional per branch, not required, and the test is whether the value already carries the label.**
+
+**On a branch that is not a `const` — use it to name the form.** This is the use the first draft of this ADR missed, and it is the more valuable one.
+
+```json
+"ColorStyleValue": {
+  "oneOf": [
+    { "type": "string",  "title": "Literal", "description": "A colour in the notation selected by settings.spec.color" },
+    { "$ref": "#/definitions/ColorObject", "title": "Component values" },
+    { "$ref": "#/definitions/TokenReference", "title": "Token" },
+    { "$ref": "#/definitions/GradientValue", "title": "Gradient" },
+    { "type": "null", "title": "None", "description": "No fill is applied" }
+  ]
+}
+```
+
+A `$ref` branch names itself — the reference page reads `ColorObject` off the pointer. A **bare** branch does not: `{type: "string"}` and `{type: "null"}` render as `string` and `null` with no meaning available anywhere. This is already costing us. `build-schema-pages.mjs` hardcodes the phrase "`null` (nothing)" when rendering a null default, because the schema has no way to say what null means for that property. A branch annotation makes that derived instead of invented, and generalises to every union with a bare branch.
+
+**On the property itself — no.** A `title` of "Size" on a property named `size` is a second copy of the key, and the reference page already heads the page with the key name. The property keeps `description` only.
+
+### One caveat on the `$ref` branch form
+
+Under draft-07, which all nine of these files declare, **a subschema containing `$ref` is a reference object and every sibling keyword is silently ignored.** So `{ "title": "Token", "$ref": "#/definitions/TokenReference" }` is, strictly read, a `$ref` and nothing else.
+
+In practice this is already how this schema works and has to keep working: **124 of its 279 `$ref` occurrences carry a `description` sibling**, and the entire generated reference is built from them. The reliance is safe because it is annotation-only — our generators read the raw JSON, where the keywords are plainly present — and because no sibling here ever carries a *constraint*, which is where strict draft-07 behaviour would actually change what validates.
+
+Two consequences of that, both accepted:
+
+- A third-party validator following draft-07 strictly will not surface these titles. That is true of the 124 descriptions already in the files, so this decision does not introduce the exposure.
+- Putting a constraint beside a `$ref` stays forbidden. Annotations only.
 
 ## How this composes with unions that are not pure enums
 
@@ -175,6 +225,7 @@ The constitution's "structural enums vs. `Style`" rule is unaffected: which prop
 ## Downstream Impact
 
 - **Reference pages** gain an Option/Meaning table wherever a set is described, generated from the branches. `build-schema-pages.mjs` currently flattens enum members into the `Type` line.
+- **The `Type` section and the null-default phrasing** become derived rather than invented. The generator hardcodes "`null` (nothing)" today because no branch can say what null means; a branch `title` and `description` replace that with the schema's own words.
 - **Validators** see no change for the sets that convert mechanically. The sets that displace an open string branch do change what validates — they close something currently open — and must be checked against the full corpus before landing.
 - **Consumers reading the schema as data** — anything iterating `enum` to build a picker — must read `oneOf[].const` instead. This is the only breaking read, and it is why the change class below is not `PATCH`.
 
@@ -192,6 +243,7 @@ The constitution's "structural enums vs. `Style`" rule is unaffected: which prop
 - The property `description` is freed to do one job, which is what the constitution's rule asks of it.
 - Per-option text becomes checkable: a test can assert every branch carries a `description`, as `StyleDefaults.test.ts` asserts every property declares a `default`.
 - Branches can later carry `deprecated` or `examples` per option, which a bare `enum` member cannot.
+- A union's non-`const` branches become nameable, which removes a hardcoded phrase from the page generator and gives every bare `string` or `null` branch a meaning it has nowhere today.
 
 **Negative**
 
