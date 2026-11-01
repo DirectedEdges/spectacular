@@ -18,7 +18,7 @@
  * Usage:  node scripts/build-mappings.mjs
  */
 
-import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -93,6 +93,78 @@ const fmt = (p) => {
   }
 };
 
+const kebab = (s) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`).replace(/^-/, '');
+
+/**
+ * One cluster, as its own page.
+ *
+ * A cluster is the unit a reader arrives at: they have a key whose row says
+ * *cluster*, and they want the rule. Inlining nine of these under one heading
+ * meant the rule for `textTruncation` sat four case tables below the rule for
+ * `autoLayout`, with no URL of its own to link or cite.
+ */
+const clusterPage = ({ name, c, platform, title }) => {
+  const basisMark =
+    c.basis === 'intent'
+      ? ' · **asserted**, not mechanically checked'
+      : c.basis === 'implementation'
+        ? ' · verified against an implementation'
+        : '';
+
+  const head = `# ${name}
+
+${badge(c.disposition)}${c.direction ? ` · ${c.direction}` : ''}${basisMark}
+
+A cluster of the [${title} binding](../${platform}.md). These keys resolve jointly — no
+one of them determines any single output, so the rule below *is* the mapping.
+
+**Keys.** ${c.keys.map((k) => `\`${k}\``).join(', ')}
+`;
+
+  if (c.form !== 'cases') {
+    return `${head}
+**Outputs.** ${c.outputs.map((o) => `\`${o}\``).join(', ')}
+
+**Resolution.** ${c.resolution}
+
+**Partially present.** ${c.partial}
+${c.stage ? `\n**Stage.** \`${c.stage}\` — produced by a later pass, not read directly.\n` : ''}${c.notes ? `\n*${c.notes}*\n` : ''}
+> Stated as prose. Not yet converted to a case table, so it cannot be mechanically checked.
+`;
+  }
+
+  const inputs = `| Operand | From |\n|---|---|\n${c.inputs.map((i) => `| \`${i.ref}\` | ${i.from} |`).join('\n')}`;
+
+  const derived = Object.keys(c.derived ?? {}).length
+    ? `\n## Derived predicates\n\n| Name | Expression | Source |\n|---|---|---|\n${Object.entries(c.derived)
+        .map(([n, d]) => `| \`derived.${n}\` | ${fmt(d.expression)} | ${d.source ?? ''} |`)
+        .join('\n')}\n`
+    : '';
+
+  const caseTable = (label, list) =>
+    `\n## ${label}\n\nOrdered — first match wins.\n\n| # | When | Emits | Why |\n|---|---|---|---|\n${list
+      .map((cs, i) => `| ${i + 1} | ${fmt(cs.when)} | ${cs.emit.length ? cs.emit.map(emitCell).join('<br>') : '*nothing*'} | ${cs.why ?? ''} |`)
+      .join('\n')}\n`;
+
+  return `${head}
+## Operands
+
+Every fact the cluster reads. Nothing outside this set participates.
+
+${inputs}
+${derived}${caseTable('Cases', c.cases)}${c.insetCases ? caseTable('Offset cases', c.insetCases) : ''}${
+    c.memberCases ? caseTable('Member cases', c.memberCases) : ''
+  }${
+    c.otherwise
+      ? `\n## Otherwise\n\n${c.otherwise.emit?.length ? c.otherwise.emit.map((e) => `\`${e}\``).join(', ') : '*Nothing is emitted.*'}${
+          c.otherwise.why ? ` — ${c.otherwise.why}` : ''
+        }\n`
+      : ''
+  }${c.stage ? `\n**Stage.** \`${c.stage}\` — produced by a later pass, not read directly.\n` : ''}${
+    c.notes ? `\n*${c.notes}*\n` : ''
+  }`;
+};
+
 /**
  * A binding that inherits its style surface from another. It states only
  * overrides plus the platform-shaped concerns the base binding cannot carry —
@@ -159,7 +231,7 @@ const renderPlatform = (file) => {
   // base binding's obligation, not its. What it must not do is silently restate
   // a key identically — that recreates the second source the dependency removed.
   if (dependsOn.length) {
-    return renderDependent({ platform, title, b, styles, dependsOn, file });
+    return { page: renderDependent({ platform, title, b, styles, dependsOn, file }), clusters: [] };
   }
 
   const missing = styleProps.filter((k) => !(k in styles));
@@ -220,7 +292,7 @@ const renderPlatform = (file) => {
     const scope = isFigma
       ? (v.elements?.length === 12 ? 'all' : (v.elements?.length ? v.elements.join(', ') : '—'))
       : '';
-    const realises = v.cluster ? `cluster [${v.cluster}](#${v.cluster.toLowerCase()})` : cell(v);
+    const realises = v.cluster ? `cluster [${v.cluster}](clusters/${platform}/${kebab(v.cluster)}.md)` : cell(v);
     return `| \`${k}\` | ${badge(v.disposition)} | ${realises} | ${isFigma ? scope + ' | ' : ''}${v.notes ?? ''} |`;
   });
 
@@ -228,52 +300,64 @@ const renderPlatform = (file) => {
     ? `| Style key | Disposition | ${col} | Element types | Notes |\n|---|---|---|---|---|`
     : `| Style key | Disposition | ${col} | Notes |\n|---|---|---|---|`;
 
-  const clusterSections = Object.entries(clusters).map(([name, c]) => {
-      const basisMark =
-      c.basis === 'intent'
-        ? ' · **asserted**, not mechanically checked'
-        : c.basis === 'implementation'
-          ? ' · verified against an implementation'
-          : '';
+  const clusterPages = Object.entries(clusters).map(([name, c]) => ({
+    name,
+    slug: kebab(name),
+    body: clusterPage({ name, c, platform, title }),
+  }));
 
-    const head = `### ${name}
+  /**
+   * The clusters index. The resolution rule itself lives on the cluster's own
+   * page: `autoLayoutSizing` alone is an eleven-row case table over its own
+   * operand set, and six of those inlined made the binding page a document you
+   * scroll past rather than read.
+   */
+  const clusterIndex = Object.entries(clusters).length
+    ? `| Cluster | Disposition | Keys | Resolution |\n|---|---|---|---|\n${Object.entries(clusters)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([name, c]) =>
+          `| [${name}](clusters/${platform}/${kebab(name)}.md) | ${badge(c.disposition)} | ${c.keys.length} | ${
+            c.form === 'cases' ? `${c.cases.length}-row case table` : 'prose — not yet a case table'
+          } |`
+        )
+        .join('\n')}`
+    : '*None declared.*';
 
-${badge(c.disposition)}${c.direction ? ` · ${c.direction}` : ''}${basisMark} — keys: ${c.keys.map((k) => `\`${k}\``).join(', ')}
+  /**
+   * Losses, last. What the platform does is settled by everything above it;
+   * this is the one section whose content is a question rather than a fact,
+   * so it reads as a postscript rather than as part of the mapping.
+   */
+  const losses = (() => {
+    const flagged = Object.entries(styles).filter(([, v]) => v.needsDecision);
+    if (!flagged.length) return '';
+    const themes = b.decisionThemes ?? {};
+    const byTheme = {};
+    for (const [k, v] of flagged) (byTheme[v.needsDecision] ??= []).push(k);
+    const section = ([t, keys]) => {
+      const theme = themes[t] ?? {};
+      const status = theme.decided
+        ? theme.decided.startsWith('Open')
+          ? `**Open.** ${theme.decided.replace(/^Open\.?\s*/, '')}`
+          : `**Decided.** ${theme.decided}`
+        : '**Open.**';
+      return `### ${theme.title ?? t}\n\nAffects ${keys.map((k) => `\`${k}\``).join(', ')}.\n\n${theme.note ?? ''}\n\n${status}`;
+    };
+    const entries = Object.entries(byTheme);
+    const decided = entries.filter(([t]) => themes[t]?.decided && !themes[t].decided.startsWith('Open'));
+    const open = entries.filter(([t]) => !themes[t]?.decided || themes[t].decided.startsWith('Open'));
+
+    return `## Losses
+
+What this platform does is settled and stated above. Where a loss is real, its *acceptability* is a product question rather than a specification's to settle alone. ${flagged.length} of ${styleProps.length} keys raise one of ${entries.length} such questions${
+      open.length ? `, of which ${open.length} ${open.length === 1 ? 'remains' : 'remain'} open` : ' — all decided'
+    }.
+
+${[...open, ...decided].map(section).join('\n\n')}
 `;
+  })();
 
-    if (c.form !== 'cases') {
-      return `${head}
-**Outputs.** ${c.outputs.map((o) => `\`${o}\``).join(', ')}
-
-**Resolution.** ${c.resolution}
-
-**Partially present.** ${c.partial}
-${c.stage ? `\n**Stage.** \`${c.stage}\` — produced by a later pass, not read directly.\n` : ''}${c.notes ? `\n*${c.notes}*\n` : ''}
-> Stated as prose. Not yet converted to a case table, so it cannot be mechanically checked.
-`;
-    }
-
-    const inputs = `| Operand | From |\n|---|---|\n${c.inputs.map((i) => `| \`${i.ref}\` | ${i.from} |`).join('\n')}`;
-
-    const derived = Object.keys(c.derived ?? {}).length
-      ? `\n**Derived predicates.**\n\n| Name | Expression | Source |\n|---|---|---|\n${Object.entries(c.derived).map(([n, d]) => `| \`derived.${n}\` | ${fmt(d.expression)} | ${d.source ?? ''} |`).join('\n')}\n`
-      : '';
-
-    const caseTable = (label, list) =>
-      `\n**${label}** — ordered, first match wins.\n\n| # | When | Emits | Why |\n|---|---|---|---|\n${list
-        .map((cs, i) => `| ${i + 1} | ${fmt(cs.when)} | ${cs.emit.length ? cs.emit.map(emitCell).join('<br>') : '*nothing*'} | ${cs.why ?? ''} |`)
-        .join('\n')}\n`;
-
-    return `${head}
-**Operands.** Every fact the cluster reads. Nothing outside this set participates.
-
-${inputs}
-${derived}${caseTable('Cases', c.cases)}${c.insetCases ? caseTable('Offset cases', c.insetCases) : ''}${c.memberCases ? caseTable('Member cases', c.memberCases) : ''}${
-      c.otherwise ? `\n**Otherwise.** ${c.otherwise.emit?.length ? c.otherwise.emit.map((e) => `\`${e}\``).join(', ') : '*nothing*'}${c.otherwise.why ? ` — ${c.otherwise.why}` : ''}\n` : ''
-    }${c.stage ? `\n**Stage.** \`${c.stage}\` — produced by a later pass, not read directly.\n` : ''}${c.notes ? `\n*${c.notes}*\n` : ''}`;
-  }).join('\n');
-
-  return `# ${title} binding
+  return { clusterPages, page: `# ${title} binding
 
 **Platform binding for the Specs document format — draft.**
 
@@ -286,16 +370,33 @@ Edit the binding file, never this page.
 
 ## Styles
 
-${tally}, of ${styleProps.length} style keys. Dispositions are defined under
-[Dispositions](#dispositions) below.
+${tally}, of ${styleProps.length} style keys.
 
-A key whose row says *cluster* does not map on its own — see the cluster below. Writing a
-per-key mapping for it would be false, not merely incomplete.
+A key whose row says *cluster* does not map on its own — its rule is a case table on the
+cluster's own page. Writing a per-key mapping for it would be false, not merely incomplete.
+
+${(() => {
+  // The legend sits with the table it explains, and lists only the dispositions
+  // this binding uses. As its own section it was either the first thing on the
+  // page, ahead of the thing it annotates, or a footnote nobody reached.
+  const meaning = {
+    bound: 'Realised, and confirmed against the implementation',
+    approximated: 'Realised with loss, and the loss is stated',
+    unsupported: 'Declared as not realised, with the resulting behaviour stated',
+    unverified: 'Coverage detected, mapping not yet confirmed by a human — **work, not a claim**',
+  };
+  const used = DISPOSITION_ORDER.filter((d) => counts[d]);
+  const rows = used.map((d) => `| \`${d}\` | ${counts[d]} | ${meaning[d]} |`).join('\n');
+  const reliance = used.includes('unverified')
+    ? 'Every row below is a claim a reader may rely on, except `unverified`, which asserts nothing.'
+    : 'Every row below is a claim a reader may rely on.';
+  return `| Disposition | Keys | Meaning |\n|---|---|---|\n${rows}\n\n${reliance}`;
+})()}
 
 ${header}
 ${rows.join('\n')}
 
-## Value forms
+## Values
 
 ${b.valueForms?.summary ?? ''}
 
@@ -317,37 +418,7 @@ ${(() => {
   }`;
 })()}
 
-${(() => {
-  const flagged = Object.entries(styles).filter(([, v]) => v.needsDecision);
-  if (!flagged.length) return '';
-  const themes = b.decisionThemes ?? {};
-  const byTheme = {};
-  for (const [k, v] of flagged) (byTheme[v.needsDecision] ??= []).push(k);
-  const section = ([t, keys]) => {
-    const theme = themes[t] ?? {};
-    const status = theme.decided
-      ? (theme.decided.startsWith('Open') ? `**Open.** ${theme.decided.replace(/^Open\.?\s*/, '')}` : `**Decided.** ${theme.decided}`)
-      : '**Open.**';
-    return `#### ${theme.title ?? t}\n\nAffects ${keys.map((k) => `\`${k}\``).join(', ')}.\n\n${theme.note ?? ''}\n\n${status}`;
-  };
-  const entries = Object.entries(byTheme);
-  const decided = entries.filter(([t]) => themes[t]?.decided && !themes[t].decided.startsWith('Open'));
-  const open = entries.filter(([t]) => !themes[t]?.decided || themes[t].decided.startsWith('Open'));
-
-  return `## Losses and decisions
-
-What this platform does is settled and stated above. Where a loss is real, its *acceptability* is a product question rather than a specification's to settle alone. ${flagged.length} of ${styleProps.length} keys raise one of ${entries.length} such questions${open.length ? `, of which ${open.length} ${open.length === 1 ? 'remains' : 'remain'} open` : ' — all decided'}.
-
-${[...open, ...decided].map(section).join('\n\n')}
-
-`;
-})()}## Clusters
-
-Keys that resolve jointly. No single key in a cluster determines any single output, so the
-resolution rule is the mapping rather than a row in the table above.
-
-${clusterSections}
-## Absent keys
+## Defaults
 
 What an absent style key **means** is spec-level, not per-platform: two platforms that
 answer differently disagree about what the same document says. It is declared once in the
@@ -371,36 +442,15 @@ ${Object.values(styles).some((v) => v.onAbsentVerified === false)
   ? '> Seeded from the transform’s documented policy and **not yet confirmed per key**. A seeded value is a starting point, not a finding.'
   : ''}
 
-## Dispositions
+## Clusters
 
-${(() => {
-  // Only the dispositions this binding actually uses. Listing all four put an
-  // `unverified` row on pages that have no unverified key, which reads as
-  // outstanding work where there is none.
-  const meaning = {
-    bound: 'Realised, and confirmed against the implementation',
-    approximated: 'Realised with loss, and the loss is stated',
-    unsupported: 'Declared as not realised, with the resulting behaviour stated',
-    unverified: 'Coverage detected, mapping not yet confirmed by a human — **work, not a claim**',
-  };
-  const used = DISPOSITION_ORDER.filter((d) => counts[d]);
-  const rows = used.map((d) => `| \`${d}\` | ${counts[d]} | ${meaning[d]} |`).join('\n');
-  const reliance = used.includes('unverified')
-    ? '\nA reader may rely on every row above except `unverified`, which asserts nothing.\n'
-    : '\nEvery row above is a claim a reader may rely on.\n';
-  return `| Disposition | Keys | Meaning |\n|---|---|---|\n${rows}\n${reliance}`;
-})()}
-## Concepts not yet bound
+Keys that resolve jointly. No single key in a cluster determines any single output, so the
+resolution rule is the mapping rather than a row in the Styles table. Each cluster's rule
+is its own page.
 
-Props, anatomy and elements, and layout have no declared binding yet. They are named
-here so their absence is visible rather than implied:
+${clusterIndex}
 
-| Concept | State |
-|---|---|
-| Props | not declared |
-| Anatomy and elements | not declared |
-| Layout | not declared |
-`;
+${losses}` };
 };
 
 /** The spec-level default table — one page, not per platform. */
@@ -460,11 +510,24 @@ ${rows.join('\n')}
 
 const files = readdirSync(bindingsDir).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
 const pages = [];
+const clusterDirs = new Set();
 for (const file of files) {
   const platform = file.replace(/\.json$/, '');
-  pages.push([join(pkg, `mappings/${platform.toUpperCase()}.md`), renderPlatform(file), `${platform.toUpperCase()}.md`]);
+  const { page, clusterPages = [] } = renderPlatform(file);
+  pages.push([join(pkg, `mappings/${platform.toUpperCase()}.md`), page, `${platform.toUpperCase()}.md`]);
+  for (const cl of clusterPages) {
+    const dir = join(pkg, `mappings/clusters/${platform}`);
+    clusterDirs.add(dir);
+    pages.push([join(dir, `${cl.slug}.md`), cl.body, `clusters/${platform}/${cl.slug}.md`]);
+  }
 }
 pages.push([join(pkg, 'mappings/DEFAULTS.md'), renderDefaults(), 'DEFAULTS.md']);
+
+// Stale cluster files would otherwise outlive a renamed or deleted cluster.
+for (const dir of clusterDirs) {
+  if (existsSync(dir)) rmSync(dir, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
+}
 
 for (const [, page, label] of pages) checkNoLeaks(label, page);
 

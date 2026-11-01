@@ -9,7 +9,7 @@
  * Usage:  node scripts/build-mappings-pages.mjs
  */
 
-import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, mkdirSync, rmSync, existsSync, statSync } from 'node:fs';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -57,21 +57,60 @@ if (!existsSync(srcDir)) {
 
 mkdirSync(outDir, { recursive: true });
 
-const files = readdirSync(srcDir).filter((f) => f.endsWith('.md'));
-if (!files.length) {
+/**
+ * Every source page, as `{ file, out, platform }`. Platform bindings sit at the
+ * top of `mappings/`; each binding's clusters sit in `mappings/clusters/<platform>/`
+ * and publish under that binding's own route, so a URL reads
+ * `/schema/mappings/css/clusters/auto-layout/`.
+ */
+const sources = (() => {
+  const out = readdirSync(srcDir)
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => ({ file: f, abs: join(srcDir, f), out: `${f.replace(/\.md$/, '').toLowerCase()}.md`, platform: f.replace(/\.md$/, '') }));
+
+  const clusterRoot = join(srcDir, 'clusters');
+  if (existsSync(clusterRoot)) {
+    for (const platform of readdirSync(clusterRoot)) {
+      const dir = join(clusterRoot, platform);
+      if (!statSync(dir).isDirectory()) continue;
+      for (const f of readdirSync(dir).filter((n) => n.endsWith('.md'))) {
+        out.push({
+          file: `clusters/${platform}/${f}`,
+          abs: join(dir, f),
+          out: `${platform}/clusters/${f}`,
+          platform: platform.toUpperCase(),
+          isCluster: true,
+        });
+      }
+    }
+  }
+  return out;
+})();
+
+if (!sources.length) {
   console.log('mappings pages: no .md files to render');
   process.exit(0);
 }
 
-for (const file of files) {
-  const platform = file.replace(/\.md$/, '');
-  const md = readFileSync(join(srcDir, file), 'utf8');
+// Replace wholesale, so a renamed or deleted cluster cannot leave a page behind.
+if (existsSync(outDir)) rmSync(outDir, { recursive: true, force: true });
+mkdirSync(outDir, { recursive: true });
+
+for (const source of sources) {
+  const { file, abs, platform, isCluster } = source;
+  const md = readFileSync(abs, 'utf8');
 
   // Starlight renders the frontmatter title as the H1; drop the source's own.
   const body = md.replace(/^# .+\n/, '');
 
   // The package file links to ../SPECIFICATION.md, which is not the site's shape.
   let linked = body.replace(/\]\(\.\.\/SPECIFICATION\.md\)/g, '](/schema/specification/)');
+
+  // A binding page links its clusters as clusters/<platform>/<name>.md; a
+  // cluster page links back to its binding as ../<platform>.md.
+  linked = linked
+    .replace(/\]\(clusters\/([a-z]+)\/([a-z-]+)\.md\)/g, (_, p, c) => `](/schema/mappings/${p}/clusters/${c}/)`)
+    .replace(/\]\(\.\.\/([a-z]+)\.md\)/g, (_, p) => `](/schema/mappings/${p}/)`);
 
   // A dependent binding links its base as CSS.md, and every page links
   // DEFAULTS.md. On the site those are routes under /schema/mappings/.
@@ -99,16 +138,24 @@ for (const file of files) {
     return linked.replace(re, (_, k) => `[\`${k}\`](/schema/styles/${kebab(k)}/)`);
   })();
 
-  const title = TITLES[platform] ?? platform.charAt(0) + platform.slice(1).toLowerCase();
+  // A cluster's own name is its title, taken from the source H1 the body drops.
+  const clusterName = isCluster ? (md.match(/^# (.+)$/m)?.[1] ?? '').trim() : null;
+  const title = clusterName ?? TITLES[platform] ?? platform.charAt(0) + platform.slice(1).toLowerCase();
+  const description = clusterName
+    ? `How the ${TITLES[platform] ?? platform} binding resolves the ${clusterName} cluster — its operand set and ordered case table`
+    : (DESCRIPTIONS[platform] ?? `How the ${title} binding realises the Specs schema`);
+
   const page = `---
 title: "${title}"
-description: "${DESCRIPTIONS[platform] ?? `How the ${title} binding realises the Specs schema`}"
+description: "${description}"
 ---
 
 <!-- Generated from packages/schema/mappings/${file} by scripts/build-mappings-pages.mjs — edit mappings/bindings/${platform.toLowerCase()}.json, not this file. -->
 
 ${linked}`;
 
-  writeFileSync(join(outDir, `${platform.toLowerCase()}.md`), page);
-  console.log(`mappings pages: wrote /schema/mappings/${platform.toLowerCase()}`);
+  const out = join(outDir, source.out);
+  mkdirSync(dirname(out), { recursive: true });
+  writeFileSync(out, page);
+  console.log(`mappings pages: wrote /schema/mappings/${source.out.replace(/\.md$/, '')}`);
 }

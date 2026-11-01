@@ -106,15 +106,6 @@ const elementTables = (() => {
 })();
 
 /**
- * ADRs that *decide* a key — derived, not hand-listed.
- *
- * Scoped to the title, the Summary line, and the Decision section. A key
- * appearing anywhere in an ADR's prose is usually incidental: scanning whole
- * files listed six ADRs for `layoutSizingHorizontal`, including one about icon
- * detection that merely quoted a YAML example. A decision about a key lives in
- * the section named Decision.
- */
-/**
  * ADRs that have a page on the site. Four exist in `adr/` without one — a DRAFT
  * among them — so linking every cited ADR produced links to pages that are not
  * published. An unpublished ADR is still worth naming; it is just not a link.
@@ -125,6 +116,15 @@ const publishedAdrs = (() => {
   return new Set(readdirSync(dir).filter((f) => f.endsWith('.md')).map((f) => f.replace(/\.md$/, '')));
 })();
 
+/**
+ * ADRs that *decide* a key — derived, not hand-listed.
+ *
+ * Scoped to the title, the Summary line, and the Decision section. A key
+ * appearing anywhere in an ADR's prose is usually incidental: scanning whole
+ * files listed six ADRs for `layoutSizingHorizontal`, including one about icon
+ * detection that merely quoted a YAML example. A decision about a key lives in
+ * the section named Decision.
+ */
 const adrsFor = (key) => {
   const dir = join(repo, 'adr');
   if (!existsSync(dir)) return [];
@@ -340,7 +340,7 @@ for (const node of nodes) {
     ? Object.entries(bindings).map(([platform, b]) => {
         const v = b.concepts.styles[key] ?? { disposition: 'unverified' };
         const realises = v.cluster
-          ? `[\`${v.cluster}\`](/schema/mappings/${platform}/#${v.cluster.toLowerCase()})`
+          ? `[\`${v.cluster}\`](/schema/mappings/${platform}/clusters/${kebab(v.cluster)}/)`
           : (v.target ? `\`${v.target}\`` : (v.module?.length ? v.module.map((m) => `\`${m}\``).join(', ') : '—'));
         return `| [${PLATFORM[platform]}](/schema/mappings/${platform}/) | ${v.disposition === 'unverified' ? '**unverified**' : v.disposition} | ${realises} |`;
       }).join('\n')
@@ -381,22 +381,31 @@ for (const node of nodes) {
     return [...union].sort().map((t) => `- [\`${t}\`](/schema/anatomy/#elementtype)`).join('\n');
   })();
 
-  // Keys this one resolves alongside, per platform — a link list, not a sentence.
+  /**
+   * Keys this one resolves alongside, grouped by cluster.
+   *
+   * Every clustered key belongs to a *different* cluster on each platform —
+   * `width` is in CSS's `intrinsicSize` and Figma's `autoVsAbsoluteLayout` — so
+   * one flat list annotated with platform names merged two unrelated groupings
+   * into a set that matched neither. A key appearing under two clusters is
+   * correct and is repeated.
+   */
   const siblingList = (() => {
     if (!isStyleKey) return null;
-    const siblings = new Map();
+    const groups = [];
     for (const [platform, b] of Object.entries(bindings)) {
-      const cl = b.concepts.styles[key]?.cluster;
-      if (!cl) continue;
-      for (const k of b.concepts.styleClusters[cl].keys ?? []) {
-        if (k !== key) siblings.set(k, (siblings.get(k) ?? []).concat(PLATFORM[platform]));
-      }
+      const name = b.concepts.styles[key]?.cluster;
+      if (!name) continue;
+      const others = (b.concepts.styleClusters[name].keys ?? []).filter((k) => k !== key);
+      if (!others.length) continue;
+      groups.push(
+        `**[${name}](/schema/mappings/${platform}/clusters/${kebab(name)}/)** — ${PLATFORM[platform]}\n\n${others
+          .sort()
+          .map((k) => `- [\`${k}\`](/schema/styles/${kebab(k)}/)`)
+          .join('\n')}`
+      );
     }
-    if (!siblings.size) return null;
-    return [...siblings.entries()]
-      .sort()
-      .map(([k, ps]) => `- [\`${k}\`](/schema/styles/${kebab(k)}/) — ${ps.join(', ')}`)
-      .join('\n');
+    return groups.length ? groups.join('\n\n') : null;
   })();
 
   /**
