@@ -330,8 +330,7 @@
       }
     },
     "AnyProp": {
-      "description": "",
-      "examples": [],
+      "description": "Any one of the seven prop definitions. A prop's `type` member discriminates which, so a consumer reads `type` before interpreting the rest.",
       "oneOf": [
         {
           "$ref": "#/definitions/BooleanProp"
@@ -474,8 +473,7 @@
     },
     "BooleanProp": {
       "type": "object",
-      "description": "",
-      "examples": [],
+      "description": "Boolean property definition for props a consumer sets on or off, typically read from a Figma boolean property that toggles a layer.",
       "properties": {
         "type": {
           "type": "string",
@@ -538,8 +536,7 @@
     },
     "EnumProp": {
       "type": "object",
-      "description": "",
-      "examples": [],
+      "description": "Enum property definition for a prop whose value is one of a fixed list, read from a Figma variant property. The admitted values are carried in its own `enum` member rather than by the schema, because they come from the library.",
       "properties": {
         "type": {
           "type": "string",
@@ -567,7 +564,7 @@
     },
     "SlotProp": {
       "type": "object",
-      "description": "",
+      "description": "Slot property definition for a prop a consumer fills with content rather than a scalar. What it accepts is declared in its own `anyOf` member, and how many children it admits in `minChildren` and `maxChildren`.",
       "examples": [],
       "properties": {
         "type": {
@@ -622,7 +619,7 @@
     },
     "Variant": {
       "type": "object",
-      "description": "",
+      "description": "One configuration of the component and everything that follows from it — the prop values that select it, its layout, and its per-element presentation.",
       "examples": [],
       "properties": {
         "configuration": {
@@ -765,7 +762,7 @@
     },
     "Elements": {
       "type": "object",
-      "description": "",
+      "description": "The presentational half of a variant, keyed by anatomy element name. An element absent from this map inherits the default variant's entry for that element.",
       "examples": [],
       "additionalProperties": {
         "$ref": "#/definitions/Element"
@@ -847,8 +844,7 @@
     },
     "Element": {
       "type": "object",
-      "description": "",
-      "examples": [],
+      "description": "One element as a variant presents it — its styles, its content, and how it configures any instance it wraps. Keyed by the same name the anatomy uses, so the two describe the same element from different angles.",
       "properties": {
         "children": {
           "oneOf": [
@@ -1073,9 +1069,11 @@
       "additionalProperties": false
     },
     "Styles": {
+      "description": "The style keys an element carries, defined in `styles.schema.json`. Named here so a component document can cite one definition rather than reaching across files at every use.",
       "$ref": "styles.schema.json#/definitions/Styles"
     },
     "ContentStyles": {
+      "description": "The style keys applied to primitive content filling an element, defined in `styles.schema.json`. Named here for the same reason as `Styles`.",
       "$ref": "styles.schema.json#/definitions/ContentStyles"
     },
     "PrimitiveSlotContent": {

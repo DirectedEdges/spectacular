@@ -8,6 +8,7 @@
     "Styles": {
       "type": "object",
       "description": "Collection of style properties emitted by Styles.data(). Each property value depends on its type and config.format.tokens setting. Applicable properties vary by element type.",
+      "examples": [{ "width": 320, "height": 44, "padding": 16, "backgroundColor": "#FF6600FF", "cornerRadius": 8 }],
       "properties": {
         "rotation": {
           "$ref": "#/definitions/NumberStyleValue",
@@ -345,6 +346,7 @@
     "TextContentStyles": {
       "type": "object",
       "description": "The formatting a text primitive takes on when it fills a slot. Deliberately narrower than Styles: only properties that format text appear, so a container's layout or surface styling cannot enter the content record. Each property is typed identically to its Styles counterpart, so a value valid in styles is valid here. typography carries the composite, so its own members travel inside it. (ADR-102)",
+      "examples": [{ "textColor": "#1B1B1BFF", "textAlignHorizontal": "CENTER", "maxLines": 1 }],
       "properties": {
         "textColor": {
           "$ref": "#/definitions/ColorStyleValue",
@@ -376,6 +378,7 @@
     "GlyphContentStyles": {
       "type": "object",
       "description": "The formatting a glyph primitive takes on when it fills a slot. fillColor plus the two dimensions: a glyph is sized rather than laid out — its box is the icon's own, set on the layer and not derived from the slot's layout the way a text run's measure is — so a glyph fill that does not carry its dimensions loses them, with nothing for a render to restore. That is why width and height belong to the fill here even though no text member does. (ADR-102)",
+      "examples": [{ "fillColor": "#1B1B1BFF", "width": 16, "height": 16 }],
       "properties": {
         "fillColor": {
           "$ref": "#/definitions/ColorStyleValue",
@@ -395,6 +398,7 @@
     "ContentStyles": {
       "type": "object",
       "description": "The styles applied to primitive content filling an element, as distinct from Styles, which are the element's own. Keyed by primitive, using the same reserved markers SlotProp.anyOf carries, because a slot's default content may hold more than one kind — a glyph and a label — and each kind is formatted by a disjoint property set. On a slot element each entry is captured from the first top-level primitive of that kind in the slot's default content, per variant, and is overridden per variant through variants[].elements exactly as styles is. A component fill is formatted by the component it instantiates, so a consumer rendering one applies styles and discards contentStyles. Meaningful only on a slot element, and its keys should agree with that slot's anyOf markers — both authoring/generator contracts, neither schema-enforced. (ADR-102)",
+      "examples": [{ "$text": { "typography": { "fontFamily": "Inter", "fontSize": 14 } } }],
       "properties": {
         "$text": {
           "$ref": "#/definitions/TextContentStyles",
@@ -410,6 +414,7 @@
     "AspectRatioValue": {
       "type": "object",
       "description": "Aspect ratio expressed as a numerator/denominator pair. `x` is the numerator, `y` is the denominator (e.g. x:16, y:9 for 16:9).",
+      "examples": [{ "x": 16, "y": 9 }, { "x": 1, "y": 1 }],
       "properties": {
         "x": {
           "type": "number",
@@ -488,6 +493,7 @@
     "GradientCenter": {
       "type": "object",
       "description": "Normalised 2-D centre point used by RADIAL and ANGULAR gradient variants. Both axes are in the range 0–1 relative to the fill bounding box.",
+      "examples": [{ "x": 0.5, "y": 0.5 }],
       "properties": {
         "x": {
           "type": "number",
@@ -511,6 +517,7 @@
     "GradientStop": {
       "type": "object",
       "description": "A single stop in a gradient definition.",
+      "examples": [{ "position": 0.5, "color": "#FF6600FF" }],
       "properties": {
         "position": {
           "type": "number",
@@ -544,6 +551,7 @@
     "LinearGradient": {
       "type": "object",
       "description": "A linear gradient defined by an angle and two or more colour stops. Maps to linear-gradient() (CSS) or LinearGradient (SwiftUI / Compose).",
+      "examples": [{ "type": "LINEAR", "angle": 90, "stops": [{ "position": 0, "color": "#FF6600FF" }, { "position": 1, "color": "#FFFFFFFF" }] }],
       "properties": {
         "type": {
           "type": "string",
@@ -573,6 +581,7 @@
     "RadialGradient": {
       "type": "object",
       "description": "A radial gradient defined by a centre point and two or more colour stops. Maps to radial-gradient() (CSS) or RadialGradient (SwiftUI / Compose).",
+      "examples": [{ "type": "RADIAL", "center": { "x": 0.5, "y": 0.5 }, "stops": [{ "position": 0, "color": "#FFFFFFFF" }, { "position": 1, "color": "#FF6600FF" }] }],
       "properties": {
         "type": {
           "type": "string",
@@ -602,6 +611,7 @@
     "AngularGradient": {
       "type": "object",
       "description": "An angular (conic) gradient defined by a centre point and two or more colour stops. Maps to conic-gradient() (CSS) or AngularGradient (SwiftUI / Compose).",
+      "examples": [{ "type": "ANGULAR", "center": { "x": 0.5, "y": 0.5 }, "stops": [{ "position": 0, "color": "#FF6600FF" }, { "position": 1, "color": "#FFFFFFFF" }] }],
       "properties": {
         "type": {
           "type": "string",
@@ -630,6 +640,7 @@
     },
     "GradientValue": {
       "description": "A discriminated union of the three supported cross-platform gradient types (LINEAR, RADIAL, ANGULAR). The `type` field is the discriminant. DIAMOND is intentionally excluded.",
+      "examples": [{ "type": "LINEAR", "angle": 180, "stops": [{ "position": 0, "color": "#FF6600FF" }, { "position": 1, "color": "#FFFFFFFF" }] }],
       "oneOf": [
         {
           "$ref": "#/definitions/LinearGradient"
@@ -645,6 +656,7 @@
     "ColorObject": {
       "type": "object",
       "description": "Inline resolved color value per DTCG Color Module §4.1. `colorSpace` and `components` are required; `alpha` defaults to 1 (fully opaque) when omitted; `hex` is an optional 6-digit sRGB fallback (#RRGGBB — no alpha channel in hex). Consumers SHOULD prefer `colorSpace` + `components` for rendering.",
+      "examples": [{ "colorSpace": "srgb", "components": [1, 0.4, 0], "alpha": 1 }, { "colorSpace": "oklch", "components": [0.7, 0.15, 50] }],
       "properties": {
         "colorSpace": {
           "description": "Color space identifier per DTCG Color §4.2 (e.g. 'srgb', 'oklch', 'display-p3').",
@@ -779,6 +791,7 @@
     },
     "ObjectFitValue": {
       "description": "How the image is fitted to its layer (CSS object-fit vocabulary). Structural property — not token-bindable. Absent means COVER. Transformer remaps Figma FILL->COVER, FIT->CONTAIN, and lossily coerces CROP->COVER, TILE->COVER so no image fill is dropped.",
+      "examples": ["CONTAIN"],
       "oneOf": [
         {
           "const": "COVER",
@@ -793,6 +806,7 @@
     "ImageValue": {
       "type": "object",
       "description": "An image fill value — a reference into an images registry plus optional fit.",
+      "examples": [{ "$image": "#/images/hero", "objectFit": "COVER" }],
       "properties": {
         "$image": {
           "type": "string",
@@ -906,6 +920,7 @@
     "Sides": {
       "type": "object",
       "description": "Per-side values using logical inline-axis directions (start/end). Used for padding and strokeWeight when sides differ.",
+      "examples": [{ "top": 8, "end": 16, "bottom": 8, "start": 16 }],
       "properties": {
         "top": {
           "$ref": "#/definitions/NumberStyleValue",
@@ -929,6 +944,7 @@
     "Corners": {
       "type": "object",
       "description": "Per-corner values using logical inline-axis directions (topStart/topEnd/bottomStart/bottomEnd). Used for cornerRadius when corners differ.",
+      "examples": [{ "topStart": 8, "topEnd": 8, "bottomEnd": 0, "bottomStart": 0 }],
       "properties": {
         "topStart": {
           "$ref": "#/definitions/NumberStyleValue",
@@ -986,6 +1002,7 @@
     "ItemSpacing": {
       "type": "object",
       "description": "Bi-axial item spacing values using absolute visual axes. Used for itemSpacing when horizontal and vertical gaps differ.",
+      "examples": [{ "horizontal": 16, "vertical": 8 }],
       "properties": {
         "horizontal": {
           "$ref": "#/definitions/NumberStyleValue",
@@ -1018,6 +1035,7 @@
     "StrokeDashPattern": {
       "type": "object",
       "description": "Dash geometry for a dashed stroke. dash and gap are in pixels and correspond to index 0 and 1 of Figma's strokeDashes array.",
+      "examples": [{ "dash": 8, "gap": 4 }],
       "properties": {
         "dash": {
           "type": "number",
@@ -1207,6 +1225,7 @@
     },
     "PositionOffset": {
       "description": "Positional offset value. Pixel number, percentage string (SCALE constraint), or null. Not token-bindable.",
+      "examples": [24, "10%"],
       "oneOf": [
         {
           "type": "number"
@@ -1272,6 +1291,7 @@
     "Shadow": {
       "type": "object",
       "description": "A single evaluated shadow. inset distinguishes drop (absent/false) from inner (true). Field names align with the DTCG Format Module shadow token.",
+      "examples": [{ "visible": true, "offsetX": 0, "offsetY": 2, "blur": 4, "spread": 0, "color": "#00000033" }, { "visible": true, "inset": true, "offsetX": 0, "offsetY": 1, "blur": 0, "spread": 0, "color": "#FFFFFF66" }],
       "properties": {
         "visible": {
           "type": "boolean",
@@ -1355,6 +1375,7 @@
     "Blur": {
       "type": "object",
       "description": "A single evaluated blur effect. Singular per type; the containing key (layerBlur vs backgroundBlur) determines render role.",
+      "examples": [{ "visible": true, "radius": 8 }],
       "properties": {
         "visible": {
           "type": "boolean",
@@ -1381,6 +1402,7 @@
     "Effects": {
       "type": "object",
       "description": "Inline effects grouped by role. Each key is optional; a key is omitted when no effects of that type are present on the node.",
+      "examples": [{ "shadows": [{ "visible": true, "offsetX": 0, "offsetY": 1, "blur": 2, "spread": 0, "color": "#0000001FFF" }] }],
       "properties": {
         "shadows": {
           "type": "array",
@@ -1419,6 +1441,7 @@
     "PropBinding": {
       "type": "object",
       "description": "A component-prop binding. Emitted when a property is bound to a Figma component property. Discriminated by $binding to avoid JSON Schema $ref keyword collision.",
+      "examples": [{ "$binding": "#/props/isDisabled" }],
       "properties": {
         "$binding": {
           "type": "string",
@@ -1433,6 +1456,7 @@
     "ConditionArgs": {
       "type": "object",
       "description": "Arguments for a condition expression. value is the prop binding to test; compareTo is the operand for binary operations.",
+      "examples": [{ "value": { "$binding": "#/props/variant" }, "compareTo": "primary" }],
       "properties": {
         "value": {
           "$ref": "#/definitions/PropBinding",
@@ -1464,6 +1488,7 @@
     "ConditionExpression": {
       "type": "object",
       "description": "A declarative condition expression pairing an operation with its arguments.",
+      "examples": [{ "operation": "equals", "args": { "value": { "$binding": "#/props/size" }, "compareTo": "large" } }],
       "properties": {
         "operation": {
           "type": "string",
@@ -1482,6 +1507,7 @@
     "Conditional": {
       "type": "object",
       "description": "A conditional binding. Evaluates the condition against a bound prop and resolves to the then or else branch.",
+      "examples": [{ "if": { "condition": { "operation": "isNull", "args": { "value": { "$binding": "#/props/label" } } }, "then": false, "else": true } }],
       "properties": {
         "if": {
           "type": "object",
@@ -1553,6 +1579,7 @@
     "TokenReference": {
       "type": "object",
       "description": "Platform-neutral token reference. $token and $type are the complete platform-facing API surface; $extensions[\"com.figma\"] carries Figma extraction provenance only and is not required by platform consumers.",
+      "examples": [{ "$token": "Color/On surface", "$type": "color" }],
       "required": [
         "$token",
         "$type"
@@ -1675,6 +1702,7 @@
     "Typography": {
       "type": "object",
       "description": "Inline typography properties grouped into a composite object. All fields are optional; only properties set on the text node are present.",
+      "examples": [{ "fontFamily": "Inter", "fontStyle": "Semi Bold", "fontSize": 16, "lineHeight": 24, "letterSpacing": 0, "textCase": "ORIGINAL" }],
       "properties": {
         "fontSize": {
           "oneOf": [

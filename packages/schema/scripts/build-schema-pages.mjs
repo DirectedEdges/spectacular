@@ -343,9 +343,40 @@ for (const node of nodes) {
 
   const types = namedTypes(spec).join(', ') || '—';
   const hasDefault = Object.prototype.hasOwnProperty.call(spec, 'default');
-  const defaultText = !hasDefault
-    ? null
-    : spec.default === null ? '`null` (nothing)' : `\`${JSON.stringify(spec.default)}\``;
+
+  /**
+   * What the default value means, in the schema's own words where it has them.
+   *
+   * The branch declaring a value now carries a `title` and `description`
+   * (ADR-114), so a null default reads as whatever that property says null
+   * means rather than as a phrase invented here. This generator hardcoded
+   * "`null` (nothing)" for every one of them, which was the same gloss on 19
+   * properties that mean 19 different things by it.
+   */
+  const branchFor = (node, value, depth = 0) => {
+    if (!node || depth > 5) return null;
+    if (node.$ref) {
+      const t = node.$ref.replace('#/definitions/', '');
+      return defs[t] ? branchFor(defs[t], value, depth + 1) : null;
+    }
+    const branches = node.oneOf ?? node.anyOf;
+    if (!Array.isArray(branches)) return null;
+    for (const b of branches) {
+      if (b.const !== undefined && b.const === value) return b;
+      if (value === null && b.type === 'null') return b;
+      const nested = branchFor(b, value, depth + 1);
+      if (nested) return nested;
+    }
+    return null;
+  };
+
+  const defaultText = (() => {
+    if (!hasDefault) return null;
+    const literal = `\`${JSON.stringify(spec.default)}\``;
+    const branch = branchFor(spec, spec.default);
+    const gloss = branch?.title ?? branch?.description;
+    return gloss ? `${literal} — ${gloss.replace(/\.$/, '')}` : literal;
+  })();
 
   // Examples preserved from the replaced pages, rendered as object literals.
   const asObject = (e) =>
