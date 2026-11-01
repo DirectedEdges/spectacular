@@ -172,13 +172,13 @@
         },
         "start": {
           "$ref": "#/definitions/PositionOffset",
-          "description": "Distance from the parent's leading edge, when the element is positioned against it. Named by reading order rather than by left and right, so a spec holds for a right-to-left locale without being rewritten.",
+          "description": "Distance from the parent's start edge, when the element is positioned against it (ADR-041).",
           "default": null,
           "examples": [0, "5%"]
         },
         "end": {
           "$ref": "#/definitions/PositionOffset",
-          "description": "Distance from the parent's trailing edge, when the element is positioned against it. Named by reading order rather than by left and right.",
+          "description": "Distance from the parent's end edge, when the element is positioned against it (ADR-041).",
           "default": null,
           "examples": [0, "5%"]
         },
@@ -248,7 +248,7 @@
         },
         "textAlignHorizontal": {
           "$ref": "#/definitions/TextAlignHorizontalStyleValue",
-          "description": "Where text sits across the writing direction, named by reading order rather than by left and right.",
+          "description": "Where text sits along the writing direction (ADR-064).",
           "default": "START",
           "examples": ["CENTER", "JUSTIFY"]
         },
@@ -423,6 +423,7 @@
       "additionalProperties": false
     },
     "AspectRatioStyleValue": {
+      "examples": [{ "x": 16, "y": 9 }],
       "description": "Aspect ratio value. Object pair when the node has a locked ratio; null when no constraint is active. TokenReference is intentionally excluded — aspect ratio is a structural lock of literal numbers in the Figma API.",
       "oneOf": [
         {
@@ -434,6 +435,7 @@
       ]
     },
     "NumberStyleValue": {
+      "examples": [16],
       "description": "Pure number style value (from NumberStyle processor)",
       "oneOf": [
         {
@@ -448,6 +450,7 @@
       ]
     },
     "BooleanStyleValue": {
+      "examples": [true],
       "description": "Boolean style value (from BooleanStyle processor)",
       "oneOf": [
         {
@@ -462,6 +465,7 @@
       ]
     },
     "BooleanBindableStyleValue": {
+      "examples": [{ "$binding": "#/props/showIcon" }],
       "description": "Boolean style value that can be bound to props or conditional expressions (visible only)",
       "oneOf": [
         {
@@ -759,6 +763,7 @@
       "additionalProperties": false
     },
     "ColorStyleValue": {
+      "examples": ["#FF6600FF"],
       "description": "Color style value. Covers formatted color string, inline resolved color object, token reference, inline gradient, or null. The string arm is emitted when Config.format.color is set to a non-OBJECT format.",
       "oneOf": [
         {
@@ -813,6 +818,7 @@
       "additionalProperties": false
     },
     "ImageStyleValue": {
+      "examples": [{ "$image": "#/images/hero", "objectFit": "COVER" }],
       "description": "Container image fill value — an ImageValue object, a TokenReference (when the fill comes from an applied Figma fill style whose paint is an image), or null. Fallback representation used when no image component is configured.",
       "oneOf": [
         {
@@ -827,6 +833,7 @@
       ]
     },
     "StringStyleValue": {
+      "examples": ["FILL"],
       "description": "Pure string style value (from StringStyle processor)",
       "oneOf": [
         {
@@ -841,6 +848,7 @@
       ]
     },
     "MixedNumberStyleValue": {
+      "examples": ["mixed"],
       "description": "Numeric style that can have 'mixed' value (from MixedStyle processor)",
       "oneOf": [
         {
@@ -859,6 +867,7 @@
       ]
     },
     "MixedStringStyleValue": {
+      "examples": ["OUTSIDE"],
       "description": "String style that can have 'mixed' value (from MixedStyle processor)",
       "oneOf": [
         {
@@ -873,6 +882,7 @@
       ]
     },
     "StrokeStyleValue": {
+      "examples": [1],
       "description": "Stroke weight value (from StrokeStyle processor)",
       "oneOf": [
         {
@@ -891,6 +901,7 @@
       ]
     },
     "CornerStyleValue": {
+      "examples": [8],
       "description": "Corner radius value (from CornerStyle processor)",
       "oneOf": [
         {
@@ -957,6 +968,7 @@
       "additionalProperties": false
     },
     "SidesStyleValue": {
+      "examples": [{ "top": 8, "end": 16, "bottom": 8, "start": 16 }],
       "description": "Sides style value. Scalar number when uniform; Sides object when per-side values differ; TokenReference for token binding; null when absent.",
       "oneOf": [
         {
@@ -974,6 +986,7 @@
       ]
     },
     "CornersStyleValue": {
+      "examples": [{ "topStart": 8, "topEnd": 8, "bottomEnd": 0, "bottomStart": 0 }],
       "description": "Corners style value. Scalar number when uniform; Corners object when per-corner values differ; TokenReference for token binding; null when absent.",
       "oneOf": [
         {
@@ -1007,6 +1020,7 @@
       "additionalProperties": false
     },
     "ItemSpacingStyleValue": {
+      "examples": [{ "horizontal": 16, "vertical": 8 }],
       "description": "Item spacing value. Scalar number when uniform; ItemSpacing object when horizontal and vertical gaps differ; TokenReference for token binding; null when absent.",
       "oneOf": [
         {
@@ -1044,6 +1058,7 @@
       "additionalProperties": false
     },
     "StrokeDashPatternStyleValue": {
+      "examples": [{ "dash": 8, "gap": 4 }],
       "description": "Dash pattern for a stroke. Present (non-null) when the stroke is dashed; null or absent when solid. Structural property — not token-bindable.",
       "oneOf": [
         {
@@ -1055,6 +1070,7 @@
       ]
     },
     "LayoutModeStyleValue": {
+      "examples": ["HORIZONTAL"],
       "description": "Layout mode value. Structural property — not token-bindable.",
       "oneOf": [
         {
@@ -1079,6 +1095,7 @@
       ]
     },
     "WrapAlignmentStyleValue": {
+      "examples": ["SPACE_BETWEEN"],
       "description": "Wrap alignment value. Structural property — not token-bindable.",
       "oneOf": [
         {
@@ -1097,6 +1114,7 @@
       ]
     },
     "MainAxisAlignmentStyleValue": {
+      "examples": ["SPACE_BETWEEN"],
       "description": "Main axis alignment value. Structural property — not token-bindable.",
       "oneOf": [
         {
@@ -1123,6 +1141,7 @@
       ]
     },
     "CrossAxisAlignmentStyleValue": {
+      "examples": ["BASELINE"],
       "description": "Cross axis alignment value. Structural property — not token-bindable.",
       "oneOf": [
         {
@@ -1153,6 +1172,7 @@
       ]
     },
     "TextAlignHorizontalStyleValue": {
+      "examples": ["CENTER"],
       "description": "Horizontal text alignment value using logical inline-axis directions. Structural property — not token-bindable.",
       "oneOf": [
         {
@@ -1179,6 +1199,7 @@
       ]
     },
     "TextOverflowStyleValue": {
+      "examples": ["ELLIPSIS"],
       "description": "Text overflow handling value. Structural property — not token-bindable.",
       "oneOf": [
         {
@@ -1197,6 +1218,7 @@
       ]
     },
     "PositionStyleValue": {
+      "examples": ["ABSOLUTE"],
       "description": "Position value. Structural property — not token-bindable.",
       "oneOf": [
         {
@@ -1230,6 +1252,7 @@
       ]
     },
     "FontStyleValue": {
+      "examples": ["Semi Bold"],
       "description": "Font family/weight value (from FontStyle processor)",
       "oneOf": [
         {
@@ -1249,6 +1272,7 @@
       ]
     },
     "LineHeightStyleValue": {
+      "examples": [24],
       "description": "Line height value (from LineHeightStyle processor)",
       "oneOf": [
         {
@@ -1268,6 +1292,7 @@
       ]
     },
     "StyleIdValue": {
+      "examples": ["S:1a2b3c4d5e6f"],
       "description": "Style ID reference (textStyleId; removed from Styles in v0.11.0 — retained for historical reference only)",
       "oneOf": [
         {
@@ -1414,6 +1439,7 @@
       "additionalProperties": false
     },
     "EffectsStyleValue": {
+      "examples": [{ "shadows": [{ "visible": true, "offsetX": 0, "offsetY": 2, "blur": 4, "spread": 0, "color": "#00000033" }] }],
       "description": "Effect value. TokenReference when the node references a named effects style; Effects when effects are defined inline.",
       "oneOf": [
         {
@@ -1555,6 +1581,7 @@
       "additionalProperties": false
     },
     "ReferenceValue": {
+      "examples": [{ "$ref": "#/props/label" }],
       "type": "object",
       "description": "@deprecated Removed in v1.0.0. Use PropBinding ($binding key) instead.",
       "properties": {
@@ -1677,6 +1704,7 @@
       "additionalProperties": false
     },
     "VariableStyle": {
+      "examples": [{ "id": "VariableID:1:23" }],
       "deprecated": true,
       "type": "object",
       "description": "@deprecated Removed in v1.0.0. Use TokenReference instead.",
@@ -1869,6 +1897,7 @@
       "additionalProperties": false
     },
     "TypographyStyleValue": {
+      "examples": [{ "fontFamily": "Inter", "fontSize": 16, "lineHeight": 24 }],
       "description": "Typography value. TokenReference when the text node references a named text style; Typography when typography is defined inline.",
       "oneOf": [
         {

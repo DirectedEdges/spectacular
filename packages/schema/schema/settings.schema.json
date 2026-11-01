@@ -5,6 +5,7 @@
   "description": "Choices about a run rather than facts about a library. Changing a setting produces different output, never incorrect output.",
   "definitions": {
     "SourceEntry": {
+      "examples": [{ "key": "abc123XYZ", "fetch": ["file", "variables"] }],
       "type": "object",
       "description": "A source the workspace reads from.",
       "properties": {
@@ -26,6 +27,7 @@
       "additionalProperties": false
     },
     "Settings": {
+      "examples": [{ "author": "Design Systems", "spec": { "format": "YAML", "keys": "CAMEL" } }],
       "type": "object",
       "description": "Run settings, grouped by concern. Each concern that owns a location carries its own directory.",
       "properties": {

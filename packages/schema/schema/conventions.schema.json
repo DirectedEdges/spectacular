@@ -5,6 +5,7 @@
   "description": "Facts about the libraries a spec was generated from and is generated for, keyed by platform. Every consumer reading the same libraries declares the same values; differing values produce incorrect output, not merely different output.",
   "definitions": {
     "VariantStateEntry": {
+      "examples": [{ "prop": "state", "value": "hover" }],
       "type": "object",
       "description": "Classifies a Figma variant prop as a semantic state concept. The map key (in specs.states) is the concept name (e.g. hover, disabled). (ADR-055, ADR-073)",
       "properties": {
@@ -36,6 +37,7 @@
       "additionalProperties": false
     },
     "PlatformConventions": {
+      "examples": [{ "naming": "TITLE", "glyphs": { "match": "Icon/{i}" } }],
       "type": "object",
       "description": "Facts about one platform's library \u2014 how it is authored (encoding members) and what it calls things (vocabulary members). One permissive shape for every platform, including figma. Also the root of a single config/conventions/<platform>.yaml file, so one file validates standalone. (ADR-073, ADR-078)",
       "properties": {
@@ -250,6 +252,7 @@
       "additionalProperties": false
     },
     "GlyphStructure": {
+      "examples": [{ "name": "icon", "children": [{ "type": "VECTOR" }] }],
       "type": "object",
       "description": "Structural form of the glyphs convention (ADR-103): membership from child structure, naming from the component name. A component is a glyph when every child matches some entry in children (set-cover, exhaustive); when fill is declared, every matched leaf must carry one of the listed fills.",
       "properties": {
@@ -279,6 +282,7 @@
       "additionalProperties": false
     },
     "GlyphStructureNode": {
+      "examples": [{ "type": "VECTOR" }],
       "type": "object",
       "description": "One node matcher within a GlyphStructure. type is an open string carrying a Figma node type (e.g. 'VECTOR', 'BOOLEAN_OPERATION'); an unknown type never matches.",
       "properties": {
@@ -304,6 +308,7 @@
       "additionalProperties": false
     },
     "Conventions": {
+      "examples": [{ "platforms": { "figma": { "naming": "TITLE" } } }],
       "type": "object",
       "description": "Facts about the libraries a spec was generated from and is generated for, keyed by platform. Figma is one key among react, web-components, swiftui \u2014 keys name implementations, not platform families. Absence of platforms means nothing is declared. (ADR-073)",
       "properties": {
@@ -333,6 +338,7 @@
       "additionalProperties": false
     },
     "MetadataConventions": {
+      "examples": [{ "platforms": { "figma": { "naming": "TITLE" } } }],
       "type": "object",
       "description": "The conventions a spec records in its metadata: the one platform entry that produced it, and the spec conventions it was produced under. A subset of Conventions reusing the same definitions, so an entry validates identically wherever it appears \u2014 but absence means something different. Here a missing platform did not produce this spec. primitives and storybook are deliberately absent: the promotion table is spent by the time a spec exists, and Storybook presentation bears on no reader of one. (ADR-079, ADR-099)",
       "properties": {
@@ -356,6 +362,7 @@
       "additionalProperties": false
     },
     "PrimitiveRule": {
+      "examples": [{ "source": "typography.fontStyle", "prop": "weight" }],
       "type": "object",
       "description": "One rule turning something a captured layer carries into props on the component it promotes to. `source` names what is read \u2014 a Styles member, a dotted path into typography, or content. The honoured set is closed per PrimitiveKind and documented rather than enumerated here, so the validation surface does not track the Styles key set. Exactly one of prop and values is given. (ADR-075)",
       "properties": {
@@ -393,6 +400,7 @@
       "additionalProperties": false
     },
     "PrimitiveEntry": {
+      "examples": [{ "elementType": "text", "map": [{ "source": "typography.fontStyle", "prop": "weight" }] }],
       "type": "object",
       "description": "One component a captured primitive layer can be promoted to, and how its styles become that component's props. Promotion runs during capture, over composed example content only. Several entries may share a kind; a declared match selects by name and takes precedence, and otherwise selection is by how many rules resolve, where at least one must. (ADR-074, ADR-075, ADR-100)",
       "properties": {
@@ -423,6 +431,7 @@
       "additionalProperties": false
     },
     "PrimitiveKind": {
+      "examples": ["text"],
       "description": "The spec element types that can be promoted to a design system component \u2014 a strict subset of ElementType. An image is deliberately absent: it is a paint on an element that is already something else, so it is bound through images.component. (ADR-074)",
       "oneOf": [
         {
@@ -440,6 +449,7 @@
       ]
     },
     "PropReference": {
+      "examples": [{ "prop": "size" }],
       "type": "object",
       "required": [
         "prop"
@@ -454,6 +464,7 @@
       "description": "A prop named by a convention. An object rather than a bare name so it can grow properties of its own without a breaking change."
     },
     "SpecsConventions": {
+      "examples": [{ "states": { "hover": { "prop": "state", "value": "hover" } } }],
       "type": "object",
       "additionalProperties": false,
       "description": "Conventions about the spec itself rather than about any platform. A sibling of `platforms` for the same reason `primitives` is: `states` names a prop and an enum value that exist in api.yaml, and a transform reading only the spec can apply it. Library-wide; the per-component equivalent is an annotation, and the annotation wins.",
@@ -507,6 +518,7 @@
       }
     },
     "ValueConvention": {
+      "examples": [{ "prop": "value" }],
       "type": "object",
       "required": [
         "prop"
@@ -525,6 +537,7 @@
       }
     },
     "StorybookConventions": {
+      "examples": [{}],
       "type": "object",
       "description": "Workspace Storybook conventions, keyed by concern, each holding per-feature settings. Most concerns are publish concerns naming how a page presents; `host` names where the Storybook serves. Both levels are open (ADR-098): feature vocabulary is validated by the concern implementation, which warns by name on anything unknown.",
       "additionalProperties": {

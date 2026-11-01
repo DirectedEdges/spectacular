@@ -16,6 +16,7 @@
   ],
   "definitions": {
     "ComponentApiDocument": {
+      "examples": [{ "metadata": { "concern": "api", "source": { "pageId": "12622:10", "nodeId": "118:10", "nodeType": "COMPONENT_SET" } }, "title": "Button", "anatomy": { "root": { "type": "container" } }, "props": {} }],
       "type": "object",
       "description": "The api concern of a component: what it is and what it takes — title, anatomy and props. Written as api.yaml by a run with splitConcerns. (ADR-091)",
       "required": [
@@ -78,6 +79,7 @@
       }
     },
     "ComponentVariantsDocument": {
+      "examples": [{ "metadata": { "concern": "variants", "source": { "pageId": "12622:10", "nodeId": "118:10", "nodeType": "COMPONENT_SET" } }, "default": { "elements": {} }, "variants": [] }],
       "type": "object",
       "description": "The variants concern of a component: the default appearance and every variant override. Written as variants.yaml by a run with splitConcerns. (ADR-091)",
       "required": [
@@ -123,6 +125,7 @@
       }
     },
     "ComponentExamplesDocument": {
+      "examples": [{ "metadata": { "concern": "examples", "source": { "pageId": "12622:10", "nodeId": "118:10", "nodeType": "COMPONENT_SET" } } }],
       "type": "object",
       "description": "The examples concern of a component: documented usages, the content they compose, and the image registry those reference. Written as examples.yaml when a component has any. (ADR-091)",
       "required": [
@@ -176,6 +179,7 @@
       }
     },
     "ComponentApiSubcomponent": {
+      "examples": [{ "title": "Card header", "anatomy": { "root": { "type": "container" } }, "props": {} }],
       "type": "object",
       "description": "A subcomponent's api slice: what it is and what it takes. (ADR-091)",
       "required": [
@@ -223,6 +227,7 @@
       }
     },
     "ComponentVariantsSubcomponent": {
+      "examples": [{ "default": { "elements": {} }, "variants": [] }],
       "type": "object",
       "description": "A subcomponent's variants slice: how it looks by default and how each variant changes it. (ADR-091)",
       "required": [
@@ -253,6 +258,7 @@
       }
     },
     "ComponentExamplesSubcomponent": {
+      "examples": [{ "images": { "cardHero": { "src": "./images/card-hero.png" } } }],
       "type": "object",
       "description": "A subcomponent's examples slice: documented usages and the content they compose. (ADR-091)",
       "required": [],

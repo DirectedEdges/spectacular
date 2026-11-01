@@ -9,7 +9,6 @@
       "type": "object",
       "description": "A component specification derived from Figma that defines structure, properties, variants, and styling rules.",
       "examples": [{ "title": "Button", "anatomy": { "root": { "type": "container" }, "label": { "type": "text" } }, "default": { "elements": { "label": { "content": "Save" } } } }],
-      "examples": [],
       "properties": {
         "metadata": {
           "allOf": [
@@ -147,7 +146,6 @@
       "type": "object",
       "description": "The structural elements that make up the component. Keys are formatted per format.keys. A key whose Figma name did not satisfy the safe key grammar (see SafeKeySentence / SafeKeyTitle) carries that name in $extensions['com.figma'].name.",
       "examples": [{ "root": { "type": "container" }, "label": { "type": "text" } }],
-      "examples": [],
       "additionalProperties": {
         "$ref": "#/definitions/AnatomyElement"
       }
@@ -249,7 +247,6 @@
       "type": "object",
       "description": "An element within the anatomy of a component.",
       "examples": [{ "type": "text" }, { "type": "container", "role": "button", "actions": [{ "type": "dismiss" }] }],
-      "examples": [],
       "properties": {
         "type": {
           "oneOf": [
@@ -334,8 +331,7 @@
     "Props": {
       "type": "object",
       "description": "Component properties. Keys are formatted per format.keys. A key whose Figma property name did not satisfy the safe key grammar (see SafeKeySentence / SafeKeyTitle) carries that name in $extensions['com.figma'].name.",
-      "examples": [{ "variant": { "type": "enum", "default": "primary", "enum": ["primary", "secondary"] } }],
-      "examples": [],
+      "examples": [{ "variant": { "type": "string", "default": "primary", "enum": ["primary", "secondary"] } }],
       "additionalProperties": {
         "$ref": "#/definitions/AnyProp"
       }
@@ -371,7 +367,6 @@
       "type": "object",
       "description": "Object property definition (ADR-111) — a prop whose value is an object of named, individually typed scalar members (e.g. a responsive margin with compact and expanded members). Members are one level deep: no SlotProp, ImageProp, or nested ObjectProp. Member names are opaque to the schema, must not begin with $, and must not contain the platform's declared objectProps.separator. No top-level default or nullable — defaults live per member.",
       "examples": [{ "type": "object", "members": { "compact": { "type": "number", "default": 8 }, "expanded": { "type": "number", "default": 24 } } }],
-      "examples": [],
       "properties": {
         "type": {
           "type": "string",
@@ -516,7 +511,6 @@
       "type": "object",
       "description": "String property definition for text content, glyph/instance swap, or other string-valued props.",
       "examples": [{ "type": "string", "default": "Save", "nullable": false }],
-      "examples": [],
       "properties": {
         "type": {
           "type": "string",
@@ -585,7 +579,6 @@
       "type": "object",
       "description": "Slot property definition for a prop a consumer fills with content rather than a scalar. What it accepts is declared in its own `anyOf` member, and how many children it admits in `minChildren` and `maxChildren`.",
       "examples": [{ "type": "slot", "minChildren": 1, "maxChildren": 1, "anyOf": ["$text", "$glyph"] }],
-      "examples": [],
       "properties": {
         "type": {
           "type": "string",
@@ -633,7 +626,6 @@
       "type": "array",
       "description": "Variants is an array of variant items, each corresponding to a specific set of non-default prop configurations taht represent a Figma variant. Evaluating a variant's style requires including layering the element styles, configurations and other properties from *every* variant that matches any of the combinations of non-defualt properties. This behavior is similar to the CSS cascade.",
       "examples": [[{ "configuration": { "variant": "primary" }, "elements": {} }]],
-      "examples": [],
       "items": {
         "$ref": "#/definitions/Variant"
       }
@@ -642,7 +634,6 @@
       "type": "object",
       "description": "One configuration of the component and everything that follows from it — the prop values that select it, its layout, and its per-element presentation.",
       "examples": [{ "configuration": { "variant": "primary" }, "elements": { "root": { "styles": { "backgroundColor": "#FF6600FF" } } } }],
-      "examples": [],
       "properties": {
         "configuration": {
           "$ref": "#/definitions/PropConfigurations"
@@ -751,7 +742,6 @@
       "type": "object",
       "description": "Per-element prop configurations (ADR-049, ADR-052). Regular keys are prop names whose values are a PropConfigurationValue. The reserved `$nested` key carries path-addressed configurations of nested descendant instances.",
       "examples": [{ "variant": "primary", "isDisabled": false }],
-      "examples": [],
       "properties": {
         "$nested": {
           "type": "array",
@@ -790,7 +780,6 @@
       "type": "object",
       "description": "The presentational half of a variant, keyed by anatomy element name. An element absent from this map inherits the default variant's entry for that element.",
       "examples": [{ "label": { "content": "Save", "styles": { "textColor": "#1B1B1BFF" } } }],
-      "examples": [],
       "additionalProperties": {
         "$ref": "#/definitions/Element"
       }
@@ -1105,10 +1094,12 @@
       "additionalProperties": false
     },
     "Styles": {
+      "examples": [{ "padding": 16, "backgroundColor": "#FF6600FF" }],
       "description": "The style keys an element carries, defined in `styles.schema.json`. Named here so a component document can cite one definition rather than reaching across files at every use.",
       "$ref": "styles.schema.json#/definitions/Styles"
     },
     "ContentStyles": {
+      "examples": [{ "$text": { "textColor": "#1B1B1BFF" } }],
       "description": "The style keys applied to primitive content filling an element, defined in `styles.schema.json`. Named here for the same reason as `Styles`.",
       "$ref": "styles.schema.json#/definitions/ContentStyles"
     },
@@ -1278,7 +1269,6 @@
       "type": "object",
       "description": "Number property definition for numeric-valued props, whether inferred from a TEXT code-only prop or from a VARIANT whose options are all numbers.",
       "examples": [{ "type": "number", "default": 1 }],
-      "examples": [],
       "properties": {
         "type": {
           "type": "string",

@@ -6,6 +6,7 @@
   "$ref": "#/definitions/RunMetadata",
   "definitions": {
     "RunMetadata": {
+      "examples": [{ "author": "Design Systems", "lastUpdated": "2026-09-26T15:14:14.469Z", "generator": { "name": "specs", "version": "0.40.0", "url": "https://spectacular.systems" }, "schema": { "version": "0.40.0", "url": "https://spectacular.systems/schema/0.40.0/component.schema.json" }, "conventions": { "platforms": { "figma": { "naming": "TITLE" } } }, "settings": {} }],
       "type": "object",
       "description": "Facts about the generation run that produced a set of component specs.",
       "properties": {
