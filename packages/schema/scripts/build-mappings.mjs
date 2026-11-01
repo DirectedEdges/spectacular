@@ -96,6 +96,19 @@ const fmt = (p) => {
 const kebab = (s) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`).replace(/^-/, '');
 
 /**
+ * What each declared case table is called on the page. A cluster may qualify
+ * its main table with further ones — per axis, per member, per relation — and
+ * each needs a heading that says which.
+ */
+const CASE_TABLE_LABELS = {
+  cases: 'Cases',
+  insetCases: 'Offset cases',
+  memberCases: 'Member cases',
+  relationCases: 'Related keys',
+  axisCases: 'Per-axis cases',
+};
+
+/**
  * One cluster, as its own page.
  *
  * A cluster is the unit a reader arrives at: they have a key whose row says
@@ -146,15 +159,32 @@ ${c.stage ? `\n**Stage.** \`${c.stage}\` — produced by a later pass, not read 
       .map((cs, i) => `| ${i + 1} | ${fmt(cs.when)} | ${cs.emit.length ? cs.emit.map(emitCell).join('<br>') : '*nothing*'} | ${cs.why ?? ''} |`)
       .join('\n')}\n`;
 
+  /**
+   * Every case table the cluster declares, discovered rather than listed.
+   *
+   * A hardcoded allowlist of three names silently dropped this cluster's
+   * `relationCases` — three declared cases that appeared on no page, which is
+   * the exact failure these generated pages exist to prevent. An unrecognised
+   * table now fails the build instead of vanishing.
+   */
+  const tables = Object.keys(c)
+    .filter((k) => /Cases$/.test(k) || k === 'cases')
+    .map((k) => {
+      const label = CASE_TABLE_LABELS[k];
+      if (!label) failures.push(`${platform}.json: cluster "${name}" declares "${k}", which has no label — add one to CASE_TABLE_LABELS or the table renders nowhere`);
+      return { key: k, label: label ?? k, list: c[k] };
+    })
+    .filter((t) => Array.isArray(t.list) && t.list.length)
+    // `cases` first; the rest in declared order, since they qualify it.
+    .sort((a, b) => (a.key === 'cases' ? -1 : b.key === 'cases' ? 1 : 0));
+
   return `${head}
 ## Operands
 
 Every fact the cluster reads. Nothing outside this set participates.
 
 ${inputs}
-${derived}${caseTable('Cases', c.cases)}${c.insetCases ? caseTable('Offset cases', c.insetCases) : ''}${
-    c.memberCases ? caseTable('Member cases', c.memberCases) : ''
-  }${
+${derived}${tables.map((t) => caseTable(t.label, t.list)).join('')}${
     c.otherwise
       ? `\n## Otherwise\n\n${c.otherwise.emit?.length ? c.otherwise.emit.map((e) => `\`${e}\``).join(', ') : '*Nothing is emitted.*'}${
           c.otherwise.why ? ` — ${c.otherwise.why}` : ''

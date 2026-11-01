@@ -34,7 +34,7 @@ Every row below is a claim a reader may rely on.
 | `clipsContent` | bound | `node.clipsContent` | component, frame, slot | Container types only; the key never reaches another type because no other key list admits it. |
 | `cornerRadius` | bound | — | component, frame, rectangle, slot | A uniform value sets the node radius; a token also binds the variable to all four corner fields; a per-corner object expands to Figma's physical corner properties. Not applied to a text node. |
 | `cornerSmoothing` | bound | `CornerStyle.applySmoothing` | component, frame, slot, vector, ellipse, star, polygon, rectangle | Skipped on TEXT nodes. |
-| `crossAxisAlignment` | approximated | — | component, frame, slot | Remaps `START`, `END`, `CENTER` and `BASELINE`. Loss: `STRETCH` is a schema value Figma's counter-axis property cannot express, and it is skipped with a warning — a declared degradation that applies nothing and says so, which is exactly what DSPEC-43 asks for. |
+| `crossAxisAlignment` | approximated | cluster [wrapping](clusters/figma/wrapping.md) | component, frame, slot | Remaps `START`, `END`, `CENTER` and `BASELINE`. Loss: `STRETCH` is a schema value Figma's counter-axis property cannot express, and it is skipped with a warning — a declared degradation that applies nothing and says so, which is exactly what DSPEC-43 asks for. |
 | `effects` | bound | `Effects.apply` | component, frame, slot, text, vector, ellipse, star, polygon, rectangle, line, glyph | Accepts Effects, TokenReference, or null. |
 | `end` | bound | cluster [autoVsAbsoluteLayout](clusters/figma/auto-vs-absolute-layout.md) | all |  |
 | `fillColor` | approximated | — | vector, ellipse, star, polygon, line, glyph | A gradient takes its own path; otherwise the same four-step paint resolution. On an instance the target is the first fillable descendant, found by walking the subtree. Loss: the colour-space issue above, and an instance with no fillable descendant drops the value silently. |
@@ -45,7 +45,7 @@ Every row below is a claim a reader may rely on.
 | `layoutSizingHorizontal` | bound | cluster [autoVsAbsoluteLayout](clusters/figma/auto-vs-absolute-layout.md) | all |  |
 | `layoutSizingVertical` | bound | cluster [autoVsAbsoluteLayout](clusters/figma/auto-vs-absolute-layout.md) | all |  |
 | `locked` | bound | `node.locked` | all | Canvas interaction only — the Plugin API can still mutate a locked node, so it applies wherever it is reached, children included. |
-| `mainAxisAlignment` | bound | — | component, frame, slot | Remaps all four schema values to Figma's primary-axis vocabulary. Gated on the node actually having the property, which effectively means an auto-layout container. |
+| `mainAxisAlignment` | bound | cluster [wrapping](clusters/figma/wrapping.md) | component, frame, slot | Remaps all four schema values to Figma's primary-axis vocabulary. Gated on the node actually having the property, which effectively means an auto-layout container. |
 | `maxHeight` | bound | — | all | Written as resolved, preserving zero, as `maxWidth`. |
 | `maxLines` | bound | `node.maxLines` | text | Deferred to last — honoured only while textTruncation is ENDING, so textOverflow must land first. |
 | `maxWidth` | bound | — | all | Written as resolved. Zero is preserved, because a maximum of zero is a real if unusual constraint and the API accepts it. Skipped on text nodes. |
@@ -107,9 +107,9 @@ is its own page.
 
 | Cluster | Disposition | Keys | Resolution |
 |---|---|---|---|
-| [autoVsAbsoluteLayout](clusters/figma/auto-vs-absolute-layout.md) | bound | 11 | 5-row case table |
-| [namedStyleVersusInline](clusters/figma/named-style-versus-inline.md) | bound | 1 | 3-row case table |
-| [wrapping](clusters/figma/wrapping.md) | bound | 4 | 4-row case table |
+| [autoVsAbsoluteLayout](clusters/figma/auto-vs-absolute-layout.md) | bound | 11 | 3-row case table |
+| [namedStyleVersusInline](clusters/figma/named-style-versus-inline.md) | bound | 1 | 4-row case table |
+| [wrapping](clusters/figma/wrapping.md) | bound | 6 | 4-row case table |
 
 ## Losses
 

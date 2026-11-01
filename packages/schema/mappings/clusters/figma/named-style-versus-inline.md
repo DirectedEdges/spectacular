@@ -1,6 +1,6 @@
 # namedStyleVersusInline
 
-bound · figma-to-spec · **asserted**, not mechanically checked
+bound · figma-to-spec · verified against an implementation
 
 A cluster of the [Figma binding](../figma.md). These keys resolve jointly — no
 one of them determines any single output, so the rule below *is* the mapping.
@@ -13,7 +13,8 @@ Every fact the cluster reads. Nothing outside this set participates.
 
 | Operand | From |
 |---|---|
-| `node.textStyleId` | Figma node |
+| `self.textStyleEntry` | whether a text-style entry was captured at all, which is not the same as its value |
+| `node.textStyleId` | Figma node — an empty string counts as no style, the same as null |
 | `baseline.typography` | the unvaried baseline for this element |
 
 ## Cases
@@ -22,9 +23,10 @@ Ordered — first match wins.
 
 | # | When | Emits | Why |
 |---|---|---|---|
-| 1 | `node.textStyleId` present | `a style reference`<br>`typography` removed | the named style is the source; resolved values beside it would be a second copy |
-| 2 | `node.textStyleId` absent **and** `self.typography` absent **and** `baseline.typography` present | `typography` re-injected from the baseline | a variant diff dropped it, but with no named style the values are the only record |
-| 3 | `node.textStyleId` absent | `typography` as resolved values |  |
+| 1 | `self.textStyleEntry` absent | *nothing* | no text-style entry was captured for this node at all, so the pass has nothing to choose between and leaves `typography` as it found it. Distinct from an entry captured with an empty value, below |
+| 2 | `node.textStyleId` present | `a style reference`<br>`typography` removed | the named style is the source; resolved values beside it would be a second copy |
+| 3 | `node.textStyleId` absent **and** `self.typography` absent **and** `baseline.typography` present | `typography` re-injected from the baseline | a variant diff dropped it, but with no named style the values are the only record |
+| 4 | `node.textStyleId` absent | `typography` as resolved values |  |
 
 ## Otherwise
 

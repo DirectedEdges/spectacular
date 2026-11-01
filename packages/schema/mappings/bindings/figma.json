@@ -646,6 +646,7 @@
           "slot"
         ],
         "target": null,
+        "cluster": "wrapping",
         "notes": "Remaps all four schema values to Figma's primary-axis vocabulary. Gated on the node actually having the property, which effectively means an auto-layout container.",
         "onAbsent": "unverified",
         "basis": "implementation"
@@ -670,6 +671,7 @@
           "slot"
         ],
         "target": null,
+        "cluster": "wrapping",
         "notes": "Remaps `START`, `END`, `CENTER` and `BASELINE`. Loss: `STRETCH` is a schema value Figma's counter-axis property cannot express, and it is skipped with a warning — a declared degradation that applies nothing and says so, which is exactly what DSPEC-43 asks for.",
         "onAbsent": "unverified",
         "basis": "implementation"
@@ -853,9 +855,77 @@
         "cases": [
           {
             "when": {
+              "operation": "isNotNull",
+              "args": {
+                "value": "context.isRoot"
+              }
+            },
+            "emit": [
+              "`position` null",
+              "all six offsets null"
+            ],
+            "why": "a root has no parent bounds to be positioned within, and where a designer dragged it on the canvas is not part of its spec"
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "notEquals",
+                  "args": {
+                    "value": "parent.layoutMode",
+                    "compareTo": "NONE"
+                  }
+                },
+                {
+                  "operation": "notEquals",
+                  "args": {
+                    "value": "node.layoutPositioning",
+                    "compareTo": "ABSOLUTE"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "`position` AUTO",
+              "all six offsets null"
+            ],
+            "why": "a flow-placed child's position comes from the parent's stack, so recording offsets would assert a placement it does not have"
+          },
+          {
+            "when": {
+              "operation": "any",
+              "args": [
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "parent.layoutMode",
+                    "compareTo": "NONE"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "node.layoutPositioning",
+                    "compareTo": "ABSOLUTE"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "`layoutSizingHorizontal` and `layoutSizingVertical` null",
+              "offsets per the per-axis table below",
+              "`position` ABSOLUTE when `node.layoutPositioning` is ABSOLUTE or any offset was set, otherwise null"
+            ],
+            "why": "an element placed by coordinates rather than a parent's stack is absolutely positioned whatever Figma reports, because a regular frame has no stack to opt out of"
+          }
+        ],
+        "axisCases": [
+          {
+            "when": {
               "operation": "equals",
               "args": {
-                "value": "node.constraints",
+                "value": "node.constraints.axis",
                 "compareTo": "MIN"
               }
             },
@@ -867,7 +937,7 @@
             "when": {
               "operation": "equals",
               "args": {
-                "value": "node.constraints",
+                "value": "node.constraints.axis",
                 "compareTo": "MAX"
               }
             },
@@ -879,7 +949,7 @@
             "when": {
               "operation": "equals",
               "args": {
-                "value": "node.constraints",
+                "value": "node.constraints.axis",
                 "compareTo": "CENTER"
               }
             },
@@ -891,7 +961,7 @@
             "when": {
               "operation": "equals",
               "args": {
-                "value": "node.constraints",
+                "value": "node.constraints.axis",
                 "compareTo": "STRETCH"
               }
             },
@@ -905,7 +975,7 @@
             "when": {
               "operation": "equals",
               "args": {
-                "value": "node.constraints",
+                "value": "node.constraints.axis",
                 "compareTo": "SCALE"
               }
             },
@@ -970,7 +1040,7 @@
           "emit": [],
           "why": "a flow-placed child in auto-layout records no positioning offsets"
         },
-        "basis": "intent"
+        "basis": "implementation"
       },
       "wrapping": {
         "disposition": "bound",
@@ -978,7 +1048,9 @@
           "wrap",
           "wrapAlignment",
           "itemSpacing",
-          "layoutMode"
+          "layoutMode",
+          "mainAxisAlignment",
+          "crossAxisAlignment"
         ],
         "outputs": [
           "node.layoutWrap",
@@ -1032,9 +1104,9 @@
               "`wrap` false",
               "`mainAxisAlignment` null",
               "`crossAxisAlignment` null",
-              "`wrapAlignment` null"
+              "`wrapAlignment` removed entirely"
             ],
-            "why": "none of them mean anything without auto-layout"
+            "why": "none of them mean anything without auto-layout. `wrapAlignment` is removed rather than nulled: the removal below also holds here, because a node with no auto-layout has no wrap either, and a first-match table that said null would describe a state no document reaches"
           },
           {
             "when": {
@@ -1100,7 +1172,7 @@
         "otherwise": {
           "emit": []
         },
-        "basis": "intent"
+        "basis": "implementation"
       },
       "namedStyleVersusInline": {
         "disposition": "bound",
@@ -1117,8 +1189,12 @@
         "form": "cases",
         "inputs": [
           {
+            "ref": "self.textStyleEntry",
+            "from": "whether a text-style entry was captured at all, which is not the same as its value"
+          },
+          {
             "ref": "node.textStyleId",
-            "from": "Figma node"
+            "from": "Figma node — an empty string counts as no style, the same as null"
           },
           {
             "ref": "baseline.typography",
@@ -1126,6 +1202,16 @@
           }
         ],
         "cases": [
+          {
+            "when": {
+              "operation": "isNull",
+              "args": {
+                "value": "self.textStyleEntry"
+              }
+            },
+            "emit": [],
+            "why": "no text-style entry was captured for this node at all, so the pass has nothing to choose between and leaves `typography` as it found it. Distinct from an entry captured with an empty value, below"
+          },
           {
             "when": {
               "operation": "isNotNull",
@@ -1183,7 +1269,7 @@
         "otherwise": {
           "emit": []
         },
-        "basis": "intent"
+        "basis": "implementation"
       }
     }
   },
