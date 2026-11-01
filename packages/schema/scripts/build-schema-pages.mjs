@@ -129,19 +129,45 @@ const isAccepted = (src) =>
 const adrsFor = (key) => {
   const dir = join(repo, 'adr');
   if (!existsSync(dir)) return [];
-  const re = new RegExp(`\\b${key}\\b`);
+  /**
+   * A style key is matched only where it is written as code.
+   *
+   * Several keys are ordinary English words, and prose uses them: `\btop\b`
+   * matched "top-level" and "the top level", which between them appear in most
+   * ADRs. That put five records about element content, code-only props, slots
+   * and transform config on `top`'s page as decisions about it. Tightening the
+   * boundary to exclude a hyphen fixed the first phrase and not the second,
+   * because no rule over bare words can separate "the top level" from the
+   * `top` offset.
+   *
+   * These ADRs backtick identifiers by convention, so the backticks are the
+   * signal. Searching only the code spans of a section uses the convention
+   * rather than guessing at prose.
+   */
+  const codeSpans = (text) => (text.match(/`[^`\n]+`/g) ?? []).join(' ');
+  const re = new RegExp(`(?<![\\w-])${key}(?![\\w-])`);
+  const mentionsKey = (text) => re.test(codeSpans(text));
   const out = [];
   for (const f of readdirSync(dir).filter((n) => /^\d{3}-.*\.md$/.test(n))) {
     const src = readFileSync(join(dir, f), 'utf8');
-    if (!re.test(src) || !isAccepted(src)) continue;
+    if (!mentionsKey(src) || !isAccepted(src)) continue;
     const title = (src.match(/^#\s+(?:ADR[\s-]*\d*\s*:\s*)?(.+)$/m)?.[1] ?? f).trim();
     const summary = src.match(/^\*\*Summary\*\*:\s*(.+)$/m)?.[1] ?? '';
-    const decision = src.match(/^## Decision\b[\s\S]*?(?=^## (?!Decision\b))/m)?.[0] ?? '';
+    /**
+     * The `## Decision` section, matched on the whole heading line.
+     *
+     * `^## Decision\b` matched `## Decision Drivers` instead, which 103 of the
+     * 105 ADRs carry and which precedes the real section — so this read the
+     * drivers on essentially every ADR and never the decision. ADR-041 decides
+     * `top` in a table inside its Decision section and was classed as merely
+     * mentioning it.
+     */
+    const decision = src.match(/^## Decision[ \t]*\r?\n[\s\S]*?(?=^## |(?![\s\S]))/m)?.[0] ?? '';
     out.push({
       num: f.slice(0, 3),
       title,
       file: f,
-      decides: re.test(title) || re.test(summary) || re.test(decision),
+      decides: mentionsKey(title) || mentionsKey(summary) || mentionsKey(decision),
     });
   }
   return out;
