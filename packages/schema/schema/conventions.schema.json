@@ -17,12 +17,17 @@
           "description": "Figma variant value that activates this concept (e.g. 'hover', 'pressed'). Omit for boolean props \u2014 defaults to 'true'."
         },
         "contract": {
-          "type": "string",
-          "enum": [
-            "omit",
-            "keep"
-          ],
-          "description": "Overrides the concept's canonical browser-driven / consumer-controlled default."
+          "description": "Overrides the concept's canonical browser-driven / consumer-controlled default.",
+          "oneOf": [
+            {
+              "const": "omit",
+              "description": "The state is left out of the spec, because the platform produces it rather than the consumer declaring it."
+            },
+            {
+              "const": "keep",
+              "description": "The state is carried in the spec, because the consumer controls it."
+            }
+          ]
         }
       },
       "required": [
@@ -35,14 +40,24 @@
       "description": "Facts about one platform's library \u2014 how it is authored (encoding members) and what it calls things (vocabulary members). One permissive shape for every platform, including figma. Also the root of a single config/conventions/<platform>.yaml file, so one file validates standalone. (ADR-073, ADR-078)",
       "properties": {
         "naming": {
-          "type": "string",
-          "enum": [
-            "NONE",
-            "SENTENCE",
-            "TITLE"
-          ],
           "default": "NONE",
-          "description": "Naming convention this platform uses for layer and component property names \u2014 the reversal target for settings.spec.keys."
+          "description": "Naming convention this platform uses for layer and component property names \u2014 the reversal target for settings.spec.keys.",
+          "oneOf": [
+            {
+              "const": "NONE",
+              "description": "No convention is asserted, so a name is read as written."
+            },
+            {
+              "const": "SENTENCE",
+              "title": "Sentence case",
+              "description": "Only the first word is capitalised, so the rest can be lowercased when reversing the name."
+            },
+            {
+              "const": "TITLE",
+              "title": "Title Case",
+              "description": "Every word is capitalised, so each can be lowercased when reversing the name."
+            }
+          ]
         },
         "glyphs": {
           "type": "object",
@@ -90,12 +105,18 @@
           "properties": {
             "scope": {
               "type": "string",
-              "enum": [
-                "NESTED",
-                "PAGE"
-              ],
               "default": "NESTED",
-              "description": "Where the library keeps subcomponents. NESTED = anatomy only; PAGE = also the Figma page."
+              "description": "Where the library keeps subcomponents. NESTED = anatomy only; PAGE = also the Figma page.",
+              "oneOf": [
+                {
+                  "const": "NESTED",
+                  "description": "Inside the parent's anatomy only."
+                },
+                {
+                  "const": "PAGE",
+                  "description": "Inside the anatomy and also as components on the Figma page."
+                }
+              ]
             },
             "match": {
               "type": "array",
@@ -124,12 +145,18 @@
           "properties": {
             "scope": {
               "type": "string",
-              "enum": [
-                "PAGE",
-                "FILE"
-              ],
               "default": "PAGE",
-              "description": "Where the library keeps instance examples."
+              "description": "Where the library keeps instance examples.",
+              "oneOf": [
+                {
+                  "const": "PAGE",
+                  "description": "On the same Figma page as the component they exemplify."
+                },
+                {
+                  "const": "FILE",
+                  "description": "Anywhere in the Figma file, so the search is not scoped to one page."
+                }
+              ]
             },
             "match": {
               "type": "array",
@@ -396,13 +423,21 @@
       "additionalProperties": false
     },
     "PrimitiveKind": {
-      "type": "string",
-      "enum": [
-        "text",
-        "glyph",
-        "container"
-      ],
-      "description": "The spec element types that can be promoted to a design system component \u2014 a strict subset of ElementType. An image is deliberately absent: it is a paint on an element that is already something else, so it is bound through images.component. (ADR-074)"
+      "description": "The spec element types that can be promoted to a design system component \u2014 a strict subset of ElementType. An image is deliberately absent: it is a paint on an element that is already something else, so it is bound through images.component. (ADR-074)",
+      "oneOf": [
+        {
+          "const": "text",
+          "description": "A text primitive, promoted where the library ships a typography component."
+        },
+        {
+          "const": "glyph",
+          "description": "An icon primitive, promoted where the library ships an icon component."
+        },
+        {
+          "const": "container",
+          "description": "A layout primitive, promoted where the library ships a box or stack component."
+        }
+      ]
     },
     "PropReference": {
       "type": "object",

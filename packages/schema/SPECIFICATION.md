@@ -193,6 +193,18 @@ An `InstanceExample` configuration value is the deliberate subset without `PropB
 
 `default` is the base variant; each entry in `variants` layers over it. A variant's `elements` override the default's per element and per style key; absent means inherited (schema: `component.schema.json`). The `null`-unset rule (§4.2) is what makes an explicit removal expressible under layering.
 
+### 4.5 Closed value sets
+
+A value whose admitted values are a fixed, known list is a **closed value set**.
+
+A closed value set MUST be declared as `oneOf` branches of `const`, one branch per admitted value, and MUST NOT be declared as a bare `enum` array (DSPEC-48). Every branch MUST carry a `description`, or a `title` where the value itself is the whole meaning, stating what choosing that value does (DSPEC-49).
+
+JSON Schema provides no keyword for annotating an individual member of an `enum`, in any draft. The branch form is the pattern the specification project endorsed in place of one, and it is what makes an option's meaning readable by a consumer of the schema rather than only by a reader of the reference pages (ADR-114).
+
+No value may satisfy two branches of the same `oneOf` (DSPEC-50). `oneOf` requires exactly one branch to match, so a `const` branch placed beside an open branch admitting that value's own type rejects the value it was added to describe: the admitted values fail validation and unadmitted ones pass. Where a closed set must coexist with other forms — a token reference, a null, a sentinel — the branches MUST remain disjoint, which they are whenever they differ by JSON type.
+
+A `title` is optional. It names the option where the value does not already name itself, as a numeric sentinel or an external identifier does not. It MUST NOT restate the value.
+
 ---
 
 ## 5. Pointers
@@ -379,6 +391,9 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-45 | A declared `default` is a literal, never a `TokenReference`, `PropBinding` or `Conditional` | package | §4.1a |
 | DSPEC-46 | A platform binding does not redeclare a style default; it cites the schema's | binding | §11.1 |
 | DSPEC-47 | Jointly resolved keys are stated as an ordered case table over a declared operand set, not as prose | binding | §11.1 |
+| DSPEC-48 | A closed value set is declared as `oneOf` branches of `const`, never as a bare `enum` array | package | §4.5, ADR-114 |
+| DSPEC-49 | Every branch of a closed value set carries a `description` or a `title` stating what choosing that option does | package | §4.5, ADR-114 |
+| DSPEC-50 | No value satisfies two branches of the same `oneOf`; in particular a `const` branch never sits beside an open branch admitting that value's own type | package | §4.5, ADR-114 |
 
 Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.
 

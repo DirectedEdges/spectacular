@@ -159,20 +159,52 @@
       "description": "As SafeKeySentence, but for format.figmaKeys TITLE — every letter word capitalized."
     },
     "ElementType": {
-      "type": "string",
       "description": "Element types derived from Figma node analysis.",
-      "enum": [
-        "text",
-        "glyph",
-        "vector",
-        "container",
-        "slot",
-        "instance",
-        "line",
-        "ellipse",
-        "rectangle",
-        "polygon",
-        "star"
+      "oneOf": [
+        {
+          "const": "text",
+          "description": "Renders a string. The only type that carries typography and text alignment."
+        },
+        {
+          "const": "glyph",
+          "description": "Renders an icon, identified by the library's glyph convention rather than by node type alone."
+        },
+        {
+          "const": "vector",
+          "description": "An arbitrary vector shape that is not recognised as a glyph."
+        },
+        {
+          "const": "container",
+          "description": "Holds other elements and carries the layout that arranges them."
+        },
+        {
+          "const": "slot",
+          "description": "A hole the consumer fills, rather than content the spec fixes."
+        },
+        {
+          "const": "instance",
+          "description": "A use of another component, whose own spec governs its interior."
+        },
+        {
+          "const": "line",
+          "description": "A single stroked segment, carrying stroke keys but no fill."
+        },
+        {
+          "const": "ellipse",
+          "description": "An elliptical shape."
+        },
+        {
+          "const": "rectangle",
+          "description": "A rectangular shape, the one shape type that also carries corner radius."
+        },
+        {
+          "const": "polygon",
+          "description": "A regular polygon."
+        },
+        {
+          "const": "star",
+          "description": "A star shape."
+        }
       ]
     },
     "ElementTypeRef": {
@@ -399,14 +431,25 @@
       "description": "DTCG §5.2.3 Figma-specific metadata for a prop definition.",
       "properties": {
         "type": {
-          "type": "string",
-          "enum": [
-            "BOOLEAN",
-            "TEXT",
-            "INSTANCE_SWAP",
-            "VARIANT"
-          ],
-          "description": "Figma-native property type"
+          "description": "Figma-native property type",
+          "oneOf": [
+            {
+              "const": "BOOLEAN",
+              "description": "A Figma boolean property, which toggles a layer's visibility."
+            },
+            {
+              "const": "TEXT",
+              "description": "A Figma text property, which substitutes a string."
+            },
+            {
+              "const": "INSTANCE_SWAP",
+              "description": "A Figma instance-swap property, which substitutes one nested component for another."
+            },
+            {
+              "const": "VARIANT",
+              "description": "A Figma variant property, one dimension of a component set."
+            }
+          ]
         },
         "source": {
           "$ref": "#/definitions/FigmaCodeOnlySource",
@@ -1036,8 +1079,16 @@
       "$ref": "styles.schema.json#/definitions/ContentStyles"
     },
     "PrimitiveSlotContent": {
-      "type": "string",
-      "enum": ["$text", "$glyph"],
+      "oneOf": [
+        {
+          "const": "$text",
+          "description": "The slot admits a text primitive — a plain string fill."
+        },
+        {
+          "const": "$glyph",
+          "description": "The slot admits a glyph primitive — an icon fill."
+        }
+      ],
       "description": "A primitive kind a slot may accept, written as a reserved value inside SlotProp.anyOf. `$text` admits a text primitive (a plain string fill); `$glyph` admits a glyph primitive (an icon fill). The names are ElementType's, so one word covers the primitive wherever it appears — `type: text` on an anatomy item and `$text` in anyOf are the same thing. The `$` prefix marks the value as reserved by the contract rather than supplied by the library, matching how $token, $binding and $slotContent mark reserved keys; a component key can never shadow a marker, because the safe key grammar (ADR-066) admits no leading `$`. Formatting for such a fill lives under the matching key of the slot element's contentStyles. Orthogonal to defaultSlot. (ADR-102)"
     },
     "Metadata": {
@@ -1074,11 +1125,20 @@
               "type": "string"
             },
             "nodeType": {
-              "type": "string",
-              "enum": [
-                "COMPONENT",
-                "COMPONENT_SET",
-                "FRAME"
+              "description": "The Figma node type this spec was captured from.",
+              "oneOf": [
+                {
+                  "const": "COMPONENT",
+                  "description": "A single component with no variant dimensions."
+                },
+                {
+                  "const": "COMPONENT_SET",
+                  "description": "A set of variants, which is why the spec carries more than one."
+                },
+                {
+                  "const": "FRAME",
+                  "description": "A frame rather than a component, as a composition is captured from."
+                }
               ]
             }
           },
@@ -1090,13 +1150,21 @@
           "additionalProperties": false
         },
         "concern": {
-          "type": "string",
-          "enum": [
-            "api",
-            "variants",
-            "examples"
-          ],
-          "description": "Which slice of a component this document carries, when a run wrote one file per concern. Absent on a single-file component, which carries every concern at once. (ADR-091)"
+          "description": "Which slice of a component this document carries, when a run wrote one file per concern. Absent on a single-file component, which carries every concern at once. (ADR-091)",
+          "oneOf": [
+            {
+              "const": "api",
+              "description": "The component's surface — its props, slots and anatomy."
+            },
+            {
+              "const": "variants",
+              "description": "The default configuration and every variant's difference from it."
+            },
+            {
+              "const": "examples",
+              "description": "Instance examples and the slot content they fill."
+            }
+          ]
         }
       },
       "required": [
@@ -1117,12 +1185,20 @@
           "description": "The Figma node ID for this subcomponent's component node."
         },
         "nodeType": {
-          "type": "string",
           "description": "The Figma node type.",
-          "enum": [
-            "COMPONENT",
-            "COMPONENT_SET",
-            "FRAME"
+          "oneOf": [
+            {
+              "const": "COMPONENT",
+              "description": "A single component with no variant dimensions."
+            },
+            {
+              "const": "COMPONENT_SET",
+              "description": "A set of variants, so the subcomponent has variant props of its own."
+            },
+            {
+              "const": "FRAME",
+              "description": "A frame rather than a component."
+            }
           ]
         }
       },

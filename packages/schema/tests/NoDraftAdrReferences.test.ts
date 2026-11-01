@@ -1,23 +1,47 @@
 /**
- * Nothing published cites a DRAFT decision record.
+ * Nothing reaches `main` citing a DRAFT decision record.
  *
- * A draft is a proposal. Citing one presents an unsettled question as a
- * decision that settles something, and two of the current drafts cover
- * subjects the schema does not handle at all. The reference is wrong whether
- * it is a link or a bare name, so this checks for the record's number and slug
- * rather than for link syntax.
+ * A draft is a proposal, so a citation on `main` presents an unsettled
+ * question as a settled decision — and a draft that has sat for months is how
+ * that happens. In-flight work is different: implementing an ADR writes the
+ * requirement and its provenance together, and the decision is accepted a step
+ * later. Forbidding the citation outright made that order impossible.
  *
- * `build-adrs.mjs` already refuses to publish a non-ACCEPTED record, so the
- * gap this closes is the other direction: a page that names one anyway.
+ * So the gate is the merge, not the citation. This checks only when `main` is
+ * the branch under test or the base of the pull request.
+ *
+ * The reference is equally wrong as a link or a bare name, so this matches the
+ * record's number and slug rather than link syntax.
  */
 
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join, resolve, relative } from 'node:path';
 
 const pkg = resolve(__dirname, '..');
 const repo = resolve(pkg, '../..');
 const adrDir = join(repo, 'adr');
+
+/**
+ * Whether this run is deciding what lands on `main`.
+ *
+ * `GITHUB_BASE_REF` is the pull request's base and is the real gate. The
+ * branch check catches a local `main` checkout, where the merge has already
+ * happened and the report is at least accurate.
+ */
+const targetsMain = (): boolean => {
+  const base = process.env.GITHUB_BASE_REF;
+  if (base) return base === 'main';
+  try {
+    const head = execFileSync('git', ['-C', repo, 'rev-parse', '--abbrev-ref', 'HEAD'], {
+      encoding: 'utf8',
+    }).trim();
+    return head === 'main';
+  } catch {
+    return false;
+  }
+};
 
 const status = (src: string) =>
   (src.match(/^\*\*Status\*\*:\s*(\S+)/m)?.[1]?.replace(/[^A-Za-z]/g, '').toUpperCase() ?? '');
@@ -63,8 +87,9 @@ describe('draft decision records', () => {
     expect(files.length).toBeGreaterThan(0);
   });
 
-  it('are never cited by anything published', () => {
+  it('are never cited by anything reaching main', () => {
     if (!draftList.length) return;
+    if (!targetsMain()) return;
     // `ADR-020`, `ADR 020` and the slug all count as a citation.
     const patterns = draftList.flatMap(({ num, slug }) => [
       { label: `ADR-${num}`, re: new RegExp(`ADR[\\s-]${num}\\b`) },

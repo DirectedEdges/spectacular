@@ -647,24 +647,79 @@
       "description": "Inline resolved color value per DTCG Color Module §4.1. `colorSpace` and `components` are required; `alpha` defaults to 1 (fully opaque) when omitted; `hex` is an optional 6-digit sRGB fallback (#RRGGBB — no alpha channel in hex). Consumers SHOULD prefer `colorSpace` + `components` for rendering.",
       "properties": {
         "colorSpace": {
-          "type": "string",
-          "enum": [
-            "srgb",
-            "srgb-linear",
-            "hsl",
-            "hwb",
-            "lab",
-            "lch",
-            "oklab",
-            "oklch",
-            "display-p3",
-            "a98-rgb",
-            "prophoto-rgb",
-            "rec2020",
-            "xyz-d65",
-            "xyz-d50"
-          ],
-          "description": "Color space identifier per DTCG Color §4.2 (e.g. 'srgb', 'oklch', 'display-p3')."
+          "description": "Color space identifier per DTCG Color §4.2 (e.g. 'srgb', 'oklch', 'display-p3').",
+          "oneOf": [
+            {
+              "const": "srgb",
+              "title": "sRGB",
+              "description": "The standard web colour space. Three components, red, green and blue."
+            },
+            {
+              "const": "srgb-linear",
+              "title": "Linear sRGB",
+              "description": "sRGB without its transfer function, so component values are proportional to light intensity."
+            },
+            {
+              "const": "hsl",
+              "title": "HSL",
+              "description": "sRGB addressed as hue, saturation and lightness."
+            },
+            {
+              "const": "hwb",
+              "title": "HWB",
+              "description": "sRGB addressed as hue, whiteness and blackness."
+            },
+            {
+              "const": "lab",
+              "title": "CIELAB",
+              "description": "Perceptually uniform, with a D50 white point. Lightness plus two opponent axes."
+            },
+            {
+              "const": "lch",
+              "title": "CIELCh",
+              "description": "CIELAB addressed as lightness, chroma and hue."
+            },
+            {
+              "const": "oklab",
+              "title": "Oklab",
+              "description": "Perceptually uniform with improved hue linearity over CIELAB. Lightness plus two opponent axes."
+            },
+            {
+              "const": "oklch",
+              "title": "Oklch",
+              "description": "Oklab addressed as lightness, chroma and hue."
+            },
+            {
+              "const": "display-p3",
+              "title": "Display P3",
+              "description": "A wide-gamut RGB space covering more saturated colour than sRGB."
+            },
+            {
+              "const": "a98-rgb",
+              "title": "Adobe RGB (1998)",
+              "description": "A wide-gamut RGB space widely used in print workflows."
+            },
+            {
+              "const": "prophoto-rgb",
+              "title": "ProPhoto RGB",
+              "description": "A very wide-gamut RGB space used in photographic editing."
+            },
+            {
+              "const": "rec2020",
+              "title": "Rec. 2020",
+              "description": "The ultra-high-definition broadcast RGB space."
+            },
+            {
+              "const": "xyz-d65",
+              "title": "CIE XYZ (D65)",
+              "description": "Device-independent tristimulus values with a D65 white point."
+            },
+            {
+              "const": "xyz-d50",
+              "title": "CIE XYZ (D50)",
+              "description": "Device-independent tristimulus values with a D50 white point."
+            }
+          ]
         },
         "components": {
           "type": "array",
@@ -723,12 +778,17 @@
       ]
     },
     "ObjectFitValue": {
-      "type": "string",
-      "enum": [
-        "COVER",
-        "CONTAIN"
-      ],
-      "description": "How the image is fitted to its layer (CSS object-fit vocabulary). Structural property — not token-bindable. Absent means COVER. Transformer remaps Figma FILL->COVER, FIT->CONTAIN, and lossily coerces CROP->COVER, TILE->COVER so no image fill is dropped."
+      "description": "How the image is fitted to its layer (CSS object-fit vocabulary). Structural property — not token-bindable. Absent means COVER. Transformer remaps Figma FILL->COVER, FIT->CONTAIN, and lossily coerces CROP->COVER, TILE->COVER so no image fill is dropped.",
+      "oneOf": [
+        {
+          "const": "COVER",
+          "description": "The image fills the layer, cropping whichever axis overflows."
+        },
+        {
+          "const": "CONTAIN",
+          "description": "The whole image is visible within the layer, leaving space on whichever axis is shorter."
+        }
+      ]
     },
     "ImageValue": {
       "type": "object",
@@ -989,15 +1049,23 @@
       "description": "Layout mode value. Structural property — not token-bindable.",
       "oneOf": [
         {
-          "type": "string",
-          "enum": [
-            "NONE",
-            "HORIZONTAL",
-            "VERTICAL"
-          ]
+          "const": "NONE",
+          "description": "No auto-layout. Children are placed by their own coordinates rather than stacked."
         },
         {
-          "type": "null"
+          "const": "HORIZONTAL",
+          "title": "Row",
+          "description": "Children stack along the inline axis."
+        },
+        {
+          "const": "VERTICAL",
+          "title": "Column",
+          "description": "Children stack along the block axis."
+        },
+        {
+          "type": "null",
+          "title": "Not specified",
+          "description": "No layout mode is recorded for this element."
         }
       ]
     },
@@ -1005,14 +1073,17 @@
       "description": "Wrap alignment value. Structural property — not token-bindable.",
       "oneOf": [
         {
-          "type": "string",
-          "enum": [
-            "START",
-            "SPACE_BETWEEN"
-          ]
+          "const": "START",
+          "description": "Wrapped lines gather at the leading edge, leaving any remaining space after the last line."
         },
         {
-          "type": "null"
+          "const": "SPACE_BETWEEN",
+          "description": "Remaining space is distributed between wrapped lines."
+        },
+        {
+          "type": "null",
+          "title": "Not applicable",
+          "description": "The element does not wrap, so there are no wrapped lines to distribute."
         }
       ]
     },
@@ -1020,16 +1091,25 @@
       "description": "Main axis alignment value. Structural property — not token-bindable.",
       "oneOf": [
         {
-          "type": "string",
-          "enum": [
-            "START",
-            "END",
-            "CENTER",
-            "SPACE_BETWEEN"
-          ]
+          "const": "START",
+          "description": "Children gather at the leading edge of the stacking axis."
         },
         {
-          "type": "null"
+          "const": "END",
+          "description": "Children gather at the trailing edge of the stacking axis."
+        },
+        {
+          "const": "CENTER",
+          "description": "Children gather at the midpoint of the stacking axis."
+        },
+        {
+          "const": "SPACE_BETWEEN",
+          "description": "Remaining space is distributed between children, pinning the first and last to the edges."
+        },
+        {
+          "type": "null",
+          "title": "Not applicable",
+          "description": "The element has no auto-layout, so there is no stacking axis to align along."
         }
       ]
     },
@@ -1037,17 +1117,29 @@
       "description": "Cross axis alignment value. Structural property — not token-bindable.",
       "oneOf": [
         {
-          "type": "string",
-          "enum": [
-            "START",
-            "END",
-            "CENTER",
-            "STRETCH",
-            "BASELINE"
-          ]
+          "const": "START",
+          "description": "Children align to the leading edge of the axis across the stack."
         },
         {
-          "type": "null"
+          "const": "END",
+          "description": "Children align to the trailing edge of the axis across the stack."
+        },
+        {
+          "const": "CENTER",
+          "description": "Children align to the midpoint of the axis across the stack."
+        },
+        {
+          "const": "STRETCH",
+          "description": "Children fill the axis across the stack rather than sizing to their own content."
+        },
+        {
+          "const": "BASELINE",
+          "description": "Children align on the baseline of their first line of text."
+        },
+        {
+          "type": "null",
+          "title": "Not applicable",
+          "description": "The element has no auto-layout, so there is no cross axis to align on."
         }
       ]
     },
@@ -1055,16 +1147,25 @@
       "description": "Horizontal text alignment value using logical inline-axis directions. Structural property — not token-bindable.",
       "oneOf": [
         {
-          "type": "string",
-          "enum": [
-            "START",
-            "CENTER",
-            "END",
-            "JUSTIFY"
-          ]
+          "const": "START",
+          "description": "Text aligns to the inline-start edge — the left in a left-to-right script."
         },
         {
-          "type": "null"
+          "const": "CENTER",
+          "description": "Text centres on the inline axis."
+        },
+        {
+          "const": "END",
+          "description": "Text aligns to the inline-end edge — the right in a left-to-right script."
+        },
+        {
+          "const": "JUSTIFY",
+          "description": "Word spacing stretches so every line but the last meets both edges."
+        },
+        {
+          "type": "null",
+          "title": "Not specified",
+          "description": "No horizontal alignment is recorded for this element."
         }
       ]
     },
@@ -1072,14 +1173,17 @@
       "description": "Text overflow handling value. Structural property — not token-bindable.",
       "oneOf": [
         {
-          "type": "string",
-          "enum": [
-            "CLIP",
-            "ELLIPSIS"
-          ]
+          "const": "CLIP",
+          "description": "Text is cut at the boundary with no indication that it continues."
         },
         {
-          "type": "null"
+          "const": "ELLIPSIS",
+          "description": "Text is cut at the boundary and a trailing ellipsis marks the truncation."
+        },
+        {
+          "type": "null",
+          "title": "Not specified",
+          "description": "No overflow behaviour is recorded for this element."
         }
       ]
     },
@@ -1087,14 +1191,17 @@
       "description": "Position value. Structural property — not token-bindable.",
       "oneOf": [
         {
-          "type": "string",
-          "enum": [
-            "AUTO",
-            "ABSOLUTE"
-          ]
+          "const": "AUTO",
+          "description": "The parent's auto-layout places the element, and no positioning offsets are recorded."
         },
         {
-          "type": "null"
+          "const": "ABSOLUTE",
+          "description": "The element is placed against its parent's bounds by the offset keys."
+        },
+        {
+          "type": "null",
+          "title": "Not positioned",
+          "description": "The element has no parent bounds to be positioned within, as on a document root."
         }
       ]
     },
@@ -1457,20 +1564,51 @@
           "examples": ["Color/On surface variant", "Background blur/Regular", "Layout Width/Margin/Compact: L"]
         },
         "$type": {
-          "type": "string",
-          "enum": [
-            "color",
-            "dimension",
-            "string",
-            "number",
-            "boolean",
-            "shadow",
-            "gradient",
-            "typography",
-            "effects",
-            "image"
-          ],
-          "description": "DTCG token type (Format Module §9). 'effects' is a Specs extension for EffectsGroup references (multi-shadow + blur composite) with no DTCG equivalent. 'image' is a Specs extension for fill-style references whose styled paint is an image (ADR-063), likewise without a DTCG equivalent."
+          "description": "DTCG token type (Format Module §9). 'effects' is a Specs extension for EffectsGroup references (multi-shadow + blur composite) with no DTCG equivalent. 'image' is a Specs extension for fill-style references whose styled paint is an image (ADR-063), likewise without a DTCG equivalent.",
+          "oneOf": [
+            {
+              "const": "color",
+              "description": "Resolves to a colour."
+            },
+            {
+              "const": "dimension",
+              "description": "Resolves to a length — a radius, a spacing step, a stroke weight."
+            },
+            {
+              "const": "string",
+              "description": "Resolves to text, such as a font family name."
+            },
+            {
+              "const": "number",
+              "description": "Resolves to a unitless number, such as an opacity or a line-height multiplier."
+            },
+            {
+              "const": "boolean",
+              "description": "Resolves to true or false."
+            },
+            {
+              "const": "shadow",
+              "description": "Resolves to a single shadow."
+            },
+            {
+              "const": "gradient",
+              "description": "Resolves to a gradient."
+            },
+            {
+              "const": "typography",
+              "description": "Resolves to a composite of type properties — family, size, line height and the rest."
+            },
+            {
+              "const": "effects",
+              "title": "Effects (Specs extension)",
+              "description": "Resolves to a group of effects — multiple shadows plus blur — which DTCG has no type for."
+            },
+            {
+              "const": "image",
+              "title": "Image (Specs extension)",
+              "description": "Resolves to a fill style whose paint is an image, which DTCG has no type for."
+            }
+          ]
         },
         "$extensions": {
           "type": "object",
@@ -1659,20 +1797,21 @@
           "description": "Spacing between paragraphs in pixels (pureNumber primitive)"
         },
         "leadingTrim": {
+          "description": "Leading trim mode — 'NONE' or 'CAP_HEIGHT' per Figma API; 'mixed' when varied across selection",
           "oneOf": [
             {
-              "type": "string",
-              "enum": [
-                "NONE",
-                "CAP_HEIGHT"
-              ]
+              "const": "NONE",
+              "description": "The line box keeps the font's full leading above and below the text."
             },
             {
-              "type": "string",
-              "const": "mixed"
+              "const": "CAP_HEIGHT",
+              "description": "Leading above the cap height and below the baseline is trimmed from the line box."
+            },
+            {
+              "const": "mixed",
+              "description": "The value varies across the text this style was read from, so no single value applies."
             }
-          ],
-          "description": "Leading trim mode — 'NONE' or 'CAP_HEIGHT' per Figma API; 'mixed' when varied across selection"
+          ]
         },
         "listSpacing": {
           "oneOf": [

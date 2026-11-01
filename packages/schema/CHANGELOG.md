@@ -9,7 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Every option of all 31 closed value sets — a description of what choosing it does (ADR-114)
+- `Styles` — `examples` on all 46 properties, each valid against its own property
+- `ColorObject.colorSpace`, `Settings.spec.tokens`, `Settings.spec.color` — per-option descriptions, previously only a value list
+- `Settings.spec.variantDepth` — `9999` titled "Unlimited", naming a sentinel the value could not
+- `DSPEC-48`, `DSPEC-49`, `DSPEC-50` — closed value sets declare `oneOf` of `const`, describe every option, and keep branches disjoint
+
 ### Changed
+
+- Closed value sets — declared as `oneOf` branches of `const` rather than a bare `enum`; admits the same values (ADR-114)
+- `Styles.position`, `Styles.layoutMode`, `Styles.textOverflow`, `Styles.textAlignHorizontal` — descriptions no longer restate their own option meanings
+- `TokenReference.$token` — described as the slash-separated path the corpus uses, not a dot-separated one
 
 ### Removed
 

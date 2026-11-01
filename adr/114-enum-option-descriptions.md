@@ -1,9 +1,9 @@
 # ADR: Describe Enum Options Where They Are Declared
 
-**Branch**: `platform-bindings`
+**Branch**: `114-enum-option-descriptions`
 **Created**: 2026-11-01
 **Status**: DRAFT
-**Summary**: *(written at implementation — see `/specs.adr.implement`)*
+**Summary**: Closed value sets declare `oneOf` branches of `const` with a description, so every option documents itself.
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

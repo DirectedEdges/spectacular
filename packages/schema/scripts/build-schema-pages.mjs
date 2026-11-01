@@ -392,20 +392,56 @@ for (const node of nodes) {
   const kids = childrenOf(p);
 
   const oneOfBranches = (() => {
-    const branches = spec.oneOf ?? spec.anyOf;
-    if (!branches?.length) return null;
+    /**
+     * The union is usually on the definition the property references, not on
+     * the property — `position` is a `$ref` to `PositionStyleValue`, and the
+     * branches live there. Descending through the value-union wrappers is the
+     * same traversal `namedTypes` does.
+     */
+    const union = (node, depth = 0) => {
+      if (!node || depth > 5) return null;
+      if (Array.isArray(node.oneOf) || Array.isArray(node.anyOf)) return node;
+      if (node.$ref) {
+        const t = node.$ref.replace('#/definitions/', '');
+        return defs[t] ? union(defs[t], depth + 1) : null;
+      }
+      return null;
+    };
+    const owner = union(spec);
+    const branches = owner && (owner.oneOf ?? owner.anyOf);
+    if (!Array.isArray(branches) || !branches.length) return null;
+    /**
+     * Rendered only where a branch says something a reader cannot get from the
+     * `Type` line above. Without this gate every one of the 46 style keys grew
+     * a table restating its own union as prose-free rows.
+     */
+    if (!branches.some((br) => br.title || br.description)) return null;
+    const cell = (s) => (s ?? '').replace(/\|/g, '\\|');
     const rows = branches
       .map((br) => {
         const named = br.$ref?.replace('#/definitions/', '');
         const child = kids.find((c) => c.path[c.path.length - 1] === named);
-        const label = child ? `[\`${named}\`](${urlOf(child.path)})` : namedTypes(br).join(', ') || '—';
+        const label =
+          br.const !== undefined
+            ? `\`${JSON.stringify(br.const)}\`${br.title ? ` — ${cell(br.title)}` : ''}`
+            : child
+              ? `[\`${named}\`](${urlOf(child.path)})`
+              : `${namedTypes(br).join(', ') || '—'}${br.title ? ` — ${cell(br.title)}` : ''}`;
         // A bare `$ref` carries no description; the one that distinguishes the
         // branch sits on the definition it points at.
-        const why = (br.description ?? (named ? defs[named]?.description : '') ?? '').replace(/\|/g, '\\|');
+        const why = cell(br.description ?? (named ? defs[named]?.description : ''));
         return `| ${label} | ${why} |`;
       })
       .join('\n');
-    return `| Form | When |\n|---|---|\n${rows}`;
+    /**
+     * A set of `const` branches is a list of options; anything else is a list
+     * of forms the value may take. The heading says which, because "Form"
+     * above a column of literal values reads as a type name.
+     */
+    const allConst = branches.every((br) => br.const !== undefined);
+    return allConst
+      ? `| Option | Meaning |\n|---|---|\n${rows}`
+      : `| Form | When |\n|---|---|\n${rows}`;
   })();
 
   const bindingRows = isStyleKey
