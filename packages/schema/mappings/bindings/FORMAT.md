@@ -90,7 +90,7 @@ The cluster section costs more to author and is the only form that can be true.
 
 A binding declares what a platform does with a **value**. What an absent key means is not a platform's choice, so a binding never declares it (DSPEC-46).
 
-Since ADR-113, every property of `Styles` carries a `default` in `styles.schema.json`, and that is the single source. `_defaults.json` is a generated summary of those declarations, published as `DEFAULTS.md` — it cites the schema and decides nothing.
+Every property of `Styles` carries a `default` in `styles.schema.json`, and that is the single source. `_defaults.json` is a generated summary of those declarations, published as `DEFAULTS.md` — it cites the schema and decides nothing.
 
 A default answers only one of the three reasons a key can be absent. The other two — a variant inheriting under layering, and an element type that cannot carry the key — remain unmarked in a document. `DEFAULTS.md` states that gap rather than papering over it.
 

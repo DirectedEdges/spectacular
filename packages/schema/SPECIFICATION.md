@@ -167,7 +167,7 @@ A scalar is a string, number or boolean — the `Scalar` definition. It delibera
 
 ### 4.1a An absent style key resolves to its declared default
 
-Every property of `Styles` declares a `default` in `styles.schema.json`. A style key absent from an element resolves to that default, and a consumer MUST use it rather than substituting a platform convention of its own (DSPEC-44; ADR-113).
+Every property of `Styles` declares a `default` in `styles.schema.json`. A style key absent from an element resolves to that default, and a consumer MUST use it rather than substituting a platform convention of its own (DSPEC-44).
 
 The declaration is by **key presence**, not truthiness: 19 of the 46 properties declare `default: null`, meaning *apply nothing*. That is a decision, and it is distinct from a property carrying no `default` keyword at all, which would mean nobody has decided.
 
@@ -375,9 +375,9 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-41 | A platform binding declares a disposition for every property of `Styles` | binding | §11.1 |
 | DSPEC-42 | A platform binding declares its handling of each of the four style value forms | binding | §11.1 |
 | DSPEC-43 | A degradation applies the spec's own recorded fallback or applies nothing and warns; it never invents data the document does not carry | binding | §11.2 |
-| DSPEC-44 | Every property of `Styles` declares a `default`, and its value validates against that property's own schema | package | §4.1a, ADR-113 |
-| DSPEC-45 | A declared `default` is a literal, never a `TokenReference`, `PropBinding` or `Conditional` | package | §4.1a, ADR-113 |
-| DSPEC-46 | A platform binding does not redeclare a style default; it cites the schema's | binding | §11.1, ADR-113 |
+| DSPEC-44 | Every property of `Styles` declares a `default`, and its value validates against that property's own schema | package | §4.1a |
+| DSPEC-45 | A declared `default` is a literal, never a `TokenReference`, `PropBinding` or `Conditional` | package | §4.1a |
+| DSPEC-46 | A platform binding does not redeclare a style default; it cites the schema's | binding | §11.1 |
 | DSPEC-47 | Jointly resolved keys are stated as an ordered case table over a declared operand set, not as prose | binding | §11.1 |
 
 Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.

@@ -106,15 +106,16 @@ const elementTables = (() => {
 })();
 
 /**
- * ADRs that have a page on the site. Four exist in `adr/` without one — a DRAFT
- * among them — so linking every cited ADR produced links to pages that are not
- * published. An unpublished ADR is still worth naming; it is just not a link.
+ * A DRAFT decision record is not cited anywhere — not as a link, and not as a
+ * bare name. A draft is a proposal, so citing one presents an unsettled
+ * question as a decision that settles something. The four drafts in `adr/`
+ * include two whose subject the schema does not yet handle at all.
+ *
+ * Status is read from the record itself rather than inferred from whether the
+ * site published it, so the rule holds even if the site's filter changes.
  */
-const publishedAdrs = (() => {
-  const dir = join(repo, 'site/src/content/docs/adr');
-  if (!existsSync(dir)) return null;
-  return new Set(readdirSync(dir).filter((f) => f.endsWith('.md')).map((f) => f.replace(/\.md$/, '')));
-})();
+const isAccepted = (src) =>
+  (src.match(/^\*\*Status\*\*:\s*(\S+)/m)?.[1]?.replace(/[^A-Za-z]/g, '').toUpperCase() ?? '') === 'ACCEPTED';
 
 /**
  * ADRs that *decide* a key — derived, not hand-listed.
@@ -132,7 +133,7 @@ const adrsFor = (key) => {
   const out = [];
   for (const f of readdirSync(dir).filter((n) => /^\d{3}-.*\.md$/.test(n))) {
     const src = readFileSync(join(dir, f), 'utf8');
-    if (!re.test(src)) continue;
+    if (!re.test(src) || !isAccepted(src)) continue;
     const title = (src.match(/^#\s+(?:ADR[\s-]*\d*\s*:\s*)?(.+)$/m)?.[1] ?? f).trim();
     const summary = src.match(/^\*\*Summary\*\*:\s*(.+)$/m)?.[1] ?? '';
     const decision = src.match(/^## Decision\b[\s\S]*?(?=^## (?!Decision\b))/m)?.[0] ?? '';
@@ -418,11 +419,7 @@ for (const node of nodes) {
     // Said rather than left blank: three keys have no ADR, and a missing
     // section reads as a render that failed instead of a fact about the key.
     if (!adrs.length) return '**Decisions.** None.\n\n**Mentions.** None.\n';
-    const item = (a) => {
-      const slug = a.file.replace(/\.md$/, '');
-      const name = !publishedAdrs || publishedAdrs.has(slug) ? `[ADR-${a.num}](/adr/${slug}/)` : `ADR-${a.num}`;
-      return `- ${name} — ${a.title}${publishedAdrs && !publishedAdrs.has(slug) ? ' *(not published)*' : ''}`;
-    };
+    const item = (a) => `- [ADR-${a.num}](/adr/${a.file.replace(/\.md$/, '')}/) — ${a.title}`;
     const decides = adrs.filter((a) => a.decides);
     const mentions = adrs.filter((a) => !a.decides);
     return `${decides.length ? `**Decisions**\n\n${decides.map(item).join('\n')}\n` : '**Decisions.** None.\n'}${
