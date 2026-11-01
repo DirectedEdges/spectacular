@@ -8,6 +8,7 @@
     "Component": {
       "type": "object",
       "description": "A component specification derived from Figma that defines structure, properties, variants, and styling rules.",
+      "examples": [{ "title": "Button", "anatomy": { "root": { "type": "container" }, "label": { "type": "text" } }, "default": { "elements": { "label": { "content": "Save" } } } }],
       "examples": [],
       "properties": {
         "metadata": {
@@ -97,6 +98,7 @@
     "InstanceExample": {
       "type": "object",
       "description": "A pre-configured usage of the whole component (ADR-048). Scalar props are set directly; slot props are filled via SlotContentRef. PropBinding is not accepted — this is a documented configuration, not a live binding.",
+      "examples": [{ "title": "Primary, disabled", "propConfigurations": { "variant": "primary", "isDisabled": true } }],
       "properties": {
         "title": {
           "type": "string"
@@ -133,6 +135,7 @@
     "InstanceExamples": {
       "type": "object",
       "description": "Named instance examples for this component.",
+      "examples": [{ "primaryDefault": { "title": "Primary", "propConfigurations": { "variant": "primary" } } }],
       "patternProperties": {
         "^[a-zA-Z0-9_-]+$": {
           "$ref": "#/definitions/InstanceExample"
@@ -143,6 +146,7 @@
     "Anatomy": {
       "type": "object",
       "description": "The structural elements that make up the component. Keys are formatted per format.keys. A key whose Figma name did not satisfy the safe key grammar (see SafeKeySentence / SafeKeyTitle) carries that name in $extensions['com.figma'].name.",
+      "examples": [{ "root": { "type": "container" }, "label": { "type": "text" } }],
       "examples": [],
       "additionalProperties": {
         "$ref": "#/definitions/AnatomyElement"
@@ -151,15 +155,18 @@
     "SafeKeySentence": {
       "type": "string",
       "pattern": "^[A-Z][a-z]*( ([a-z]+|[0-9]+))*$",
-      "description": "A round-trip-safe Figma name under format.figmaKeys SENTENCE: ASCII letters and digits, single-space word separators, sentence case, each word either all letters or all digits, never beginning with a digit. Names matching this pattern reconstruct identically from the output of any format.keys value; names that do not require $extensions['com.figma'].name."
+      "description": "A round-trip-safe Figma name under format.figmaKeys SENTENCE: ASCII letters and digits, single-space word separators, sentence case, each word either all letters or all digits, never beginning with a digit. Names matching this pattern reconstruct identically from the output of any format.keys value; names that do not require $extensions['com.figma'].name.",
+      "examples": ["Icon only", "Size 2"]
     },
     "SafeKeyTitle": {
       "type": "string",
       "pattern": "^[A-Z][a-z]*( ([A-Z][a-z]*|[0-9]+))*$",
-      "description": "As SafeKeySentence, but for format.figmaKeys TITLE — every letter word capitalized."
+      "description": "As SafeKeySentence, but for format.figmaKeys TITLE — every letter word capitalized.",
+      "examples": ["Icon Only", "Size 2"]
     },
     "ElementType": {
       "description": "Element types derived from Figma node analysis.",
+      "examples": ["text", "container"],
       "oneOf": [
         {
           "const": "text",
@@ -210,6 +217,7 @@
     "ElementTypeRef": {
       "type": "object",
       "description": "Reference to an external element type definition.",
+      "examples": [{ "$ref": "foundations#/definitions/glyph" }],
       "properties": {
         "$ref": {
           "type": "string",
@@ -224,6 +232,7 @@
     "SubcomponentRef": {
       "type": "object",
       "description": "Reference to a subcomponent definition within the same spec.",
+      "examples": [{ "$ref": "#/subcomponents/cardHeader" }],
       "properties": {
         "$ref": {
           "type": "string",
@@ -239,6 +248,7 @@
     "AnatomyElement": {
       "type": "object",
       "description": "An element within the anatomy of a component.",
+      "examples": [{ "type": "text" }, { "type": "container", "role": "button", "actions": [{ "type": "dismiss" }] }],
       "examples": [],
       "properties": {
         "type": {
@@ -324,6 +334,7 @@
     "Props": {
       "type": "object",
       "description": "Component properties. Keys are formatted per format.keys. A key whose Figma property name did not satisfy the safe key grammar (see SafeKeySentence / SafeKeyTitle) carries that name in $extensions['com.figma'].name.",
+      "examples": [{ "variant": { "type": "enum", "default": "primary", "enum": ["primary", "secondary"] } }],
       "examples": [],
       "additionalProperties": {
         "$ref": "#/definitions/AnyProp"
@@ -331,6 +342,7 @@
     },
     "AnyProp": {
       "description": "Any one of the seven prop definitions. A prop's `type` member discriminates which, so a consumer reads `type` before interpreting the rest.",
+      "examples": [{ "type": "boolean", "default": false }, { "type": "string", "default": "primary", "enum": ["primary", "secondary"] }],
       "oneOf": [
         {
           "$ref": "#/definitions/BooleanProp"
@@ -358,6 +370,7 @@
     "ObjectProp": {
       "type": "object",
       "description": "Object property definition (ADR-111) — a prop whose value is an object of named, individually typed scalar members (e.g. a responsive margin with compact and expanded members). Members are one level deep: no SlotProp, ImageProp, or nested ObjectProp. Member names are opaque to the schema, must not begin with $, and must not contain the platform's declared objectProps.separator. No top-level default or nullable — defaults live per member.",
+      "examples": [{ "type": "object", "members": { "compact": { "type": "number", "default": 8 }, "expanded": { "type": "number", "default": 24 } } }],
       "examples": [],
       "properties": {
         "type": {
@@ -404,6 +417,7 @@
     "FigmaCodeOnlySource": {
       "type": "object",
       "description": "Provenance metadata for props extracted from a Figma code-only container layer.",
+      "examples": [{ "kind": "codeOnlyProp", "layer": "Code only props" }],
       "properties": {
         "kind": {
           "type": "string",
@@ -428,6 +442,7 @@
     "FigmaPropExtension": {
       "type": "object",
       "description": "DTCG §5.2.3 Figma-specific metadata for a prop definition.",
+      "examples": [{ "type": "VARIANT", "name": "Size" }],
       "properties": {
         "type": {
           "description": "Figma-native property type",
@@ -464,6 +479,7 @@
     "PropExtensions": {
       "type": "object",
       "description": "DTCG §5.2.3 platform-specific extensions for prop definitions. Each property is a reverse-domain key whose value is a platform extension type.",
+      "examples": [{ "com.figma": { "type": "VARIANT", "name": "Variant" } }],
       "properties": {
         "com.figma": {
           "$ref": "#/definitions/FigmaPropExtension"
@@ -474,6 +490,7 @@
     "BooleanProp": {
       "type": "object",
       "description": "Boolean property definition for props a consumer sets on or off, typically read from a Figma boolean property that toggles a layer.",
+      "examples": [{ "type": "boolean", "default": false }],
       "properties": {
         "type": {
           "type": "string",
@@ -498,6 +515,7 @@
     "StringProp": {
       "type": "object",
       "description": "String property definition for text content, glyph/instance swap, or other string-valued props.",
+      "examples": [{ "type": "string", "default": "Save", "nullable": false }],
       "examples": [],
       "properties": {
         "type": {
@@ -537,6 +555,7 @@
     "EnumProp": {
       "type": "object",
       "description": "Enum property definition for a prop whose value is one of a fixed list, read from a Figma variant property. The admitted values are carried in its own `enum` member rather than by the schema, because they come from the library.",
+      "examples": [{ "type": "string", "default": "primary", "enum": ["primary", "secondary"] }],
       "properties": {
         "type": {
           "type": "string",
@@ -565,6 +584,7 @@
     "SlotProp": {
       "type": "object",
       "description": "Slot property definition for a prop a consumer fills with content rather than a scalar. What it accepts is declared in its own `anyOf` member, and how many children it admits in `minChildren` and `maxChildren`.",
+      "examples": [{ "type": "slot", "minChildren": 1, "maxChildren": 1, "anyOf": ["$text", "$glyph"] }],
       "examples": [],
       "properties": {
         "type": {
@@ -612,6 +632,7 @@
     "Variants": {
       "type": "array",
       "description": "Variants is an array of variant items, each corresponding to a specific set of non-default prop configurations taht represent a Figma variant. Evaluating a variant's style requires including layering the element styles, configurations and other properties from *every* variant that matches any of the combinations of non-defualt properties. This behavior is similar to the CSS cascade.",
+      "examples": [[{ "configuration": { "variant": "primary" }, "elements": {} }]],
       "examples": [],
       "items": {
         "$ref": "#/definitions/Variant"
@@ -620,6 +641,7 @@
     "Variant": {
       "type": "object",
       "description": "One configuration of the component and everything that follows from it — the prop values that select it, its layout, and its per-element presentation.",
+      "examples": [{ "configuration": { "variant": "primary" }, "elements": { "root": { "styles": { "backgroundColor": "#FF6600FF" } } } }],
       "examples": [],
       "properties": {
         "configuration": {
@@ -672,6 +694,7 @@
     },
     "PropConfigurationValue": {
       "description": "The value of a single prop configuration entry (ADR-049): a scalar, a PropBinding for pass-through to a parent prop, a SlotContentRef under a slot-prop key for a named slot-content fill, an ImageBinding under an image-prop key forwarding an image into a nested image instance (ADR-063), an ObjectPropValue under an object-prop key (ADR-111), or null when the prop is unset in this configuration — a value, not an absence: an absent key inherits, a null key overrides an inherited value with no value (ADR-080).",
+      "examples": ["primary", 2, true, null],
       "oneOf": [
         {
           "type": "string"
@@ -702,6 +725,7 @@
     "ObjectPropValue": {
       "type": "object",
       "description": "A member-keyed object value configuring an ObjectProp (ADR-111). Keys are the prop's member names; values are scalar member values, or null to unset a member. Layering is evaluated per member: an absent member key inherits, a null member value unsets (ADR-080). Member names must not begin with $, which keeps this form distinguishable from PropBinding, SlotContentRef, and ImageBinding.",
+      "examples": [{ "compact": 8, "expanded": 24 }],
       "minProperties": 1,
       "propertyNames": {
         "pattern": "^[^$]"
@@ -726,6 +750,7 @@
     "PropConfigurations": {
       "type": "object",
       "description": "Per-element prop configurations (ADR-049, ADR-052). Regular keys are prop names whose values are a PropConfigurationValue. The reserved `$nested` key carries path-addressed configurations of nested descendant instances.",
+      "examples": [{ "variant": "primary", "isDisabled": false }],
       "examples": [],
       "properties": {
         "$nested": {
@@ -743,6 +768,7 @@
     "NestedPropConfiguration": {
       "type": "object",
       "description": "A path-addressed configuration of a nested descendant instance reached through instance boundaries (ADR-052). `path` is an ordered list of instanceOf element keys from the anchoring instance to the descendant; the terminal instance owns the configured slot/prop. Remaining keys are PropConfigurationValues applied there (slot fills via SlotContentRef). Slot descents are not path segments: a filled slot points to another slotContentExamples/Composition entry that recurses with its own paths.",
+      "examples": [{ "path": ["icon"], "size": "small" }],
       "required": [
         "path"
       ],
@@ -763,6 +789,7 @@
     "Elements": {
       "type": "object",
       "description": "The presentational half of a variant, keyed by anatomy element name. An element absent from this map inherits the default variant's entry for that element.",
+      "examples": [{ "label": { "content": "Save", "styles": { "textColor": "#1B1B1BFF" } } }],
       "examples": [],
       "additionalProperties": {
         "$ref": "#/definitions/Element"
@@ -771,6 +798,7 @@
     "SlotContent": {
       "type": "object",
       "description": "The anonymous structural triplet — anatomy, elements, layout — used as a named slot fill (ADR-046). Carries no metadata of its own; identity lives at the key under which it is stored (Component.slotContentExamples or Composition.slotContent).",
+      "examples": [{ "anatomy": { "label": { "type": "text" } }, "elements": { "label": { "content": "Save" } }, "layout": ["label"] }],
       "required": [
         "anatomy",
         "elements",
@@ -795,6 +823,7 @@
     "Composition": {
       "type": "object",
       "description": "A named, authored unit of composed content (ADR-042, ADR-046). The top-level anatomy+elements+layout triplet is the primary content — no wrapper, no reserved `main` key. Optional slotContent bundles named SlotContent fills alongside the primary content. A SlotContentRef pointing at a Composition entry resolves to the top-level triplet; a pointer into slotContent/<key> resolves to that SlotContent directly.",
+      "examples": [{ "title": "Sign-in page", "anatomy": { "root": { "type": "container" } }, "elements": { "root": { "styles": { "padding": 24 } } }, "layout": ["root"] }],
       "required": [
         "anatomy",
         "elements",
@@ -845,6 +874,7 @@
     "Element": {
       "type": "object",
       "description": "One element as a variant presents it — its styles, its content, and how it configures any instance it wraps. Keyed by the same name the anatomy uses, so the two describe the same element from different angles.",
+      "examples": [{ "children": ["label"], "styles": { "padding": 16, "layoutMode": "HORIZONTAL" } }],
       "properties": {
         "children": {
           "oneOf": [
@@ -915,6 +945,7 @@
     "PropBinding": {
       "type": "object",
       "description": "A component-prop binding. Emitted when a property is bound to a Figma component property. Discriminated by $binding to avoid JSON Schema $ref keyword collision.",
+      "examples": [{ "$binding": "#/props/isDisabled" }],
       "properties": {
         "$binding": {
           "type": "string",
@@ -929,6 +960,7 @@
     "SlotBinding": {
       "type": "object",
       "description": "Slot binding: a PropBinding to a slot prop, optionally carrying authored sample fills in `examples`. Each `examples[i]` is a SlotContentRef (ADR-046) pointing into Component.slotContentExamples or a Composition. Emitters currently write at most one entry — `examples[0]` is Figma's authoring default. Non-contractual reference material; code consumers handle missing slots through component logic and need not honor it.",
+      "examples": [{ "$binding": "#/props/children" }],
       "required": [
         "$binding"
       ],
@@ -950,6 +982,7 @@
     "SlotContentRef": {
       "type": "object",
       "description": "Reference to a SlotContent or Composition entry by JSON Pointer (ADR-046). Resolves to a Composition entry (top-level triplet), a Composition.slotContent entry, or a Component.slotContentExamples entry — all yield anatomy+elements+layout. Discriminated by the $slotContent key.",
+      "examples": [{ "$slotContent": "#/components/card/slotContentExamples/card__content__default" }],
       "properties": {
         "$slotContent": {
           "type": "string",
@@ -964,6 +997,7 @@
     "ConditionArgs": {
       "type": "object",
       "description": "Arguments for a condition expression. value is the prop binding to test; compareTo is the operand for binary operations.",
+      "examples": [{ "value": { "$binding": "#/props/variant" }, "compareTo": "primary" }],
       "properties": {
         "value": {
           "$ref": "#/definitions/PropBinding",
@@ -995,6 +1029,7 @@
     "ConditionExpression": {
       "type": "object",
       "description": "A declarative condition expression pairing an operation with its arguments.",
+      "examples": [{ "operation": "equals", "args": { "value": { "$binding": "#/props/size" }, "compareTo": "large" } }],
       "properties": {
         "operation": {
           "type": "string",
@@ -1013,6 +1048,7 @@
     "Conditional": {
       "type": "object",
       "description": "A conditional binding. Evaluates the condition against a bound prop and resolves to the then or else branch.",
+      "examples": [{ "if": { "condition": { "operation": "isNotNull", "args": { "value": { "$binding": "#/props/label" } } }, "then": true, "else": false } }],
       "properties": {
         "if": {
           "type": "object",
@@ -1087,11 +1123,13 @@
           "description": "The slot admits a glyph primitive — an icon fill."
         }
       ],
-      "description": "A primitive kind a slot may accept, written as a reserved value inside SlotProp.anyOf. `$text` admits a text primitive (a plain string fill); `$glyph` admits a glyph primitive (an icon fill). The names are ElementType's, so one word covers the primitive wherever it appears — `type: text` on an anatomy item and `$text` in anyOf are the same thing. The `$` prefix marks the value as reserved by the contract rather than supplied by the library, matching how $token, $binding and $slotContent mark reserved keys; a component key can never shadow a marker, because the safe key grammar (ADR-066) admits no leading `$`. Formatting for such a fill lives under the matching key of the slot element's contentStyles. Orthogonal to defaultSlot. (ADR-102)"
+      "description": "A primitive kind a slot may accept, written as a reserved value inside SlotProp.anyOf. `$text` admits a text primitive (a plain string fill); `$glyph` admits a glyph primitive (an icon fill). The names are ElementType's, so one word covers the primitive wherever it appears — `type: text` on an anatomy item and `$text` in anyOf are the same thing. The `$` prefix marks the value as reserved by the contract rather than supplied by the library, matching how $token, $binding and $slotContent mark reserved keys; a component key can never shadow a marker, because the safe key grammar (ADR-066) admits no leading `$`. Formatting for such a fill lives under the matching key of the slot element's contentStyles. Orthogonal to defaultSlot. (ADR-102)",
+      "examples": ["$text"]
     },
     "Metadata": {
       "type": "object",
       "description": "Metadata about the component. `source` identifies the Figma node this spec was captured from and is always present; the run's facts are present only when this document states them rather than a sibling run metadata document. (ADR-089)",
+      "examples": [{ "source": { "pageId": "12622:10", "nodeId": "118:10", "nodeType": "COMPONENT_SET" } }],
       "properties": {
         "author": {
           "$ref": "metadata.schema.json#/definitions/RunMetadata/properties/author"
@@ -1173,6 +1211,7 @@
     "SubcomponentSource": {
       "type": "object",
       "description": "Figma source identity for a subcomponent node. Carries pageId, nodeId, and nodeType to enable reverse-direction tools to resolve a subcomponent back to its originating Figma node.",
+      "examples": [{ "pageId": "12622:10", "nodeId": "118:10", "nodeType": "COMPONENT" }],
       "properties": {
         "pageId": {
           "type": "string",
@@ -1210,6 +1249,7 @@
     "Subcomponent": {
       "type": "object",
       "description": "A subcomponent's data, derived from ComponentData but excluding metadata and subcomponents. The optional source field carries Figma node identity for reverse-direction tooling.",
+      "examples": [{ "title": "Card header", "anatomy": { "root": { "type": "container" } }, "default": { "elements": { "root": { "styles": { "padding": 16 } } } }, "source": { "pageId": "12622:10", "nodeId": "118:10", "nodeType": "COMPONENT_SET" } }],
       "allOf": [
         {
           "$ref": "#/definitions/Component"
@@ -1237,6 +1277,7 @@
     "NumberProp": {
       "type": "object",
       "description": "Number property definition for numeric-valued props, whether inferred from a TEXT code-only prop or from a VARIANT whose options are all numbers.",
+      "examples": [{ "type": "number", "default": 1 }],
       "examples": [],
       "properties": {
         "type": {
@@ -1280,6 +1321,7 @@
     "ImageProp": {
       "type": "object",
       "description": "Image-valued property definition (ADR-063). An authoring-default image sits either on the ImageBinding at a binding site (describing that site) or in examples here (describing the image the component itself was authored with, ADR-088); the binding is the more specific statement where both apply.",
+      "examples": [{ "type": "image", "default": "#/images/avatarPlaceholder", "nullable": true }],
       "properties": {
         "type": {
           "type": "string",
@@ -1319,6 +1361,7 @@
     "ImageBinding": {
       "type": "object",
       "description": "A prop-bound image forwarded into a nested image instance's source prop, carrying authoring-default example images. PropBinding extended with examples (mirrors SlotBinding, ADR-047).",
+      "examples": [{ "$binding": "#/props/image" }],
       "properties": {
         "$binding": {
           "type": "string",
@@ -1340,6 +1383,7 @@
     "Images": {
       "type": "object",
       "description": "Registry of image data keyed by identifier (ADR-063). De-duplicated so each distinct image is stored once. Lives in the examples concern (examples.yaml under specs-cli --split-concerns).",
+      "examples": [{ "cardHero": { "src": "./images/card-hero.png" } }],
       "patternProperties": {
         "^[a-zA-Z0-9_-]+$": {
           "$ref": "#/definitions/ImageData"
@@ -1350,6 +1394,7 @@
     "ImageData": {
       "type": "object",
       "description": "A registry entry for one distinct image. Two-phase, expressed structurally: 'src' absent = unresolved (detect phase); resolution ADDS 'src', so the Figma identity in $extensions survives for reverse-direction tooling.",
+      "examples": [{ "src": "./images/hero.png" }],
       "properties": {
         "src": {
           "type": "string",
@@ -1381,6 +1426,7 @@
     "FigmaElementExtension": {
       "type": "object",
       "description": "Figma capture provenance for an element. Written when a primitive layer in composed example content is promoted to a component instance. (ADR-084)",
+      "examples": [{ "promotedPrimitive": true, "multipleMatches": false }],
       "properties": {
         "promotedPrimitive": {
           "type": "boolean",
@@ -1415,6 +1461,7 @@
     "ElementExtensions": {
       "type": "object",
       "description": "DTCG-style platform extensions for an element.",
+      "examples": [{ "com.figma": { "promotedPrimitive": true } }],
       "properties": {
         "com.figma": {
           "$ref": "#/definitions/FigmaElementExtension"
