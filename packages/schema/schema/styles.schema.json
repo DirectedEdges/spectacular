@@ -172,13 +172,13 @@
         },
         "start": {
           "$ref": "#/definitions/PositionOffset",
-          "description": "Distance from the parent's inline-start edge, when the element is positioned against it.",
+          "description": "Distance from the parent's leading edge, when the element is positioned against it. Named by reading order rather than by left and right, so a spec holds for a right-to-left locale without being rewritten.",
           "default": null,
           "examples": [0, "5%"]
         },
         "end": {
           "$ref": "#/definitions/PositionOffset",
-          "description": "Distance from the parent's inline-end edge, when the element is positioned against it.",
+          "description": "Distance from the parent's trailing edge, when the element is positioned against it. Named by reading order rather than by left and right.",
           "default": null,
           "examples": [0, "5%"]
         },
@@ -248,7 +248,7 @@
         },
         "textAlignHorizontal": {
           "$ref": "#/definitions/TextAlignHorizontalStyleValue",
-          "description": "Where text sits on the inline axis, named by logical direction rather than by left and right.",
+          "description": "Where text sits across the writing direction, named by reading order rather than by left and right.",
           "default": "START",
           "examples": ["CENTER", "JUSTIFY"]
         },
@@ -349,28 +349,22 @@
       "examples": [{ "textColor": "#1B1B1BFF", "textAlignHorizontal": "CENTER", "maxLines": 1 }],
       "properties": {
         "textColor": {
-          "$ref": "#/definitions/ColorStyleValue",
-          "description": "Text fill color of the content."
+          "$ref": "#/definitions/ColorStyleValue"
         },
         "typography": {
-          "$ref": "#/definitions/TypographyStyleValue",
-          "description": "Typography of the content. TokenReference when a named text style is referenced; Typography when defined inline."
+          "$ref": "#/definitions/TypographyStyleValue"
         },
         "textAlignHorizontal": {
-          "$ref": "#/definitions/TextAlignHorizontalStyleValue",
-          "description": "Horizontal text alignment using logical inline-axis directions — START, CENTER, END, or JUSTIFY. Structural property — not token-bindable."
+          "$ref": "#/definitions/TextAlignHorizontalStyleValue"
         },
         "textAlignVertical": {
-          "$ref": "#/definitions/StringStyleValue",
-          "description": "Vertical text alignment of the content."
+          "$ref": "#/definitions/StringStyleValue"
         },
         "textOverflow": {
-          "$ref": "#/definitions/TextOverflowStyleValue",
-          "description": "How overflowing content is handled — CLIP or ELLIPSIS. Structural property — not token-bindable."
+          "$ref": "#/definitions/TextOverflowStyleValue"
         },
         "maxLines": {
-          "$ref": "#/definitions/NumberStyleValue",
-          "description": "Maximum number of lines before ELLIPSIS overflow applies; null or absent means no limit."
+          "$ref": "#/definitions/NumberStyleValue"
         }
       },
       "additionalProperties": false
@@ -381,16 +375,13 @@
       "examples": [{ "fillColor": "#1B1B1BFF", "width": 16, "height": 16 }],
       "properties": {
         "fillColor": {
-          "$ref": "#/definitions/ColorStyleValue",
-          "description": "Fill color of the glyph."
+          "$ref": "#/definitions/ColorStyleValue"
         },
         "width": {
-          "$ref": "#/definitions/NumberStyleValue",
-          "description": "Width of the glyph box, in pixels."
+          "$ref": "#/definitions/NumberStyleValue"
         },
         "height": {
-          "$ref": "#/definitions/NumberStyleValue",
-          "description": "Height of the glyph box, in pixels."
+          "$ref": "#/definitions/NumberStyleValue"
         }
       },
       "additionalProperties": false

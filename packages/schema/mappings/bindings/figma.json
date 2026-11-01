@@ -97,7 +97,7 @@
           "rectangle"
         ],
         "target": null,
-        "notes": "Resolves in four steps — gradient, resolved style, bound variable, cached raw value — and writes a single solid paint. A token with neither a resolvable variable nor a cached raw value is skipped with a warning, which is the degradation DSPEC-43 permits. Loss: `colorSpace` is never read, so components are taken as sRGB regardless; a `none` component becomes 0; components beyond the third are dropped. Never applied to a text node.",
+        "notes": "Reads Figma's `fills`; the name diverges because a spec names the role the colour plays, not the Figma property it came from (ADR-009). Resolves in four steps — gradient, resolved style, bound variable, cached raw value — and writes a single solid paint. A token with neither a resolvable variable nor a cached raw value is skipped with a warning, which is the degradation DSPEC-43 permits. Loss: `colorSpace` is never read, so components are taken as sRGB regardless; a `none` component becomes 0; components beyond the third are dropped. Never applied to a text node.",
         "onAbsent": "unverified",
         "basis": "implementation",
         "needsDecision": "colorSpace"
@@ -126,7 +126,7 @@
           "glyph"
         ],
         "target": null,
-        "notes": "A gradient takes its own path; otherwise the same four-step paint resolution. On an instance the target is the first fillable descendant, found by walking the subtree. Loss: the colour-space issue above, and an instance with no fillable descendant drops the value silently.",
+        "notes": "Reads Figma's `fills`; the name diverges because a spec names the role the colour plays (ADR-013). A gradient takes its own path; otherwise the same four-step paint resolution. On an instance the target is the first fillable descendant, found by walking the subtree. Loss: the colour-space issue above, and an instance with no fillable descendant drops the value silently.",
         "onAbsent": "unverified",
         "basis": "implementation",
         "needsDecision": "colorSpace"
@@ -137,7 +137,7 @@
           "text"
         ],
         "target": null,
-        "notes": "Text nodes only, using the same four-step paint resolution. Loss: the colour-space issue above.",
+        "notes": "Reads Figma's `fills`; the name diverges because a spec names the role the colour plays (ADR-009). Text nodes only, using the same four-step paint resolution. Loss: the colour-space issue above.",
         "onAbsent": "unverified",
         "basis": "implementation",
         "needsDecision": "colorSpace"
