@@ -161,6 +161,54 @@ const refsOf = (n, depth = 0, out = new Set()) => {
   return out;
 };
 
+/**
+ * Which of a property's admitted forms an example value takes, so a reader can
+ * tell a literal from a token reference from a composite at a glance. Matched
+ * against the union rather than guessed from the value's JavaScript type: a
+ * `TokenReference` and a `Corners` object are both objects.
+ */
+const formOf = (value, node, depth = 0) => {
+  const n = node?.$ref ? defs[node.$ref.replace('#/definitions/', '')] : node;
+  if (!n || depth > 6) return '—';
+
+  const branches = n.oneOf ?? n.anyOf;
+  if (Array.isArray(branches)) {
+    for (const b of branches) {
+      const named = b.$ref?.replace('#/definitions/', '');
+      if (named && admitsValue(defs[named], value)) return typeLabel(named);
+      if (!named && admitsValue(b, value)) return `\`${primitiveName(value)}\``;
+    }
+    return `\`${primitiveName(value)}\``;
+  }
+  return node?.$ref ? typeLabel(node.$ref.replace('#/definitions/', '')) : `\`${primitiveName(value)}\``;
+};
+
+const primitiveName = (v) =>
+  v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v === 'object' ? 'object' : typeof v;
+
+/** Whether a value satisfies a node, to the depth needed to tell forms apart. */
+const admitsValue = (n, v, depth = 0) => {
+  if (!n || depth > 6) return false;
+  if (n.$ref) return admitsValue(defs[n.$ref.replace('#/definitions/', '')], v, depth + 1);
+  const branches = n.oneOf ?? n.anyOf;
+  if (Array.isArray(branches)) return branches.some((b) => admitsValue(b, v, depth + 1));
+  if (Array.isArray(n.enum)) return n.enum.includes(v);
+  if (n.type === 'null') return v === null;
+  if (n.type === 'string') return typeof v === 'string';
+  if (n.type === 'number' || n.type === 'integer') return typeof v === 'number';
+  if (n.type === 'boolean') return typeof v === 'boolean';
+  if (n.type === 'array') return Array.isArray(v);
+  if (n.type === 'object' || n.properties) {
+    if (typeof v !== 'object' || v === null || Array.isArray(v)) return false;
+    for (const req of n.required ?? []) if (!(req in v)) return false;
+    if (n.additionalProperties === false) {
+      for (const k of Object.keys(v)) if (!n.properties?.[k]) return false;
+    }
+    return true;
+  }
+  return false;
+};
+
 /** The types a value admits, named rather than collapsed to primitives. */
 const namedTypes = (node, depth = 0, out = []) => {
   if (!node || depth > 5) return out;
@@ -304,14 +352,37 @@ for (const node of nodes) {
     e.includes('<br>') && /`[A-Za-z$]+:/.test(e)
       ? `\`{ ${e.split('<br>').map((x) => x.replace(/`/g, '').trim()).join(', ')} }\``
       : e;
-  // A `Settings` cell names the config that selects between forms, so the
-  // column appears only on the keys that have one.
+  /**
+   * Examples come from the schema's own `examples` keyword where it has one.
+   * Those are real JSON values, validated against the property they sit on, so
+   * a reader can copy one into a document. The preserved display strings are
+   * the fallback for anything the schema does not yet carry — they were a
+   * rendering of a value rather than the value, and could not be checked.
+   */
+  const schemaExamples = Array.isArray(spec.examples) ? spec.examples : null;
   const exampleRows = kept.typeExamples ?? [];
-  const anySettings = exampleRows.some((r) => r.settings);
-  const examples = exampleRows.map(
-    (r) => `| ${rehome(r.type)} | ${rehome(asObject(r.example))} |${anySettings ? ` ${rehome(r.settings) ?? '—'} |` : ''}`
-  );
-  const exampleHead = anySettings ? '| Type | Example | Settings |\n|---|---|---|' : '| Type | Example |\n|---|---|';
+  const anySettings = !schemaExamples && exampleRows.some((r) => r.settings);
+  const examples = schemaExamples
+    ? schemaExamples.map((ex) => `| \`${JSON.stringify(ex)}\` | ${formOf(ex, spec)} |`)
+    : exampleRows.map(
+        (r) => `| ${rehome(r.type)} | ${rehome(asObject(r.example))} |${anySettings ? ` ${rehome(r.settings) ?? '—'} |` : ''}`
+      );
+  const exampleHead = schemaExamples
+    ? '| Example | Form |\n|---|---|'
+    : anySettings
+      ? '| Type | Example | Settings |\n|---|---|---|'
+      : '| Type | Example |\n|---|---|';
+
+  /**
+   * The config that selects between a key's value forms, where one does. It
+   * annotated the replaced pages' example table and is not derivable, so it
+   * survives as a line under the table rather than as a column the schema's
+   * own examples have no cell for.
+   */
+  const settingsNote =
+    schemaExamples && exampleRows.some((r) => r.settings)
+      ? `\nWhich form is emitted is selected by ${[...new Set(exampleRows.filter((r) => r.settings).map((r) => rehome(r.settings)))].join(' and ')}.\n`
+      : '';
 
   /**
    * A union's branches, each with the description that distinguishes it.
@@ -459,7 +530,7 @@ ${trail}
 ### Type
 
 ${types}${required.has(key) ? ' · required' : ''}
-${defaultText ? `\n### Default\n\n${defaultText}\n` : ''}${examples.length ? `\n### Examples\n\n${exampleHead}\n${examples.join('\n')}\n` : ''}${oneOfBranches ? `\n### One of\n\n${oneOfBranches}\n` : ''}${
+${defaultText ? `\n### Default\n\n${defaultText}\n` : ''}${examples.length ? `\n### Examples\n\n${exampleHead}\n${examples.join("\n")}\n${settingsNote}` : ""}${oneOfBranches ? `\n### One of\n\n${oneOfBranches}\n` : ''}${
     // On a union page the branches ARE the children, so `One of` has already
     // listed them with the description that tells them apart.
     kids.length && !oneOfBranches

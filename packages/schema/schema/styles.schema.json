@@ -12,232 +12,332 @@
         "rotation": {
           "$ref": "#/definitions/NumberStyleValue",
           "description": "Rotation in degrees",
-          "default": 0
+          "default": 0,
+          "examples": [45, -90, { "$token": "DS.Rotation.Quarter", "$type": "number" }]
         },
         "visible": {
           "$ref": "#/definitions/BooleanBindableStyleValue",
           "description": "Visibility. Can be bound to component prop.",
-          "default": true
+          "default": true,
+          "examples": [
+            false,
+            { "$binding": "#/props/showIcon" },
+            {
+              "if": {
+                "condition": { "operation": "isNotNull", "args": { "value": { "$binding": "#/props/label" } } },
+                "then": true,
+                "else": false
+              }
+            }
+          ]
         },
         "opacity": {
           "$ref": "#/definitions/NumberStyleValue",
           "description": "Opacity 0-1",
-          "default": 1
+          "default": 1,
+          "examples": [0.5, 0, { "$token": "DS.Opacity.Disabled", "$type": "number" }]
         },
         "locked": {
           "$ref": "#/definitions/BooleanStyleValue",
           "description": "Lock state",
-          "default": false
+          "default": false,
+          "examples": [true]
         },
         "backgroundColor": {
           "$ref": "#/definitions/ColorStyleValue",
           "description": "Background fill color. Present on all non-text element types. Represented in Figma as fills.",
-          "default": null
+          "default": null,
+          "examples": [
+            "#FF6600",
+            "#FF6600FF",
+            "rgb(255, 102, 0)",
+            "rgba(255, 102, 0, 1)",
+            "hsla(24, 100%, 50%, 1)",
+            "hsb(24, 100%, 100%)",
+            "oklch(0.7 0.15 50 / 1)",
+            "oklab(0.7 0.1 0.1 / 1)",
+            { "colorSpace": "srgb", "components": [1, 0.4, 0] },
+            { "$token": "DS.Color.Surface.Muted", "$type": "color" },
+            {
+              "type": "LINEAR",
+              "angle": 180,
+              "stops": [
+                { "position": 0, "color": "#FF6600FF" },
+                { "position": 1, "color": "#FFFFFFFF" }
+              ]
+            }
+          ]
         },
         "backgroundImage": {
           "$ref": "#/definitions/ImageStyleValue",
           "description": "Image fill painted on a layer. Present on non-text element types. Fallback representation used when no image component is configured. Represented in Figma as an IMAGE-type fill.",
-          "default": null
+          "default": null,
+          "examples": [{ "$image": "#/images/hero", "objectFit": "COVER" }]
         },
         "fillColor": {
           "$ref": "#/definitions/ColorStyleValue",
           "description": "Glyph fill color. Present on GLYPH element type only. Represented in Figma as fills.",
-          "default": null
+          "default": null,
+          "examples": ["#1B1B1BFF", { "$token": "DS.Color.Icon.Default", "$type": "color" }]
         },
         "textColor": {
           "$ref": "#/definitions/ColorStyleValue",
           "description": "Text fill color. Present on TEXT element type only. Represented in Figma as fills.",
-          "default": null
+          "default": null,
+          "examples": ["#1B1B1BFF", { "$token": "DS.Color.Text.Default", "$type": "color" }]
         },
         "effects": {
           "$ref": "#/definitions/EffectsStyleValue",
           "description": "Effect output. TokenReference when the node references a named effects style; Effects when effects are defined inline. Replaces effectStyleId.",
-          "default": null
+          "default": null,
+          "examples": [
+            {
+              "shadows": [
+                { "visible": true, "offsetX": 0, "offsetY": 2, "blur": 4, "spread": 0, "color": "#0000001FFF" }
+              ]
+            },
+            { "$token": "DS.Effect.Elevation.100", "$type": "shadow" }
+          ]
         },
         "clipsContent": {
           "$ref": "#/definitions/BooleanStyleValue",
           "description": "Whether the element clips content that overflows its box",
-          "default": false
+          "default": false,
+          "examples": [true]
         },
         "cornerRadius": {
           "$ref": "#/definitions/CornersStyleValue",
           "description": "Corner radius. Scalar when uniform; Corners object when per-corner values differ.",
-          "default": 0
+          "default": 0,
+          "examples": [
+            8,
+            { "topStart": 4, "topEnd": 4, "bottomEnd": 0, "bottomStart": 0 },
+            { "$token": "DS.Radius.400", "$type": "dimension" }
+          ]
         },
         "width": {
           "$ref": "#/definitions/NumberStyleValue",
           "description": "Width in pixels",
-          "default": 0
+          "default": 0,
+          "examples": [320]
         },
         "height": {
           "$ref": "#/definitions/NumberStyleValue",
           "description": "Height in pixels",
-          "default": 0
+          "default": 0,
+          "examples": [44]
         },
         "minWidth": {
           "$ref": "#/definitions/NumberStyleValue",
           "description": "Minimum width",
-          "default": 0
+          "default": 0,
+          "examples": [120, { "$token": "DS.Size.Target.Min", "$type": "dimension" }]
         },
         "minHeight": {
           "$ref": "#/definitions/NumberStyleValue",
           "description": "Minimum height",
-          "default": 0
+          "default": 0,
+          "examples": [44]
         },
         "maxWidth": {
           "$ref": "#/definitions/NumberStyleValue",
           "description": "Maximum width",
-          "default": null
+          "default": null,
+          "examples": [640]
         },
         "maxHeight": {
           "$ref": "#/definitions/NumberStyleValue",
           "description": "Maximum height",
-          "default": null
+          "default": null,
+          "examples": [480]
         },
         "position": {
           "$ref": "#/definitions/PositionStyleValue",
           "description": "Layout positioning mode — AUTO (participates in parent auto-layout) or ABSOLUTE. Present as ABSOLUTE on every element that emits positioning offsets, including children of non-auto-layout containers; AUTO appears only inside auto-layout containers (ADR-070). Structural property — not token-bindable.",
-          "default": "AUTO"
+          "default": "AUTO",
+          "examples": ["ABSOLUTE"]
         },
         "top": {
           "$ref": "#/definitions/PositionOffset",
           "description": "Offset from block-start (top) edge. Emitted only alongside position (ADR-070). Present when vertical constraint is MIN, STRETCH, or SCALE.",
-          "default": null
+          "default": null,
+          "examples": [24, "10%"]
         },
         "bottom": {
           "$ref": "#/definitions/PositionOffset",
           "description": "Offset from block-end (bottom) edge. Emitted only alongside position (ADR-070). Present when vertical constraint is MAX or STRETCH.",
-          "default": null
+          "default": null,
+          "examples": [16, "10%"]
         },
         "start": {
           "$ref": "#/definitions/PositionOffset",
           "description": "Offset from inline-start edge. Emitted only alongside position (ADR-070). Present when horizontal constraint is MIN, STRETCH, or SCALE.",
-          "default": null
+          "default": null,
+          "examples": [0, "5%"]
         },
         "end": {
           "$ref": "#/definitions/PositionOffset",
           "description": "Offset from inline-end edge. Emitted only alongside position (ADR-070). Present when horizontal constraint is MAX or STRETCH.",
-          "default": null
+          "default": null,
+          "examples": [0, "5%"]
         },
         "centerHorizontalOffset": {
           "$ref": "#/definitions/PositionOffset",
           "description": "Horizontal offset from center. Emitted only alongside position (ADR-070). Present when horizontal constraint is CENTER.",
-          "default": null
+          "default": null,
+          "examples": [0, -12]
         },
         "centerVerticalOffset": {
           "$ref": "#/definitions/PositionOffset",
           "description": "Vertical offset from center. Emitted only alongside position (ADR-070). Present when vertical constraint is CENTER.",
-          "default": null
+          "default": null,
+          "examples": [0, 8]
         },
         "layoutSizingHorizontal": {
           "$ref": "#/definitions/StringStyleValue",
           "description": "Horizontal sizing mode",
-          "default": "FIXED"
+          "default": "FIXED",
+          "examples": ["HUG", "FILL"]
         },
         "layoutSizingVertical": {
           "$ref": "#/definitions/StringStyleValue",
           "description": "Vertical sizing mode",
-          "default": "FIXED"
+          "default": "FIXED",
+          "examples": ["HUG", "FILL"]
         },
         "strokes": {
           "$ref": "#/definitions/ColorStyleValue",
           "description": "Stroke colors",
-          "default": null
+          "default": null,
+          "examples": ["#1B1B1BFF", { "$token": "DS.Color.Border.Default", "$type": "color" }]
         },
         "strokeAlign": {
           "$ref": "#/definitions/MixedStringStyleValue",
           "description": "Stroke alignment",
-          "default": "INSIDE"
+          "default": "INSIDE",
+          "examples": ["OUTSIDE", "CENTER"]
         },
         "strokeWeight": {
           "$ref": "#/definitions/SidesStyleValue",
           "description": "Stroke weight. Scalar when uniform; Sides object when per-side values differ.",
-          "default": 0
+          "default": 0,
+          "examples": [1, { "top": 0, "end": 0, "bottom": 1, "start": 0 }]
         },
         "strokeDashPattern": {
           "$ref": "#/definitions/StrokeDashPatternStyleValue",
           "description": "Dash pattern for a stroke. Present (non-null) when the stroke is dashed; null or absent when solid.",
-          "default": null
+          "default": null,
+          "examples": [{ "dash": 8, "gap": 4 }]
         },
         "typography": {
           "$ref": "#/definitions/TypographyStyleValue",
           "description": "Typography properties. TokenReference when the node references a named text style; Typography when defined inline.",
-          "default": null
+          "default": null,
+          "examples": [
+            {
+              "fontFamily": "Inter",
+              "fontStyle": "Semi Bold",
+              "fontSize": 16,
+              "lineHeight": 24,
+              "letterSpacing": 0,
+              "textCase": "ORIGINAL"
+            },
+            { "$token": "DS.Type.Body.Default", "$type": "typography" }
+          ]
         },
         "textAlignHorizontal": {
           "$ref": "#/definitions/TextAlignHorizontalStyleValue",
           "description": "Horizontal text alignment using logical inline-axis directions — START (left in LTR), CENTER, END (right in LTR), or JUSTIFY. Structural property — not token-bindable.",
-          "default": "START"
+          "default": "START",
+          "examples": ["CENTER", "JUSTIFY"]
         },
         "textAlignVertical": {
           "$ref": "#/definitions/StringStyleValue",
           "description": "Vertical text alignment",
-          "default": "TOP"
+          "default": "TOP",
+          "examples": ["CENTER", "BOTTOM"]
         },
         "textOverflow": {
           "$ref": "#/definitions/TextOverflowStyleValue",
           "description": "How overflowing text is handled — CLIP (cut off) or ELLIPSIS (trailing ellipsis). Structural property — not token-bindable.",
-          "default": "CLIP"
+          "default": "CLIP",
+          "examples": ["ELLIPSIS"]
         },
         "maxLines": {
           "$ref": "#/definitions/NumberStyleValue",
           "description": "Maximum number of lines before ELLIPSIS text overflow applies; null or absent means no limit.",
-          "default": null
+          "default": null,
+          "examples": [1, 2]
         },
         "mainAxisAlignment": {
           "$ref": "#/definitions/MainAxisAlignmentStyleValue",
           "description": "Alignment along the main axis (depends on layoutMode). Structural property — not token-bindable.",
-          "default": "START"
+          "default": "START",
+          "examples": ["CENTER", "SPACE_BETWEEN"]
         },
         "primaryAxisSizingMode": {
           "$ref": "#/definitions/StringStyleValue",
           "description": "Primary axis sizing mode",
-          "default": "AUTO"
+          "default": "AUTO",
+          "examples": ["FIXED"]
         },
         "crossAxisAlignment": {
           "$ref": "#/definitions/CrossAxisAlignmentStyleValue",
           "description": "Alignment along the cross axis (perpendicular to layoutMode). Structural property — not token-bindable.",
-          "default": "START"
+          "default": "START",
+          "examples": ["CENTER", "STRETCH", "BASELINE"]
         },
         "layoutMode": {
           "$ref": "#/definitions/LayoutModeStyleValue",
           "description": "Auto-layout direction. NONE (no auto-layout), HORIZONTAL (row), or VERTICAL (column).",
-          "default": "NONE"
+          "default": "NONE",
+          "examples": ["HORIZONTAL", "VERTICAL"]
         },
         "wrap": {
           "$ref": "#/definitions/BooleanStyleValue",
           "description": "Whether auto-layout wrapping is enabled (default: false).",
-          "default": false
+          "default": false,
+          "examples": [true]
         },
         "wrapAlignment": {
           "$ref": "#/definitions/WrapAlignmentStyleValue",
           "description": "Space distribution between wrapped lines. Only meaningful when wrap is true.",
-          "default": null
+          "default": null,
+          "examples": ["SPACE_BETWEEN"]
         },
         "itemReverseZIndex": {
           "$ref": "#/definitions/BooleanStyleValue",
           "description": "Reverse z-index stacking",
-          "default": false
+          "default": false,
+          "examples": [true]
         },
         "itemSpacing": {
           "$ref": "#/definitions/ItemSpacingStyleValue",
           "description": "Gap between items. Scalar when uniform; object with horizontal/vertical when axes differ.",
-          "default": 0
+          "default": 0,
+          "examples": [8, { "horizontal": 16, "vertical": 8 }]
         },
         "padding": {
           "$ref": "#/definitions/SidesStyleValue",
           "description": "Padding. Scalar when uniform; Sides object when per-side values differ.",
-          "default": 0
+          "default": 0,
+          "examples": [
+            16,
+            { "top": 8, "end": 16, "bottom": 8, "start": 16 },
+            { "$token": "DS.Space.400", "$type": "dimension" }
+          ]
         },
         "cornerSmoothing": {
           "$ref": "#/definitions/NumberStyleValue",
           "description": "Degree of corner smoothing (0 = standard circular corners, 1 = fully smooth iOS-style squircle). Applies to FRAME, COMPONENT, RECTANGLE, POLYGON, STAR, VECTOR, and ELLIPSE element types.",
-          "default": 0
+          "default": 0,
+          "examples": [0.6, 1]
         },
         "aspectRatio": {
           "$ref": "#/definitions/AspectRatioStyleValue",
           "description": "Aspect ratio constraint. Present only when the node has a locked ratio; omitted otherwise.",
-          "default": null
+          "default": null,
+          "examples": [{ "x": 16, "y": 9 }, { "x": 1, "y": 1 }]
         }
       },
       "additionalProperties": false
