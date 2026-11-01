@@ -13,7 +13,7 @@
           "$ref": "#/definitions/NumberStyleValue",
           "description": "Rotation in degrees",
           "default": 0,
-          "examples": [45, -90, { "$token": "DS.Rotation.Quarter", "$type": "number" }]
+          "examples": [45, -90, { "$token": "Rotation/Quarter turn", "$type": "number" }]
         },
         "visible": {
           "$ref": "#/definitions/BooleanBindableStyleValue",
@@ -35,7 +35,7 @@
           "$ref": "#/definitions/NumberStyleValue",
           "description": "Opacity 0-1",
           "default": 1,
-          "examples": [0.5, 0, { "$token": "DS.Opacity.Disabled", "$type": "number" }]
+          "examples": [0.5, 0, { "$token": "Opacity/Disabled", "$type": "number" }]
         },
         "locked": {
           "$ref": "#/definitions/BooleanStyleValue",
@@ -57,7 +57,7 @@
             "oklch(0.7 0.15 50 / 1)",
             "oklab(0.7 0.1 0.1 / 1)",
             { "colorSpace": "srgb", "components": [1, 0.4, 0] },
-            { "$token": "DS.Color.Surface.Muted", "$type": "color" },
+            { "$token": "Color/Secondary container", "$type": "color" },
             {
               "type": "LINEAR",
               "angle": 180,
@@ -78,13 +78,13 @@
           "$ref": "#/definitions/ColorStyleValue",
           "description": "Glyph fill color. Present on GLYPH element type only. Represented in Figma as fills.",
           "default": null,
-          "examples": ["#1B1B1BFF", { "$token": "DS.Color.Icon.Default", "$type": "color" }]
+          "examples": ["#1B1B1BFF", { "$token": "Color/On surface", "$type": "color" }]
         },
         "textColor": {
           "$ref": "#/definitions/ColorStyleValue",
           "description": "Text fill color. Present on TEXT element type only. Represented in Figma as fills.",
           "default": null,
-          "examples": ["#1B1B1BFF", { "$token": "DS.Color.Text.Default", "$type": "color" }]
+          "examples": ["#1B1B1BFF", { "$token": "Color/On surface", "$type": "color" }]
         },
         "effects": {
           "$ref": "#/definitions/EffectsStyleValue",
@@ -96,7 +96,7 @@
                 { "visible": true, "offsetX": 0, "offsetY": 2, "blur": 4, "spread": 0, "color": "#0000001FFF" }
               ]
             },
-            { "$token": "DS.Effect.Elevation.100", "$type": "shadow" }
+            { "$token": "Light/elevation.shadow.overlay", "$type": "shadow" }
           ]
         },
         "clipsContent": {
@@ -112,7 +112,7 @@
           "examples": [
             8,
             { "topStart": 4, "topEnd": 4, "bottomEnd": 0, "bottomStart": 0 },
-            { "$token": "DS.Radius.400", "$type": "dimension" }
+            { "$token": "Constants/Radius/Medium", "$type": "dimension" }
           ]
         },
         "width": {
@@ -131,7 +131,7 @@
           "$ref": "#/definitions/NumberStyleValue",
           "description": "Minimum width",
           "default": 0,
-          "examples": [120, { "$token": "DS.Size.Target.Min", "$type": "dimension" }]
+          "examples": [120, { "$token": "Constants/Sizing/Target minimum", "$type": "dimension" }]
         },
         "minHeight": {
           "$ref": "#/definitions/NumberStyleValue",
@@ -209,7 +209,7 @@
           "$ref": "#/definitions/ColorStyleValue",
           "description": "Stroke colors",
           "default": null,
-          "examples": ["#1B1B1BFF", { "$token": "DS.Color.Border.Default", "$type": "color" }]
+          "examples": ["#1B1B1BFF", { "$token": "Color/Outline", "$type": "color" }]
         },
         "strokeAlign": {
           "$ref": "#/definitions/MixedStringStyleValue",
@@ -242,7 +242,7 @@
               "letterSpacing": 0,
               "textCase": "ORIGINAL"
             },
-            { "$token": "DS.Type.Body.Default", "$type": "typography" }
+            { "$token": "Type/Body/Default", "$type": "typography" }
           ]
         },
         "textAlignHorizontal": {
@@ -324,7 +324,7 @@
           "examples": [
             16,
             { "top": 8, "end": 16, "bottom": 8, "start": 16 },
-            { "$token": "DS.Space.400", "$type": "dimension" }
+            { "$token": "Constants/Spacing/Medium", "$type": "dimension" }
           ]
         },
         "cornerSmoothing": {
@@ -1453,7 +1453,8 @@
       "properties": {
         "$token": {
           "type": "string",
-          "description": "DTCG dot-separated token path, e.g. 'DS Color.Text.Primary'. Usable directly as DTCG alias {DS Color.Text.Primary}."
+          "description": "Token path, separated by '/', mirroring the path of the Figma variable or style it names — e.g. 'Color/On surface variant'. Segments may contain spaces and punctuation, so the path is not constrained by a pattern.",
+          "examples": ["Color/On surface variant", "Background blur/Regular", "Layout Width/Margin/Compact: L"]
         },
         "$type": {
           "type": "string",
