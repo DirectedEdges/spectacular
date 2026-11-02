@@ -14,15 +14,18 @@
           "type": "string"
         },
         "lastUpdated": {
-          "type": "string"
+          "type": "string",
+          "format": "date-time"
         },
         "generator": {
           "type": "object",
           "properties": {
             "url": {
-              "type": "string"
+              "type": "string",
+              "format": "uri"
             },
             "version": {
+              "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$",
               "type": "string"
             },
             "name": {
@@ -60,13 +63,16 @@
           "properties": {
             "url": {
               "type": "string",
+              "format": "uri",
               "description": "Versioned schema URL pinned to a git tag (e.g. https://raw.githubusercontent.com/.../v0.13.0/schema/component.schema.json)"
             },
             "version": {
+              "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$",
               "type": "string"
             },
             "latest": {
               "type": "string",
+              "format": "uri",
               "description": "Stable URL pointing to the latest schema on the main branch for discovery"
             }
           },

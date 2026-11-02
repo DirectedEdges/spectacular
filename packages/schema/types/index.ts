@@ -63,7 +63,7 @@ export type { Settings, ResolvedSettings, ColorFormat, SourceEntry } from './Set
 export { DEFAULT_SETTINGS } from './Settings.js';
 
 // Style types
-export type { Styles, ContentStyles, TextContentStyles, GlyphContentStyles, Style, ColorStyle, ColorObject, StyleKey, TokenReference, AspectRatioValue, AspectRatioStyle, Typography, Sides, Corners, ItemSpacing, LayoutMode, WrapAlignment, MainAxisAlignment, CrossAxisAlignment, Position, PositionOffset, StrokeDashPattern, TextAlignHorizontal, TextOverflow } from './Styles.js';
+export type { Styles, ContentStyles, TextContentStyles, GlyphContentStyles, Style, ColorStyle, ColorObject, StyleKey, TokenReference, AspectRatioValue, AspectRatioStyle, Typography, Sides, Corners, ItemSpacing, LayoutMode, WrapAlignment, MainAxisAlignment, CrossAxisAlignment, Position, PositionOffset, StrokeDashPattern, TextAlignHorizontal, TextOverflow, StrokeAlign, LayoutSizing, TextAlignVertical, PrimaryAxisSizingMode } from './Styles.js';
 export type { Shadow, Blur, Effects } from './Effects.js';
 export type { GradientStop, GradientCenter, LinearGradient, RadialGradient, AngularGradient, GradientValue } from './Gradient.js';
 

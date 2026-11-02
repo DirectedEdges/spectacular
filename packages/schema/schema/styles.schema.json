@@ -195,13 +195,13 @@
           "examples": [0, 8]
         },
         "layoutSizingHorizontal": {
-          "$ref": "#/definitions/StringStyleValue",
+          "$ref": "#/definitions/LayoutSizingStyleValue",
           "description": "What determines the element's width — a fixed value, its contents, or the space its parent offers.",
           "default": "FIXED",
           "examples": ["HUG", "FILL"]
         },
         "layoutSizingVertical": {
-          "$ref": "#/definitions/StringStyleValue",
+          "$ref": "#/definitions/LayoutSizingStyleValue",
           "description": "What determines the element's height — a fixed value, its contents, or the space its parent offers.",
           "default": "FIXED",
           "examples": ["HUG", "FILL"]
@@ -213,7 +213,7 @@
           "examples": ["#1B1B1BFF", { "$token": "Color/Outline", "$type": "color" }]
         },
         "strokeAlign": {
-          "$ref": "#/definitions/MixedStringStyleValue",
+          "$ref": "#/definitions/StrokeAlignStyleValue",
           "description": "Where the stroke sits relative to the element's boundary.",
           "default": "INSIDE",
           "examples": ["OUTSIDE", "CENTER"]
@@ -253,7 +253,7 @@
           "examples": ["CENTER", "JUSTIFY"]
         },
         "textAlignVertical": {
-          "$ref": "#/definitions/StringStyleValue",
+          "$ref": "#/definitions/TextAlignVerticalStyleValue",
           "description": "Where text sits within the height available to it.",
           "default": "TOP",
           "examples": ["CENTER", "BOTTOM"]
@@ -277,7 +277,7 @@
           "examples": ["CENTER", "SPACE_BETWEEN"]
         },
         "primaryAxisSizingMode": {
-          "$ref": "#/definitions/StringStyleValue",
+          "$ref": "#/definitions/PrimaryAxisSizingModeStyleValue",
           "description": "Whether the stacking axis sizes to its contents or to a fixed value.",
           "default": "AUTO",
           "examples": ["FIXED"]
@@ -358,7 +358,7 @@
           "$ref": "#/definitions/TextAlignHorizontalStyleValue"
         },
         "textAlignVertical": {
-          "$ref": "#/definitions/StringStyleValue"
+          "$ref": "#/definitions/TextAlignVerticalStyleValue"
         },
         "textOverflow": {
           "$ref": "#/definitions/TextOverflowStyleValue"
@@ -805,6 +805,7 @@
       "examples": [{ "$image": "#/images/hero", "objectFit": "COVER" }],
       "properties": {
         "$image": {
+          "format": "uri-reference",
           "type": "string",
           "description": "Pointer into an images registry, e.g. '#/images/hero' (single-file) or 'card.examples#/images/hero' (concern-split)."
         },
@@ -1214,6 +1215,94 @@
         }
       ]
     },
+    "StrokeAlignStyleValue": {
+      "description": "Stroke alignment value. Structural property — not token-bindable.",
+      "examples": ["OUTSIDE"],
+      "oneOf": [
+        {
+          "const": "INSIDE",
+          "description": "The stroke is drawn within the element's bounds, so it does not enlarge the painted area."
+        },
+        {
+          "const": "OUTSIDE",
+          "description": "The stroke is drawn beyond the element's bounds, enlarging the painted area by its weight."
+        },
+        {
+          "const": "CENTER",
+          "description": "The stroke straddles the boundary, half inside and half outside."
+        },
+        {
+          "type": "null",
+          "title": "No stroke",
+          "description": "The element has no visible stroke for an alignment to apply to."
+        }
+      ]
+    },
+    "LayoutSizingStyleValue": {
+      "description": "Axis sizing value. Structural property — not token-bindable.",
+      "examples": ["FILL"],
+      "oneOf": [
+        {
+          "const": "FIXED",
+          "description": "The axis takes the recorded dimension."
+        },
+        {
+          "const": "HUG",
+          "description": "The axis shrinks to its contents, so the dimension is an outcome rather than an instruction."
+        },
+        {
+          "const": "FILL",
+          "description": "The axis expands to the space the parent offers, so the dimension is an outcome rather than an instruction."
+        },
+        {
+          "type": "null",
+          "title": "Not applicable",
+          "description": "The element is positioned by coordinates rather than sized by a parent's layout."
+        }
+      ]
+    },
+    "TextAlignVerticalStyleValue": {
+      "description": "Vertical text alignment value. Structural property — not token-bindable.",
+      "examples": ["CENTER"],
+      "oneOf": [
+        {
+          "const": "TOP",
+          "description": "Text sits at the top of the height available to it."
+        },
+        {
+          "const": "CENTER",
+          "description": "Text centres within the height available to it."
+        },
+        {
+          "const": "BOTTOM",
+          "description": "Text sits at the bottom of the height available to it."
+        },
+        {
+          "type": "null",
+          "title": "Not specified",
+          "description": "No vertical alignment is recorded for this element."
+        }
+      ]
+    },
+    "PrimaryAxisSizingModeStyleValue": {
+      "description": "Primary axis sizing value. Structural property — not token-bindable.",
+      "examples": ["FIXED"],
+      "oneOf": [
+        {
+          "const": "AUTO",
+          "description": "The stacking axis sizes to its contents."
+        },
+        {
+          "const": "FIXED",
+          "description": "The stacking axis takes the recorded dimension."
+        },
+        {
+          "type": "null",
+          "title": "Not applicable",
+          "description": "The element has no auto-layout, so there is no stacking axis to size."
+        }
+      ]
+    },
     "PositionStyleValue": {
       "examples": ["ABSOLUTE"],
       "description": "Position value. Structural property — not token-bindable.",
@@ -1469,6 +1558,7 @@
       "examples": [{ "$binding": "#/props/isDisabled" }],
       "properties": {
         "$binding": {
+          "pattern": "^#(/[A-Za-z0-9_$.~:@+-]+)+$",
           "type": "string",
           "description": "JSON Pointer to the bound prop within this spec's props block, e.g. '#/props/propName'"
         }
