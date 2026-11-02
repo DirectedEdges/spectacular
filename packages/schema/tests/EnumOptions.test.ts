@@ -44,11 +44,28 @@ const walk = (node: unknown, path: string, visit: (n: Node, p: string) => void):
   }
 };
 
-const eachFile = (visit: (n: Node, p: string) => void) => {
+const parsed: Record<string, Node> = Object.fromEntries(
+  files.map((f) => [f, JSON.parse(readFileSync(join(schemaDir, f), 'utf8'))])
+);
+
+const eachFile = (visit: (n: Node, p: string, file: string) => void) => {
   for (const file of files) {
-    const schema = JSON.parse(readFileSync(join(schemaDir, file), 'utf8'));
-    walk(schema.definitions, file, visit);
+    walk(parsed[file].definitions, file, (n, p) => visit(n, p, file));
   }
+};
+
+/**
+ * A branch, with a local `$ref` followed one hop.
+ *
+ * Sentinels are declared once and referenced — `MixedValue` holds `mixed` for
+ * every property that can receive it. A check that only reads inline `const`
+ * branches stops seeing them the moment they are factored out, and passes
+ * because it is looking at nothing.
+ */
+const deref = (branch: Node, file: string): Node => {
+  const ref: string | undefined = branch?.$ref;
+  if (!ref?.startsWith('#/definitions/')) return branch;
+  return parsed[file]?.definitions?.[ref.replace('#/definitions/', '')] ?? branch;
 };
 
 /**
@@ -66,18 +83,6 @@ const branchesOf = (node: Node): Node[] => {
 const constBranches = (node: Node): Node[] =>
   branchesOf(node).filter((b) => b && b.const !== undefined);
 
-/**
- * Sites where a `const` branch sits beside an open branch of the same type,
- * which `oneOf` rejects rather than accepts. These three predate ADR-114 and
- * are a real defect in shipped output: `"mixed"` is a declared value of each
- * and validates as invalid today. Fixing them changes what validates, so it is
- * its own change rather than a side effect of this one.
- */
-const KNOWN_EXCLUSIVITY_DEFECTS = new Set([
-  'styles.schema.json/FontStyleValue',
-  'styles.schema.json/Typography/properties/fontFamily',
-  'styles.schema.json/Typography/properties/fontStyle',
-]);
 
 describe('closed value sets', () => {
   it('are never declared as a bare enum', () => {
@@ -138,18 +143,22 @@ describe('closed value sets', () => {
    */
   it('keep their branches mutually exclusive', () => {
     const clashes: string[] = [];
+    /**
+     * An open branch is one admitting a whole JSON type. A branch that excludes
+     * the sentinel with `not` is no longer open to it, which is how a declared
+     * sentinel and a free-form string of the same type stay disjoint.
+     */
     const openType = (b: Node): string | null =>
-      b.const === undefined && typeof b.type === 'string' && !b.enum ? b.type : null;
+      b.const === undefined && typeof b.type === 'string' && !b.enum && !b.not ? b.type : null;
 
-    eachFile((n, p) => {
-      if (KNOWN_EXCLUSIVITY_DEFECTS.has(p)) return;
-      const branches = branchesOf(n);
+    eachFile((n, p, file) => {
+      const branches = branchesOf(n).map((b) => ({ raw: b, resolved: deref(b, file) }));
       if (branches.length < 2) return;
-      const consts = branches.filter((b) => b && b.const !== undefined);
+      const consts = branches.filter((b) => b.resolved?.const !== undefined).map((b) => b.resolved);
       if (!consts.length) return;
 
       for (const b of branches) {
-        const open = openType(b);
+        const open = openType(b.raw);
         if (!open) continue;
         for (const c of consts) {
           const constType = c.const === null ? 'null' : typeof c.const === 'number' ? 'number' : typeof c.const;
