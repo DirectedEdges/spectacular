@@ -22,6 +22,14 @@ const files = readdirSync(schemaDir).filter((f) => f.endsWith('.json'));
 
 type Node = Record<string, any>;
 
+/**
+ * Keywords whose contents are instance data, not subschemas. Descending into
+ * them reads a document as a schema: `EnumProp` has a *property* named `enum`,
+ * so an example of an enum prop contains `enum: ["primary", "secondary"]` —
+ * which is a value, and was reported as a bare enum declaration.
+ */
+const VALUE_KEYWORDS = new Set(['examples', 'default', 'const', 'enum']);
+
 /** Every subschema in a file, with a JSON-pointer-ish path for reporting. */
 const walk = (node: unknown, path: string, visit: (n: Node, p: string) => void): void => {
   if (!node || typeof node !== 'object') return;
@@ -31,6 +39,7 @@ const walk = (node: unknown, path: string, visit: (n: Node, p: string) => void):
   }
   visit(node as Node, path);
   for (const [key, value] of Object.entries(node)) {
+    if (VALUE_KEYWORDS.has(key)) continue;
     if (value && typeof value === 'object') walk(value, `${path}/${key}`, visit);
   }
 };

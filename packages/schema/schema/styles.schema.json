@@ -855,8 +855,7 @@
           "type": "number"
         },
         {
-          "type": "string",
-          "const": "mixed"
+          "$ref": "#/definitions/MixedValue"
         },
         {
           "$ref": "#/definitions/TokenReference"
@@ -889,8 +888,7 @@
           "type": "number"
         },
         {
-          "type": "string",
-          "const": "mixed"
+          "$ref": "#/definitions/MixedValue"
         },
         {
           "$ref": "#/definitions/TokenReference"
@@ -908,8 +906,7 @@
           "type": "number"
         },
         {
-          "type": "string",
-          "const": "mixed"
+          "$ref": "#/definitions/MixedValue"
         },
         {
           "$ref": "#/definitions/TokenReference"
@@ -1236,6 +1233,11 @@
         }
       ]
     },
+    "MixedValue": {
+      "const": "mixed",
+      "description": "A sentinel standing for \"this varies\". Figma reports no value for a text property whose characters differ — half the run bold, half regular — and a capture must record something, so it records this. Declared once and referenced wherever a property can receive it, so every property means the same thing by it. A consumer applies nothing for a mixed value: there is no single value to apply, and choosing one would invent data the document does not carry.",
+      "examples": ["mixed"]
+    },
     "PositionOffset": {
       "description": "Positional offset value. Pixel number, percentage string (SCALE constraint), or null. Not token-bindable.",
       "examples": [24, "10%"],
@@ -1256,15 +1258,16 @@
       "description": "Font family/weight value (from FontStyle processor)",
       "oneOf": [
         {
-          "type": "string"
+          "type": "string",
+          "not": { "$ref": "#/definitions/MixedValue" },
+          "$comment": "Any string but the mixed sentinel, which is its own branch. Without the exclusion both branches match it and oneOf rejects the value it was added to admit."
         },
         {
           "type": "number",
           "description": "Font weight numeric value"
         },
         {
-          "type": "string",
-          "const": "mixed"
+          "$ref": "#/definitions/MixedValue"
         },
         {
           "type": "null"
@@ -1277,11 +1280,15 @@
       "oneOf": [
         {
           "type": "string",
+          "not": { "$ref": "#/definitions/MixedValue" },
           "description": "Percentage (e.g., '150%') or 'auto'"
         },
         {
           "type": "number",
           "description": "Pixel value"
+        },
+        {
+          "$ref": "#/definitions/MixedValue"
         },
         {
           "$ref": "#/definitions/TokenReference"
@@ -1729,8 +1736,7 @@
               "type": "number"
             },
             {
-              "type": "string",
-              "const": "mixed"
+              "$ref": "#/definitions/MixedValue"
             },
             {
               "$ref": "#/definitions/TokenReference"
@@ -1741,11 +1747,11 @@
         "fontFamily": {
           "oneOf": [
             {
-              "type": "string"
+              "type": "string",
+              "not": { "$ref": "#/definitions/MixedValue" }
             },
             {
-              "type": "string",
-              "const": "mixed"
+              "$ref": "#/definitions/MixedValue"
             },
             {
               "$ref": "#/definitions/TokenReference"
@@ -1756,11 +1762,11 @@
         "fontStyle": {
           "oneOf": [
             {
-              "type": "string"
+              "type": "string",
+              "not": { "$ref": "#/definitions/MixedValue" }
             },
             {
-              "type": "string",
-              "const": "mixed"
+              "$ref": "#/definitions/MixedValue"
             },
             {
               "$ref": "#/definitions/TokenReference"
@@ -1772,11 +1778,15 @@
           "oneOf": [
             {
               "type": "string",
+              "not": { "$ref": "#/definitions/MixedValue" },
               "description": "Percentage (e.g., '150%') or 'auto'"
             },
             {
               "type": "number",
               "description": "Pixel value"
+            },
+            {
+              "$ref": "#/definitions/MixedValue"
             },
             {
               "$ref": "#/definitions/TokenReference"
@@ -1790,8 +1800,7 @@
               "type": "number"
             },
             {
-              "type": "string",
-              "const": "mixed"
+              "$ref": "#/definitions/MixedValue"
             },
             {
               "$ref": "#/definitions/TokenReference"
@@ -1855,8 +1864,7 @@
               "description": "Leading above the cap height and below the baseline is trimmed from the line box."
             },
             {
-              "const": "mixed",
-              "description": "The value varies across the text this style was read from, so no single value applies."
+              "$ref": "#/definitions/MixedValue"
             }
           ]
         },

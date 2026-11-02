@@ -74,11 +74,12 @@ Every row below is a claim a reader may rely on.
 
 ## Values
 
-Every style value may be a literal, a TokenReference, a PropBinding, or a Conditional. A disposition for a key means little without saying what happens to each form (DSPEC-42).
+Every style value may be a literal, the `mixed` sentinel, a TokenReference, a PropBinding, or a Conditional. A disposition for a key means little without saying what happens to each form (DSPEC-42).
 
 | Form | Disposition | Behaviour |
 |---|---|---|
 | Literal | bound | The ordinary case. |
+| `mixed` | **unverified** | Not yet traced. A spec carrying the sentinel would reach the font loader as a family name, and `loadFontWithFallback` degrades an unloadable font to Inter Regular with a warning — so the likely behaviour is a fallback font rather than nothing applied. Confirming that is the work; the render path has no explicit handling of the sentinel. |
 | `TokenReference` | bound | Recognised by its `$token` key and resolved to a Figma variable. Where the variable cannot be resolved, the value falls back to the cached raw value the document carries, which is a degradation using only data the document holds (DSPEC-43). |
 | `PropBinding` | bound *(not confirmed per key)* | A dedicated binding path parses `{ $binding: "#/props/NAME" }` and wires the corresponding Figma node field to the component property. |
 | `Conditional` | bound *(not confirmed per key)* | The ADR-018 conditional form is implemented on the render path: the condition’s binding target is resolved dynamically and the then/else branch applied. This is the one platform that honours it. |

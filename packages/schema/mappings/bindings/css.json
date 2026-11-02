@@ -2140,7 +2140,9 @@
     }
   },
   "valueForms": {
-    "summary": "Every style value may be a literal, a TokenReference, a PropBinding, or a Conditional. A disposition for a key means little without saying what happens to each form (DSPEC-42).",
+    "summary": "Every style value may be a literal, the `mixed` sentinel, a TokenReference, a PropBinding, or a Conditional. A disposition for a key means little without saying what happens to each form (DSPEC-42).",
+    "mixedValue": "unsupported",
+    "mixedValueNote": "A mixed value states that the property varies across the text it was read from, so there is no single value to emit. Nothing is emitted for it, and the declaration below says so rather than leaving a consumer to guess. Applies equally to React and Web Components, which inherit this binding.",
     "literal": "bound",
     "literalNote": "The ordinary case; every case table above is written against literals.",
     "tokenReference": "bound",

@@ -75,11 +75,12 @@ Every row below is a claim a reader may rely on.
 
 ## Values
 
-Every style value may be a literal, a TokenReference, a PropBinding, or a Conditional. A disposition for a key means little without saying what happens to each form (DSPEC-42).
+Every style value may be a literal, the `mixed` sentinel, a TokenReference, a PropBinding, or a Conditional. A disposition for a key means little without saying what happens to each form (DSPEC-42).
 
 | Form | Disposition | Behaviour |
 |---|---|---|
 | Literal | bound | The ordinary case; every case table above is written against literals. |
+| `mixed` | unsupported | A mixed value states that the property varies across the text it was read from, so there is no single value to emit. Nothing is emitted for it, and the declaration below says so rather than leaving a consumer to guess. Applies equally to React and Web Components, which inherit this binding. |
 | `TokenReference` | bound | Emitted per `settings.spec.tokens`. A dedicated token-value path recognises `$token` and renders it in the configured notation. |
 | `PropBinding` | unsupported | A PropBinding is not applied to any style value. `visible` is the one possible exception and is not currently realised either: the check is a literal `false` comparison, which a `{ $binding }` object fails, so a bound visibility emits nothing. Declared scope, not an unfound gap. |
 | `Conditional` | unsupported | Not yet implemented. Nothing in the transform matches a conditional, so a `visible` carrying the ADR-018 conditional form renders permanently visible and the condition is discarded. The render path does implement it, so a document survives a Figma round trip and loses the condition only on the way to CSS. |

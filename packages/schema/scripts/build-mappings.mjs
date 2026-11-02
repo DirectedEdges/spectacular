@@ -432,7 +432,18 @@ ${b.valueForms?.summary ?? ''}
 
 ${(() => {
   const vf = b.valueForms ?? {};
-  const forms = [['literal', 'Literal'], ['tokenReference', '`TokenReference`'], ['propBinding', '`PropBinding`'], ['conditional', '`Conditional`']];
+  /**
+   * `mixedValue` is a fifth form rather than a kind of literal: the document is
+   * stating that the property varies, not giving a value. A binding that treats
+   * it as a literal emits the string "mixed" into output.
+   */
+  const forms = [
+    ['literal', 'Literal'],
+    ['mixedValue', '`mixed`'],
+    ['tokenReference', '`TokenReference`'],
+    ['propBinding', '`PropBinding`'],
+    ['conditional', '`Conditional`'],
+  ];
   const rows = forms.map(([k, label]) => {
     const d = vf[k] ?? 'unverified';
     const flag = vf[`${k}Verified`] === false ? ' *(not confirmed per key)*' : '';

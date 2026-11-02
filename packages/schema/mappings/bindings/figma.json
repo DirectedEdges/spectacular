@@ -1274,7 +1274,9 @@
     }
   },
   "valueForms": {
-    "summary": "Every style value may be a literal, a TokenReference, a PropBinding, or a Conditional. A disposition for a key means little without saying what happens to each form (DSPEC-42).",
+    "summary": "Every style value may be a literal, the `mixed` sentinel, a TokenReference, a PropBinding, or a Conditional. A disposition for a key means little without saying what happens to each form (DSPEC-42).",
+    "mixedValue": "unverified",
+    "mixedValueNote": "Not yet traced. A spec carrying the sentinel would reach the font loader as a family name, and `loadFontWithFallback` degrades an unloadable font to Inter Regular with a warning — so the likely behaviour is a fallback font rather than nothing applied. Confirming that is the work; the render path has no explicit handling of the sentinel.",
     "literal": "bound",
     "literalNote": "The ordinary case.",
     "tokenReference": "bound",
