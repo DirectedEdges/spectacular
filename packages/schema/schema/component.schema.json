@@ -146,6 +146,7 @@
       "type": "object",
       "description": "The structural elements that make up the component. Keys are formatted per format.keys. A key whose Figma name did not satisfy the safe key grammar (see SafeKeySentence / SafeKeyTitle) carries that name in $extensions['com.figma'].name.",
       "examples": [{ "root": { "type": "container" }, "label": { "type": "text" } }],
+      "minProperties": 1,
       "additionalProperties": {
         "$ref": "#/definitions/AnatomyElement"
       }
@@ -562,7 +563,8 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "minItems": 1
         },
         "nullable": {
           "type": "boolean",
@@ -573,6 +575,10 @@
           "$ref": "#/definitions/PropExtensions"
         }
       },
+      "required": [
+        "type",
+        "enum"
+      ],
       "additionalProperties": false
     },
     "SlotProp": {
@@ -610,6 +616,7 @@
           "items": {
             "type": "string"
           },
+          "minItems": 1,
           "description": "What this slot permits — the one list of its accepted content. Each entry is either a component type name from the library's own namespace, or a reserved PrimitiveSlotContent marker naming a primitive kind ($text, $glyph). The two populations cannot collide, because the safe key grammar (ADR-066) admits no leading `$` in a component key. Absent means any component and no primitive. Items stay typed as plain strings rather than an enum, because the array holds arbitrary component names alongside the reserved markers. Examples: [$glyph, $text, badge] takes a glyph, a label, or a composed Badge; [$text] is text-only with no component permitted; [badge] is Badge-only with no primitive permitted. (ADR-102)"
         },
         "defaultSlot": {
@@ -804,7 +811,8 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/LayoutNode"
-          }
+          },
+          "minItems": 1
         }
       },
       "additionalProperties": false
@@ -837,7 +845,8 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/LayoutNode"
-          }
+          },
+          "minItems": 1
         },
         "slotContent": {
           "type": "object",
@@ -1282,6 +1291,7 @@
           "items": {
             "type": "number"
           },
+          "minItems": 1,
           "description": "The closed set of accepted values, when the source enumerates them rather than leaving the range open. Absent means the prop accepts any number."
         },
         "nullable": {

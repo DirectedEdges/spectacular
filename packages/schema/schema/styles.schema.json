@@ -1432,6 +1432,7 @@
           "items": {
             "$ref": "#/definitions/Shadow"
           },
+          "minItems": 1,
           "description": "Ordered list of shadows; Shadow.inset distinguishes drop (absent/false) vs inner (true)"
         },
         "layerBlur": {

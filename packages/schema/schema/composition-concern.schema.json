@@ -95,6 +95,7 @@
           "items": {
             "$ref": "component.schema.json#/definitions/LayoutNode"
           },
+          "minItems": 1,
           "description": "The composition's layout tree"
         }
       }
