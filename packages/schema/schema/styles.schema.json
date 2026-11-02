@@ -1235,7 +1235,7 @@
     },
     "MixedValue": {
       "const": "mixed",
-      "description": "A sentinel standing for \"this varies\". Figma reports no value for a text property whose characters differ — half the run bold, half regular — and a capture must record something, so it records this. Declared once and referenced wherever a property can receive it, so every property means the same thing by it. A consumer applies nothing for a mixed value: there is no single value to apply, and choosing one would invent data the document does not carry.",
+      "description": "A sentinel standing for \"this varies\". A text layer whose characters differ — half the run bold, half regular — has no single value for a type property, and a capture must record something, so it records this. Declared once and referenced wherever a property can receive it, so every property means the same thing by it.\n\nIt carries no value a consumer can use. No binding applies it: there is nothing to apply, and choosing one of the varying values would invent data the document does not carry. Its purpose is to be visible — it reports that the source layer mixes values, which is an authoring problem to fix in the design file rather than a value to render.",
       "examples": ["mixed"]
     },
     "PositionOffset": {

@@ -205,6 +205,14 @@ No value may satisfy two branches of the same `oneOf` (DSPEC-50). `oneOf` requir
 
 A `title` is optional. It names the option where the value does not already name itself, as a numeric sentinel or an external identifier does not. It MUST NOT restate the value.
 
+### 4.6 The `mixed` sentinel
+
+A text layer whose characters differ has no single value for a type property. A producer that encounters one MUST record the string `mixed`, referencing `MixedValue` in `styles.schema.json`, rather than choosing one of the varying values (`producer`).
+
+The sentinel is not a value. **A consumer MUST apply nothing for it, and MUST NOT substitute one of the varying values or a platform default (DSPEC-51).** Every binding declares it `unsupported` for this reason, which is the one disposition that states a deliberate non-realisation rather than a gap (§11.1).
+
+Its purpose is to be visible. A `mixed` value reports that the source design mixes values within one layer, which is a thing to fix in the design rather than a thing to render. A producer SHOULD warn when it records one (`producer`, `unenforced`).
+
 ---
 
 ## 5. Pointers
@@ -394,6 +402,7 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-48 | A closed value set is declared as `oneOf` branches of `const`, never as a bare `enum` array | package | §4.5, ADR-114 |
 | DSPEC-49 | Every branch of a closed value set carries a `description` or a `title` stating what choosing that option does | package | §4.5, ADR-114 |
 | DSPEC-50 | No value satisfies two branches of the same `oneOf`; in particular a `const` branch never sits beside an open branch admitting that value's own type | package | §4.5, ADR-114 |
+| DSPEC-51 | A consumer applies nothing for a `mixed` value, and never substitutes one of the varying values or a platform default | consumer | §4.6 |
 
 Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.
 
