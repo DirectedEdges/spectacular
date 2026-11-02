@@ -4,6 +4,7 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
+| 115 | Closed Style Value Sets | |
 | 114 | Describe Enum Options Where They Are Declared | (reserved, draft in PR #799) |
 | 113 | Style defaults belong to the schema | (reserved, draft in PR #799) |
 | 112 | Settings Defaults Adopt Their Scaffolded Values | |
