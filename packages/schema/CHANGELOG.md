@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `mappings/bindings/` is published. The binding data states which platform realises each style key and how, which is a fact about the contract and belongs with it. A consumer can now read it from the package rather than the repo (#837)
 - Every option of all 31 closed value sets — a description of what choosing it does (ADR-114)
 - `Styles` — `examples` on all 46 properties, each valid against its own property
 - `ColorObject.colorSpace`, `Settings.spec.tokens`, `Settings.spec.color` — per-option descriptions, previously only a value list

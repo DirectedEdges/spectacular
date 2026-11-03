@@ -32,22 +32,21 @@ const WATCHED = [
     run: [
       resolve(site, 'scripts/build-mappings.mjs'),
       resolve(site, 'scripts/build-style-pages.mjs'),
-      resolve(site, 'scripts/build-mappings-pages.mjs'),
     ],
   },
   {
     /**
-     * The binding data only. `build-mappings.mjs` writes its rendered pages
-     * back into `mappings/` itself — `clusters/<platform>/*.md`, `DEFAULTS.md`
-     * and the per-platform files — so watching the whole directory for `.md`
-     * made the generator retrigger itself without end.
+     * The whole directory, not just `bindings/`. It used to be scoped to the
+     * binding JSON because `build-mappings.mjs` wrote its rendered markdown
+     * back into `mappings/` and so retriggered itself without end. That
+     * markdown stage is gone (#837) — the generator writes straight to the
+     * site — so nothing it produces lands in a watched path.
      */
-    dir: resolve(repo, 'packages/schema/mappings/bindings'),
-    match: /\.json$/,
+    dir: resolve(repo, 'packages/schema/mappings'),
+    match: /\.json$|\.md$/,
     run: [
       resolve(site, 'scripts/build-mappings.mjs'),
       resolve(site, 'scripts/build-style-pages.mjs'),
-      resolve(site, 'scripts/build-mappings-pages.mjs'),
     ],
   },
   /**
