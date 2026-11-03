@@ -39,10 +39,13 @@ export type Styles = Partial<{
   centerHorizontalOffset: PositionOffset;
   /** Vertical offset from center. Emitted only alongside `position` (ADR-070). Present when vertical constraint is CENTER. @since 0.19.0 */
   centerVerticalOffset: PositionOffset;
-  layoutSizingHorizontal: Style;
-  layoutSizingVertical: Style;
+  /** What determines the element's width. Structural property — not token-bindable. @since 0.40.0 */
+  layoutSizingHorizontal: LayoutSizing | null;
+  /** What determines the element's height. Structural property — not token-bindable. @since 0.40.0 */
+  layoutSizingVertical: LayoutSizing | null;
   strokes: ColorStyle;
-  strokeAlign: Style;
+  /** Where the stroke sits relative to the element's boundary. Structural property — not token-bindable. @since 0.40.0 */
+  strokeAlign: StrokeAlign | null;
   /** Stroke weight. Scalar when uniform; `Sides` object when per-side values differ. @since 1.0.0 */
   strokeWeight: Style | Sides;
   /** Dash pattern for a stroke. Present (non-null) when the stroke is dashed; null or absent when solid. Structural property — not token-bindable. @since 0.27.0 */
@@ -50,7 +53,8 @@ export type Styles = Partial<{
   typography: TokenReference | Typography;
   /** Horizontal text alignment using logical inline-axis directions (`START`/`END`). `JUSTIFY` maps from Figma's `JUSTIFIED`. Structural property — not token-bindable. Present on TEXT element type only. @since 0.29.0 */
   textAlignHorizontal: TextAlignHorizontal | null;
-  textAlignVertical: Style;
+  /** Where text sits within the height available to it. Structural property — not token-bindable. @since 0.40.0 */
+  textAlignVertical: TextAlignVertical | null;
   /** How overflowing text is handled — `CLIP` (cut off) or `ELLIPSIS` (trailing ellipsis). Structural property — not token-bindable. Present on TEXT element type only. @since 0.28.0 */
   textOverflow: TextOverflow | null;
   /** Maximum number of lines before `ELLIPSIS` text overflow applies; `null` or absent means no limit. Present on TEXT element type only. @since 0.28.0 */
@@ -58,7 +62,8 @@ export type Styles = Partial<{
   textColor: ColorStyle;
   /** Alignment along the main axis (depends on `layoutMode`). Structural property — not token-bindable. @since 0.18.0 */
   mainAxisAlignment: MainAxisAlignment | null;
-  primaryAxisSizingMode: Style;
+  /** Whether the stacking axis sizes to its contents or to a fixed value. Structural property — not token-bindable. @since 0.40.0 */
+  primaryAxisSizingMode: PrimaryAxisSizingMode | null;
   /** Alignment along the cross axis (perpendicular to `layoutMode`). Structural property — not token-bindable. @since 0.18.0 */
   crossAxisAlignment: CrossAxisAlignment | null;
   /** Auto-layout direction. Structural property — not token-bindable. @since 0.18.0 */
@@ -98,7 +103,7 @@ export type TextContentStyles = Partial<{
   /** Horizontal text alignment, using logical inline-axis directions (`START`/`END`). */
   textAlignHorizontal: TextAlignHorizontal | null;
   /** Vertical text alignment. */
-  textAlignVertical: Style;
+  textAlignVertical: TextAlignVertical | null;
   /** How overflowing content is handled — `CLIP` or `ELLIPSIS`. */
   textOverflow: TextOverflow | null;
   /** Maximum number of lines before `ELLIPSIS` overflow applies; `null` means no limit. */
@@ -308,6 +313,34 @@ export interface Sides {
  * @since 0.19.0
  */
 export type Position = 'AUTO' | 'ABSOLUTE';
+
+/**
+ * Where a stroke sits relative to the element's boundary. Structural property
+ * that cannot be token-bound.
+ * @since 0.40.0
+ */
+export type StrokeAlign = 'INSIDE' | 'OUTSIDE' | 'CENTER';
+
+/**
+ * What determines an element's size on one axis. Structural property that
+ * cannot be token-bound.
+ * @since 0.40.0
+ */
+export type LayoutSizing = 'FIXED' | 'HUG' | 'FILL';
+
+/**
+ * Where text sits within the height available to it. Structural property that
+ * cannot be token-bound.
+ * @since 0.40.0
+ */
+export type TextAlignVertical = 'TOP' | 'CENTER' | 'BOTTOM';
+
+/**
+ * Whether the stacking axis sizes to its contents or to a fixed value.
+ * Structural property that cannot be token-bound.
+ * @since 0.40.0
+ */
+export type PrimaryAxisSizingMode = 'AUTO' | 'FIXED';
 
 /**
  * Positional offset value. Pixel number, percentage string (SCALE constraint, e.g. "25%"), or null.

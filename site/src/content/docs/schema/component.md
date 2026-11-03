@@ -12,7 +12,7 @@ The `Component` type is the root object of every spec. It contains the component
 | `title` | `string` | Yes | Component name |
 | `anatomy` | [`Anatomy`](/schema/anatomy/) | Yes | Map of named elements that make up the component |
 | `props` | [`Props`](/schema/props/) | No | Configurable input properties |
-| `default` | [`Variant`](/schema/variants.md/#variant) | Yes | Default variant — the baseline appearance |
+| `default` | [`Variant`](/schema/variants/#variant) | Yes | Default variant — the baseline appearance |
 | `variants` | [`Variant[]`](variants.md) | No | Layered variant overrides |
 | `invalidPropCombinations` | [`PropConfigurations[]`](prop-configurations.md) | No | Prop combinations that are not valid together |
 | `subcomponents` | [`Subcomponents`](/schema/subcomponents/) | No | Embedded child component definitions |

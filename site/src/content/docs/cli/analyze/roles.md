@@ -3,8 +3,6 @@ title: "roles"
 description: "Report which anatomy elements declare a role, which do not, and where a declaration disagrees with itself"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge experimental-badge">Experimental</span>')</script>
-
 Reads every component's `api.yaml` and produces `analysis/roles.yaml`: which elements declare a [role](/roles/), which are bare, which concepts the library uses and which it has never reached for, and the declarations that disagree with themselves.
 
 [Roles](/roles/) are the one input in the vocabulary with no acquisition path. Every other fact about a component is observable in Figma; a role is a human judgment, annotated one layer at a time in Dev Mode. So a library adopting them needs a measure before it starts — and the same report, run again, is what shows a sweep landed.

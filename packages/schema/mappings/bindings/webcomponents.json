@@ -1,0 +1,26 @@
+{
+  "platform": "webcomponents",
+  "dependsOn": [
+    "css"
+  ],
+  "realises": "Emits Lit custom elements. Styling is delegated wholly to the CSS binding.",
+  "note": "Declares only what this platform adds to or changes from the CSS binding. A style key absent here is bound exactly as css.json states; this file never restates one.",
+  "concepts": {
+    "styles": {},
+    "styleClusters": {}
+  },
+  "valueForms": {
+    "summary": "Inherited from the CSS binding unless restated here.",
+    "literal": "inherited",
+    "tokenReference": "inherited",
+    "propBinding": "inherited",
+    "conditional": "inherited"
+  },
+  "surfaces": {
+    "note": "The platform-shaped questions this binding owes, none of which are CSS. All unverified.",
+    "propsToParameters": "unverified",
+    "slotsToChildren": "unverified",
+    "variantsToSelection": "unverified",
+    "styleAttachment": "unverified"
+  }
+}

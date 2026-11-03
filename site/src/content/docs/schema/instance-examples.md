@@ -3,9 +3,6 @@ title: "Instance Examples"
 description: "Pre-configured whole-component usages for documentation"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge pro-badge">Pro</span>')</script>
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge experimental-badge">Experimental</span>')</script>
-
 An `InstanceExample` is a pre-configured usage of a *whole* component — a documented configuration for human readers and tooling, not a live data flow. Scalar props are set directly; slot props are filled with a [`SlotContentRef`](/schema/slot-content-ref/). They live on [`Component.instanceExamples`](/schema/component/) and are emitted only with a Pro license.
 
 ```ts

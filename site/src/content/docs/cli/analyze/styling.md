@@ -3,8 +3,6 @@ title: "styling"
 description: "Emit a token inventory showing which variables are applied to each anatomy element"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge experimental-badge">Experimental</span>')</script>
-
 The styling analyzer builds a design-token inventory from your generated specs. It records every Figma variable, color style, text style, and effect style a component applies, how it is applied (fill, background, spacing, etc.), and — when foundations data is available — which published tokens no component uses at all.
 
 ## Use When

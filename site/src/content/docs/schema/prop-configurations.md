@@ -26,7 +26,7 @@ type PropConfigurations = Record<
 An `ObjectPropValue` sets the members of an [`ObjectProp`](/schema/props/#objectprop). Member names must not begin with `$`, which is what keeps the form distinguishable from `PropBinding` and the other `$`-keyed references:
 
 ```yaml
-# A variant configuring two members; an omitted member inherits
+# A variant configuring two members; an omitted member keeps its resolved value
 margin:
   compact: none
   expanded: large
@@ -36,8 +36,8 @@ margin:
 
 `null` means the prop is **unset** in this configuration. It is a value, not an absence, and the distinction matters because configurations layer:
 
-- an **absent** key inherits whatever the layer beneath it set
-- a **`null`** key overrides an inherited value with "no value"
+- an **absent** key keeps whatever value the preceding configurations resolved to
+- a **`null`** key replaces that resolved value with "no value"
 
 A nullable prop is therefore fully described by its own key. Nothing beside it — a paired visibility flag, a producer extension — needs to be read to know whether the prop is set:
 
@@ -54,7 +54,7 @@ header: null
 
 PropConfigurations appear in four places:
 
-- **Variant `configuration`** — declares which prop combination activates a [variant](/schema/variants.md/#variant). When all listed props match their specified values, the variant's overrides are applied.
+- **Variant `configuration`** — declares which prop combination activates a [variant](/schema/variants/#variant). When all listed props match their specified values, the variant's overrides are applied.
 - **`invalidPropCombinations`** — an array on the [Component](/schema/component/) root (carried by the api concern) that declares prop combinations which should never occur together.
 - **`Element.propConfigurations`** — sets prop values on a nested instance element; accepts the full union (scalars, `PropBinding`, `CompositionRef`).
 - **`InstanceExample.propConfigurations`** — documents a complete configuration; scalars, `null`, and slot-content references.

@@ -5,7 +5,8 @@
 ### I. Types and Schema Are the Same Contract (NON-NEGOTIABLE)
 `@directededges/specs-schema` publishes two interlinked artifacts: TypeScript types in `types/` and JSON schemas in `schema/`. They MUST describe the same structure at all times.
 
-- Every type in `types/` has a corresponding definition (direct or via reference) in `schema/component.schema.json` or its siblings. Changes to one MUST be reflected in the other before publishing.
+- Parity runs **both ways**. Every type in `types/` has a corresponding definition (direct or via reference) in `schema/component.schema.json` or its siblings, **and every named definition in those files has a named type**. Changes to one MUST be reflected in the other before publishing.
+- A named definition is a name consumers read and cite. Leaving one without a type says the contract has a concept TypeScript cannot name — so extracting a definition for documentation's sake creates a type obligation, it does not escape one.
 - The JSON schemas are the authoritative validation contract for serialized output. The TypeScript types are the authoritative compile-time contract for code consuming that output.
 - Neither artifact may drift ahead of the other. Misalignment is a bug.
 
@@ -13,7 +14,7 @@ Rationale: Every consumer (`specs-from-figma`, `specs-cli`, `specs-plugin-2`) re
 
 ### II. No Logic — Types and Schema Only
 This package MUST NOT contain transformation logic, processing algorithms, or runtime behavior beyond:
-- `DEFAULT_SETTINGS` exported from `Settings.ts`, `DEFAULT_PIPELINE` from `Pipeline.ts`, and `DEFAULT_CONVENTIONS` from `Conventions.ts`
+- `DEFAULT_SETTINGS` exported from `Settings.ts` and `DEFAULT_CONVENTIONS` from `Conventions.ts`
 
 All other exports MUST be pure type declarations (`type`, `interface`) or static schema files. No classes, no functions, no async operations.
 
@@ -25,7 +26,7 @@ The exports from `types/index.ts` are the full public API. Every exported type i
 - New types require explicit justification: they MUST represent a genuine, shared concept in the Specs schema — not an internal implementation detail of any one package.
 - Removing or renaming an exported type or a named field within a type is a breaking change and MUST follow semantic versioning.
 - Schema exports (via `exports` in `package.json`) are equally contractual — adding, removing, or restructuring a schema file is a breaking change.
-- The permitted runtime exports are `DEFAULT_SETTINGS`, `DEFAULT_PIPELINE`, and `DEFAULT_CONVENTIONS` — one defaults constant per configuration artifact (ADR-071). Adding a runtime export for anything else requires constitutional amendment.
+- The permitted runtime exports are `DEFAULT_SETTINGS` and `DEFAULT_CONVENTIONS` — one defaults constant per configuration artifact (ADR-071). Adding a runtime export for anything else requires constitutional amendment.
 - **ADRs and spec decisions MUST be justified by the shared contract's own coherence and the needs of all consumers equally. No single downstream package's internal model, class structure, or implementation detail may be cited as a decision driver or rationale. ADRs inform downstream packages; they are not driven by them.**
 
 Rationale: All downstream packages compile against these types. Any change has a multiplied impact across `specs-from-figma`, `specs-cli`, and `specs-plugin-2` simultaneously. Allowing one package's internals to steer the spec contract creates an implicit ownership hierarchy that undermines the shared-language role of this package.
@@ -65,6 +66,19 @@ Rationale: Figma is the data source for the schema, not the naming authority. Th
 - **Naming — no abbreviations**: Type names, field names, schema properties, and API identifiers MUST use full, unabbreviated words. Prefer `Operation` over `Op`, `Button` over `Btn`, `Configuration` over `Config`. Clarity takes priority over brevity in the public contract. Accepted exceptions: `Config` (grandfathered), `args` (universally understood shorthand for arguments).
 - **Naming — enum casing in Styles**: String literal union types used as enum values in `Styles` and its child types (`Typography`, `Gradient`, `Effects`) MUST use `SCREAMING_CASE` (e.g., `'NONE'`, `'HORIZONTAL'`, `'SPACE_BETWEEN'`). Exception: values defined by external standards (e.g., DTCG `$type` values like `'color'`, CSS Color Level 4 color spaces like `'srgb'`) preserve their standard's casing.
 - **Typing — structural enums vs. `Style`**: When a `Styles` property has a closed, known set of values and is **not token-bindable** (i.e., the value is structural or computed — never a `TokenReference`, `PropBinding`, or `Conditional`), it MUST be typed as a named type rather than `Style`. For string enums, define a string literal union (e.g., `LayoutMode`, `Position`) and type the property as `TypeName | null`. For non-string structural values, define a named narrow type (e.g., `PositionOffset` as `number | string | null`). Conversely, properties whose values may be token-bound, prop-bound, or conditional MUST use `Style` (or a domain-specific type like `ColorStyle`). Established examples: `LayoutMode`, `MainAxisAlignment`, `CrossAxisAlignment`, `WrapAlignment`, `Position`, `PositionOffset`.
+- **Documentation — what a `description` says**: A property's `description` states what the value controls and, where the value only applies under a condition, the condition that bounds it. One sentence is the target; a second is justified only when it bounds applicability, never when it explains a consequence.
+
+  A `description` MUST NOT:
+
+  - Restate the property's own name. `rotation` described as "Rotation in degrees" tells a reader nothing the key and its type do not.
+  - State the type, the admitted forms, or the default. Generated reference pages derive each of those into its own section, so a description that repeats one costs the reader twice.
+  - Describe the meaning of individual enum values. A description describes the property; the values are described where they are declared.
+  - Name a platform property, cite a decision record, or restate a rule. Those belong in the platform binding declaration, the ADR corpus, and the rule catalogue respectively, each of which the reference pages already render.
+
+  The test is the same one the workspace applies to code comments: delete the description, read the property and its type, and ask what the reader lost. `maxLines` as "The most lines the text may occupy before it is truncated, usually declared with `textOverflow`" survives it. `width` as "The element's width in pixels when horizontal sizing is `FIXED`" survives it, where a version that went on to explain what `HUG` and `FILL` do instead would not — that is the sizing rule, documented where the sizing rule lives.
+
+- **Documentation — `examples`**: An example is a single value valid against the property it sits on, not a rendering of one and not a list of the admitted values. It MUST NOT repeat the declared `default`, which the reference page states separately. Enumerating a closed set is `enum`'s job, not `examples`'.
+
 - **Language/Tooling**: TypeScript strict mode (`tsconfig.build.json`); ESM only; no runtime dependencies permitted (devDependencies: `typescript` only).
 - **Build**: `tsc -p tsconfig.build.json` emits `.js` shims into `dist/`. The source of truth is `types/*.ts` — `dist/` is a compatibility artifact only.
 - **No test framework required** for a pure types/schema package, but schema consistency checks and type compilation serve as the quality gate.

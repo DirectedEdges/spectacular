@@ -3,8 +3,6 @@ title: "Analyze"
 description: "Run analysis passes over component specs and write aggregate reports to analysis/"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge experimental-badge">Experimental</span>')</script>
-
 Analyzers read component specs and produce aggregate snapshots for governance, auditing, and LLM-assisted analysis. Unlike transforms — which produce build artifacts your codebase consumes — analyzers produce one-time snapshots you read, diff, or hand to a language model.
 
 This section is what each report contains. How to run them — arguments, options, exit codes — is the [`analyze` command reference](/cli/commands/analyze/).

@@ -109,6 +109,33 @@ Do not reorder these, and do not fold two steps into one pass. A tier-3 or tier-
     - Do not create new doc pages for types that are only used as field values on an existing documented type — document them inline in the parent type's page.
     - If no doc file exists for the changed type, skip this step.
 
+11a. **Update the specification** — `packages/schema/SPECIFICATION.md`:
+    - This is the normative document, distinct from the reference pages in step 11. It states requirements; those pages describe members. The site renders it at `/schema/specification` from this file, so edit the package file and never the generated page.
+    - **Decide whether the ADR touches it at all.** §1.5 declares a normativity gradient: document kinds and identity, identifiers, values and layering, pointers, slots, roles, extensions and versioning are specified there; the leaf style vocabularies (`styles`, `effects`, `typography`, gradients, corners, sides) are governed by the JSON Schema and the reference pages alone. An ADR that only adds or changes a leaf style member needs **no** specification change — say so in the report and move on.
+    - **If the ADR introduces a semantic rule** — a requirement draft-07 JSON Schema cannot express (cross-member consistency, reference existence, value semantics conditioned on a sibling, open-vocabulary consumer behaviour, a producer or consumer obligation) — add a row to the §9 rule catalogue: next free `DSPEC-nn`, the rule in one RFC-2119 sentence, the class it binds (`document` / `producer` / `consumer` / `validator` / `package`), and a `Source` citation of the section plus this ADR. Never renumber or reuse an existing ID; IDs are stable citation targets.
+    - **If the ADR changes a structure §2–§8 specifies**, update that section's prose, and give every requirement an enforcement note from §1.2 (`schema: <file>`, `DSPEC-nn`, `producer`, `consumer`, `unenforced`). A requirement that cannot be given one does not belong in the document.
+    - Keep the ADR as provenance, not authority: §1.6 says an ADR is not normative, so state the rule here rather than pointing at the ADR for it.
+    - **Gate**: if the ADR declares a rule nothing in the schema can enforce and §9 gained no row, halt and report — the requirement would otherwise exist only in an ADR, where §1.6 says no consumer is bound by it.
+
+11b. **File an issue for every deferred consequence.**
+    - An ADR's **Consequences** and **Downstream Impact** sections are where deferred work goes to die. ADR-113 shipped asserting that 44 documentation pages "become generated from the schema" and that a transform's disagreement with the schema "becomes visible" — neither was implemented, neither had an issue, and both were invisible until someone asked.
+    - Re-read those two sections against what you actually changed. Sort every statement into one of three:
+      - **Done** — implemented in this pass. Nothing to file.
+      - **Deliberate non-goal** — the ADR states it is out of scope, in those words. Nothing to file.
+      - **Deferred** — asserted as an effect, or named as downstream impact, but not implemented. **This needs an issue.**
+    - **A downstream platform implementation is a deferred consequence.** An ADR that changes the contract and names a transform, emitter or plugin surface that must adopt it has deferred that work, whether or not the Downstream Impact row says so in those words. One issue per package, not one for all of them: they land in different repos and move independently.
+
+    **How to file them.**
+
+    - Invoke the `create-issue` skill. Use its **small form** — what, why, files, under 100 words, no section headings. These are follow-ups, not briefs; a deferred consequence described at length costs more to read than to do.
+    - Labels are the territories the work touches, per that skill's table. A platform-adoption issue takes the label of the package that adopts it.
+    - **One parent, chosen by how this ADR was reached:**
+      - **Invoked from a broader plan or lane** — a lane issue, an epic, or a tracking issue already exists for the work that led here. Parent every filed issue to it, and do **not** board them: subissues are never boarded.
+      - **Standalone ADR** — nothing broader invoked it. File one issue for the ADR's adoption as a **top-level, boarded** issue set to **In progress**, and parent the per-consequence issues to that. The ADR then has exactly one thing on the board, not none and not seven.
+    - GitHub permits **one parent per sub-issue**. Re-parenting means `removeSubIssue` from the old parent before `addSubIssue` to the new one; `addSubIssue` alone fails with *"Sub issue may only have one parent"*.
+    - **Do not record the issue numbers in the ADR.** ADRs are not trackers and not plans: an ADR states a decision and its consequences, and what remains lives in issues. Report the numbers in step 14 instead.
+    - **Gate**: if a statement in Consequences or Downstream Impact is neither implemented, nor an explicitly stated non-goal, nor filed as an issue, halt and report it. An ADR that claims an effect nothing produced is a false record, and the claim is what a reader will rely on.
+
 12. **Update CHANGELOG.md**:
     - The release branch scaffolds an `## [X.Y.Z] - Unreleased` heading with empty sections. Add entries into the existing scaffold — do **not** replace `Unreleased` with a date (the date is set at release time). If no scaffold heading exists, prepend one using `Unreleased` as the date.
     - **Format**: one top-level bullet per user-visible change; no sub-bullets; no bold; no code blocks; no wrapping prose paragraphs
@@ -122,7 +149,9 @@ Do not reorder these, and do not fold two steps into one pass. A tier-3 or tier-
 13. **Confirm the version in `package.json`**: It must equal the ADR's **target version** — the one the release branch already carries, normally set by `/start-next-release`. Write it only if it differs; do not invent a bump beyond the release branch's version.
     - **Gate**: After writing, read `package.json` back and confirm the `"version"` field matches the ADR's target version. If it does not match, halt and report — do not proceed to step 14.
 
-14. **Report**: List every file modified (with one-line description each) — all of which must be under `packages/schema/`, `adr/`, or `site/`. Name any ADR that had no schema-package surface, and any consumer left uncompilable, as outstanding work rather than doing it. The list **must** include the ADR file, `CHANGELOG.md`, and `package.json` — if any is absent from the list, halt: steps 10, 12, or 13 were not completed. State that the author should review the diff and accept the ADR once satisfied. Remind the author that this ADR branch (`$BRANCH`) targets the release branch (`$RELEASE_BRANCH`), not `main`.
+14. **Report**: List every file modified (with one-line description each) — all of which must be under `packages/schema/`, `adr/`, or `site/`. Name any ADR that had no schema-package surface, and any consumer left uncompilable, as outstanding work rather than doing it. The list **must** include the ADR file, `CHANGELOG.md`, and `package.json` — if any is absent from the list, halt: steps 10, 12, or 13 were not completed. State either the `SPECIFICATION.md` change or the reason the ADR needed none (§1.5 gradient, or no semantic rule introduced) — silence on it is not an acceptable report. List the issues filed for deferred consequences (step 11b) with their numbers, or state that every statement in Consequences and Downstream Impact was implemented or is an explicit non-goal. Remind the author that this ADR branch (`$BRANCH`) targets the release branch (`$RELEASE_BRANCH`), not `main`.
+
+**Do not tell the author to accept the ADR while any deferred-consequence issue is open.** An ACCEPTED ADR asserting effects that nothing produced is a false record, and acceptance is the moment that record becomes load-bearing. Say which issues gate it instead.
 
 ## Key rules
 

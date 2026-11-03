@@ -84,8 +84,8 @@ base block already covers it; for anything else the declared styling would be
 dropped silently, which is what the warning exists to prevent.
 
 Variants emit in **schema order** — `variants.yaml` puts single-prop variants
-before compound ones, which is the cascade the variant-layering algorithm
-assumes. Child element overrides use a descendant selector:
+before compound ones, which is the declaration order the variant merge resolves
+in. Child element overrides use a descendant selector:
 `.ds-button[data-appearance="outline"] .ds-button__label`.
 
 ## Token references

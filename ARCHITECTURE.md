@@ -27,8 +27,8 @@ the site at `site/ARCHITECTURE.md`.
    describe the same structure at all times; drift is a bug. No automated
    parity test exists: enforcement is review + `/specs.consistency-check`.
 2. **No logic.** Type declarations and static JSON only. The sole runtime
-   exports are `DEFAULT_CONVENTIONS`, `DEFAULT_SETTINGS`, `DEFAULT_PIPELINE`;
-   adding a fourth requires constitutional amendment.
+   exports are `DEFAULT_CONVENTIONS` and `DEFAULT_SETTINGS`; adding a third
+   requires constitutional amendment.
 3. **`types/index.ts` is the entire public API.** Removing or renaming an
    exported type *or field* is breaking. Naming: code platforms outrank Figma;
    no downstream package's internals may drive an ADR decision.
@@ -62,7 +62,10 @@ There is no `Config.ts` anymore — older links to "Config" mean these three.
 | `packages/schema/tests/` | Type-level `*.test-d.ts` files + runtime tests |
 
 Enums have no separate file: closed sets are string-literal unions inside the
-owning type file, mirrored as `enum` arrays in the matching `*.schema.json`.
+owning type file, mirrored in the matching `*.schema.json` as `oneOf` branches
+of `const`, one per option, each carrying a description — never a bare `enum`
+array, which JSON Schema gives no way to annotate per member (ADR-114,
+DSPEC-48..50).
 Structural closed enums are named union types — `Style` is only for values
 that can be token-bound, prop-bound, or conditional. SCREAMING_CASE for style
 enum values except external standards (DTCG, CSS Color 4).

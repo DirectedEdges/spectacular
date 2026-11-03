@@ -3,8 +3,6 @@ title: "PropBinding"
 description: "Dynamic links between props and element or style properties"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge pro-badge">Pro</span>')</script>
-
 A `PropBinding` creates a dynamic link between a prop and an element or style property. When the bound prop changes value, the linked property updates accordingly.
 
 ```ts
@@ -24,7 +22,7 @@ PropBindings are accepted on these element properties:
 | `visible` | Element visibility is controlled by a prop |
 | `content` | Text or glyph content is bound to a prop |
 
-PropBindings can also appear as style values anywhere a [`Style`](/schema/styles.md/#values) is accepted.
+PropBindings can also appear as style values anywhere a [`Style`](/schema/styles/#values) is accepted.
 
 ## Further Reading
 

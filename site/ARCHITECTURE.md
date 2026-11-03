@@ -22,6 +22,11 @@ content).
 - Pages importing images or components must be `.mdx`; assets import
   relatively from `src/assets/`.
 - `pro/thankyou.mdx` is intentionally unlisted (post-purchase landing).
+- **No `pro` or `experimental` badge goes on a `schema/` page**, in the sidebar
+  or injected in-page. A badge there makes a claim about the *format*, which is
+  open; what is licensed is what the tooling fills in. Tier information lives on
+  `overview/licensing.md`, and badges belong on the command, settings, guide and
+  plugin pages that describe tool behaviour.
 - Fragile couplings to Starlight internals: the inline exclusive-accordion
   script in `astro.config.mjs` and the `!important` overrides in
   `src/custom.css` — both break candidates on a Starlight upgrade.
@@ -36,10 +41,10 @@ content).
 | `astro.config.mjs` | Nav (`sidebar` array), port 4323, component overrides, `pro`/`experimental` badge constants, accordion script |
 | `src/content/docs/` | All pages; directory = URL prefix; `index.md(x)` = section root |
 | `src/content/docs/cli/commands/` | One page per CLI command, named for the command as `packages/cli/src/commands/` now is — so a page, its command and its source file share a name. Two exceptions worth knowing: the page is kebab-case where a command is camelCase (`apply-custom-tokens` ↔ `applyCustomTokens`), and `analyze` has a command file but no page |
-| `src/content/docs/schema/` | Type pages + deep `styles/`/`typography/`/`effects/` property trees |
+| `src/content/docs/schema/` | Type pages + deep `styles/`/`typography/`/`effects/` property trees, plus cross-cutting pages that explain the contract rather than one node of it (`platform-neutrality`) |
 | `src/content/docs/code/` | One page per emitted artifact (`contract`, `scaffold`, `styles`, `stories`, `cssvars`) — what `specs react` / `specs webcomponents` write, linked from both command pages |
 | `src/content/docs/settings/` | One page per config key |
-| `src/content/docs/versioning/` | Spec workspace versioning: overview + concept pages; command reference stays in `cli/commands/version.md` (linked from both sidebar groups) |
+| `src/content/docs/versioning/` | Spec workspace versioning: overview + concept pages; command reference stays in `cli/commands/version.md`. These pages sit as a subgroup under Commands in the sidebar, not as a top-level section |
 | `src/content/docs/roles/` | One page per role concept, plus `inventory` and `precedence`; a concept family shares one page (`textbox`, `status`) and the inventory links every member to it |
 | `src/components/Figure.astro` | The in-content authoring component (`src, alt, caption?, maxWidth?`) |
 | `src/custom.css` | The only stylesheet — Starlight overrides |

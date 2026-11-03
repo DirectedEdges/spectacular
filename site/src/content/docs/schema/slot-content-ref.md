@@ -3,9 +3,6 @@ title: "Slot Content Reference"
 description: "A $slotContent JSON Pointer to a SlotContent or Composition entry"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge pro-badge">Pro</span>')</script>
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge experimental-badge">Experimental</span>')</script>
-
 A `SlotContentRef` names the act of filling a slot. It is a single-key object whose `$slotContent` value is a JSON Pointer to the fill, so the same content can be authored once and referenced from many places.
 
 ```ts
