@@ -2,8 +2,8 @@
 
 **Branch**: `115-closed-style-value-sets`
 **Created**: 2026-11-01
-**Status**: DRAFT
-**Summary**: *(written at implementation — see `/specs.adr.implement`)*
+**Status**: ACCEPTED
+**Summary**: Five `Styles` keys that inherited an open string wrapper by accident become named closed value sets, each dropping three value forms nothing writes.
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

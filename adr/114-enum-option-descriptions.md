@@ -2,7 +2,7 @@
 
 **Branch**: `114-enum-option-descriptions`
 **Created**: 2026-11-01
-**Status**: DRAFT
+**Status**: ACCEPTED
 **Summary**: Closed value sets declare `oneOf` branches of `const` with a description, so every option documents itself.
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*

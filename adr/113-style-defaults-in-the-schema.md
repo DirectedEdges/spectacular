@@ -1,6 +1,6 @@
 # ADR: Style defaults belong to the schema
 
-**Status**: DRAFT
+**Status**: ACCEPTED
 
 **Summary**: Every `Styles` property declares a `default`, making what an absent style key means a fact of the contract rather than of one transform.
 
