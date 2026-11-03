@@ -23,7 +23,7 @@ type PropConfigurations = Record<
 
 `InstanceExample.propConfigurations` accepts scalars, `null`, slot-content references, and `ObjectPropValue` — `PropBinding` is not permitted there.
 
-An `ObjectPropValue` sets the members of an [`ObjectProp`](/schema/props/#objectprop). Member names must not begin with `$`, which is what keeps the form distinguishable from `PropBinding` and the other `$`-keyed references:
+An `ObjectPropValue` sets the members of an [`ObjectProp`](/schema/props/object/). Member names must not begin with `$`, which is what keeps the form distinguishable from `PropBinding` and the other `$`-keyed references:
 
 ```yaml
 # A variant configuring two members; an omitted member keeps its resolved value

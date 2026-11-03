@@ -78,7 +78,7 @@ Element-type applicability (`container`/`text`/`glyph`/`vectors`/`line`) moves t
 
 A second style type, carried by [`Element.contentStyles`](/schema/elements/#styles-vs-content-styles). `Styles` describes an element's own appearance; `ContentStyles` describes the appearance of primitive content *filling* it.
 
-It is a map keyed by the [primitive markers](/schema/props/#primitiveslotcontent) a slot's `anyOf` carries, because default slot content may hold more than one primitive and each is formatted by a different set:
+It is a map keyed by the [primitive markers](/schema/props/slot/#primitive-content-markers) a slot's `anyOf` carries, because default slot content may hold more than one primitive and each is formatted by a different set:
 
 | Key | Type |
 |-----|------|

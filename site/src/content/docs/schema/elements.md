@@ -26,7 +26,7 @@ type Elements = Record<string, Element>;
 
 An element has two style blocks, and they describe different subjects. `styles` are the element's own — its padding, alignment, surface, sizing. `contentStyles` are what content *placed inside it* is formatted with.
 
-On a slot element, `contentStyles` is keyed by primitive, using the same [markers](/schema/props/#primitiveslotcontent) the slot's `anyOf` carries. Default slot content may hold more than one primitive — a glyph and a label — so a flat block could not say which styles belonged to which:
+On a slot element, `contentStyles` is keyed by primitive, using the same [markers](/schema/props/slot/#primitive-content-markers) the slot's `anyOf` carries. Default slot content may hold more than one primitive — a glyph and a label — so a flat block could not say which styles belonged to which:
 
 ```yaml
 default:

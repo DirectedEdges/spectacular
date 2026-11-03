@@ -3,7 +3,7 @@ title: "slotPrimitives"
 description: "Read the primitives a slot holds in its default content as the primitives that slot accepts"
 ---
 
-A slot's default content is inspected for primitives, and what it holds is recorded two ways: the formatting a primitive fill should take is captured onto the slot element's [`contentStyles`](/schema/elements/#styles-vs-content-styles), and — where the slot already names components it accepts — `$text` and `$glyph` [markers](/schema/props/#primitiveslotcontent) join that list. A library fact: it states that this library expresses composable content the way Figma already allows, with a designer who wants a label that can also hold a Badge authoring a slot with a primitive inside, and a designer who wants a plain string authoring a `TEXT` property instead.
+A slot's default content is inspected for primitives, and what it holds is recorded two ways: the formatting a primitive fill should take is captured onto the slot element's [`contentStyles`](/schema/elements/#styles-vs-content-styles), and — where the slot already names components it accepts — `$text` and `$glyph` [markers](/schema/props/slot/#primitive-content-markers) join that list. A library fact: it states that this library expresses composable content the way Figma already allows, with a designer who wants a label that can also hold a Badge authoring a slot with a primitive inside, and a designer who wants a plain string authoring a `TEXT` property instead.
 
 | | |
 |---|---|
