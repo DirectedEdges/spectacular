@@ -173,11 +173,13 @@ export default defineConfig({
                 { label: 'Variants', slug: 'schema/variants' },
               ],
             },
-            {
-              label: 'Styles',
-              collapsed: true,
-              autogenerate: { directory: 'schema/styles' },
-            },
+            // The 99 generated style pages are not a nav section. They are a
+            // containment tree five levels deep, and a sidebar flattens it into
+            // a list where `visible` appears three times with nothing to say
+            // which is the style key and which are members of `Blur` and
+            // `Shadow`. `Styles` is linked in the group above, and the pages
+            // reach each other through the `Type` and `Path` sections that name
+            // the relationship the sidebar cannot.
             {
               label: 'Documents',
               collapsed: true,

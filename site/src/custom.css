@@ -603,3 +603,27 @@ html[data-has-hero] .hero .tagline {
 .sl-markdown-content :is(th, td) code {
 	overflow-wrap: normal;
 }
+
+/* ── A heading directly after a heading ── */
+
+/* On a generated style page each admitted value is an `h5` under `Values`, and
+   a value with no description and no example — `null` on most keys — is a
+   heading with nothing beneath it. Starlight's heading margins are authored to
+   separate a heading from the prose above it, so two adjacent headings collapse
+   to a gap that reads as the second one belonging to the first.
+
+   `+` rather than a descendant rule: this applies only where a heading is the
+   immediately preceding sibling, never to a heading that follows real content. */
+.sl-markdown-content :is(h2, h3, h4, h5, h6) + :is(h2, h3, h4) {
+	margin-top: 2.5rem;
+}
+
+/* ── A heading and the paragraph it introduces ── */
+
+/* Starlight's vertical rhythm gives every block element a top margin when it
+   follows another block element, which separates a heading from the paragraph
+   beneath it as if the two were unrelated. They are one unit. Same specificity
+   as that rule, and this file loads after it. */
+.sl-markdown-content :is(h2, h3, h4, h5, h6) + p {
+	margin-top: 0.25rem;
+}

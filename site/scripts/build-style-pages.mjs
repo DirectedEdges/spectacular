@@ -19,20 +19,34 @@
  *     the tree from 113 pages to 307. They are documented once at the schema
  *     root and linked.
  *
- * Usage:  node scripts/build-schema-pages.mjs
+ * Usage:  node scripts/build-style-pages.mjs
  */
 
 import { readFileSync, writeFileSync, mkdirSync, rmSync, readdirSync, existsSync } from 'node:fs';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { TYPE_PAGE_HOME, REHOMED, STALE_CONTENT_FOLDERS } from './style-pages-constants.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const pkg = resolve(here, '..');
-const repo = resolve(pkg, '../..');
-const docsSchema = resolve(pkg, '../../site/src/content/docs/schema');
+const site = resolve(here, '..');
+const repo = resolve(site, '..');
+const pkg = join(repo, 'packages/schema');
+const docsSchema = join(site, 'src/content/docs/schema');
 const outRoot = join(docsSchema, 'styles');
 
-const defs = JSON.parse(readFileSync(join(pkg, 'schema/styles.schema.json'), 'utf8')).definitions;
+/**
+ * The style definitions, with `component.schema.json`'s underneath them.
+ *
+ * A style value may branch to `PropBinding`, which lives in the component
+ * schema — a legitimate cross-file `$ref`. Reading only this file left that
+ * branch with no title and no description, so `visible` listed a form it could
+ * not describe. The styles file wins on any name collision, because this
+ * generator documents styles.
+ */
+const defs = {
+  ...JSON.parse(readFileSync(join(pkg, 'schema/component.schema.json'), 'utf8')).definitions,
+  ...JSON.parse(readFileSync(join(pkg, 'schema/styles.schema.json'), 'utf8')).definitions,
+};
 const props = defs.Styles.properties;
 
 const preservedFile = join(pkg, 'mappings/_style-page-content.json');
@@ -48,43 +62,108 @@ const PLATFORM = { figma: 'Figma', css: 'CSS' };
 const isWrapper = (n) => /StyleValue$|^Style$|^StyleKey$/.test(n);
 
 /**
- * Preserved content was written when the type pages lived at the schema root,
- * so its links point at pages that no longer exist. Rewriting them here keeps
- * the capture file verbatim — it is the archive of what those pages said, and
- * editing it to track a move would make it a worse record.
+ * Strips a `$ref` down to its definition name, across files as well as within
+ * one. `component.schema.json#/definitions/PropBinding` is a legitimate
+ * cross-file reference, and replacing only the literal `#/definitions/` left
+ * the filename glued to the type: `component.schema.jsonPropBinding`.
  */
-const REHOMED = {
-  'color-object': '/schema/styles/color-object/',
-  'gradient-value': '/schema/styles/gradient-value/',
-  sides: '/schema/styles/sides/',
-  typography: '/schema/styles/typography/',
-  effects: '/schema/styles/effects/',
-  corners: '/schema/styles/corner-radius/',
-};
+const DEF_PREFIX = /^.*#\/definitions\//;
+
 const rehome = (s) =>
   typeof s === 'string'
     ? s.replace(/\/schema\/([a-z-]+)\//g, (m, slug) => REHOMED[slug] ?? m)
     : s;
 
-/** Documented once at the schema root; never nested. See the header. */
-const VALUE_FORMS = new Set(['TokenReference', 'PropBinding', 'Conditional', 'ReferenceValue', 'VariableStyle', 'StyleIdValue']);
+/**
+ * YAML for a JSON value, covering the subset `examples` holds: scalars, maps
+ * and arrays of them.
+ *
+ * Examples are STORED as JSON, because that is what makes them trustworthy —
+ * each one validates against the property it sits on. They are READ as YAML,
+ * because that is the form specs are authored in.
+ *
+ * Quoting is the part that has to be right rather than merely tidy. A naive
+ * dump of `backgroundImage`'s example emits `$image: #/images/hero`, where
+ * everything from the `#` is a YAML comment and the value is silently empty.
+ * So a string is quoted whenever leaving it bare would change what it parses
+ * as.
+ */
+const yamlScalar = (v) => {
+  if (v === null) return 'null';
+  if (typeof v === 'boolean' || typeof v === 'number') return JSON.stringify(v);
+  const s = String(v);
+  const needsQuote =
+    s === '' ||
+    // An indicator in first position: comment, anchor, alias, directive, tag,
+    // block scalar, flow collection, quote, or the key/item separators.
+    /^[#&*!|>%@`\-?:,[\]{}'"]/.test(s) ||
+    // Would parse as something other than a string.
+    /^(true|false|null|~|yes|no|on|off)$/i.test(s) ||
+    /^[+-]?(\d|\.\d)/.test(s) ||
+    // Structural characters anywhere.
+    /: |\s#|\n|\t/.test(s) ||
+    s !== s.trim();
+  return needsQuote ? JSON.stringify(s) : s;
+};
+
+const toYaml = (value, indent = 0) => {
+  const pad = ' '.repeat(indent);
+  if (Array.isArray(value)) {
+    if (!value.length) return `${pad}[]`;
+    // A short run of scalars inline. `components: [1, 0.4, 0]` is one colour,
+    // and three bullet lines made it look like three of something.
+    if (value.length <= 4 && value.every((x) => x === null || typeof x !== 'object')) {
+      return `${pad}[${value.map(yamlScalar).join(', ')}]`;
+    }
+    return value
+      .map((item) => {
+        if (item !== null && typeof item === 'object') {
+          // The dash takes the place of the first two spaces of the item's
+          // own indentation, so a nested map hangs off its bullet.
+          const body = toYaml(item, indent + 2);
+          return `${pad}- ${body.slice(indent + 2)}`;
+        }
+        return `${pad}- ${yamlScalar(item)}`;
+      })
+      .join('\n');
+  }
+  if (value !== null && typeof value === 'object') {
+    const entries = Object.entries(value);
+    if (!entries.length) return `${pad}{}`;
+    return entries
+      .map(([k, v]) => {
+        const key = yamlScalar(k);
+        if (v !== null && typeof v === 'object' && (Array.isArray(v) ? v.length : Object.keys(v).length)) {
+          const body = toYaml(v, indent + 2);
+          // A value that rendered to one line belongs on the key's line —
+          // `components:` followed by `[1, 0.4, 0]` beneath it read as a
+          // block that happened to be short.
+          if (!body.includes('\n')) return `${pad}${key}: ${body.trimStart()}`;
+          return `${pad}${key}:\n${body}`;
+        }
+        return `${pad}${key}: ${toYaml(v, 0)}`;
+      })
+      .join('\n');
+  }
+  return `${pad}${yamlScalar(value)}`;
+};
 
 /**
- * The hand-written type pages at the schema root were redundant with the
- * generated tree — `/schema/typography/` and `/schema/styles/typography/`
- * documented the same type. The generated page wins, so each hand-written
- * page's non-derivable content (its decision records, and its examples where
- * the schema carries none) is rendered onto the generated page that supersedes
- * it. `corners` has no page of its own because `Corners` is reached by exactly
- * one path, so its home is that path's page.
+ * Documented once at the schema root; never nested. See the header.
+ *
+ * Derived rather than listed: a value form is a type that already has a
+ * hand-written page of its own at the schema root, which is the same fact
+ * `handWritten` reads off the directory. The hardcoded set it replaces named
+ * six types, three of which — `ReferenceValue`, `VariableStyle`,
+ * `StyleIdValue` — are not reachable from `Styles` at all, so the list had
+ * been carrying dead entries.
+ *
+ * Membership is only ever tested against a type the traversal reached, so a
+ * root page whose name happens to match an unreachable definition cannot
+ * affect the tree.
  */
-const TYPE_PAGE_HOME = {
-  'color-object': ['ColorObject'],
-  'gradient-value': ['GradientValue'],
-  sides: ['Sides'],
-  typography: ['typography'],
-  effects: ['effects'],
-  corners: ['cornerRadius'],
+const VALUE_FORMS = {
+  has: (name) => handWritten.has(kebab(name)),
 };
 
 /** Pages written by hand at the schema root, which this must not overwrite. */
@@ -202,7 +281,7 @@ const adrsFor = (key, path) => {
 const refsOf = (n, depth = 0, out = new Set()) => {
   if (!n || depth > 6) return out;
   if (n.$ref) {
-    const t = n.$ref.replace('#/definitions/', '');
+    const t = n.$ref.replace(DEF_PREFIX, '');
     if (isWrapper(t) && defs[t]) return refsOf(defs[t], depth + 1, out);
     out.add(t);
     return out;
@@ -219,19 +298,19 @@ const refsOf = (n, depth = 0, out = new Set()) => {
  * `TokenReference` and a `Corners` object are both objects.
  */
 const formOf = (value, node, depth = 0) => {
-  const n = node?.$ref ? defs[node.$ref.replace('#/definitions/', '')] : node;
+  const n = node?.$ref ? defs[node.$ref.replace(DEF_PREFIX, '')] : node;
   if (!n || depth > 6) return '—';
 
   const branches = n.oneOf ?? n.anyOf;
   if (Array.isArray(branches)) {
     for (const b of branches) {
-      const named = b.$ref?.replace('#/definitions/', '');
+      const named = b.$ref?.replace(DEF_PREFIX, '');
       if (named && admitsValue(defs[named], value)) return typeLabel(named);
       if (!named && admitsValue(b, value)) return `\`${primitiveName(value)}\``;
     }
     return `\`${primitiveName(value)}\``;
   }
-  return node?.$ref ? typeLabel(node.$ref.replace('#/definitions/', '')) : `\`${primitiveName(value)}\``;
+  return node?.$ref ? typeLabel(node.$ref.replace(DEF_PREFIX, '')) : `\`${primitiveName(value)}\``;
 };
 
 const primitiveName = (v) =>
@@ -240,9 +319,13 @@ const primitiveName = (v) =>
 /** Whether a value satisfies a node, to the depth needed to tell forms apart. */
 const admitsValue = (n, v, depth = 0) => {
   if (!n || depth > 6) return false;
-  if (n.$ref) return admitsValue(defs[n.$ref.replace('#/definitions/', '')], v, depth + 1);
+  if (n.$ref) return admitsValue(defs[n.$ref.replace(DEF_PREFIX, '')], v, depth + 1);
   const branches = n.oneOf ?? n.anyOf;
   if (Array.isArray(branches)) return branches.some((b) => admitsValue(b, v, depth + 1));
+  // `const` as well as `enum`. Closed value sets are written as `oneOf`
+  // branches of `const` (ADR-114), and without this no option branch ever
+  // admitted its own value — so `position`'s `"ABSOLUTE"` matched nothing.
+  if (n.const !== undefined) return v === n.const;
   if (Array.isArray(n.enum)) return n.enum.includes(v);
   if (n.type === 'null') return v === null;
   if (n.type === 'string') return typeof v === 'string';
@@ -265,7 +348,7 @@ const namedTypes = (node, depth = 0, out = []) => {
   if (!node || depth > 5) return out;
   const push = (s) => { if (!out.includes(s)) out.push(s); };
   if (node.$ref) {
-    const name = node.$ref.replace('#/definitions/', '');
+    const name = node.$ref.replace(DEF_PREFIX, '');
     if (isWrapper(name) && defs[name]) return namedTypes(defs[name], depth + 1, out);
     push(typeLabel(name));
     return out;
@@ -322,7 +405,7 @@ const childEntries = (node) => {
   const own = Object.entries(node.properties ?? {});
   if (own.length) return own;
   return (node.oneOf ?? node.anyOf ?? [])
-    .map((b) => b.$ref?.replace('#/definitions/', ''))
+    .map((b) => b.$ref?.replace(DEF_PREFIX, ''))
     .filter((t) => t && defs[t]?.properties)
     .map((t) => [t, defs[t]]);
 };
@@ -372,10 +455,7 @@ const slugPath = (p) => p.map(kebab).join('/');
 const urlOf = (p) => `/schema/styles/${slugPath(p)}/`;
 const childrenOf = (p) => nodes.filter((n) => n.path.length === p.length + 1 && n.path.slice(0, p.length).join('.') === p.join('.'));
 
-// Folders this tree supersedes. `types/` was the flat catch-all; `typography/`
-// and `effects/` were sibling folders holding the same member pages the tree
-// now emits under the path that reaches them.
-for (const stale of ['types', 'typography', 'effects']) {
+for (const stale of STALE_CONTENT_FOLDERS) {
   if (existsSync(join(docsSchema, stale))) rmSync(join(docsSchema, stale), { recursive: true, force: true });
 }
 
@@ -428,7 +508,7 @@ for (const node of nodes) {
   const branchFor = (node, value, depth = 0) => {
     if (!node || depth > 5) return null;
     if (node.$ref) {
-      const t = node.$ref.replace('#/definitions/', '');
+      const t = node.$ref.replace(DEF_PREFIX, '');
       return defs[t] ? branchFor(defs[t], value, depth + 1) : null;
     }
     const branches = node.oneOf ?? node.anyOf;
@@ -463,13 +543,57 @@ for (const node of nodes) {
    * rendering of a value rather than the value, and could not be checked.
    */
   const schemaExamples = Array.isArray(spec.examples) ? spec.examples : null;
-  const exampleRows = kept.typeExamples ?? [];
+  /**
+   * Preserved rows whose `Type` the schema still admits.
+   *
+   * These came from the hand-written pages and are not validated against
+   * anything, so they outlive the contract: `clipsContent` kept a
+   * `TokenReference` row after its value narrowed to a bare `boolean`, which
+   * is a page advertising a value the schema rejects.
+   */
+  const admittedTypeNames = new Set(namedTypes(spec).map((t) => t.replace(/`/g, '')));
+  const exampleRows = (kept.typeExamples ?? []).filter((r) => {
+    const named = String(r.type ?? '').match(/`([^`]+)`|\[`([^`]+)`\]/);
+    const name = named?.[1] ?? named?.[2];
+    return !name || admittedTypeNames.has(name);
+  });
   const anySettings = !schemaExamples && exampleRows.some((r) => r.settings);
+
+  /**
+   * A scalar stays a table row; a composite becomes a YAML block.
+   *
+   * One line of JSON in a table cell is unreadable past about four keys —
+   * `shadows`' two-shadow example is 180 characters of punctuation in a cell
+   * that cannot wrap. YAML fixes that and cannot go in a cell at all, being
+   * multi-line. But eleven fenced blocks for `backgroundColor`, whose examples
+   * are mostly colour strings, is a worse page than the table it replaced.
+   *
+   * So the value's own shape decides, and a page carrying both gets the table
+   * first and the blocks after it.
+   */
+  const isComposite = (v) => v !== null && typeof v === 'object';
+  const scalarExamples = (schemaExamples ?? []).filter((ex) => !isComposite(ex));
+  const compositeExamples = (schemaExamples ?? []).filter(isComposite);
+
   const examples = schemaExamples
-    ? schemaExamples.map((ex) => `| \`${JSON.stringify(ex)}\` | ${formOf(ex, spec)} |`)
+    ? scalarExamples.map((ex) => `| \`${JSON.stringify(ex)}\` | ${formOf(ex, spec)} |`)
     : exampleRows.map(
         (r) => `| ${rehome(r.type)} | ${rehome(asObject(r.example))} |${anySettings ? ` ${rehome(r.settings) ?? '—'} |` : ''}`
       );
+
+  /**
+   * Each composite labelled with the type it is, because that is what the
+   * table's `Type` column carried and a fenced block has no columns.
+   */
+  const exampleBlocks = compositeExamples
+    .map((ex) => {
+      // The label names which form the value takes, which only means something
+      // where there is more than one. On a plain object or array page it read
+      // `**object**` or `**array**` above every block.
+      const label = Array.isArray(spec.oneOf ?? spec.anyOf) ? `**${formOf(ex, spec)}**\n\n` : '';
+      return `${label}\`\`\`yaml\n${toYaml(ex)}\n\`\`\``;
+    })
+    .join('\n\n');
   const exampleHead = schemaExamples
     // "Type", matching the section above that lists them. The column names
     // which of the admitted types the example value is, and calling the same
@@ -534,7 +658,7 @@ for (const node of nodes) {
       if (!node || depth > 5) return null;
       if (Array.isArray(node.oneOf) || Array.isArray(node.anyOf)) return node;
       if (node.$ref) {
-        const t = node.$ref.replace('#/definitions/', '');
+        const t = node.$ref.replace(DEF_PREFIX, '');
         return defs[t] ? union(defs[t], depth + 1) : null;
       }
       return null;
@@ -572,7 +696,7 @@ for (const node of nodes) {
      * declares them in — which is what the enum option sets want.
      */
     const tierOf = (br) => {
-      const t = br.$ref?.replace('#/definitions/', '');
+      const t = br.$ref?.replace(DEF_PREFIX, '');
       if (t && VALUE_FORMS.has(t)) return t === 'TokenReference' ? 1 : 1.5;
       if (t && defs[t]?.properties) return 3;
       if (t && (defs[t]?.oneOf || defs[t]?.anyOf)) return 2;
@@ -589,48 +713,136 @@ for (const node of nodes) {
      * which is what that page's own branch descriptions are for.
      */
     const expandable = ordered.filter((br) => {
-      const t = br.$ref?.replace('#/definitions/', '');
+      const t = br.$ref?.replace(DEF_PREFIX, '');
       return t && !VALUE_FORMS.has(t) && Object.keys(defs[t]?.properties ?? {}).length;
     });
     const expandOnly = expandable.length === 1 ? expandable[0] : null;
 
     /**
-     * A list, not a table. Half the unions have an arm — `null`, or a bare
-     * primitive — whose type name is its own description, and in a table that
-     * is a blank cell on 17 pages. A list item simply ends.
+     * Each example assigned to the one form it illustrates, first match wins.
+     *
+     * The page had a `Type` list and an `Examples` section enumerating the same
+     * forms in two different shapes — a table for the scalars, fenced blocks
+     * for the composites. One section keyed by form removes both the
+     * repetition and the mixed formatting, and a form's examples sit under it.
      */
-    const items = ordered
-      .map((br) => {
-        const named = br.$ref?.replace('#/definitions/', '');
-        const child = kids.find((c) => c.path[c.path.length - 1] === named);
-        const label =
-          br.const !== undefined
-            ? `\`${JSON.stringify(br.const)}\``
-            : child
-              ? `[\`${named}\`](${urlOf(child.path)})`
-              : namedTypes(br).join(', ') || '—';
-        /**
-         * One clause saying when a reader would write this form — not the
-         * type's full description, which is written for the type's own page.
-         * `TokenReference`'s runs 200 characters about `$extensions` and
-         * appears on 40 pages; as a list item that is noise.
-         *
-         * So a definition's `title` wins over its `description` here, and the
-         * long text stays where there is room for it.
-         */
-        const gloss =
-          br.description ??
-          (named ? defs[named]?.title ?? defs[named]?.description : null) ??
-          br.title ??
-          '';
-        const nested = br === expandOnly ? membersOf(named) : '';
-        return `- **${label}**${gloss ? ` — ${gloss}` : ''}${nested ? `\n${nested}` : ''}`;
-      })
-      .join('\n');
+    const claimed = new Set();
+    const examplesFor = (br) =>
+      (schemaExamples ?? []).filter((ex, i) => {
+        if (claimed.has(i)) return false;
+        if (!admitsValue(br, ex)) return false;
+        claimed.add(i);
+        return true;
+      });
 
-    return hasConst
-      ? { heading: 'Options', body: items }
-      : { heading: 'Type', body: `One of:\n\n${items}` };
+    /**
+     * The branch the declared default belongs to, so the default reads as one
+     * of the values rather than as a section of its own. `cornerRadius`'s `0`
+     * is a `number`, `backgroundColor`'s is the `null` arm, `position`'s is the
+     * `"AUTO"` option.
+     */
+    /**
+     * `branchFor` only recognises a `const` or `null` arm, because its other
+     * job is to find the gloss a declaring branch carries. A default like
+     * `opacity`'s `1` belongs to the plain `number` arm, which has no gloss
+     * and which that function never returns — so without the fallback the
+     * marker never rendered and, with the `Default` section gone, the value
+     * was lost from the page entirely.
+     */
+    const defaultBranch = hasDefault
+      ? (branchFor(spec, spec.default) ?? ordered.find((br) => admitsValue(br, spec.default)) ?? null)
+      : null;
+    /**
+     * `(default)` alone where the branch's name IS the value — an option, or
+     * `null`. Where the branch admits many values, the marker has to carry
+     * which one, or removing the `Default` section would lose it: `number
+     * (default)` does not say `1`.
+     */
+    const defaultMark = (br) => {
+      if (!defaultBranch || br !== defaultBranch) return '';
+      const isTheValue = br.const !== undefined || br.type === 'null';
+      return isTheValue ? ' (default)' : ` (default: \`${JSON.stringify(spec.default)}\`)`;
+    };
+
+    /**
+     * Whether a branch's type has a page of its own, which decides whether its
+     * members are listed here.
+     *
+     * A shared type — `ColorObject`, `GradientValue`, `Sides`, `Blur` — has a
+     * canonical page that lists its own members, so repeating them here is
+     * noise and the expanded example says more. A singly-reached type —
+     * `Effects`, `Corners`, `Typography`, `ImageValue` — has no page, and this
+     * list is the only route to its member pages. Dropping it there would
+     * orphan them, as suppressing `Contains` once did.
+     */
+    const hasOwnPage = (t) => Boolean(t && (handWritten.has(kebab(t)) || (SHARED.has(t) && isDocumentable(t))));
+
+    const asScalar = (ex) => (typeof ex === 'string' ? JSON.stringify(ex) : yamlScalar(ex));
+
+    /**
+     * Any example no branch claimed, plus the note saying which form a run
+     * emits. Both close the section rather than trailing the page: the note
+     * had been landing after `Default`, where it read as a statement about the
+     * default, and an unclaimed example would vanish with nothing saying so —
+     * which is itself the signal, since an example matching none of its own
+     * property's branches is a bad example or a gap in the union.
+     */
+    const tailOf = () => {
+      const orphans = (schemaExamples ?? []).filter((_, i) => !claimed.has(i));
+      const block = orphans.length
+        ? orphans
+            .map((ex) =>
+              ex !== null && typeof ex === 'object' ? `\`\`\`yaml\n${toYaml(ex)}\n\`\`\`` : `- \`${asScalar(ex)}\``
+            )
+            .join('\n')
+        : '';
+      return [block, settingsNote.trim()].filter(Boolean).join('\n\n');
+    };
+
+    /** An option set stays a bulleted list — a quoted literal is not a heading. */
+    if (hasConst) {
+      const rows = ordered.map((br) => {
+        const label = br.const !== undefined ? `\`${JSON.stringify(br.const)}\`` : namedTypes(br).join(', ') || '—';
+        const gloss = br.description ?? br.title ?? '';
+        // Claimed but not shown: an option's example is the option.
+        examplesFor(br);
+        return `- **${label}**${defaultMark(br)}${gloss ? ` — ${gloss}` : ''}`;
+      });
+      return { heading: 'Value', body: [rows.join('\n'), tailOf()].filter(Boolean).join('\n\n') };
+    }
+
+    const sections = ordered.map((br) => {
+      const named = br.$ref?.replace(DEF_PREFIX, '');
+      const child = kids.find((c) => c.path[c.path.length - 1] === named);
+      const linked = child ? `[\`${named}\`](${urlOf(child.path)})` : named ? typeLabel(named) : null;
+      // `namedTypes` returns its entries already backticked, so this must not
+      // wrap them again.
+      const label = linked ?? (namedTypes(br).join(', ') || '—');
+
+      /**
+       * One clause saying when a reader would write this form — not the type's
+       * full description, which is written for the type's own page.
+       * `TokenReference`'s runs 200 characters about `$extensions` and appears
+       * on 40 pages; under a heading that is noise.
+       */
+      const gloss =
+        br.description ?? (named ? (defs[named]?.title ?? defs[named]?.description) : null) ?? br.title ?? '';
+
+      const members = br === expandOnly && !hasOwnPage(named) ? membersOf(named, '') : '';
+
+      const mine = examplesFor(br);
+      const shown = mine.length
+        ? mine.every((ex) => ex === null || typeof ex !== 'object')
+          ? mine.map((ex) => `- \`${asScalar(ex)}\``).join('\n')
+          : mine.map((ex) => `\`\`\`yaml\n${toYaml(ex)}\n\`\`\``).join('\n\n')
+        : '';
+
+      // `#####`, a level below the `###` sections, so a value reads as
+      // subordinate to `Values` rather than competing with it.
+      return [`##### ${label}${defaultMark(br)}`, gloss, members, shown].filter(Boolean).join('\n\n');
+    });
+
+    return { heading: 'Value', body: [sections.join('\n\n'), tailOf()].filter(Boolean).join('\n\n') };
   })();
 
   /**
@@ -648,7 +860,7 @@ for (const node of nodes) {
     const resolve = (node, depth = 0) => {
       if (!node || depth > 5) return node;
       if (node.$ref) {
-        const t = node.$ref.replace('#/definitions/', '');
+        const t = node.$ref.replace(DEF_PREFIX, '');
         return defs[t] ? resolve(defs[t], depth + 1) : null;
       }
       return node;
@@ -657,12 +869,12 @@ for (const node of nodes) {
     if (!node) return null;
 
     // An array of a named type: the item type carries the members.
-    const itemType = node.type === 'array' ? node.items?.$ref?.replace('#/definitions/', '') : null;
+    const itemType = node.type === 'array' ? node.items?.$ref?.replace(DEF_PREFIX, '') : null;
     if (itemType && Object.keys(defs[itemType]?.properties ?? {}).length) {
       const why = defs[itemType].title ?? node.description ?? defs[itemType].description ?? '';
       return {
-        heading: 'Type',
-        body: `An array of:\n\n- **\`${itemType}\`**${why ? ` — ${why}` : ''}\n${membersOf(itemType)}`,
+        heading: 'Value',
+        body: `An array of:\n\n##### \`${itemType}\`\n\n${[why, membersOf(itemType, '')].filter(Boolean).join('\n\n')}`,
       };
     }
 
@@ -677,6 +889,27 @@ for (const node of nodes) {
       return {
         heading: 'Contains',
         body: kids.map((c) => `- [\`${c.path[c.path.length - 1]}\`](${urlOf(c.path)})`).join('\n'),
+      };
+    }
+
+    /**
+     * A single named type whose page is elsewhere — `effects.backgroundBlur` is
+     * a bare `$ref` to `Blur`, which is shared and so does not nest, leaving
+     * nothing to list and the page on the bare fallback reading `Type: Blur`.
+     *
+     * Rendered in the same shape a union branch gets, so one value and five
+     * read alike.
+     */
+    const only = spec.$ref?.replace(DEF_PREFIX, '');
+    if (only && defs[only] && !isWrapper(only)) {
+      const gloss = spec.description ?? defs[only].title ?? defs[only].description ?? '';
+      const shown = (schemaExamples ?? [])
+        .map((ex) => (ex !== null && typeof ex === 'object' ? `\`\`\`yaml\n${toYaml(ex)}\n\`\`\`` : `- \`${yamlScalar(ex)}\``))
+        .join('\n\n');
+      return {
+        heading: 'Value',
+        body: [`##### ${typeLabel(only)}`, gloss, shown].filter(Boolean).join('\n\n'),
+        consumedExamples: true,
       };
     }
     return null;
@@ -703,7 +936,17 @@ for (const node of nodes) {
   const homedSlug = Object.entries(TYPE_PAGE_HOME).find(([, path]) => path.join('.') === p.join('.'))?.[0];
   const carried = homedSlug ? (preserved.typePages?.[homedSlug]?.sections ?? {}) : {};
   const carriedSections = [];
-  if (!examples.length) {
+  /**
+   * Gated on whether the schema carries examples at all, not on whether the
+   * scalar table has rows.
+   *
+   * `examples` holds only the scalar rows now — a page whose examples are all
+   * composites has none, so the gate opened on `effects`, `typography` and
+   * `gradient-value` and rendered the replaced page's hand-written `Values`
+   * table beneath the generated `Value` section. Two sections a heading apart,
+   * one of them a 2024 snapshot.
+   */
+  if (!schemaExamples?.length) {
     for (const name of ['Values', 'Examples', 'Example']) {
       if (carried[name]) carriedSections.push(`\n### ${name}\n\n${rehome(carried[name])}\n`);
     }
@@ -779,9 +1022,9 @@ for (const node of nodes) {
     const adrs = adrsFor(key, `styles.${p.join('.')}`);
     // Said rather than left blank: several keys have no record, and a missing
     // section reads as a render that failed instead of a fact about the key.
-    if (!adrs.length) return '**Decisions.** None.\n';
+    if (!adrs.length) return 'None.\n';
     const item = (a) => `- [ADR-${a.num}](/adr/${a.file.replace(/\.md$/, '')}/) — ${a.title}`;
-    return `**Decisions**\n\n${adrs.map(item).join('\n')}\n`;
+    return `${adrs.map(item).join('\n')}\n`;
   })();
 
   /**
@@ -825,7 +1068,7 @@ for (const node of nodes) {
       const resolve = (s, depth = 0) => {
         if (!s || depth > 5) return s;
         if (s.$ref) {
-          const t = s.$ref.replace('#/definitions/', '');
+          const t = s.$ref.replace(DEF_PREFIX, '');
           return defs[t] ? resolve(defs[t], depth + 1) : null;
         }
         return s;
@@ -851,17 +1094,21 @@ for (const node of nodes) {
      *
      * The element segment stays a placeholder because its name is the author's.
      */
-    const root = `[\`elements\`](/schema/elements/).\`<element>\`.[\`styles\`](/schema/styles/)`;
+    // The leading ellipsis stands for the roots above `elements` — `default`
+    // and each `variants[]` entry both carry one, so naming either would be
+    // wrong half the time, and starting at `elements` read as a top-level key.
+    // Unbacketed and with no separator of its own, so it reads as an elision
+    // rather than as a segment named "...".
+    const root = `...[\`elements\`](/schema/elements/).\`<element>\`.[\`styles\`](/schema/styles/)`;
     return `### Path\n\n${root}.${segments.join('.')}\n`;
   })();
 
   const page = `---
 title: "${key}"
 description: "${(spec.description ?? kept.intro ?? `The ${key} value`).replace(/"/g, '\\"').slice(0, 300)}"
-tableOfContents: false
 ---
 
-<!-- Generated by packages/schema/scripts/build-schema-pages.mjs from styles.schema.json,
+<!-- Generated by site/scripts/build-style-pages.mjs from styles.schema.json,
      the platform binding data, and content preserved from the replaced pages. -->
 
 ${spec.description ?? rehome(kept.intro) ?? ""}
@@ -873,8 +1120,31 @@ ${
   // twice, once without the meanings and once with them.
   valueSection
     ? `### ${valueSection.heading}\n\n${valueSection.body}\n${required.has(key) ? '\nRequired.\n' : ''}`
-    : `### Type\n\n${types}${required.has(key) ? ' · required' : ''}\n`
-}${defaultText ? `\n### Default\n\n${defaultText}\n` : ''}${examples.length ? `\n### Examples\n\n${exampleHead}\n${examples.join("\n")}\n${settingsNote}` : ""}${
+    : // `Values` here too — a leaf whose value is a bare `boolean` answers the
+      // same question as a five-form union, and two names for it put `Type` on
+      // 14 pages and `Values` on the other 85.
+      // The default marks the single type, the way it marks a branch on a
+      // union page — otherwise a key whose value is one plain type is the only
+      // kind of page with a `Default` section of its own.
+      `### Value\n\n${types}${hasDefault ? ` (default: \`${JSON.stringify(spec.default)}\`)` : ''}${
+        required.has(key) ? ' · required' : ''
+      }\n`
+}${
+    // No `Default` section anywhere. The declared default is marked on the
+    // value that carries it — `(default)` on an option or `null` arm,
+    // `(default: 1)` where the form admits more than one value, and on the
+    // type itself where the value is a single plain type. The fact sits with
+    // the value instead of being restated in a section of its own.
+    ''
+  }${
+    // Only where there is no form list to carry them — a plain object or array
+    // page like `Blur` or `effects.shadows`, which has no form to key by.
+    !oneOfBranches && !valueSection?.consumedExamples && (examples.length || exampleBlocks)
+      ? `\n### Examples\n\n${examples.length ? `${exampleHead}\n${examples.join('\n')}\n` : ''}${
+          exampleBlocks ? `${examples.length ? '\n' : ''}${exampleBlocks}\n` : ''
+        }${settingsNote}`
+      : ''
+  }${
     // Members are listed by `valueSection` — beneath the branch or type that
     // owns them, rather than in a sibling section that attributed them to the
     // page. This is the fallback for a page whose children belong to neither.
@@ -886,7 +1156,7 @@ ${
       ? `\n### Resolved jointly with\n\nThis key does not map on its own. Its cluster's ordered case table is linked above.\n\n${siblingList}\n`
       : ''
   }${kept.figmaKeyNote ? `\n### Figma key\n\n${rehome(kept.figmaKeyNote)}\n` : ''}${carriedSections.join('')}${
-    decisionRecords ? `\n### Decision records\n\n${decisionRecords}` : ''
+    decisionRecords ? `\n### Decisions\n\n${decisionRecords}` : ''
   }${furtherReading}${
     isStyleKey
       ? `\n### Rules\n\n| Rule | Statement |\n|---|---|\n| [DSPEC-44](/schema/specification/#9-rule-catalogue) | Every \`Styles\` property declares a \`default\` valid against its own schema |\n| [DSPEC-45](/schema/specification/#9-rule-catalogue) | A declared \`default\` is a literal, never a reference or conditional |\n${
@@ -934,4 +1204,6 @@ console.log(
 const depths = {};
 for (const n of nodes) depths[n.path.length] = (depths[n.path.length] ?? 0) + 1;
 console.log(`by depth: ${Object.entries(depths).map(([d, c]) => `${d}:${c}`).join('  ')}`);
-console.log(`value forms kept at the schema root and linked: ${[...VALUE_FORMS].filter((v) => defs[v]).join(', ')}`);
+console.log(
+  `value forms kept at the schema root and linked: ${Object.keys(defs).filter((n) => VALUE_FORMS.has(n)).join(', ')}`
+);

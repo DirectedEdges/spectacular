@@ -21,6 +21,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { MEMBERS_WITHOUT_DEFAULTS } from './styles-exclusions.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const schema = JSON.parse(
@@ -165,13 +166,8 @@ const memberSchema = (path: string): any => {
 };
 
 /**
- * The optional members ADR-116 deliberately leaves without a `default`, each
- * with the reason recorded there.
- *
- * Four are *unexpressible*: the member means "nothing of this kind applies" and
- * its schema admits no `null` to say so. Three are *undetermined*: a literal
- * would validate, but none follows from the member's own meaning — `16` is a
- * browser convention, not a fact about `fontSize`.
+ * The optional members ADR-116 deliberately leaves without a `default`. The
+ * list and the reason for each entry are in `styles-exclusions.ts`.
  *
  * `lineHeight` is no longer among them. The contract spelled automatic leading
  * `'auto'` in the member's own description and `'AUTO'` everywhere a document
@@ -181,15 +177,7 @@ const memberSchema = (path: string): any => {
  * The list is asserted in both directions. A member removed from it must declare
  * a default, and a member added to it must be argued for in the ADR first.
  */
-const UNDECLARED = [
-  'ColorObject.hex',
-  'Effects.backgroundBlur',
-  'Effects.layerBlur',
-  'Effects.shadows',
-  'Typography.fontFamily',
-  'Typography.fontSize',
-  'Typography.fontStyle',
-];
+const UNDECLARED = MEMBERS_WITHOUT_DEFAULTS;
 
 const hasDefault = (node: any) => Object.prototype.hasOwnProperty.call(node, 'default');
 

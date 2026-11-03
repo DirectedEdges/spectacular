@@ -969,6 +969,7 @@
     },
     "PropBinding": {
       "type": "object",
+      "title": "A value supplied by one of the component's own props.",
       "description": "A component-prop binding. Emitted when a property is bound to a Figma component property. Discriminated by $binding to avoid JSON Schema $ref keyword collision.",
       "examples": [{ "$binding": "#/props/isDisabled" }],
       "properties": {

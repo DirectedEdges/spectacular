@@ -23,7 +23,9 @@ import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const pkg = resolve(here, '..');
+const site = resolve(here, '..');
+const repo = resolve(site, '..');
+const pkg = join(repo, 'packages/schema');
 const bindingsDir = join(pkg, 'mappings/bindings');
 
 const schema = JSON.parse(readFileSync(join(pkg, 'schema/styles.schema.json'), 'utf8'));

@@ -1,7 +1,6 @@
 ---
 title: "Styles"
 description: "Style properties and value types"
-tableOfContents: false
 ---
 
 The `Styles` object holds visual properties for an element. Every property is optional. Which properties are evaluated depends on the element type. Source: [`packages/schema/types/Styles.ts`](https://github.com/DirectedEdges/specs/blob/main/packages/schema/types/Styles.ts).

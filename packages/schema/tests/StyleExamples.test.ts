@@ -10,6 +10,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { KEYS_WITHOUT_EXAMPLES } from './styles-exclusions.js';
 
 const pkg = resolve(__dirname, '..');
 const props: Record<string, any> = JSON.parse(
@@ -19,14 +20,18 @@ const props: Record<string, any> = JSON.parse(
 describe('Styles examples', () => {
   const keys = Object.keys(props);
 
-  /**
-   * All 46, not most. A reference page without an example is the gap the
-   * examples work existed to close, and one property quietly missing one is
-   * invisible on a site of 99 pages.
-   */
-  it('cover every property', () => {
-    const missing = keys.filter((k) => !Array.isArray(props[k].examples) || !props[k].examples.length);
+  const NO_EXAMPLE = KEYS_WITHOUT_EXAMPLES;
+
+  it('cover every property but the ones whose value teaches nothing', () => {
+    const missing = keys.filter(
+      (k) => !NO_EXAMPLE.includes(k) && (!Array.isArray(props[k].examples) || !props[k].examples.length)
+    );
     expect(missing).toEqual([]);
+  });
+
+  it('carry no example on the excluded properties', () => {
+    const unexpected = NO_EXAMPLE.filter((k) => Array.isArray(props[k].examples) && props[k].examples.length);
+    expect(unexpected).toEqual([]);
   });
 
   /**

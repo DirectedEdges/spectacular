@@ -6,9 +6,9 @@ import { ImageValue } from "./Image.js";
 
 export type Styles = Partial<{
   rotation: Style;
-  visible: Style;
+  visible: boolean | TokenReference | PropBinding | Conditional;
   opacity: Style;
-  locked: Style;
+  locked: boolean;
   backgroundColor: ColorStyle;
   /** Image fill painted on a layer. Present on container element types. Fallback representation used when no image component is configured. A `TokenReference` when the image fill comes from an applied Figma fill style (the style reference routes here — not to `backgroundColor` — when the styled paint is an image). Absent when there is no image fill. @since 0.28.0 */
   backgroundImage: ImageValue | TokenReference | null;
@@ -16,7 +16,7 @@ export type Styles = Partial<{
   fillColor: ColorStyle;
   effects: TokenReference | Effects;
   /** Whether the element clips content that overflows its box. @since 0.30.0 */
-  clipsContent: Style;
+  clipsContent: boolean;
   /** Corner radius. Scalar when uniform; `Corners` object when per-corner values differ. @since 1.0.0 */
   cornerRadius: Style | Corners;
   width: Style;
@@ -52,27 +52,27 @@ export type Styles = Partial<{
   strokeDashPattern: StrokeDashPattern | null;
   typography: TokenReference | Typography;
   /** Horizontal text alignment using logical inline-axis directions (`START`/`END`). `JUSTIFY` maps from Figma's `JUSTIFIED`. Structural property — not token-bindable. Present on TEXT element type only. @since 0.29.0 */
-  textAlignHorizontal: TextAlignHorizontal | null;
+  textAlignHorizontal: TextAlignHorizontal;
   /** Where text sits within the height available to it. Structural property — not token-bindable. @since 0.40.0 */
-  textAlignVertical: TextAlignVertical | null;
+  textAlignVertical: TextAlignVertical;
   /** How overflowing text is handled — `CLIP` (cut off) or `ELLIPSIS` (trailing ellipsis). Structural property — not token-bindable. Present on TEXT element type only. @since 0.28.0 */
-  textOverflow: TextOverflow | null;
+  textOverflow: TextOverflow;
   /** Maximum number of lines before `ELLIPSIS` text overflow applies; `null` or absent means no limit. Present on TEXT element type only. @since 0.28.0 */
   maxLines: Style;
   textColor: ColorStyle;
   /** Alignment along the main axis (depends on `layoutMode`). Structural property — not token-bindable. @since 0.18.0 */
   mainAxisAlignment: MainAxisAlignment | null;
   /** Whether the stacking axis sizes to its contents or to a fixed value. Structural property — not token-bindable. @since 0.40.0 */
-  primaryAxisSizingMode: PrimaryAxisSizingMode | null;
+  primaryAxisSizingMode: PrimaryAxisSizingMode;
   /** Alignment along the cross axis (perpendicular to `layoutMode`). Structural property — not token-bindable. @since 0.18.0 */
   crossAxisAlignment: CrossAxisAlignment | null;
   /** Auto-layout direction. Structural property — not token-bindable. @since 0.18.0 */
-  layoutMode: LayoutMode | null;
+  layoutMode: LayoutMode;
   /** Whether auto-layout wrapping is enabled (default: false). @since 0.18.0 */
-  wrap: Style;
+  wrap: boolean;
   /** Space distribution between wrapped lines. Only meaningful when `wrap` is true. Structural property — not token-bindable. @since 0.18.0 */
-  wrapAlignment: WrapAlignment | null;
-  itemReverseZIndex: Style;
+  wrapAlignment: WrapAlignment;
+  itemReverseZIndex: boolean;
   /** Item spacing. Scalar when uniform; `ItemSpacing` object when horizontal and vertical gaps differ. @since 0.18.0 */
   itemSpacing: Style | ItemSpacing;
   /** Padding. Scalar when uniform; `Sides` object when per-side values differ. @since 1.0.0 */
@@ -101,11 +101,11 @@ export type TextContentStyles = Partial<{
   /** Typography of the content, as a composite or a type-token reference. */
   typography: TokenReference | Typography;
   /** Horizontal text alignment, using logical inline-axis directions (`START`/`END`). */
-  textAlignHorizontal: TextAlignHorizontal | null;
+  textAlignHorizontal: TextAlignHorizontal;
   /** Vertical text alignment. */
-  textAlignVertical: TextAlignVertical | null;
+  textAlignVertical: TextAlignVertical;
   /** How overflowing content is handled — `CLIP` or `ELLIPSIS`. */
-  textOverflow: TextOverflow | null;
+  textOverflow: TextOverflow;
   /** Maximum number of lines before `ELLIPSIS` overflow applies; `null` means no limit. */
   maxLines: Style;
 }>;
@@ -253,10 +253,10 @@ export interface Typography {
   lineHeight?: string | number | TokenReference;
   /** Letter spacing in pixels; 'mixed' allowed (mixableNumber primitive) */
   letterSpacing?: number | 'mixed' | TokenReference;
-  /** Text case: "UPPER", "LOWER", "TITLE", "ORIGINAL", or 'mixed' (mixableString primitive) */
-  textCase?: string | 'mixed' | TokenReference;
-  /** Text decoration: "UNDERLINE", "STRIKETHROUGH", "NONE", or 'mixed' (mixableString primitive) */
-  textDecoration?: string | 'mixed' | TokenReference;
+  /** How the text's letter casing is transformed when it renders. */
+  textCase?: 'ORIGINAL' | 'UPPER' | 'LOWER' | 'TITLE' | 'mixed';
+  /** A line drawn through or under the text. */
+  textDecoration?: 'NONE' | 'UNDERLINE' | 'STRIKETHROUGH' | 'mixed';
   /** Paragraph indent in pixels (pureNumber primitive) */
   paragraphIndent?: number | TokenReference;
   /** Spacing between paragraphs in pixels (pureNumber primitive) */

@@ -19,30 +19,18 @@
         "visible": {
           "$ref": "#/definitions/BooleanBindableStyleValue",
           "description": "Whether the element renders.",
-          "default": true,
-          "examples": [
-            false,
-            { "$binding": "#/props/showIcon" },
-            {
-              "if": {
-                "condition": { "operation": "isNotNull", "args": { "value": { "$binding": "#/props/label" } } },
-                "then": true,
-                "else": false
-              }
-            }
-          ]
+          "default": true
         },
         "opacity": {
           "$ref": "#/definitions/NumberStyleValue",
           "description": "How opaque the element and its contents are, from fully transparent to fully opaque.",
           "default": 1,
-          "examples": [0.5, 0, { "$token": "Opacity/Disabled", "$type": "number" }]
+          "examples": [0.5, 0]
         },
         "locked": {
           "$ref": "#/definitions/BooleanStyleValue",
           "description": "Whether the element is protected from selection and editing on the canvas.",
-          "default": false,
-          "examples": [true]
+          "default": false
         },
         "backgroundColor": {
           "$ref": "#/definitions/ColorStyleValue",
@@ -57,7 +45,7 @@
             "hsb(24, 100%, 100%)",
             "oklch(0.7 0.15 50 / 1)",
             "oklab(0.7 0.1 0.1 / 1)",
-            { "colorSpace": "srgb", "components": [1, 0.4, 0] },
+            { "colorSpace": "srgb", "components": [1, 0.4, 0], "alpha": 1, "hex": "#FF6600" },
             { "$token": "Color/Secondary container", "$type": "color" },
             {
               "type": "LINEAR",
@@ -103,15 +91,13 @@
         "clipsContent": {
           "$ref": "#/definitions/BooleanStyleValue",
           "description": "Whether content extending past the element's bounds is cut off at them.",
-          "default": false,
-          "examples": [true]
+          "default": false
         },
         "cornerRadius": {
           "$ref": "#/definitions/CornersStyleValue",
           "description": "How much each corner is rounded.",
           "default": 0,
           "examples": [
-            8,
             { "topStart": 4, "topEnd": 4, "bottomEnd": 0, "bottomStart": 0 },
             { "$token": "Constants/Radius/Medium", "$type": "dimension" }
           ]
@@ -119,38 +105,32 @@
         "width": {
           "$ref": "#/definitions/NumberStyleValue",
           "description": "The element's width in pixels when horizontal sizing is FIXED.",
-          "default": 0,
-          "examples": [320]
+          "default": 0
         },
         "height": {
           "$ref": "#/definitions/NumberStyleValue",
           "description": "The element's height in pixels when vertical sizing is FIXED.",
-          "default": 0,
-          "examples": [44]
+          "default": 0
         },
         "minWidth": {
           "$ref": "#/definitions/NumberStyleValue",
           "description": "The smallest width the element may take when its width is otherwise flexible.",
-          "default": 0,
-          "examples": [120, { "$token": "Constants/Sizing/Target minimum", "$type": "dimension" }]
+          "default": 0
         },
         "minHeight": {
           "$ref": "#/definitions/NumberStyleValue",
           "description": "The smallest height the element may take when its height is otherwise flexible.",
-          "default": 0,
-          "examples": [44]
+          "default": 0
         },
         "maxWidth": {
           "$ref": "#/definitions/NumberStyleValue",
           "description": "The largest width the element may take when its width is otherwise flexible.",
-          "default": null,
-          "examples": [640]
+          "default": null
         },
         "maxHeight": {
           "$ref": "#/definitions/NumberStyleValue",
           "description": "The largest height the element may take when its height is otherwise flexible.",
-          "default": null,
-          "examples": [480]
+          "default": null
         },
         "position": {
           "$ref": "#/definitions/PositionStyleValue",
@@ -162,37 +142,37 @@
           "$ref": "#/definitions/PositionOffset",
           "description": "Distance from the parent's top edge, when the element is positioned against it.",
           "default": null,
-          "examples": [24, "10%"]
+          "examples": ["10%"]
         },
         "bottom": {
           "$ref": "#/definitions/PositionOffset",
           "description": "Distance from the parent's bottom edge, when the element is positioned against it.",
           "default": null,
-          "examples": [16, "10%"]
+          "examples": ["10%"]
         },
         "start": {
           "$ref": "#/definitions/PositionOffset",
           "description": "Distance from the parent's start edge, when the element is positioned against it (ADR-041).",
           "default": null,
-          "examples": [0, "5%"]
+          "examples": ["5%"]
         },
         "end": {
           "$ref": "#/definitions/PositionOffset",
           "description": "Distance from the parent's end edge, when the element is positioned against it (ADR-041).",
           "default": null,
-          "examples": [0, "5%"]
+          "examples": ["5%"]
         },
         "centerHorizontalOffset": {
           "$ref": "#/definitions/PositionOffset",
           "description": "Horizontal distance from the parent's centre, when the element is centred on that axis.",
           "default": null,
-          "examples": [0, -12]
+          "examples": [-12]
         },
         "centerVerticalOffset": {
           "$ref": "#/definitions/PositionOffset",
           "description": "Vertical distance from the parent's centre, when the element is centred on that axis.",
           "default": null,
-          "examples": [0, 8]
+          "examples": [-8]
         },
         "layoutSizingHorizontal": {
           "$ref": "#/definitions/LayoutSizingStyleValue",
@@ -222,7 +202,7 @@
           "$ref": "#/definitions/SidesStyleValue",
           "description": "How thick the stroke is.",
           "default": 0,
-          "examples": [1, { "top": 0, "end": 0, "bottom": 1, "start": 0 }]
+          "examples": [{ "top": 0, "end": 0, "bottom": 1, "start": 0 }]
         },
         "strokeDashPattern": {
           "$ref": "#/definitions/StrokeDashPatternStyleValue",
@@ -267,8 +247,7 @@
         "maxLines": {
           "$ref": "#/definitions/NumberStyleValue",
           "description": "The most lines the text may occupy before it is truncated, usually declared with `textOverflow`.",
-          "default": null,
-          "examples": [1, 2]
+          "default": null
         },
         "mainAxisAlignment": {
           "$ref": "#/definitions/MainAxisAlignmentStyleValue",
@@ -297,36 +276,30 @@
         "wrap": {
           "$ref": "#/definitions/BooleanStyleValue",
           "description": "Whether children that overflow the stacking axis continue onto another line.",
-          "default": false,
-          "examples": [true]
+          "default": false
         },
         "wrapAlignment": {
           "$ref": "#/definitions/WrapAlignmentStyleValue",
           "description": "How wrapped lines are distributed across the axis they stack on, when the element wraps.",
-          "default": null,
+          "default": "START",
           "examples": ["SPACE_BETWEEN"]
         },
         "itemReverseZIndex": {
           "$ref": "#/definitions/BooleanStyleValue",
           "description": "Whether later children paint behind earlier ones rather than in front.",
-          "default": false,
-          "examples": [true]
+          "default": false
         },
         "itemSpacing": {
           "$ref": "#/definitions/ItemSpacingStyleValue",
           "description": "The gap held between stacked children.",
           "default": 0,
-          "examples": [8, { "horizontal": 16, "vertical": 8 }]
+          "examples": [{ "horizontal": 16, "vertical": 8 }]
         },
         "padding": {
           "$ref": "#/definitions/SidesStyleValue",
           "description": "The space held between the element's bounds and its contents.",
           "default": 0,
-          "examples": [
-            16,
-            { "top": 8, "end": 16, "bottom": 8, "start": 16 },
-            { "$token": "Constants/Spacing/Medium", "$type": "dimension" }
-          ]
+          "examples": [{ "top": 8, "end": 16, "bottom": 8, "start": 16 }]
         },
         "cornerSmoothing": {
           "$ref": "#/definitions/NumberStyleValue",
@@ -450,19 +423,8 @@
       ]
     },
     "BooleanStyleValue": {
-      "examples": [true],
-      "description": "Boolean style value (from BooleanStyle processor)",
-      "oneOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "$ref": "#/definitions/TokenReference"
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "description": "A boolean style value. The key is either true or false; an unset key is omitted.",
+      "type": "boolean"
     },
     "BooleanBindableStyleValue": {
       "examples": [{ "$binding": "#/props/showIcon" }],
@@ -479,9 +441,6 @@
         },
         {
           "$ref": "#/definitions/Conditional"
-        },
-        {
-          "type": "null"
         }
       ]
     },
@@ -1100,11 +1059,6 @@
           "const": "VERTICAL",
           "title": "Column",
           "description": "Children stack along the block axis."
-        },
-        {
-          "type": "null",
-          "title": "Not specified",
-          "description": "No layout mode is recorded for this element."
         }
       ]
     },
@@ -1119,11 +1073,6 @@
         {
           "const": "SPACE_BETWEEN",
           "description": "Remaining space is distributed between wrapped lines."
-        },
-        {
-          "type": "null",
-          "title": "Not applicable",
-          "description": "The element does not wrap, so there are no wrapped lines to distribute."
         }
       ]
     },
@@ -1204,11 +1153,6 @@
         {
           "const": "JUSTIFY",
           "description": "Word spacing stretches so every line but the last meets both edges."
-        },
-        {
-          "type": "null",
-          "title": "Not specified",
-          "description": "No horizontal alignment is recorded for this element."
         }
       ]
     },
@@ -1223,11 +1167,6 @@
         {
           "const": "ELLIPSIS",
           "description": "Text is cut at the boundary and a trailing ellipsis marks the truncation."
-        },
-        {
-          "type": "null",
-          "title": "Not specified",
-          "description": "No overflow behaviour is recorded for this element."
         }
       ]
     },
@@ -1249,8 +1188,8 @@
         },
         {
           "type": "null",
-          "title": "No stroke",
-          "description": "The element has no visible stroke for an alignment to apply to."
+          "title": "Removed by this variant",
+          "description": "The variant drops the value its base element carried."
         }
       ]
     },
@@ -1272,8 +1211,8 @@
         },
         {
           "type": "null",
-          "title": "Not applicable",
-          "description": "The element is positioned by coordinates rather than sized by a parent's layout."
+          "title": "Removed by this variant",
+          "description": "The variant drops the value its base element carried."
         }
       ]
     },
@@ -1292,11 +1231,6 @@
         {
           "const": "BOTTOM",
           "description": "Text sits at the bottom of the height available to it."
-        },
-        {
-          "type": "null",
-          "title": "Not specified",
-          "description": "No vertical alignment is recorded for this element."
         }
       ]
     },
@@ -1311,11 +1245,6 @@
         {
           "const": "FIXED",
           "description": "The stacking axis takes the recorded dimension."
-        },
-        {
-          "type": "null",
-          "title": "Not applicable",
-          "description": "The element has no auto-layout, so there is no stacking axis to size."
         }
       ]
     },
@@ -1333,25 +1262,26 @@
         },
         {
           "type": "null",
-          "title": "Not positioned",
-          "description": "The element has no parent bounds to be positioned within, as on a document root."
+          "title": "Removed by this variant",
+          "description": "The variant drops the value its base element carried."
         }
       ]
     },
     "MixedValue": {
       "const": "mixed",
-      "description": "A sentinel standing for \"this varies\". A text layer whose characters differ — half the run bold, half regular — has no single value for a type property, and a capture must record something, so it records this. Declared once and referenced wherever a property can receive it, so every property means the same thing by it.\n\nIt carries no value a consumer can use. No binding applies it: there is nothing to apply, and choosing one of the varying values would invent data the document does not carry. Its purpose is to be visible — it reports that the source layer mixes values, which is an authoring problem to fix in the design file rather than a value to render.",
+      "description": "Records that the source layer mixes values — half a text run bold, half regular — so there is no single value to capture. Nothing renders it; it marks an authoring problem to fix in the design file.",
       "examples": ["mixed"]
     },
     "PositionOffset": {
       "description": "Positional offset value. Pixel number, percentage string (SCALE constraint), or null. Not token-bindable.",
-      "examples": [24, "10%"],
+      "examples": ["10%"],
       "oneOf": [
         {
           "type": "number"
         },
         {
-          "type": "string"
+          "type": "string",
+          "description": "A percentage of the parent's corresponding dimension, e.g. '10%'."
         },
         {
           "type": "null"
@@ -1386,11 +1316,10 @@
         {
           "type": "string",
           "not": { "$ref": "#/definitions/MixedValue" },
-          "description": "A percentage of the font size, e.g. '150%', or 'AUTO' for the font's own automatic leading. Uppercase only — 'auto' is not a value this contract carries."
+          "description": "A percentage of the font size, e.g. '150%', or 'AUTO' for automatic leading."
         },
         {
-          "type": "number",
-          "description": "Pixel value"
+          "type": "number"
         },
         {
           "$ref": "#/definitions/MixedValue"
@@ -1504,7 +1433,10 @@
     "Blur": {
       "type": "object",
       "description": "A single evaluated blur effect. Singular per type; the containing key (layerBlur vs backgroundBlur) determines render role.",
-      "examples": [{ "visible": true, "radius": 8 }],
+      "examples": [
+        { "visible": true, "radius": 8 },
+        { "visible": false, "radius": 12 }
+      ],
       "properties": {
         "visible": {
           "type": "boolean",
@@ -1539,15 +1471,27 @@
             "$ref": "#/definitions/Shadow"
           },
           "minItems": 1,
-          "description": "Ordered list of shadows; Shadow.inset distinguishes drop (absent/false) vs inner (true)"
+          "description": "Ordered list of shadows; Shadow.inset distinguishes drop (absent/false) vs inner (true)",
+          "examples": [
+            [{ "visible": true, "offsetX": 0, "offsetY": 2, "blur": 4, "spread": 0, "color": "#00000033" }],
+            [
+              { "visible": true, "offsetX": 0, "offsetY": 1, "blur": 2, "spread": 0, "color": "#0000001F" },
+              { "visible": true, "inset": true, "offsetX": 0, "offsetY": 1, "blur": 0, "spread": 0, "color": "#FFFFFF66" }
+            ]
+          ]
         },
         "layerBlur": {
           "$ref": "#/definitions/Blur",
-          "description": "Layer blur (filter effect on the node itself)"
+          "description": "Layer blur (filter effect on the node itself)",
+          "examples": [{ "visible": true, "radius": 4 }]
         },
         "backgroundBlur": {
           "$ref": "#/definitions/Blur",
-          "description": "Background blur (backdrop filter)"
+          "description": "Background blur (backdrop filter)",
+          "examples": [
+            { "visible": true, "radius": 24 },
+            { "visible": false, "radius": 24 }
+          ]
         }
       },
       "additionalProperties": false
@@ -1885,28 +1829,50 @@
           "default": 0
         },
         "textCase": {
+          "description": "How the text's letter casing is transformed when it renders.",
+          "default": "ORIGINAL",
           "oneOf": [
             {
-              "type": "string"
+              "const": "ORIGINAL",
+              "description": "The characters render as they were typed."
             },
             {
-              "$ref": "#/definitions/TokenReference"
+              "const": "UPPER",
+              "description": "Every character renders as a capital."
+            },
+            {
+              "const": "LOWER",
+              "description": "Every character renders in lower case."
+            },
+            {
+              "const": "TITLE",
+              "description": "The first character of each word renders as a capital."
+            },
+            {
+              "$ref": "#/definitions/MixedValue"
             }
-          ],
-          "description": "Text case (\"UPPER\", \"LOWER\", \"TITLE\", \"ORIGINAL\", or 'mixed') (mixableString primitive)",
-          "default": "ORIGINAL"
+          ]
         },
         "textDecoration": {
+          "description": "A line drawn through or under the text.",
+          "default": "NONE",
           "oneOf": [
             {
-              "type": "string"
+              "const": "NONE",
+              "description": "No line is drawn."
             },
             {
-              "$ref": "#/definitions/TokenReference"
+              "const": "UNDERLINE",
+              "description": "A line is drawn under the text."
+            },
+            {
+              "const": "STRIKETHROUGH",
+              "description": "A line is drawn through the text."
+            },
+            {
+              "$ref": "#/definitions/MixedValue"
             }
-          ],
-          "description": "Text decoration (\"UNDERLINE\", \"STRIKETHROUGH\", \"NONE\", or 'mixed') (mixableString primitive)",
-          "default": "NONE"
+          ]
         },
         "paragraphIndent": {
           "oneOf": [
@@ -1933,7 +1899,7 @@
           "default": 0
         },
         "leadingTrim": {
-          "description": "Leading trim mode — 'NONE' or 'CAP_HEIGHT' per Figma API; 'mixed' when varied across selection",
+          "description": "How much of the font's built-in leading is trimmed from the line box.",
           "default": "NONE",
           "oneOf": [
             {

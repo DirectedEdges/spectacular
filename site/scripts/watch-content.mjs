@@ -30,8 +30,8 @@ const WATCHED = [
     dir: resolve(repo, 'packages/schema/schema'),
     match: /\.json$/,
     run: [
-      resolve(repo, 'packages/schema/scripts/build-mappings.mjs'),
-      resolve(repo, 'packages/schema/scripts/build-schema-pages.mjs'),
+      resolve(site, 'scripts/build-mappings.mjs'),
+      resolve(site, 'scripts/build-style-pages.mjs'),
       resolve(site, 'scripts/build-mappings-pages.mjs'),
     ],
   },
@@ -45,15 +45,15 @@ const WATCHED = [
     dir: resolve(repo, 'packages/schema/mappings/bindings'),
     match: /\.json$/,
     run: [
-      resolve(repo, 'packages/schema/scripts/build-mappings.mjs'),
-      resolve(repo, 'packages/schema/scripts/build-schema-pages.mjs'),
+      resolve(site, 'scripts/build-mappings.mjs'),
+      resolve(site, 'scripts/build-style-pages.mjs'),
       resolve(site, 'scripts/build-mappings-pages.mjs'),
     ],
   },
   /**
    * `adr/` is deliberately not watched. `build-adrs.mjs` removes its whole
    * output directory and writes it back, which a running `astro dev` does not
-   * survive — the same flaw `build-schema-pages.mjs` had. Firing it on every
+   * survive — the same flaw `build-style-pages.mjs` had. Firing it on every
    * ADR keystroke would take the server down repeatedly. Watch it once that
    * generator writes in place.
    */
