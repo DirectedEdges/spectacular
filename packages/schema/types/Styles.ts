@@ -249,7 +249,7 @@ export interface Typography {
   fontFamily?: string | 'mixed' | TokenReference;
   /** Style name (e.g., "Bold"); 'mixed' when varied; TokenReference for variable-bound fonts */
   fontStyle?: string | 'mixed' | TokenReference;
-  /** Line height: "150%", "auto", or pixel value (lineHeight primitive) */
+  /** Line height: "150%", "AUTO", or pixel value (lineHeight primitive). Uppercase only — "auto" is not a value this contract carries. */
   lineHeight?: string | number | TokenReference;
   /** Letter spacing in pixels; 'mixed' allowed (mixableNumber primitive) */
   letterSpacing?: number | 'mixed' | TokenReference;
