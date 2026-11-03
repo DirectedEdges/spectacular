@@ -118,15 +118,35 @@ const isAccepted = (src) =>
   (src.match(/^\*\*Status\*\*:\s*(\S+)/m)?.[1]?.replace(/[^A-Za-z]/g, '').toUpperCase() ?? '') === 'ACCEPTED';
 
 /**
- * ADRs that *decide* a key — derived, not hand-listed.
+ * ADRs that decide a path, read from the record's own `**Decides**` line.
  *
- * Scoped to the title, the Summary line, and the Decision section. A key
- * appearing anywhere in an ADR's prose is usually incidental: scanning whole
- * files listed six ADRs for `layoutSizingHorizontal`, including one about icon
- * detection that merely quoted a YAML example. A decision about a key lives in
- * the section named Decision.
+ * ```
+ * **Decides**: effects, effects.backgroundBlur, effects.layerBlur
+ * ```
+ *
+ * A declaration, not a derivation. Matching key names against prose was wrong
+ * in both directions and could not be made right: several style keys are
+ * ordinary English words, so `top` matched "the top level" and `components`
+ * matched an ADR about the scan manifest, while a nested member like
+ * `effects.backgroundBlur` was invisible because the section only ran on
+ * top-level keys. The record is the artifact that knows what it decides.
+ *
+ * Until a record carries the line, the old matcher stands in for it — see
+ * `derivedDecides`. A page losing its decision records the moment this
+ * changed would be a worse answer than a page citing a near-miss.
  */
-const adrsFor = (key) => {
+const declaredDecides = (src) => {
+  const line = src.match(/^\*\*Decides\*\*:\s*(.+)$/m)?.[1]?.trim();
+  if (!line) return null;
+  if (/^(none|—|-|\*\(none\)\*)$/i.test(line)) return [];
+  return line
+    .replace(/`/g, '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+};
+
+const adrsFor = (key, path) => {
   const dir = join(repo, 'adr');
   if (!existsSync(dir)) return [];
   /**
@@ -150,25 +170,30 @@ const adrsFor = (key) => {
   const out = [];
   for (const f of readdirSync(dir).filter((n) => /^\d{3}-.*\.md$/.test(n))) {
     const src = readFileSync(join(dir, f), 'utf8');
-    if (!mentionsKey(src) || !isAccepted(src)) continue;
+    if (!isAccepted(src)) continue;
     const title = (src.match(/^#\s+(?:ADR[\s-]*\d*\s*:\s*)?(.+)$/m)?.[1] ?? f).trim();
-    const summary = src.match(/^\*\*Summary\*\*:\s*(.+)$/m)?.[1] ?? '';
+    const declared = declaredDecides(src);
+
     /**
-     * The `## Decision` section, matched on the whole heading line.
+     * The stand-in for a record with no `**Decides**` line: the key, written as
+     * code, in the title, the Summary, or the Decision section.
      *
-     * `^## Decision\b` matched `## Decision Drivers` instead, which 103 of the
-     * 105 ADRs carry and which precedes the real section — so this read the
-     * drivers on essentially every ADR and never the decision. ADR-041 decides
-     * `top` in a table inside its Decision section and was classed as merely
-     * mentioning it.
+     * Scoped to those three because a key appearing anywhere in an ADR's prose
+     * is usually incidental — scanning whole files listed six records for
+     * `layoutSizingHorizontal`, one of them about icon detection because it
+     * quoted a YAML example. The `## Decision` heading is matched on the whole
+     * line: `^## Decision\b` matched `## Decision Drivers`, which 103 records
+     * carry and which precedes the real section.
      */
-    const decision = src.match(/^## Decision[ \t]*\r?\n[\s\S]*?(?=^## |(?![\s\S]))/m)?.[0] ?? '';
-    out.push({
-      num: f.slice(0, 3),
-      title,
-      file: f,
-      decides: mentionsKey(title) || mentionsKey(summary) || mentionsKey(decision),
-    });
+    const derivedDecides = () => {
+      const summary = src.match(/^\*\*Summary\*\*:\s*(.+)$/m)?.[1] ?? '';
+      const decision = src.match(/^## Decision[ \t]*\r?\n[\s\S]*?(?=^## |(?![\s\S]))/m)?.[0] ?? '';
+      return mentionsKey(title) || mentionsKey(summary) || mentionsKey(decision);
+    };
+
+    const decides = declared ? declared.includes(path) || declared.includes(key) : derivedDecides();
+    if (!decides) continue;
+    out.push({ num: f.slice(0, 3), title, file: f, declared: Boolean(declared) });
   }
   return out;
 };
@@ -347,14 +372,35 @@ const slugPath = (p) => p.map(kebab).join('/');
 const urlOf = (p) => `/schema/styles/${slugPath(p)}/`;
 const childrenOf = (p) => nodes.filter((n) => n.path.length === p.length + 1 && n.path.slice(0, p.length).join('.') === p.join('.'));
 
-// Replace the previous flat output wholesale, so a renamed page cannot linger.
-if (existsSync(outRoot)) rmSync(outRoot, { recursive: true, force: true });
 // Folders this tree supersedes. `types/` was the flat catch-all; `typography/`
 // and `effects/` were sibling folders holding the same member pages the tree
 // now emits under the path that reaches them.
 for (const stale of ['types', 'typography', 'effects']) {
   if (existsSync(join(docsSchema, stale))) rmSync(join(docsSchema, stale), { recursive: true, force: true });
 }
+
+/**
+ * Every file this run is responsible for, so the sweep at the end can delete a
+ * page whose key was renamed or removed without deleting the other 98.
+ *
+ * The previous version removed the whole `styles/` tree first and wrote it back
+ * from scratch. Correct output, but a running `astro dev` watches these files:
+ * deleting all 99 and recreating them left the server serving 500s for pages
+ * whose files were present and valid on disk, and the count grew with each
+ * run. A docs change should not cost a dev server restart.
+ */
+const emitted = new Set();
+
+/**
+ * Written only when the bytes differ. An unchanged file keeps its mtime, so a
+ * schema edit touching one key triggers one hot reload rather than 99.
+ */
+const writeIfChanged = (file, contents) => {
+  emitted.add(file);
+  if (existsSync(file) && readFileSync(file, 'utf8') === contents) return false;
+  writeFileSync(file, contents);
+  return true;
+};
 
 let written = 0;
 for (const node of nodes) {
@@ -425,7 +471,10 @@ for (const node of nodes) {
         (r) => `| ${rehome(r.type)} | ${rehome(asObject(r.example))} |${anySettings ? ` ${rehome(r.settings) ?? '—'} |` : ''}`
       );
   const exampleHead = schemaExamples
-    ? '| Example | Form |\n|---|---|'
+    // "Type", matching the section above that lists them. The column names
+    // which of the admitted types the example value is, and calling the same
+    // set "forms" here and "types" there made them read as two taxonomies.
+    ? '| Example | Type |\n|---|---|'
     : anySettings
       ? '| Type | Example | Settings |\n|---|---|---|'
       : '| Type | Example |\n|---|---|';
@@ -438,7 +487,7 @@ for (const node of nodes) {
    */
   const settingsNote =
     schemaExamples && exampleRows.some((r) => r.settings)
-      ? `\nWhich form is emitted is selected by ${[...new Set(exampleRows.filter((r) => r.settings).map((r) => rehome(r.settings)))].join(' and ')}.\n`
+      ? `\nWhich type is emitted is selected by ${[...new Set(exampleRows.filter((r) => r.settings).map((r) => rehome(r.settings)))].join(' and ')}.\n`
       : '';
 
   /**
@@ -447,6 +496,32 @@ for (const node of nodes) {
    * `GradientValue` is exactly one of them at a time.
    */
   const kids = childrenOf(p);
+
+  /**
+   * A type's own members, indented one level.
+   *
+   * Listing them in a sibling `Contains` section stated them as the page's
+   * members, which they are not: `effects` holds a token reference, an
+   * `Effects` object or `null`, and `shadows` belongs to the middle one only.
+   * The indent is the attribution.
+   *
+   * Where a member's page lives depends on whether its owning type is reached
+   * by more than one key — a shared type's members sit under the type's own
+   * canonical page, everything else under the path that reaches it. That is the
+   * same split `walk` made when it emitted them.
+   */
+  const membersOf = (t, indent = '  ') => {
+    const owned = Object.keys(defs[t]?.properties ?? {});
+    if (!owned.length) return '';
+    const base = SHARED.has(t) && !handWritten.has(kebab(t)) ? [t] : p;
+    return owned
+      .map((m) => {
+        const path = [...base, m];
+        const exists = nodes.some((n) => n.path.join('.') === path.join('.'));
+        return `${indent}- ${exists ? `[\`${m}\`](${urlOf(path)})` : `\`${m}\``}`;
+      })
+      .join('\n');
+  };
 
   const oneOfBranches = (() => {
     /**
@@ -468,38 +543,146 @@ for (const node of nodes) {
     const branches = owner && (owner.oneOf ?? owner.anyOf);
     if (!Array.isArray(branches) || !branches.length) return null;
     /**
-     * Rendered only where a branch says something a reader cannot get from the
-     * `Type` line above. Without this gate every one of the 46 style keys grew
-     * a table restating its own union as prose-free rows.
+     * A union carrying `const` branches is a closed set of options; anything
+     * else is the set of forms the value may take. The two read differently
+     * enough to earn their own heading, so a reader is not inferring which kind
+     * they are looking at from a column label.
+     *
+     * Tested with `some` rather than `every`, because every enum union here
+     * also admits `null`.
      */
-    if (!branches.some((br) => br.title || br.description)) return null;
-    const cell = (s) => (s ?? '').replace(/\|/g, '\\|');
-    const rows = branches
+    const hasConst = branches.some((br) => br.const !== undefined);
+
+    /**
+     * Branches read most to least sophisticated, not in schema order.
+     *
+     * The schema's order is whatever each definition happened to be written
+     * in, so `backgroundColor` led with a bare `string` and `effects` led with
+     * a token reference while `cornerRadius` led with a number. A reader
+     * scanning for the richest form they could use was scanning an arbitrary
+     * list.
+     *
+     *   1  a token or binding reference — the form to reach for first
+     *   2  a named type that is itself a union, e.g. `GradientValue`
+     *   3  a named object type, whose members are listed beneath it
+     *   4  a literal option, or a raw primitive
+     *   5  `null`, always last
+     *
+     * Sorting is stable, so branches sharing a tier keep the order the schema
+     * declares them in — which is what the enum option sets want.
+     */
+    const tierOf = (br) => {
+      const t = br.$ref?.replace('#/definitions/', '');
+      if (t && VALUE_FORMS.has(t)) return t === 'TokenReference' ? 1 : 1.5;
+      if (t && defs[t]?.properties) return 3;
+      if (t && (defs[t]?.oneOf || defs[t]?.anyOf)) return 2;
+      if (br.type === 'null') return 5;
+      return 4;
+    };
+    const ordered = [...branches].sort((a, b) => tierOf(a) - tierOf(b));
+
+    /**
+     * Members are listed beneath their branch only where exactly one branch
+     * has any. `GradientValue` admits three gradient types that each carry a
+     * `type`, a centre or an angle, and `stops`; expanding all three repeats
+     * near-identical member lists and buries the distinction between them,
+     * which is what that page's own branch descriptions are for.
+     */
+    const expandable = ordered.filter((br) => {
+      const t = br.$ref?.replace('#/definitions/', '');
+      return t && !VALUE_FORMS.has(t) && Object.keys(defs[t]?.properties ?? {}).length;
+    });
+    const expandOnly = expandable.length === 1 ? expandable[0] : null;
+
+    /**
+     * A list, not a table. Half the unions have an arm — `null`, or a bare
+     * primitive — whose type name is its own description, and in a table that
+     * is a blank cell on 17 pages. A list item simply ends.
+     */
+    const items = ordered
       .map((br) => {
         const named = br.$ref?.replace('#/definitions/', '');
         const child = kids.find((c) => c.path[c.path.length - 1] === named);
         const label =
           br.const !== undefined
-            ? `\`${JSON.stringify(br.const)}\`${br.title ? ` — ${cell(br.title)}` : ''}`
+            ? `\`${JSON.stringify(br.const)}\``
             : child
               ? `[\`${named}\`](${urlOf(child.path)})`
-              : `${namedTypes(br).join(', ') || '—'}${br.title ? ` — ${cell(br.title)}` : ''}`;
-        // A bare `$ref` carries no description; the one that distinguishes the
-        // branch sits on the definition it points at.
-        const why = cell(br.description ?? (named ? defs[named]?.description : ''));
-        return `| ${label} | ${why} |`;
+              : namedTypes(br).join(', ') || '—';
+        /**
+         * One clause saying when a reader would write this form — not the
+         * type's full description, which is written for the type's own page.
+         * `TokenReference`'s runs 200 characters about `$extensions` and
+         * appears on 40 pages; as a list item that is noise.
+         *
+         * So a definition's `title` wins over its `description` here, and the
+         * long text stays where there is room for it.
+         */
+        const gloss =
+          br.description ??
+          (named ? defs[named]?.title ?? defs[named]?.description : null) ??
+          br.title ??
+          '';
+        const nested = br === expandOnly ? membersOf(named) : '';
+        return `- **${label}**${gloss ? ` — ${gloss}` : ''}${nested ? `\n${nested}` : ''}`;
       })
       .join('\n');
-    /**
-     * A set of `const` branches is a list of options; anything else is a list
-     * of forms the value may take. The heading says which, because "Form"
-     * above a column of literal values reads as a type name.
-     */
-    const allConst = branches.every((br) => br.const !== undefined);
-    return allConst
-      ? `| Option | Meaning |\n|---|---|\n${rows}`
-      : `| Form | When |\n|---|---|\n${rows}`;
+
+    return hasConst
+      ? { heading: 'Options', body: items }
+      : { heading: 'Type', body: `One of:\n\n${items}` };
   })();
+
+  /**
+   * The same one-section shape for the two values that are not unions.
+   *
+   * `shadows` is an array of `Shadow` and `Blur` is a plain object, so both
+   * fell through to a `Type` line reading `array, Shadow` or `object` plus a
+   * sibling `Contains`. That is the pair this page shape replaced for unions,
+   * left standing on four pages because the rule was written about `oneOf`
+   * rather than about having members.
+   */
+  const memberSection = (() => {
+    if (oneOfBranches) return null;
+
+    const resolve = (node, depth = 0) => {
+      if (!node || depth > 5) return node;
+      if (node.$ref) {
+        const t = node.$ref.replace('#/definitions/', '');
+        return defs[t] ? resolve(defs[t], depth + 1) : null;
+      }
+      return node;
+    };
+    const node = resolve(spec);
+    if (!node) return null;
+
+    // An array of a named type: the item type carries the members.
+    const itemType = node.type === 'array' ? node.items?.$ref?.replace('#/definitions/', '') : null;
+    if (itemType && Object.keys(defs[itemType]?.properties ?? {}).length) {
+      const why = defs[itemType].title ?? node.description ?? defs[itemType].description ?? '';
+      return {
+        heading: 'Type',
+        body: `An array of:\n\n- **\`${itemType}\`**${why ? ` — ${why}` : ''}\n${membersOf(itemType)}`,
+      };
+    }
+
+    /**
+     * The page is itself an object type, so its members are not a branch's —
+     * they are the page's own. No lead-in and no indent: the heading is
+     * `Contains` and the list is flat, which is what it already said. What goes
+     * away is the `Type` line above it reading `object`.
+     */
+    const own = spec.$sharedType ?? (node.properties ? key : null);
+    if (own && kids.length) {
+      return {
+        heading: 'Contains',
+        body: kids.map((c) => `- [\`${c.path[c.path.length - 1]}\`](${urlOf(c.path)})`).join('\n'),
+      };
+    }
+    return null;
+  })();
+
+  const valueSection = oneOfBranches ?? memberSection;
 
   const bindingRows = isStyleKey
     ? Object.entries(bindings).map(([platform, b]) => {
@@ -577,18 +760,26 @@ for (const node of nodes) {
    * Decision records. Status is omitted: a superseded ADR would not still be
    * cited, so the column read ACCEPTED on every row and carried no information.
    */
+  /**
+   * Shown at every depth, not only on the 46 top-level keys.
+   *
+   * `effects.backgroundBlur` is decided by the effects record, which names it,
+   * and the page said nothing because the section did not run below depth 1.
+   * A nested member is as much a decided thing as the key that contains it.
+   *
+   * `Mentions` is gone. It listed records that matched a key's name without
+   * deciding it, which is a statement about a text search rather than about
+   * the key — and nothing declares a mention, so there is no honest version of
+   * it once the records declare what they decide.
+   */
   const decisionRecords = (() => {
-    if (!isStyleKey) return null;
-    const adrs = adrsFor(key);
-    // Said rather than left blank: three keys have no ADR, and a missing
+    if (spec.$sharedType) return null;
+    const adrs = adrsFor(key, p.join('.'));
+    // Said rather than left blank: several keys have no record, and a missing
     // section reads as a render that failed instead of a fact about the key.
-    if (!adrs.length) return '**Decisions.** None.\n\n**Mentions.** None.\n';
+    if (!adrs.length) return '**Decisions.** None.\n';
     const item = (a) => `- [ADR-${a.num}](/adr/${a.file.replace(/\.md$/, '')}/) — ${a.title}`;
-    const decides = adrs.filter((a) => a.decides);
-    const mentions = adrs.filter((a) => !a.decides);
-    return `${decides.length ? `**Decisions**\n\n${decides.map(item).join('\n')}\n` : '**Decisions.** None.\n'}${
-      mentions.length ? `\n**Mentions**\n\n${mentions.map(item).join('\n')}\n` : ''
-    }`;
+    return `**Decisions**\n\n${adrs.map(item).join('\n')}\n`;
   })();
 
   /**
@@ -604,9 +795,63 @@ for (const node of nodes) {
     return paths.map((path) => `- [\`styles.${path}\`](/schema/styles/${path.split('.').map(kebab).join('/')}/)`).join('\n');
   })();
 
-  const trail = p.length > 1
-    ? `Reached as \`styles.${p.join('.')}\`, within ${p.slice(0, -1).map((seg, i) => `[\`${seg}\`](${urlOf(p.slice(0, i + 1))})`).join(' → ')}.\n`
-    : '';
+  /**
+   * The access path to this value, as the expression you would write.
+   *
+   * Every ancestor segment links to its own page, so a reader five levels deep
+   * can walk back up without the sidebar. The segments are separate code spans
+   * because a link cannot cover part of one.
+   *
+   * An array segment carries `[]`, which the previous prose trail left out —
+   * `styles.effects.shadows.blur` reads as an object walk, and `shadows` is a
+   * list.
+   */
+  const pathSection = (() => {
+    /**
+     * Shown at every depth. This replaced a prose breadcrumb that only existed
+     * to name the ancestors, so it was skipped on the 46 top-level keys, which
+     * have none. Rooted at `elements` the path says something there too:
+     * `elements.<element>.styles.aspectRatio` is where the value is written.
+     *
+     * A shared type's canonical page is the exception — `ColorObject` sits at
+     * depth 1 beside the style keys, but `styles.ColorObject` is not a path.
+     */
+    if (spec.$sharedType) return '';
+    const isArray = (prefix) => {
+      const node = nodes.find((n) => n.path.join('.') === prefix.join('.'));
+      if (!node) return false;
+      const resolve = (s, depth = 0) => {
+        if (!s || depth > 5) return s;
+        if (s.$ref) {
+          const t = s.$ref.replace('#/definitions/', '');
+          return defs[t] ? resolve(defs[t], depth + 1) : null;
+        }
+        return s;
+      };
+      return resolve(node.spec)?.type === 'array';
+    };
+    const segments = p.map((seg, i) => {
+      const prefix = p.slice(0, i + 1);
+      const suffix = isArray(prefix) ? '[]' : '';
+      const last = i === p.length - 1;
+      return `${last ? `\`${seg}\`` : `[\`${seg}\`](${urlOf(prefix)})`}${suffix}`;
+    });
+    /**
+     * Rooted at `elements`, not at `styles`. `styles` is not a top-level key —
+     * a style is reached through a named element, so a path starting at
+     * `styles` is not an expression anyone can write.
+     *
+     * `elements` is where styles live: it is a member of a `Variant`, so the
+     * same path sits under `default` and under each `variants[]` entry. Those
+     * two roots are left off rather than picked between. `anatomy` is a
+     * different thing — the declared set of available anatomy items — and is
+     * not where a style is written.
+     *
+     * The element segment stays a placeholder because its name is the author's.
+     */
+    const root = `[\`elements\`](/schema/elements/).\`<element>\`.[\`styles\`](/schema/styles/)`;
+    return `### Path\n\n${root}.${segments.join('.')}\n`;
+  })();
 
   const page = `---
 title: "${key}"
@@ -619,14 +864,19 @@ tableOfContents: false
 
 ${spec.description ?? rehome(kept.intro) ?? ""}
 
-${trail}
-### Type
-
-${types}${required.has(key) ? ' · required' : ''}
-${defaultText ? `\n### Default\n\n${defaultText}\n` : ''}${examples.length ? `\n### Examples\n\n${exampleHead}\n${examples.join("\n")}\n${settingsNote}` : ""}${oneOfBranches ? `\n### One of\n\n${oneOfBranches}\n` : ''}${
-    // On a union page the branches ARE the children, so `One of` has already
-    // listed them with the description that tells them apart.
-    kids.length && !oneOfBranches
+${pathSection}
+${
+  // One section, not two. The member list and the one-line type list state the
+  // same fact — what may be written here — so a page carrying both said it
+  // twice, once without the meanings and once with them.
+  valueSection
+    ? `### ${valueSection.heading}\n\n${valueSection.body}\n${required.has(key) ? '\nRequired.\n' : ''}`
+    : `### Type\n\n${types}${required.has(key) ? ' · required' : ''}\n`
+}${defaultText ? `\n### Default\n\n${defaultText}\n` : ''}${examples.length ? `\n### Examples\n\n${exampleHead}\n${examples.join("\n")}\n${settingsNote}` : ""}${
+    // Members are listed by `valueSection` — beneath the branch or type that
+    // owns them, rather than in a sibling section that attributed them to the
+    // page. This is the fallback for a page whose children belong to neither.
+    kids.length && !valueSection
       ? `\n### Contains\n\n${kids.map((c) => `- [\`${c.path[c.path.length - 1]}\`](${urlOf(c.path)})`).join('\n')}\n`
       : ''
   }${bindingRows ? `\n### Platform bindings\n\n| Platform | Disposition | Realised by |\n|---|---|---|\n${bindingRows}\n` : ''}${usedBy ? `\n### Used by\n\n${usedBy}\n` : ''}${supportedOn ? `\n### Supported on\n\n${supportedOn}\n` : ''}${
@@ -655,11 +905,30 @@ ${defaultText ? `\n### Default\n\n${defaultText}\n` : ''}${examples.length ? `\n
 
   const dir = p.length > 1 ? join(outRoot, ...p.slice(0, -1).map(kebab)) : outRoot;
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, `${kebab(key)}.md`), page);
-  written++;
+  if (writeIfChanged(join(dir, `${kebab(key)}.md`), page)) written++;
 }
 
-console.log(`${written} pages written as a containment tree under site/src/content/docs/schema/styles/`);
+/** Pages from an earlier run that this one no longer emits. */
+const removed = (() => {
+  const out = [];
+  const sweep = (dir) => {
+    if (!existsSync(dir)) return;
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) sweep(full);
+      else if (entry.name.endsWith('.md') && !emitted.has(full)) {
+        rmSync(full);
+        out.push(full);
+      }
+    }
+  };
+  sweep(outRoot);
+  return out;
+})();
+
+console.log(
+  `${emitted.size} pages under site/src/content/docs/schema/styles/ — ${written} changed, ${emitted.size - written} unchanged, ${removed.length} removed`
+);
 const depths = {};
 for (const n of nodes) depths[n.path.length] = (depths[n.path.length] ?? 0) + 1;
 console.log(`by depth: ${Object.entries(depths).map(([d, c]) => `${d}:${c}`).join('  ')}`);

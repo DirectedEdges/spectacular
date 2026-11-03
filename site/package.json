@@ -6,8 +6,9 @@
     "build:content": "node scripts/build-releases.mjs && node scripts/build-adrs.mjs && node scripts/build-specification.mjs && node ../packages/schema/scripts/build-mappings.mjs && node ../packages/schema/scripts/build-schema-pages.mjs && node scripts/build-mappings-pages.mjs",
     "prebuild": "npm run build:content",
     "predev": "npm run build:content",
-    "dev": "astro dev",
-    "start": "astro dev",
+    "dev": "node scripts/watch-content.mjs",
+    "dev:no-watch": "astro dev",
+    "start": "node scripts/watch-content.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"

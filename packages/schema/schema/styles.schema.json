@@ -545,7 +545,7 @@
     },
     "LinearGradient": {
       "type": "object",
-      "description": "A linear gradient defined by an angle and two or more colour stops. Maps to linear-gradient() (CSS) or LinearGradient (SwiftUI / Compose).",
+      "description": "A linear gradient defined by an angle and two or more colour stops.",
       "examples": [{ "type": "LINEAR", "angle": 90, "stops": [{ "position": 0, "color": "#FF6600FF" }, { "position": 1, "color": "#FFFFFFFF" }] }],
       "properties": {
         "type": {
@@ -575,7 +575,7 @@
     },
     "RadialGradient": {
       "type": "object",
-      "description": "A radial gradient defined by a centre point and two or more colour stops. Maps to radial-gradient() (CSS) or RadialGradient (SwiftUI / Compose).",
+      "description": "A radial gradient defined by a centre point and two or more colour stops.",
       "examples": [{ "type": "RADIAL", "center": { "x": 0.5, "y": 0.5 }, "stops": [{ "position": 0, "color": "#FFFFFFFF" }, { "position": 1, "color": "#FF6600FF" }] }],
       "properties": {
         "type": {
@@ -605,7 +605,7 @@
     },
     "AngularGradient": {
       "type": "object",
-      "description": "An angular (conic) gradient defined by a centre point and two or more colour stops. Maps to conic-gradient() (CSS) or AngularGradient (SwiftUI / Compose).",
+      "description": "An angular (conic) gradient defined by a centre point and two or more colour stops.",
       "examples": [{ "type": "ANGULAR", "center": { "x": 0.5, "y": 0.5 }, "stops": [{ "position": 0, "color": "#FF6600FF" }, { "position": 1, "color": "#FFFFFFFF" }] }],
       "properties": {
         "type": {
@@ -634,8 +634,12 @@
       "additionalProperties": false
     },
     "GradientValue": {
-      "description": "A discriminated union of the three supported cross-platform gradient types (LINEAR, RADIAL, ANGULAR). The `type` field is the discriminant. DIAMOND is intentionally excluded.",
-      "examples": [{ "type": "LINEAR", "angle": 180, "stops": [{ "position": 0, "color": "#FF6600FF" }, { "position": 1, "color": "#FFFFFFFF" }] }],
+      "description": "One of three cross-platform gradient types: linear, radial or angular. Diamond is intentionally excluded.",
+      "examples": [
+        { "type": "LINEAR", "angle": 180, "stops": [{ "position": 0, "color": "#FF6600FF" }, { "position": 1, "color": "#FFFFFFFF" }] },
+        { "type": "RADIAL", "center": { "x": 0.5, "y": 0.5 }, "stops": [{ "position": 0, "color": "#FFFFFFFF" }, { "position": 1, "color": "#FF6600FF" }] },
+        { "type": "ANGULAR", "center": { "x": 0.5, "y": 0.5 }, "stops": [{ "position": 0, "color": "#FF6600FF" }, { "position": 1, "color": "#FFFFFFFF" }] }
+      ],
       "oneOf": [
         {
           "$ref": "#/definitions/LinearGradient"
@@ -768,7 +772,7 @@
       "oneOf": [
         {
           "type": "string",
-          "description": "Formatted color string (e.g. '#FF6600', 'rgba(255,102,0,1)') emitted when Config.format.color is non-OBJECT."
+          "description": "A color written in one of the supported string notations, such as hex, rgb(), hsl(), hsb(), oklch() or oklab()."
         },
         {
           "$ref": "#/definitions/ColorObject",
@@ -1540,12 +1544,11 @@
       "description": "Effect value. TokenReference when the node references a named effects style; Effects when effects are defined inline.",
       "oneOf": [
         {
-          "$ref": "#/definitions/TokenReference",
-          "description": "Named effects style reference ($type: \"effects\")"
+          "$ref": "#/definitions/TokenReference"
         },
         {
           "$ref": "#/definitions/Effects",
-          "description": "Inline effects grouped by role"
+          "description": "One or more effects properties, inline"
         },
         {
           "type": "null"
@@ -1660,6 +1663,7 @@
     },
     "TokenReference": {
       "type": "object",
+      "title": "A design token resolved by the consuming platform.",
       "description": "Platform-neutral token reference. $token and $type are the complete platform-facing API surface; $extensions[\"com.figma\"] carries Figma extraction provenance only and is not required by platform consumers.",
       "examples": [{ "$token": "Color/On surface", "$type": "color" }],
       "required": [
@@ -1966,12 +1970,11 @@
       "description": "Typography value. TokenReference when the text node references a named text style; Typography when typography is defined inline.",
       "oneOf": [
         {
-          "$ref": "#/definitions/TokenReference",
-          "description": "Named text style reference ($type: \"typography\")"
+          "$ref": "#/definitions/TokenReference"
         },
         {
           "$ref": "#/definitions/Typography",
-          "description": "Inline typography properties"
+          "description": "One or more typography properties, inline"
         },
         {
           "type": "null"

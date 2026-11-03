@@ -22,9 +22,32 @@ export default defineConfig({
     '/schema/effects/': '/schema/styles/effects/',
     '/schema/corners/': '/schema/styles/corner-radius/',
     // Their member pages sat in sibling folders at the schema root and moved
-    // with them, so the whole subtree redirects rather than 16 pages one by one.
-    '/schema/typography/[...rest]': '/schema/styles/typography/[...rest]',
-    '/schema/effects/[...rest]': '/schema/styles/effects/[...rest]',
+    // with them. Listed one by one: a `[...rest]` pattern here is read as a
+    // dynamic route and fails the build asking for a `getStaticPaths`, because
+    // `redirects` matches literal paths only.
+    '/schema/typography/font-family/': '/schema/styles/typography/font-family/',
+    '/schema/typography/font-size/': '/schema/styles/typography/font-size/',
+    '/schema/typography/font-style/': '/schema/styles/typography/font-style/',
+    '/schema/typography/hanging-list/': '/schema/styles/typography/hanging-list/',
+    '/schema/typography/hanging-punctuation/': '/schema/styles/typography/hanging-punctuation/',
+    '/schema/typography/leading-trim/': '/schema/styles/typography/leading-trim/',
+    '/schema/typography/letter-spacing/': '/schema/styles/typography/letter-spacing/',
+    '/schema/typography/line-height/': '/schema/styles/typography/line-height/',
+    '/schema/typography/list-spacing/': '/schema/styles/typography/list-spacing/',
+    '/schema/typography/paragraph-indent/': '/schema/styles/typography/paragraph-indent/',
+    '/schema/typography/paragraph-spacing/': '/schema/styles/typography/paragraph-spacing/',
+    '/schema/typography/text-case/': '/schema/styles/typography/text-case/',
+    '/schema/typography/text-decoration/': '/schema/styles/typography/text-decoration/',
+    '/schema/effects/background-blur/': '/schema/styles/effects/background-blur/',
+    '/schema/effects/layer-blur/': '/schema/styles/effects/layer-blur/',
+    '/schema/effects/shadows/': '/schema/styles/effects/shadows/',
+    '/schema/effects/shadows/blur/': '/schema/styles/effects/shadows/blur/',
+    '/schema/effects/shadows/color/': '/schema/styles/effects/shadows/color/',
+    '/schema/effects/shadows/inset/': '/schema/styles/effects/shadows/inset/',
+    '/schema/effects/shadows/offset-x/': '/schema/styles/effects/shadows/offset-x/',
+    '/schema/effects/shadows/offset-y/': '/schema/styles/effects/shadows/offset-y/',
+    '/schema/effects/shadows/spread/': '/schema/styles/effects/shadows/spread/',
+    '/schema/effects/shadows/visible/': '/schema/styles/effects/shadows/visible/',
   },
   integrations: [
     starlight({
