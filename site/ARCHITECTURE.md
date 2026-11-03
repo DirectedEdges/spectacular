@@ -78,6 +78,21 @@ content).
   text, wipes and rebuilds `docs/adr/`.
 - `scripts/build-releases.mjs`: merges `packages/schema/CHANGELOG.md` +
   `packages/cli/CHANGELOG.md` into the tabbed releases page.
+- `scripts/build-mappings.mjs`: renders `schema/mappings/` (per-platform
+  binding pages + cluster pages) from `packages/schema/mappings/bindings/`,
+  with completeness enforced over both the style keys and the prop kinds.
+- `scripts/build-style-pages.mjs`: the `schema/styles/` tree from
+  `styles.schema.json`, the binding data, and `_style-page-content.json`.
+- `scripts/build-prop-pages.mjs`: the `schema/props/` tree (kind, member and
+  extensions pages) from `component.schema.json`, the binding data, and
+  `_prop-page-content.json`. `schema/props.md` stays the hand-written hub.
+- `scripts/build-specification.mjs`: wraps `packages/schema/SPECIFICATION.md`
+  as `schema/specification.md`.
+
+All five run via `predev`/`prebuild`; `npm run dev` additionally watches
+`packages/schema/schema/` and `packages/schema/mappings/` and reruns the
+affected generators. The generated trees (`docs/adr/`, `schema/mappings/`,
+`schema/styles/`, `schema/props/`, `schema/specification.md`) are gitignored.
 
 ## Verification
 
