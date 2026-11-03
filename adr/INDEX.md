@@ -4,6 +4,7 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
+| 116 | Nested style members declare their own defaults | |
 | 112 | Settings Defaults Adopt Their Scaffolded Values | |
 | 111 | Object-Typed Props | |
 | 108 | The `$slotContent` Pointer Namespace | (reserved, draft in PR #767) |
