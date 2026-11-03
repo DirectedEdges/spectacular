@@ -4,7 +4,7 @@
 **Created**: 2026-10-02
 **Status**: ACCEPTED
 **Summary**: A `specs.slots.default.match` convention and `SlotProp.defaultSlot` marker name a component's one always-composed slot, enabling flattened child nesting.
-**Decides**: none
+**Decides**: props.slot.defaultSlot
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

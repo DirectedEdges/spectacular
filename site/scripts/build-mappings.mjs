@@ -33,6 +33,19 @@ const styleProps = Object.keys(schema.definitions.Styles.properties);
 const styleDescription = (key) =>
   schema.definitions.Styles.properties[key]?.description ?? '';
 
+/**
+ * The prop kinds, read off `AnyProp`'s own union so a kind added to the schema
+ * fails every binding file that has not declared it — the same guard the style
+ * keys get. `BooleanProp` → `boolean`: the definition name minus the suffix is
+ * the discriminator each definition's `type` member carries (except `enum`,
+ * which shares `type: string` with StringProp and is discriminated by `enum`'s
+ * presence — the kind id still reads off the definition name).
+ */
+const componentSchema = JSON.parse(readFileSync(join(pkg, 'schema/component.schema.json'), 'utf8'));
+const propKinds = componentSchema.definitions.AnyProp.oneOf.map((b) =>
+  b.$ref.replace(/^.*#\/definitions\//, '').replace(/Prop$/, '').toLowerCase()
+);
+
 const TITLES = { figma: 'Figma', css: 'CSS', react: 'React', webcomponents: 'Web Components' };
 const DISPOSITION_ORDER = ['bound', 'approximated', 'unsupported', 'unverified'];
 
@@ -118,7 +131,7 @@ const CASE_TABLE_LABELS = {
  * meant the rule for `textTruncation` sat four case tables below the rule for
  * `autoLayout`, with no URL of its own to link or cite.
  */
-const clusterPage = ({ name, c, platform, title }) => {
+const clusterPage = ({ name, c, platform, title, lead }) => {
   const basisMark =
     c.basis === 'intent'
       ? ' · **asserted**, not mechanically checked'
@@ -130,8 +143,8 @@ const clusterPage = ({ name, c, platform, title }) => {
 
 ${badge(c.disposition)}${c.direction ? ` · ${c.direction}` : ''}${basisMark}
 
-A cluster of the [${title} binding](../${platform}.md). These keys resolve jointly — no
-one of them determines any single output, so the rule below *is* the mapping.
+${lead ?? `A cluster of the [${title} binding](../${platform}.md). These keys resolve jointly — no
+one of them determines any single output, so the rule below *is* the mapping.`}
 
 **Keys.** ${c.keys.map((k) => `\`${k}\``).join(', ')}
 `;
@@ -198,12 +211,99 @@ ${derived}${tables.map((t) => caseTable(t.label, t.list)).join('')}${
 };
 
 /**
+ * The props surface of one binding: a per-kind table plus the clusters whose
+ * rules span kinds. Unlike styles, props are NOT inherited by a dependent
+ * binding — how a prop becomes a parameter is each platform's own fact — so
+ * every binding file declares all kinds and this renders for all four.
+ *
+ * Completeness mirrors the style guard: a prop kind in `AnyProp` with no row
+ * in a binding file fails the build. The kind list is read off the schema's
+ * own union, so adding an eighth kind breaks every binding that has not
+ * answered for it.
+ */
+const renderProps = ({ platform, title, b, file }) => {
+  const props = b.concepts?.props ?? {};
+  const clusters = b.concepts?.propClusters ?? {};
+
+  const extra = Object.keys(props).filter((k) => !propKinds.includes(k));
+  if (extra.length) failures.push(`${file}: prop kinds not in the schema's AnyProp — ${extra.join(', ')}`);
+  const missing = propKinds.filter((k) => !(k in props));
+  if (missing.length) failures.push(`${file}: missing prop kinds — ${missing.join(', ')}`);
+
+  for (const [name, c] of Object.entries(clusters)) {
+    for (const k of c.keys ?? []) {
+      if (!(k in props)) failures.push(`${file}: prop cluster "${name}" names \`${k}\`, absent from concepts.props`);
+    }
+    if (c.form === 'cases') {
+      if (!c.inputs?.length) failures.push(`${file}: prop cluster "${name}" declares cases but no inputs — the operand set must be finite and visible`);
+      for (const [i, cs] of (c.cases ?? []).entries()) {
+        if (!cs.when) failures.push(`${file}: prop cluster "${name}" case ${i} has no predicate`);
+        if (!Array.isArray(cs.emit)) failures.push(`${file}: prop cluster "${name}" case ${i} has no emit list — an empty array is a claim, a missing one is an omission`);
+      }
+    } else {
+      if (!c.resolution) failures.push(`${file}: prop cluster "${name}" has no resolution rule — the rule IS the mapping`);
+      if (!c.partial) failures.push(`${file}: prop cluster "${name}" does not say what a partially present cluster does`);
+    }
+  }
+  // One direction only: a kind may belong to a cluster AND keep a direct row,
+  // because a kind is a population of props, not a single key — `boolean`
+  // reads natively on its own and ALSO participates in variantAxes. The
+  // styles-side rule (a clustered key has no mapping of its own) is about
+  // single keys and does not transfer.
+  for (const [k, v] of Object.entries(props)) {
+    if (v.cluster && !(v.cluster in clusters)) failures.push(`${file}: prop kind \`${k}\` names cluster "${v.cluster}", which is not declared`);
+  }
+
+  const realiseCell = (v) =>
+    v.target ? `\`${v.target}\`` : v.module ? (v.module.length ? v.module.map((m) => `\`${m}\``).join(', ') : '—') : (v.realises ?? '—');
+
+  const rows = propKinds.map((k) => {
+    const v = props[k] ?? { disposition: 'unverified' };
+    const clusterLink = v.cluster ? ` · cluster [${v.cluster}](clusters/${platform}/${kebab(v.cluster)}.md)` : '';
+    return `| [\`${k}\`](/schema/props/${k}/) | ${badge(v.disposition)} | ${realiseCell(v)}${clusterLink} | ${v.notes ?? ''} |`;
+  });
+
+  const clusterIndex = Object.entries(clusters).length
+    ? `\n### Prop clusters\n\nRules that span kinds — where which kind a prop even IS, or where its platform shape, is resolved jointly rather than per kind.\n\n| Cluster | Disposition | Kinds | Resolution |\n|---|---|---|---|\n${Object.entries(clusters)
+        .sort(([a], [z]) => a.localeCompare(z))
+        .map(([name, c]) =>
+          `| [${name}](clusters/${platform}/${kebab(name)}.md) | ${badge(c.disposition)} | ${c.keys.map((k) => `\`${k}\``).join(', ')} | ${
+            c.form === 'cases' ? `${c.cases.length}-row case table` : 'prose — not yet a case table'
+          } |`
+        )
+        .join('\n')}\n`
+    : '';
+
+  const section = `## Props
+
+A prop is declared once in the spec and realised differently by kind on each platform.
+Unlike a style key, a kind may carry its own row *and* participate in a cluster — a kind
+is a population of props, and different populations of it resolve differently.
+
+| Prop kind | Disposition | Realised by | Notes |
+|---|---|---|---|
+${rows.join('\n')}
+${clusterIndex}`;
+
+  const clusterPages = Object.entries(clusters).map(([name, c]) => ({
+    name,
+    slug: kebab(name),
+    body: clusterPage({
+      name, c, platform, title,
+      lead: `A prop cluster of the [${title} binding](../${platform}.md). The kinds named below resolve jointly here — which kind a prop even is, or what platform shape it takes, is decided by this rule rather than per kind.`,
+    }),
+  }));
+
+  return { section, clusterPages };
+};
+
+/**
  * A binding that inherits its style surface from another. It states only
  * overrides plus the platform-shaped concerns the base binding cannot carry —
  * how props become parameters, slots become children, variants become
  * selection, and how styles attach.
  */
-const renderDependent = ({ platform, title, b, styles, dependsOn, file }) => {
+const renderDependent = ({ platform, title, b, styles, dependsOn, file, propsSection }) => {
   const base = dependsOn.map((d) => `[${TITLES[d] ?? d}](${d.toUpperCase()}.md)`).join(", ");
   const overrides = Object.entries(styles);
 
@@ -237,6 +337,7 @@ ${overrides.length
       .join('\n')}`
   : '**None.** Every style key is inherited unchanged.'}
 
+${propsSection ?? ''}
 ## Platform surfaces
 
 ${surfaces.note ?? ''}
@@ -259,11 +360,18 @@ const renderPlatform = (file) => {
   const extra = Object.keys(styles).filter((k) => !styleProps.includes(k));
   if (extra.length) failures.push(`${file}: style keys not in the schema — ${extra.join(', ')}`);
 
+  // The props surface renders on every binding, base and dependent alike —
+  // a prop's platform shape is never inherited.
+  const propsOut = renderProps({ platform, title, b, file });
+
   // A dependent binding declares only what it changes, so completeness is the
   // base binding's obligation, not its. What it must not do is silently restate
   // a key identically — that recreates the second source the dependency removed.
   if (dependsOn.length) {
-    return { page: renderDependent({ platform, title, b, styles, dependsOn, file }), clusters: [] };
+    return {
+      page: renderDependent({ platform, title, b, styles, dependsOn, file, propsSection: propsOut.section }),
+      clusterPages: propsOut.clusterPages,
+    };
   }
 
   const missing = styleProps.filter((k) => !(k in styles));
@@ -389,7 +497,7 @@ ${[...open, ...decided].map(section).join('\n\n')}
 `;
   })();
 
-  return { clusterPages, page: `# ${title} binding
+  return { clusterPages: [...clusterPages, ...propsOut.clusterPages], page: `# ${title} binding
 
 **Platform binding for the Specs document format — draft.**
 
@@ -492,6 +600,8 @@ resolution rule is the mapping rather than a row in the Styles table. Each clust
 is its own page.
 
 ${clusterIndex}
+
+${propsOut.section}
 
 ${losses}` };
 };

@@ -4,7 +4,7 @@
 **Created**: 2026-09-14
 **Status**: ACCEPTED
 **Summary**: An `examples` field on `ImageProp` carries authoring-default images alongside `default` and `nullable`, matching `ImageBinding.examples`.
-**Decides**: none
+**Decides**: props.image.examples
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none — extends ADR-063)*
 

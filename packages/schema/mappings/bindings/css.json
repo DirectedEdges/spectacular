@@ -2137,6 +2137,101 @@
         "form": "cases",
         "basis": "implementation"
       }
+    },
+    "props": {
+      "boolean": {
+        "disposition": "bound",
+        "module": ["Css", "states"],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "cluster": "propsToSelectors",
+        "notes": "A boolean prop is a selection fact, not a declaration: a variant configuration naming it becomes an attribute selector on the emitting platform's surface. A boolean classified as a state concept selects by the concept's selector instead (pseudo-class or aria attribute)."
+      },
+      "string": {
+        "disposition": "unsupported",
+        "module": [],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "notes": "A string prop is content. Nothing is emitted for it; the stylesheet styles the element that carries it, never the value."
+      },
+      "enum": {
+        "disposition": "bound",
+        "module": ["Css", "enumCase"],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "cluster": "propsToSelectors",
+        "notes": "An enum prop's values become attribute selectors, lowercased by the enumCase contract — HTML attribute selectors are case-sensitive, and the emitting platform writes the same normalized spelling. An enum classified as a state concept selects by the concept's selector instead."
+      },
+      "number": {
+        "disposition": "bound",
+        "module": ["Css"],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "cluster": "propsToSelectors",
+        "notes": "A number prop with a closed `enum` is a variant axis and selects like an enum, on the numeric spelling. An open-valued number is content and emits nothing."
+      },
+      "slot": {
+        "disposition": "unsupported",
+        "module": [],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "notes": "A slot is a place content goes. Its formatting travels on the slot element's `contentStyles`, keyed by primitive kind — that styling is part of the styles surface above, not a mapping of the prop."
+      },
+      "image": {
+        "disposition": "unsupported",
+        "module": [],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "notes": "An image prop is content; the `backgroundImage` style key is the styling surface, and a bound image reaches it as a custom property the emitting platform writes."
+      },
+      "object": {
+        "disposition": "bound",
+        "module": ["Css"],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "cluster": "propsToSelectors",
+        "notes": "An object prop participates member-wise: each member is a scalar, flattened to a dotted arg key, and an enum member is a variant axis selecting exactly as a top-level enum does."
+      }
+    },
+    "propClusters": {
+      "propsToSelectors": {
+        "disposition": "bound",
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["boolean", "enum", "number", "object"],
+        "inputs": [
+          { "ref": "prop.kind", "from": "spec document" },
+          { "ref": "prop.enum", "from": "spec document" },
+          { "ref": "conventions.specs.states", "from": "declared conventions" },
+          { "ref": "context.platform", "from": "emitting platform (React or Web Components)" }
+        ],
+        "derived": {
+          "isStateConcept": {
+            "expression": { "operation": "equals", "args": { "value": "conventions.specs.states.<concept>.prop", "compareTo": "this prop" } },
+            "source": "from-specs states.buildStateLookup"
+          }
+        },
+        "cases": [
+          {
+            "when": { "operation": "equals", "args": { "value": "derived.isStateConcept", "compareTo": true } },
+            "emit": ["the concept's selector — a pseudo-class (`:hover`, `:disabled`) or an aria attribute (`[aria-selected=\"true\"]`)"],
+            "why": "A state concept's styling follows the browser's or the contract's own state surface, not a variant attribute"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "context.platform", "compareTo": "react" } },
+            "emit": ["`[data-<prop>=\"<value>\"]` on the component's root class"],
+            "why": "The React scaffold writes each variant prop as a data attribute on its root"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "context.platform", "compareTo": "webcomponents" } },
+            "emit": ["`:host([<attr>=\"<value>\"])`, where `<attr>` is the reflected attribute — bare where the name is free, `data-` where it collides with a global attribute"],
+            "why": "The custom element reflects the prop; reflectedAttrs is the one function the element and the stylesheet share, so they cannot disagree"
+          }
+        ],
+        "otherwise": { "emit": [], "why": "A prop no variant configuration names selects nothing" },
+        "notes": "Props never become declarations. They decide WHICH rule block applies; the styles surface above decides what the block says. Values are normalized by the enumCase contract on both sides of the selector."
+      }
     }
   },
   "valueForms": {

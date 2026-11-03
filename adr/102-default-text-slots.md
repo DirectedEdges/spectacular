@@ -4,7 +4,7 @@
 **Created**: 2026-10-06
 **Status**: ACCEPTED
 **Summary**: Reserved `$text` and `$glyph` markers in `anyOf`, with `Element.contentStyles` formatting each primitive fill per variant.
-**Decides**: none
+**Decides**: props.slot.anyOf
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

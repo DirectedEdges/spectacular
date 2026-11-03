@@ -4,10 +4,88 @@
     "css"
   ],
   "realises": "Emits Lit custom elements. Styling is delegated wholly to the CSS binding.",
-  "note": "Declares only what this platform adds to or changes from the CSS binding. A style key absent here is bound exactly as css.json states; this file never restates one.",
+  "note": "Declares only what this platform adds to or changes from the CSS binding. A style key absent here is bound exactly as css.json states; this file never restates one. Props are NOT inherited: how a prop becomes a property or attribute is this platform's own surface, declared in full below.",
   "concepts": {
     "styles": {},
-    "styleClusters": {}
+    "styleClusters": {},
+    "props": {
+      "boolean": {
+        "disposition": "bound",
+        "realises": "a `boolean` member of the element's contract, reflected as an attribute",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "cluster": "statesToContract",
+        "notes": "The contract types and defaults are the shared platform-neutral derivation — the same module React uses. Reflection follows the shared attribute rule: the bare attribute where the name is free, the `data-` form where it collides with a global attribute that already has behaviour."
+      },
+      "string": {
+        "disposition": "bound",
+        "realises": "a `string` member of the element's contract, nullable-widened with `null`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Widened to admit `null` by the shared nullability rule (ADR-065). `examples` feed stories; they never become a contract default."
+      },
+      "enum": {
+        "disposition": "bound",
+        "realises": "a named union type, reflected as an attribute the stylesheet selects on",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "cluster": "statesToContract",
+        "notes": "Values are lowercased by the enumCase contract. The element reflects the prop so the stylesheet can select `:host([<attr>=\"<value>\"])`; the attribute spelling comes from the one shared function the emitter and the stylesheet both call, so the two cannot disagree. Reserved global names (`hidden`, `title`, `id`, every `aria-*`) fall back to `data-<attr>`."
+      },
+      "number": {
+        "disposition": "bound",
+        "realises": "a `number` member of the element's contract",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Shared contract derivation. A closed `enum` of numbers reflects and selects like an enum does, on the numeric spelling."
+      },
+      "slot": {
+        "disposition": "unverified",
+        "realises": "`<slot>` projection — the default slot unnamed, others named",
+        "direction": "spec-to-code",
+        "notes": "A slot prop never reaches the platform-neutral contract; the custom element projects it through `<slot>`. The projection shape — unnamed for the declared `defaultSlot`, `<slot name=\"…\">` otherwise — is the intended rule and the emitter carries slot projection code, but the per-case behaviour has not been confirmed the way the React cluster has."
+      },
+      "image": {
+        "disposition": "unverified",
+        "realises": "a URL-valued property",
+        "direction": "spec-to-code",
+        "notes": "Expected to mirror the React binding — registry pointers resolve to served asset URLs — but not yet confirmed against the emitter."
+      },
+      "object": {
+        "disposition": "bound",
+        "realises": "a named member interface; values as object literals",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "The contract spells the object shape as its own interface (ADR-111), from the same shared derivation as React. Stories and controls work on the flat dotted-arg-key view and reassemble the object in this emitter's idiom."
+      }
+    },
+    "propClusters": {
+      "statesToContract": {
+        "disposition": "bound",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["boolean", "enum"],
+        "inputs": [
+          { "ref": "conventions.specs.states", "from": "declared conventions" },
+          { "ref": "concept.contract", "from": "the shared state-concept table (from-specs states.ts)" }
+        ],
+        "cases": [
+          {
+            "when": { "operation": "equals", "args": { "value": "concept.contract", "compareTo": "omit" } },
+            "emit": ["nothing — the prop leaves the contract; the CSS binding selects on the browser pseudo-class"],
+            "why": "Hover, focus, active are the browser's to drive; a consumer cannot meaningfully set them"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "concept.contract", "compareTo": "keep" } },
+            "emit": ["the prop stays a property; the element writes the concept's aria attribute when it is set"],
+            "why": "Disabled, selected, invalid are consumer-set facts the DOM should also state"
+          }
+        ],
+        "otherwise": { "emit": ["the prop is an ordinary property"], "why": "A prop no state entry names is not a state" },
+        "notes": "Identical rule to the React binding by construction: the concept table — selector and contract disposition per concept — is one shared module, so the two emitters and the CSS transform cannot disagree."
+      }
+    }
   },
   "valueForms": {
     "summary": "Inherited from the CSS binding unless restated here.",
@@ -17,10 +95,7 @@
     "conditional": "inherited"
   },
   "surfaces": {
-    "note": "The platform-shaped questions this binding owes, none of which are CSS. All unverified.",
-    "propsToParameters": "unverified",
-    "slotsToChildren": "unverified",
-    "variantsToSelection": "unverified",
+    "note": "The platform-shaped questions this binding owes, none of which are CSS. propsToParameters, slotsToChildren and variantsToSelection graduated into concepts.props and concepts.propClusters above; variant selection itself is the CSS binding's propsToSelectors cluster.",
     "styleAttachment": "unverified"
   }
 }

@@ -4,7 +4,7 @@
 **Created**: 2026-03-16
 **Status**: ACCEPTED
 **Summary**: A `codeOnlyPropsPattern` option and `FigmaCodeOnlySource` extension emit props that exist in code but not Figma.
-**Decides**: none
+**Decides**: props.$extensions
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 **Depends on**: [026-platform-extensions](./026-platform-extensions.md) (`$extensions` pattern)

@@ -1,0 +1,41 @@
+{
+  "$comment": "Hand-written content carried into the generated prop pages, the counterpart of _style-page-content.json. Keyed by kind id (the AnyProp definition name minus 'Prop', lowercased), with `sections` rendered after the generated sections in declared order. Everything derivable from component.schema.json or the binding files lives THERE; this file holds only the judgment calls and narratives no schema member states. Extracted from site/src/content/docs/schema/props.md when the generated tree replaced it.",
+  "extractedFrom": "site/src/content/docs/schema/props.md",
+  "kinds": {
+    "boolean": {
+      "sections": {
+        "States": "A boolean prop named by a [`specs.states`](/schema/conventions/#specs-members) entry is a state concept, not an ordinary parameter. Whether it stays in the emitted contract follows the concept's disposition — browser-managed concepts (hover, focus, active) leave the contract entirely, consumer-set ones (disabled, selected, invalid) stay and also surface as an aria attribute. The rule's case table is the [statesToContract](/schema/mappings/react/clusters/states-to-contract/) cluster, shared by both emitters and the CSS transform."
+      }
+    },
+    "string": {
+      "intro": "A `StringProp` is distinguished from an `EnumProp` by the absence of `enum` — the two share `type: string`, and the closed list is what separates a value set the library enumerates from one it leaves open."
+    },
+    "enum": {
+      "intro": "An `EnumProp` shares `type: string` with `StringProp`; the presence of `enum` is what discriminates it.",
+      "sections": {
+        "States": "An enum prop named by a [`specs.states`](/schema/conventions/#specs-members) entry participates in state classification exactly as a boolean does — see the [statesToContract](/schema/mappings/react/clusters/states-to-contract/) cluster. An enum whose entries are all state values can leave the emitted contract entirely when every concept naming it is browser-managed."
+      }
+    },
+    "number": {},
+    "slot": {
+      "sections": {
+        "Primitive content markers": "`anyOf` is the one list of what a slot accepts. Alongside component names it carries reserved markers naming a **primitive** kind:\n\n| Marker | Admits |\n|--------|--------|\n| `$text` | A text primitive — a plain string fill |\n| `$glyph` | A glyph primitive — an icon fill |\n\n```yaml\nprops:\n  children:\n    type: slot\n    defaultSlot: true\n    anyOf: [$glyph, $text, badge]   # a glyph, a label, or a composed Badge\n  description:\n    type: slot\n    anyOf: [$text, link]            # accepts a primitive, and is not the default slot\n```\n\n`anyOf: [$text]` is a text-only slot — no component permitted. `anyOf: [badge]` is Badge-only — no primitive permitted. Absent means any component and no primitive, which is what every slot without markers means today.\n\nThe names are the ones [`anatomy`](/schema/anatomy/) items already use, so `type: text` on an element and `$text` here are the same primitive. The `$` prefix marks a value the contract reserves rather than one the library supplies — the same role it plays in `$token`, `$binding` and `$slotContent`, extended from keys to values. A component key can never shadow a marker, because the safe key grammar admits no leading `$`.\n\nA marker is recorded when the slot's default content in Figma held a top-level primitive of that kind, in at least one variant, and [`slotPrimitives`](/settings/slot-primitives/) is on — which it is unless the library turns it off. A marker only ever joins an `anyOf` that already names at least one component; a slot whose detected content is primitives alone carries no `anyOf`, because `anyOf` is a constraint and `[$text]` would say only a text primitive may fill the slot. Those primitives are not emitted as anatomy elements — the slot is — and their formatting travels on the slot element's [`contentStyles`](/schema/elements/#styles-vs-content-styles), keyed by the same markers.\n\nMarkers and `defaultSlot` are orthogonal. A Button's `children` accepts primitives *and* is the default slot; an Alert's `description` accepts a primitive and is *not* the default; a layout component's slots are default-eligible and take components only.",
+        "The default slot": "`defaultSlot` marks the one slot a layout component always composes through. It is set at generation time, when the prop's name matched the library's [`specs.slots.default.match`](/schema/conventions/#slots) convention, and is read off the spec thereafter — a consumer needs no access to those conventions to know which slot it is.\n\nAn instance filling a `defaultSlot` prop may be nested as a plain [child](/schema/children/) rather than through a [`SlotContentRef`](/schema/slot-content-ref/). Every other slot binds explicitly, which is the only shape that can say *which* of several slots a fill belongs to.\n\n**At most one `SlotProp` per component may be `true`.** This is a constraint over sibling entries in one `props` map, which JSON Schema cannot express without reaching into a named prop's value to compare it against its siblings. It is therefore an authoring and generator contract, not schema-validated: `specs generate` marks at most one and reports a component whose declared convention matches several, and a hand-authored spec that breaks the invariant is malformed input a consumer may reject.",
+        "Constraints": "Slot constraint members (`minChildren`, `maxChildren`, `anyOf`) are emitted when [`conventions.platforms.figma.slotConstraints`](/schema/conventions/#platform-members) is declared."
+      }
+    },
+    "image": {
+      "sections": {
+        "Where an authoring default lives": "An authoring-default image sits in one of two places, and they describe different things:\n\n| Location | Describes |\n|----------|-----------|\n| [`ImageBinding.examples`](/schema/prop-configurations/) | The image at *that binding site* — how one consumer placed it |\n| `ImageProp.examples` | The image *the component itself* was authored with |\n\nWhere both apply to one rendered instance, the binding is the more specific statement. A designated image component is the origin of an image rather than a consumer of one, so it has no binding site in its own spec — `examples` on the prop is its only home for this.\n\n`examples` is non-contractual reference material, parallel to `StringProp.examples`, and is distinct from `default`: a default states what the prop resolves to when a consumer omits it, while examples only demonstrate typical content.\n\n```yaml\nprops:\n  imageSource:\n    type: image\n    examples:\n      - $image: \"#/components/dsImage/images/dsImage__image\"\n```"
+      }
+    },
+    "object": {
+      "sections": {
+        "Example": "```yaml\nprops:\n  margin:\n    type: object\n    members:\n      compact:\n        type: string\n        default: none\n        enum: [none, small, large]\n      expanded:\n        type: string\n        default: none\n        enum: [none, small, large]\n```\n\nFigma authors members as separator-delimited flat property names (`margin.compact`, `margin.expanded`), folded into one `ObjectProp` when [`conventions.platforms.figma.objectProps`](/schema/conventions/#platform-members) is declared. Each member's `$extensions['com.figma'].name` records the flat source name, so unfolding back to Figma is reversal, not re-derivation. Configurations set an object prop with a member-keyed value — see [Prop Configurations](/schema/prop-configurations/)."
+      }
+    }
+  },
+  "extensionsPage": {
+    "intro": "The `$extensions` object on a prop definition holds vendor-specific metadata under reverse-domain keys. Currently only the `com.figma` extension is defined. Extension data is provenance — a consumer MUST NOT need it to interpret the prop (the spec contract carries everything semantic), and the render direction reads it to reverse what capture recorded."
+  }
+}

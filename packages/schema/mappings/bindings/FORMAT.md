@@ -107,3 +107,16 @@ It is also testable, which prose never was: synthesize a document matching a cas
 A mapping is not always a direct read of one Figma property. Some spec keys are produced by a later pass — collapsed, diffed against a parent, or removed — and a binding that presents them as direct reads misleads anyone implementing a second time.
 
 Where a key is post-processed rather than read, `notes` says so and names the stage.
+
+## `concepts.props` and `concepts.propClusters` — the prop surface
+
+Props reuse the two-section shape with one change of unit: the keys are the **prop kinds** — `boolean`, `string`, `enum`, `number`, `slot`, `image`, `object` — read off `AnyProp`'s own union, not individual prop names, which are open. Completeness is enforced the same way: every kind must appear in every binding file's `concepts.props`, so an eighth kind added to the schema fails every binding that has not answered for it.
+
+Two rules differ from styles, both because a kind is a *population* of props rather than a single key:
+
+- **A kind may carry its own row and belong to a cluster.** `boolean` reads natively on its own AND participates in `variantAxes` — different populations of the kind resolve differently. The styles rule (a clustered key has no mapping of its own) does not transfer.
+- **Props are never inherited by a dependent binding.** How a prop becomes a parameter, an attribute, or a selector is each platform's own fact, so `react.json` and `webcomponents.json` declare all seven kinds in full even though their style surface defers to CSS.
+
+Prop clusters carry the joint rules: which kind a Figma VARIANT property even becomes (`variantAxes`, `numberInference`), consolidation (`booleanContentPairing`), provenance minting (`codeOnlyProps`), platform shape (`slotsToChildren`, `statesToContract`, `propsToSelectors`). The `form: cases` / `form: prose` contract, the declared operand set, and the leak guard all apply unchanged.
+
+There is no `onAbsent` for props and no prop `_defaults.json`: what an absent or null prop value means is the schema's own per-kind nullability contract (ADR-065), declared once in `component.schema.json` and published on the generated kind pages.

@@ -4,10 +4,119 @@
     "css"
   ],
   "realises": "Emits React components and stories. Styling is delegated wholly to the CSS binding.",
-  "note": "Declares only what this platform adds to or changes from the CSS binding. A style key absent here is bound exactly as css.json states; this file never restates one.",
+  "note": "Declares only what this platform adds to or changes from the CSS binding. A style key absent here is bound exactly as css.json states; this file never restates one. Props are NOT inherited: how a prop becomes a parameter is this platform's own surface, declared in full below.",
   "concepts": {
     "styles": {},
-    "styleClusters": {}
+    "styleClusters": {},
+    "props": {
+      "boolean": {
+        "disposition": "bound",
+        "realises": "a `boolean` member of the component's Props interface",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "cluster": "statesToContract",
+        "notes": "Declared in the generated types file with its `default` in the Defaults export. In JSX a true value spells as the bare attribute, false as `{false}`. A boolean classified as a browser-managed state concept never reaches the contract."
+      },
+      "string": {
+        "disposition": "bound",
+        "realises": "a `string` member of the Props interface, nullable-widened with `null`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Widened to admit `null` by the nullability rule: absent `nullable` means nullable for an open-valued kind (ADR-065). `examples` feed stories and composed instances; they never become a contract default."
+      },
+      "enum": {
+        "disposition": "bound",
+        "realises": "a named union type, one member per `enum` value",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "cluster": "statesToContract",
+        "notes": "The union is named for the component and prop; values are lowercased by the enumCase contract, and the declared `default` is normalized with them. The scaffold writes the current value as a `data-<prop>` attribute on the component's root, which is the selector surface the CSS binding's propsToSelectors cluster states."
+      },
+      "number": {
+        "disposition": "bound",
+        "realises": "a `number` member of the Props interface",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Emitted as a numeric expression — `count={1430}` — wherever a configuration carries it, keyed to the declared type rather than to how the text looks: the same digits against a string prop are content. A closed `enum` of numbers selects like an enum does."
+      },
+      "slot": {
+        "disposition": "bound",
+        "realises": "`children`, or a named prop of `React.ReactNode`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "cluster": "slotsToChildren",
+        "notes": "A slot prop never reaches the platform-neutral contract — its type is the one part of a contract that cannot be platform-neutral, so each target spells its own. React spells the designated default slot as `children` and every other slot as a named `React.ReactNode` prop."
+      },
+      "image": {
+        "disposition": "bound",
+        "realises": "a nullable `string` URL member of the Props interface",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "An image registry pointer resolves to a served asset URL at emit. A bound prop carrying an authoring-default example (ADR-088) emits the example as the fallback — `p.src ?? \"<url>\"` — because composed content is static and without it the child falls back to its own default artwork."
+      },
+      "object": {
+        "disposition": "bound",
+        "realises": "a named member interface; values as object literals",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "The contract spells the object shape as its own interface (ADR-111). Stories and controls work on the flat view — each member under a dotted arg key (`margin.compact`) — and reassemble the object at the call site. A member binding pointer (`#/props/margin/members/compact`) reads through member access on the host."
+      }
+    },
+    "propClusters": {
+      "slotsToChildren": {
+        "disposition": "bound",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["slot"],
+        "inputs": [
+          { "ref": "prop.defaultSlot", "from": "spec document (ADR-099)" },
+          { "ref": "configuration.value", "from": "the filling configuration" }
+        ],
+        "cases": [
+          {
+            "when": { "operation": "all", "args": [
+              { "operation": "equals", "args": { "value": "prop.defaultSlot", "compareTo": true } },
+              { "operation": "isNotNull", "args": { "value": "configuration.value" } }
+            ] },
+            "emit": ["the fill as this instance's JSX children — the scaffold reads its designated default slot from `props.children`"],
+            "why": "Whatever kind the fill is: a `$slotContent` reference composes, a literal string becomes JSX text"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "configuration.value", "compareTo": "a $slotContent reference on a non-default slot" } },
+            "emit": ["`<prop>={<>…composed JSX…</>}` as a named attribute"],
+            "why": "An explicit binding is the only shape that can say which of several slots a fill belongs to"
+          }
+        ],
+        "otherwise": { "emit": [], "why": "A prop's spelling never nominates a default slot — with no declared `defaultSlot`, every fill is a named prop and a literal string against an undeclared slot is refused" },
+        "notes": "The declared `defaultSlot` is the TARGET component's, read from its contract — never inferred from the key's spelling."
+      },
+      "statesToContract": {
+        "disposition": "bound",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["boolean", "enum"],
+        "inputs": [
+          { "ref": "conventions.specs.states", "from": "declared conventions" },
+          { "ref": "concept.contract", "from": "the shared state-concept table (from-specs states.ts)" }
+        ],
+        "cases": [
+          {
+            "when": { "operation": "equals", "args": { "value": "concept.contract", "compareTo": "omit" } },
+            "emit": ["nothing — the prop leaves the contract; the CSS binding selects on the browser pseudo-class"],
+            "why": "Hover, focus, active are the browser's to drive; a consumer cannot meaningfully set them"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "concept.contract", "compareTo": "keep" } },
+            "emit": ["the prop stays a parameter; the scaffold writes the concept's aria attribute when it is set"],
+            "why": "Disabled, selected, invalid are consumer-set facts the DOM should also state"
+          }
+        ],
+        "otherwise": { "emit": ["the prop is an ordinary parameter"], "why": "A prop no state entry names is not a state" },
+        "notes": "A prop is omitted only when EVERY concept entry naming it says omit. The concept table — selector and contract disposition per concept — is shared between both emitters and the CSS transform, so the three cannot disagree."
+      }
+    }
   },
   "valueForms": {
     "summary": "Inherited from the CSS binding unless restated here.",
@@ -17,10 +126,7 @@
     "conditional": "inherited"
   },
   "surfaces": {
-    "note": "The platform-shaped questions this binding owes, none of which are CSS. All unverified.",
-    "propsToParameters": "unverified",
-    "slotsToChildren": "unverified",
-    "variantsToSelection": "unverified",
+    "note": "The platform-shaped questions this binding owes, none of which are CSS. propsToParameters, slotsToChildren and variantsToSelection graduated into concepts.props and concepts.propClusters above; variant selection itself is the CSS binding's propsToSelectors cluster.",
     "styleAttachment": "unverified"
   }
 }

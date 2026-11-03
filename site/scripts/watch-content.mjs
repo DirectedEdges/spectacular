@@ -32,6 +32,7 @@ const WATCHED = [
     run: [
       resolve(site, 'scripts/build-mappings.mjs'),
       resolve(site, 'scripts/build-style-pages.mjs'),
+      resolve(site, 'scripts/build-prop-pages.mjs'),
     ],
   },
   {
@@ -47,6 +48,7 @@ const WATCHED = [
     run: [
       resolve(site, 'scripts/build-mappings.mjs'),
       resolve(site, 'scripts/build-style-pages.mjs'),
+      resolve(site, 'scripts/build-prop-pages.mjs'),
     ],
   },
   /**

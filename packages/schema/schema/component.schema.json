@@ -499,7 +499,8 @@
           "const": "boolean"
         },
         "default": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "The value a consumer gets without setting the prop. Required — a boolean always has a resting state."
         },
         "$extensions": {
           "$ref": "#/definitions/PropExtensions"
@@ -527,7 +528,8 @@
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "description": "Deprecated — use `examples` for demo content (ADR-014). A read Figma default is what the designer typed, not a contract default."
         },
         "nullable": {
           "type": "boolean",
@@ -563,14 +565,16 @@
           "const": "string"
         },
         "default": {
-          "type": "string"
+          "type": "string",
+          "description": "The value a consumer gets without setting the prop — one of `enum`'s entries."
         },
         "enum": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "minItems": 1
+          "minItems": 1,
+          "description": "The closed list of accepted values, in authored order — it is the variant axis, and the render direction rebuilds the component set from it positionally."
         },
         "nullable": {
           "type": "boolean",
@@ -600,7 +604,8 @@
           "type": [
             "null",
             "string"
-          ]
+          ],
+          "description": "Default slot content. Optional — omitted when no meaningful default exists."
         },
         "nullable": {
           "type": "boolean",
@@ -1177,7 +1182,8 @@
           "const": "number"
         },
         "default": {
-          "type": "number"
+          "type": "number",
+          "description": "Default numeric value. Optional — omitted when no meaningful default exists."
         },
         "enum": {
           "type": "array",

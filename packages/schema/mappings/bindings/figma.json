@@ -1271,6 +1271,159 @@
         },
         "basis": "implementation"
       }
+    },
+    "props": {
+      "boolean": {
+        "disposition": "bound",
+        "target": "ComponentPropertyDefinitions (BOOLEAN, or a two-option VARIANT)",
+        "direction": "both",
+        "basis": "implementation",
+        "cluster": "variantAxes",
+        "notes": "A native BOOLEAN property reads directly. A VARIANT whose options are exactly true/false (case-insensitive) also reads as a boolean, recording `$extensions['com.figma'].type: VARIANT` so the render direction rebuilds the variant axis rather than a BOOLEAN property. Render creates a BOOLEAN property where the prop is bound to an element's `visible`."
+      },
+      "string": {
+        "disposition": "bound",
+        "target": "ComponentPropertyDefinitions (TEXT or INSTANCE_SWAP)",
+        "direction": "both",
+        "basis": "implementation",
+        "cluster": "numberInference",
+        "notes": "TEXT and INSTANCE_SWAP both collapse to `string`; the Figma property type survives in `$extensions['com.figma'].type`. An INSTANCE_SWAP default resolves the component id to a name, reduced to the glyph name where the glyphs convention identifies one (ADR-103). The read default lands in `examples`, never `default` (ADR-014). Render re-derives the property type from where the prop is bound: `content` → TEXT, `instanceOf` → INSTANCE_SWAP."
+      },
+      "enum": {
+        "disposition": "bound",
+        "target": "VARIANT property options / ComponentSet variant axes",
+        "direction": "both",
+        "basis": "implementation",
+        "cluster": "variantAxes",
+        "notes": "The option list is the variant axis, authored order preserved — the render direction rebuilds the component set from it positionally. `nullable: false` is recorded: the enum lists every accepted value."
+      },
+      "number": {
+        "disposition": "bound",
+        "target": "TEXT default or all-numeric VARIANT options, under `platforms.figma.inferNumberProps`",
+        "direction": "both",
+        "basis": "implementation",
+        "cluster": "variantAxes",
+        "notes": "Opt-in inference (ADR-029). A TEXT property whose default passes the numeric guard becomes a NumberProp; a VARIANT whose every option is numeric becomes a NumberProp carrying the options as `enum` (ADR-072). With the convention off, both stay strings."
+      },
+      "slot": {
+        "disposition": "bound",
+        "target": "ComponentPropertyDefinitions (SLOT), plus slotSettings and preferredValues",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Native SLOT properties read as `type: slot`. Under `platforms.figma.slotConstraints`, `slotSettings` and resolved `preferredValues` populate `minChildren`/`maxChildren`/`anyOf` (ADR-056). A primitive marker joins `anyOf` when a variant's default content held a top-level `$text`/`$glyph` primitive and the platform reads slot primitives (ADR-102) — only ever joining an `anyOf` that already names a component. `defaultSlot` resolves once at generation from `specs.slots.default.match`, is refused when the prop is bound to anything but a container or slot element, and marks at most one prop (ADR-099). Render skips slot props — slot structure is rebuilt from the elements, not minted as a property."
+      },
+      "image": {
+        "disposition": "bound",
+        "target": "code-only container layer named in `figma.images.sourceProps`",
+        "direction": "both",
+        "basis": "implementation",
+        "cluster": "codeOnlyProps",
+        "notes": "An image prop has no native Figma property type; it is read from a code-only layer (ADR-063) and carries authoring-default images in `examples` (ADR-088). Render mints the hidden layer back."
+      },
+      "object": {
+        "disposition": "bound",
+        "target": "separator-delimited flat property names, under `platforms.figma.objectProps`",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Figma cannot author an object natively. Flat names fold into one ObjectProp before key formatting (ADR-111); each member's `$extensions['com.figma'].name` records the flat source name, so unfolding on render is reversal, not re-derivation. A name colliding with the fold outcome stays flat. Render emits one flat property per member — BOOLEAN for boolean members, TEXT otherwise; enum members are variant axes and belong to the component set."
+      }
+    },
+    "propClusters": {
+      "variantAxes": {
+        "disposition": "bound",
+        "direction": "figma-to-spec",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["boolean", "enum", "number"],
+        "inputs": [
+          { "ref": "property.type", "from": "Figma ComponentPropertyDefinitions" },
+          { "ref": "property.variantOptions", "from": "Figma ComponentPropertyDefinitions" },
+          { "ref": "conventions.platforms.figma.inferNumberProps", "from": "declared conventions" }
+        ],
+        "derived": {
+          "booleanPair": {
+            "expression": { "operation": "equals", "args": { "value": "property.variantOptions", "compareTo": "exactly the pair true/false, case-insensitive" } },
+            "source": "capture-side VARIANT classification"
+          },
+          "allNumeric": {
+            "expression": { "operation": "equals", "args": { "value": "property.variantOptions", "compareTo": "every option numeric" } },
+            "source": "capture-side numeric option guard (ADR-072)"
+          }
+        },
+        "cases": [
+          {
+            "when": { "operation": "all", "args": [
+              { "operation": "equals", "args": { "value": "property.type", "compareTo": "VARIANT" } },
+              { "operation": "equals", "args": { "value": "derived.booleanPair", "compareTo": true } }
+            ] },
+            "emit": ["BooleanProp with `$extensions['com.figma'].type: VARIANT`"],
+            "why": "A two-state axis is a boolean wearing variant clothes; the extension records the source so render rebuilds the axis"
+          },
+          {
+            "when": { "operation": "all", "args": [
+              { "operation": "equals", "args": { "value": "property.type", "compareTo": "VARIANT" } },
+              { "operation": "equals", "args": { "value": "conventions.platforms.figma.inferNumberProps", "compareTo": true } },
+              { "operation": "equals", "args": { "value": "derived.allNumeric", "compareTo": true } }
+            ] },
+            "emit": ["NumberProp with the options as `enum`, authored order, `nullable: false`"],
+            "why": "ADR-072 — the enum is the variant axis; render rebuilds the component set from it positionally"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "property.type", "compareTo": "VARIANT" } },
+            "emit": ["EnumProp with the options as `enum`, `nullable: false`"],
+            "why": "The default case: a closed option list"
+          }
+        ],
+        "otherwise": { "emit": [], "why": "Non-VARIANT property types resolve per kind, outside this cluster" },
+        "notes": "One Figma VARIANT property resolves to one of three prop kinds, and no kind alone states the rule."
+      },
+      "numberInference": {
+        "disposition": "bound",
+        "direction": "figma-to-spec",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["string", "number"],
+        "inputs": [
+          { "ref": "property.type", "from": "Figma ComponentPropertyDefinitions" },
+          { "ref": "property.defaultValue", "from": "Figma ComponentPropertyDefinitions" },
+          { "ref": "conventions.platforms.figma.inferNumberProps", "from": "declared conventions" }
+        ],
+        "cases": [
+          {
+            "when": { "operation": "all", "args": [
+              { "operation": "equals", "args": { "value": "property.type", "compareTo": "TEXT" } },
+              { "operation": "equals", "args": { "value": "conventions.platforms.figma.inferNumberProps", "compareTo": true } },
+              { "operation": "equals", "args": { "value": "property.defaultValue", "compareTo": "passes the numeric guard" } }
+            ] },
+            "emit": ["NumberProp with `default` and `examples` carrying the number"],
+            "why": "ADR-029 — opt-in, so a library whose TEXT props are genuinely text never loses them to digits"
+          }
+        ],
+        "otherwise": { "emit": ["StringProp with the read default in `examples`"], "why": "The read default is demo content, never a contract default (ADR-014)" },
+        "notes": "A TEXT property is a string or a number, and only the convention plus the value decide which."
+      },
+      "codeOnlyProps": {
+        "disposition": "bound",
+        "direction": "both",
+        "basis": "implementation",
+        "form": "prose",
+        "keys": ["image"],
+        "outputs": ["props with `$extensions['com.figma'].source` provenance"],
+        "resolution": "A hidden code-only container layer's sub-layers mint props the component's native property surface cannot carry — accessibility labels, heading levels, ARIA concerns, image sources (ADR-027). Each prop records `source.kind: 'codeOnlyProp'` and its `layer`; an enum minted from a nested instance records `instanceOf`. Props named in `figma.images.sourceProps` mint ImageProps (ADR-063). Native extraction skips these names so a prop is minted exactly once. Render mints the hidden layers back from the provenance.",
+        "partial": "A code-only layer with no recognisable sub-layer shape mints nothing; native props are unaffected.",
+        "notes": "Code-only extraction spans the boolean, string, number, enum and image kinds; it is keyed under `image` because that kind exists only through it — the other kinds also read natively."
+      },
+      "booleanContentPairing": {
+        "disposition": "bound",
+        "direction": "figma-to-spec",
+        "basis": "implementation",
+        "form": "prose",
+        "keys": ["boolean"],
+        "outputs": ["the paired content prop, made nullable; the boolean prop, consumed"],
+        "resolution": "A BOOLEAN property that only ever toggles the visibility of the element a content prop fills is not a second fact — it is the content prop's nullability. Where visible- and content-bindings co-occur on one element across variants and the pairing validates, the boolean is consumed and the content prop records `nullable: true`; `null` then means what the toggle meant.",
+        "partial": "A candidate pair that fails cross-variant validation leaves both props standing as read.",
+        "notes": "The consolidation rule: two Figma properties become one spec prop. The render direction re-creates the boolean from the nullable content prop's visible-binding."
+      }
     }
   },
   "valueForms": {

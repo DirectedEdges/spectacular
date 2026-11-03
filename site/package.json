@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "build:content": "node scripts/build-releases.mjs && node scripts/build-adrs.mjs && node scripts/build-specification.mjs && node scripts/build-mappings.mjs && node scripts/build-style-pages.mjs",
+    "build:content": "node scripts/build-releases.mjs && node scripts/build-adrs.mjs && node scripts/build-specification.mjs && node scripts/build-mappings.mjs && node scripts/build-style-pages.mjs && node scripts/build-prop-pages.mjs",
     "prebuild": "npm run build:content",
     "predev": "npm run build:content",
     "dev": "node scripts/watch-content.mjs",
