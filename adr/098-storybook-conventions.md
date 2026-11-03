@@ -4,6 +4,7 @@
 **Created**: 2026-10-02
 **Status**: ACCEPTED
 **Summary**: A `storybook` conventions member maps publish concerns to open feature settings, loaded from `conventions/storybook.yaml` beside `specs` and `figma.primitives`.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

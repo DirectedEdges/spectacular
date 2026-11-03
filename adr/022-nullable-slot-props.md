@@ -4,6 +4,7 @@
 **Created**: 2026-03-12
 **Status**: ACCEPTED
 **Summary**: `SlotProp` gains `nullable` and a nullable `default`, matching the other prop types.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none — extends ADR 019 to cover `SlotProp`)*
 

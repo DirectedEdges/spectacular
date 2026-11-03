@@ -4,6 +4,7 @@
 **Created**: 2026-03-09
 **Status**: ACCEPTED
 **Summary**: A `fillColor` property colors icon elements alongside `backgroundColor`, `textColor` and `strokes`.
+**Decides**: styles.fillColor
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

@@ -4,6 +4,7 @@
 **Created**: 2026-07-14
 **Status**: ACCEPTED
 **Summary**: Images are supported by `backgroundImage` style, `ImageProp` and binding in components and examples.
+**Decides**: styles.backgroundImage, styles.backgroundImage.$image, styles.backgroundImage.objectFit
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

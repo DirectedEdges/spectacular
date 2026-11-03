@@ -4,6 +4,7 @@
 **Created**: 2026-04-29
 **Status**: ACCEPTED
 **Summary**: A `Composition` type names composed content, carrying `anatomy`, `elements` and `layout` with optional title and description.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: [ADR 025 — Flowing Content into a Nested Instance's Slot](025-nested-slot-api) *(partially — retains its `Composition` shape; defers its `PropConfigurations` widening to ADR-049)*
 **Extended by**: ADR-046 (Slots and Slot References), ADR-047 (Component Slot Examples), ADR-048 (Component Instance Examples), ADR-049 (Prop Configurations and Bindings)

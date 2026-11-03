@@ -191,7 +191,7 @@ const adrsFor = (key, path) => {
       return mentionsKey(title) || mentionsKey(summary) || mentionsKey(decision);
     };
 
-    const decides = declared ? declared.includes(path) || declared.includes(key) : derivedDecides();
+    const decides = declared ? declared.includes(path) : derivedDecides();
     if (!decides) continue;
     out.push({ num: f.slice(0, 3), title, file: f, declared: Boolean(declared) });
   }
@@ -774,7 +774,9 @@ for (const node of nodes) {
    */
   const decisionRecords = (() => {
     if (spec.$sharedType) return null;
-    const adrs = adrsFor(key, p.join('.'));
+    // Rooted, because `anatomy` and `props` will declare paths in the same
+    // field and a bare leaf would not say which tree it belongs to.
+    const adrs = adrsFor(key, `styles.${p.join('.')}`);
     // Said rather than left blank: several keys have no record, and a missing
     // section reads as a render that failed instead of a fact about the key.
     if (!adrs.length) return '**Decisions.** None.\n';

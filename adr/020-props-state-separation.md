@@ -3,6 +3,7 @@
 **Branch**: `020-props-state-separation`
 **Created**: 2026-03-11
 **Status**: DRAFT
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

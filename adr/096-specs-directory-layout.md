@@ -4,6 +4,7 @@
 **Created**: 2026-09-29
 **Status**: ACCEPTED
 **Summary**: `specs/` gains a directory per kind — `components/`, `compositions/`, `analysis/` — with one resolver owning the layout and `TransformerContext` gaining `specsRoot` and `kind` so nothing climbs paths to find its depth.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

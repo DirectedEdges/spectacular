@@ -4,6 +4,7 @@
 **Created**: 2026-03-30
 **Status**: ACCEPTED
 **Summary**: An `emptyVariants` include option replaces `variantNames`, and the remaining `Config.include` fields become optional.
+**Decides**: none
 **Deciders**: nathanacurtis (author)
 **Supersedes**: *(none)*
 

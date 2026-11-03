@@ -4,6 +4,7 @@
 **Created**: 2026-03-10
 **Status**: ACCEPTED
 **Summary**: A `glyph` element type, `GlyphProp` and `glyphNamePattern` emit icons as first-class by applying Figma conventions.
+**Decides**: styles.fillColor
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

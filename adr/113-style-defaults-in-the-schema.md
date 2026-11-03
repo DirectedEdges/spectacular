@@ -3,6 +3,7 @@
 **Status**: ACCEPTED
 
 **Summary**: Every `Styles` property declares a `default`, making what an absent style key means a fact of the contract rather than of one transform.
+**Decides**: styles.aspectRatio, styles.backgroundColor, styles.backgroundImage, styles.bottom, styles.centerHorizontalOffset, styles.centerVerticalOffset, styles.clipsContent, styles.cornerRadius, styles.cornerSmoothing, styles.crossAxisAlignment, styles.effects, styles.end, styles.fillColor, styles.height, styles.itemReverseZIndex, styles.itemSpacing, styles.layoutMode, styles.layoutSizingHorizontal, styles.layoutSizingVertical, styles.locked, styles.mainAxisAlignment, styles.maxHeight, styles.maxLines, styles.maxWidth, styles.minHeight, styles.minWidth, styles.opacity, styles.padding, styles.position, styles.primaryAxisSizingMode, styles.rotation, styles.start, styles.strokeAlign, styles.strokeDashPattern, styles.strokeWeight, styles.strokes, styles.textAlignHorizontal, styles.textAlignVertical, styles.textColor, styles.textOverflow, styles.top, styles.typography, styles.visible, styles.width, styles.wrap, styles.wrapAlignment
 
 ## Context
 

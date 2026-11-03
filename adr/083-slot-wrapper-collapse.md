@@ -4,6 +4,7 @@
 **Created**: 2026-09-01
 **Status**: ACCEPTED
 **Summary**: `collapsePrimitiveWrapper` extends to a root wrapping one `slot`, merging both containers and keeping the slot's value on shared keys.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none — amends ADR-058)*
 

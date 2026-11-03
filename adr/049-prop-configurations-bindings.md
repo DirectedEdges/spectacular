@@ -4,6 +4,7 @@
 **Created**: 2026-04-29
 **Status**: ACCEPTED
 **Summary**: `PropConfigurations` values accept `PropBinding` and `SlotContentRef`, so a configuration can forward a prop or fill a slot.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Depends on**: [ADR-008 — Introduce PropBinding](008-prop-binding), [ADR-042 — Composition Structural Type](042-composition-type), [ADR-046 — Slots and Slot References](046-slots-and-slot-references), [ADR-047 — Component Slot Examples](047-component-slot-examples), [ADR-048 — Component Instance Examples](048-component-instance-examples)
 

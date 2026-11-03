@@ -4,6 +4,7 @@
 **Created**: 2026-10-21
 **Status**: ACCEPTED
 **Summary**: `CompositionApiDocument`, `CompositionVariantsDocument`, and `CompositionExamplesDocument` type a composition's `splitConcerns` files, exact to each concern alongside the existing component documents.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none; extends ADR-091 to a second spec kind)*
 

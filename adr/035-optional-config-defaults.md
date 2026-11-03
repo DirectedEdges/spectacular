@@ -4,6 +4,7 @@
 **Created**: 2026-04-10
 **Status**: ACCEPTED
 **Summary**: Every `Config` property carrying a default becomes optional, so a config states only what it changes.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

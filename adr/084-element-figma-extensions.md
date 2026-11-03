@@ -4,6 +4,7 @@
 **Created**: 2026-09-02
 **Status**: ACCEPTED
 **Summary**: An `Element.$extensions` member records that a layer was promoted, whether the match was ambiguous, and what it consumed.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 
