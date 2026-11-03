@@ -3,6 +3,7 @@
 **Status**: ACCEPTED
 
 **Summary**: Every `Styles` property declares a `default`, making what an absent style key means a fact of the contract rather than of one transform.
+**Decides**: backgroundColor, bottom, clipsContent, cornerRadius, effects, end, layoutMode, locked, maxWidth, opacity, padding, padding.bottom, padding.end, padding.start, padding.top, position, rotation, start, strokeAlign, textAlignHorizontal, top, typography, visible, width, wrap
 
 ## Context
 

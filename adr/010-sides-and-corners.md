@@ -4,6 +4,7 @@
 **Created**: 2026-03-05
 **Status**: ACCEPTED
 **Summary**: Composite `Sides` and `Corners` types replace flat padding, stroke weight and corner radius properties.
+**Decides**: cornerRadius, cornerSmoothing, padding, strokeWeight
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

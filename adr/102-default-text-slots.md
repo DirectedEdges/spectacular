@@ -4,6 +4,7 @@
 **Created**: 2026-10-06
 **Status**: ACCEPTED
 **Summary**: Reserved `$text` and `$glyph` markers in `anyOf`, with `Element.contentStyles` formatting each primitive fill per variant.
+**Decides**: backgroundColor, fillColor, height, minWidth, padding, typography, typography.fontFamily, typography.fontSize, typography.letterSpacing, typography.lineHeight, typography.textCase, typography.textDecoration, width
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

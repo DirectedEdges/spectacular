@@ -4,6 +4,7 @@
 **Created**: 2026-08-10
 **Status**: ACCEPTED
 **Summary**: A `format.figmaKeys` option and safe key grammar preserve Figma layer names losslessly through `com.figma.name`.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none — extends ADR-058)*
 

@@ -4,6 +4,7 @@
 **Created**: 2026-02-25
 **Status**: ACCEPTED
 **Summary**: Gradient types and a `ColorStyle` alias let `backgroundColor`, `textColor` and `strokes` carry linear, radial and angular gradients.
+**Decides**: backgroundColor, strokes, textColor
 **Deciders**: Nathan Curtis
 **Supersedes**: *(none)*
 

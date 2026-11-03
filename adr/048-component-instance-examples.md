@@ -4,6 +4,7 @@
 **Created**: 2026-04-29
 **Status**: ACCEPTED
 **Summary**: An `instanceExamples` registry carries real instances of a component, stored once and referenced by variants.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Depends on**: [ADR-042 — Composition Structural Type](042-composition-type), [ADR-046 — Slots and Slot References](046-slots-and-slot-references), [ADR-047 — Component Slot Examples](047-component-slot-examples)
 **Extended by**: ADR-049 (Prop Configurations and Bindings)

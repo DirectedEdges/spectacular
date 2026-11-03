@@ -4,6 +4,7 @@
 **Created**: 2026-03-02
 **Status**: ACCEPTED
 **Summary**: A `PropBinding` type keyed `$binding` replaces `ReferenceValue` unions wherever a value is bound to a prop.
+**Decides**: visible
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

@@ -4,6 +4,7 @@
 **Created**: 2026-08-30
 **Status**: ACCEPTED
 **Summary**: A `conventions.primitives` table maps a captured layer's styles onto the props of the component it promotes to.
+**Decides**: fillColor, height, layoutMode, textColor, typography, typography.fontFamily, typography.fontSize, typography.fontStyle, width
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

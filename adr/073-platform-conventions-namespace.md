@@ -4,6 +4,7 @@
 **Created**: 2026-08-30
 **Status**: ACCEPTED
 **Summary**: A platform-keyed `conventions.platforms` map replaces `conventions.figma`, with a `conventions.specs` sibling for the conventions that describe the spec rather than any platform.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

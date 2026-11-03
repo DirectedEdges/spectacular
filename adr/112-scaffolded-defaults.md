@@ -4,6 +4,7 @@
 **Created**: 2026-10-22
 **Status**: ACCEPTED
 **Summary**: `spec.format`, `spec.keys`, `spec.color`, `curation.preserveManualSelections` and `spec.collapsePrimitiveWrapper` default to the values every scaffolded workspace writes.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none; changes default values introduced by ADR-071, ADR-093)*
 

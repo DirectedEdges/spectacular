@@ -4,6 +4,7 @@
 **Created**: 2026-04-20
 **Status**: ACCEPTED
 **Summary**: An `ItemSpacing` type gives `itemSpacing` a bi-axial shape, replacing the separate `counterAxisSpacing` property.
+**Decides**: bottom, end, itemSpacing, itemSpacing.horizontal, itemSpacing.vertical, start, top
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

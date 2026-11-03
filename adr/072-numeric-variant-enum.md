@@ -4,6 +4,7 @@
 **Created**: 2026-08-24
 **Status**: ACCEPTED
 **Summary**: `NumberProp` carries an `enum` of the numeric values a variant prop accepts, so a numeric variant set keeps its options instead of widening to an unbounded number.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

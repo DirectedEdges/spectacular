@@ -3,6 +3,7 @@
 **Created**: 2026-03-02
 **Status**: ACCEPTED
 **Summary**: A DTCG `ColorValue` object replaces the hex string in `ColorStyle`, aligning color values with token standards.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

@@ -4,6 +4,7 @@
 **Created**: 2026-03-11
 **Status**: ACCEPTED
 **Summary**: `StringProp.default` accepts `null`, expressing props whose absent value is meaningful.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

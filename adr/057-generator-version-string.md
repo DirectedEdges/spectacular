@@ -4,6 +4,7 @@
 **Created**: 2026-06-15
 **Status**: ACCEPTED
 **Summary**: `Metadata.generator.version` is typed `string`, matching the semver values every producer already emits.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

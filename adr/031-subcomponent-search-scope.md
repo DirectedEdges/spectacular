@@ -4,6 +4,7 @@
 **Created**: 2026-03-24
 **Status**: ACCEPTED
 **Summary**: A `processing.subcomponents` object with `scope`, `match` and `exclude` replaces `subcomponentNamePattern` for finding subcomponents.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 
