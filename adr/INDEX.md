@@ -4,7 +4,6 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
-| 116 | Nested style members declare their own defaults | |
 | 112 | Settings Defaults Adopt Their Scaffolded Values | |
 | 111 | Object-Typed Props | |
 | 108 | The `$slotContent` Pointer Namespace | (reserved, draft in PR #767) |
@@ -25,6 +24,7 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
+| 116 | Nested style members declare their own defaults | 23 of 30 optional composite members declare a `default`; required members declare none; `lineHeight` settles on `'AUTO'` |
 | 115 | Closed Style Value Sets | Five keys that inherited an open string wrapper become named closed sets, each dropping three value forms nothing writes |
 | 114 | Describe Enum Options Where They Are Declared | A closed value set declares `oneOf` branches of `const` with a description, so every option documents itself |
 | 113 | Style defaults belong to the schema | Every `Styles` property declares a `default`, making what an absent style key means a fact of the contract rather than of one transform |

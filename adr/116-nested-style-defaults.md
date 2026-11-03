@@ -2,7 +2,7 @@
 
 **Branch**: `116-nested-style-defaults`
 **Created**: 2026-11-03
-**Status**: DRAFT
+**Status**: ACCEPTED
 **Summary**: Optional members of the `Styles` composite types declare their own `default`, joining the 46 top-level properties that already do.
 **Decides**: styles.Sides.top, styles.Sides.end, styles.Sides.bottom, styles.Sides.start, styles.cornerRadius.topStart, styles.cornerRadius.topEnd, styles.cornerRadius.bottomEnd, styles.cornerRadius.bottomStart, styles.itemSpacing.horizontal, styles.itemSpacing.vertical, styles.ColorObject.alpha, styles.ColorObject.hex, styles.backgroundImage.objectFit, styles.effects.shadows, styles.effects.layerBlur, styles.effects.backgroundBlur, styles.effects.shadows.inset, styles.typography.fontSize, styles.typography.fontFamily, styles.typography.fontStyle, styles.typography.lineHeight, styles.typography.letterSpacing, styles.typography.textCase, styles.typography.textDecoration, styles.typography.paragraphIndent, styles.typography.paragraphSpacing, styles.typography.leadingTrim, styles.typography.listSpacing, styles.typography.hangingPunctuation, styles.typography.hangingList
 **Deciders**: Nathan Curtis (author)
@@ -61,7 +61,6 @@ ADR-113 met this for 19 of 46 properties and answered it with `default: null`, b
 | `Effects.layerBlur`, `Effects.backgroundBlur` | `$ref: Blur` | `Blur` is an object with two required members |
 | `ColorObject.hex` | `string`, `pattern: ^#[0-9A-Fa-f]{6}$` | No string expresses "no fallback" |
 | `Typography.fontSize`, `.fontFamily`, `.fontStyle` | number / string / `MixedValue` / `TokenReference` | A literal is admitted; the *meaning* is the problem — see below |
-| `Typography.lineHeight` | string / number / `MixedValue` / `TokenReference` | Automatic leading is spelled two ways in the contract — see below |
 
 | Option | For | Against |
 |---|---|---|
@@ -69,13 +68,22 @@ ADR-113 met this for 19 of 46 properties and answered it with `default: null`, b
 | B. Declare `default: null` anyway and exempt these members from the validation test | Every member page shows something | Publishes a default the member's own schema rejects, and the exemption dissolves the only gate ADR-113 built. The test would pass on a falsehood by configuration |
 | C. Widen each unexpressible member's schema to admit `null` | `null` then validates, and all 30 declare | Changes what documents are valid in order to carry an annotation, for a value nothing writes. This is the reasoning ADR-113 used to refuse `allOf` wrappers around `$ref`, applied to validation rather than structure — and a `shadows: null` arm invites a producer to write one |
 
-**A.** Eight members declare none, in three classes:
+**A.** Seven members declare none, in two classes:
 
 - **Unexpressible** — `Effects.shadows`, `Effects.layerBlur`, `Effects.backgroundBlur`, `ColorObject.hex`. The member means "nothing of this kind applies" and the schema has no literal for it.
 - **Undetermined** — `Typography.fontSize`, `.fontFamily`, `.fontStyle`. A literal is admitted, but none is defensible from the type's own meaning. `16` is a browser convention, not a fact about `fontSize`; `"Regular"` is a Figma family-style naming convention many families do not use. Picking one would be the invention this ADR's second driver forbids.
-- **Disputed** — `Typography.lineHeight`. Automatic leading is the correct default, and the contract spells it two ways: the member's own description says `'auto'`, and the documents carry `'AUTO'`. Declaring either would settle a vocabulary question by annotation, which is how the contract would acquire a second spelling rather than lose one. Resolving it is closed-value-set work of the kind ADR-115 did, not defaults work.
 
-So 22 of the 30 optional members declare a default and 8 do not, each named with its reason.
+So 23 of the 30 optional members declare a default and 7 do not, each named with its reason.
+
+### `Typography.lineHeight` — one spelling, then a default
+
+A third class had one member in it. Automatic leading is plainly `lineHeight`'s default, and the contract spelled it two ways: `'auto'` in the member's own description, `'AUTO'` in `TYPOGRAPHY_DEFAULTS` and `LineHeightStyle`, which is what every document carries.
+
+That is a defect in the contract, not a defaults question, and declaring either spelling would have left the second one standing. It is resolved here rather than deferred because a default cannot be declared over an unsettled vocabulary:
+
+**`'AUTO'` is the spelling. `'auto'` is not a value this contract carries.** The member's description says so, and the TypeScript doc comment on `Typography.lineHeight` is corrected to match. `Typography.lineHeight` then declares `default: "AUTO"`.
+
+No `pattern` is added to the string branch. Enforcing the casing is a validity change — it would reject documents this schema currently accepts — and that is a separate decision from naming the value. Every `lineHeight` string observed across the workspace specs is already a percentage or `AUTO`, so nothing in evidence writes the lowercase form.
 
 ---
 
@@ -144,9 +152,8 @@ As in ADR-113, `default` sits as a sibling of `$ref` where the member has one, w
 | `Typography.fontSize` | A literal validates, but no number follows from the type's meaning | Undetermined |
 | `Typography.fontFamily` | As `fontSize`; no family name is a fact about the member | Undetermined |
 | `Typography.fontStyle` | As `fontSize`; `"Regular"` is a Figma naming convention, not a contract | Undetermined |
-| `Typography.lineHeight` | Automatic leading is the value; the contract spells it `'auto'` in the member's description and `'AUTO'` in documents | Disputed |
 
-The four unexpressible members all mean "nothing of this kind is applied". Resolving them needs a `null` arm on each member's schema, which is a validity change and its own decision. `lineHeight` needs its two spellings reconciled first, which is a closed-value-set decision and also its own.
+The four unexpressible members all mean "nothing of this kind is applied". Resolving them needs a `null` arm on each member's schema, which is a validity change and its own decision.
 
 ### Required members, excluded by Decision 1
 
@@ -187,7 +194,7 @@ DSPEC-45 (a default is a literal) and DSPEC-46 (a platform binding does not rede
 
 - The traversal reaches the 16 composite types it is meant to, asserted as a list, so a traversal that stopped short cannot pass every other assertion on an empty set.
 - Every required member carries no `default` (DSPEC-53).
-- Every optional member carries one, except the eight named above, which the test lists explicitly so adding a default to one is a deliberate edit rather than a silent drift.
+- Every optional member carries one, except the seven named above, which the test lists explicitly so adding a default to one is a deliberate edit rather than a silent drift.
 - Every declared member default is a type the member admits (DSPEC-52), by the same structural check the top-level pass uses.
 - Every declared member default is a literal (DSPEC-45).
 - A style key and a composite member it expands into declare the same default, where the two are of the same JSON type. This is what holds Decision 3 together: `Sides` serves `padding` and `strokeWeight`, and a third key defaulting to anything but `0` would make `Sides.top` wrong by that path.

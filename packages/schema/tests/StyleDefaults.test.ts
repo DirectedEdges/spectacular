@@ -171,10 +171,12 @@ const memberSchema = (path: string): any => {
  * Four are *unexpressible*: the member means "nothing of this kind applies" and
  * its schema admits no `null` to say so. Three are *undetermined*: a literal
  * would validate, but none follows from the member's own meaning — `16` is a
- * browser convention, not a fact about `fontSize`. `lineHeight` is *disputed*:
- * its own description spells automatic leading `'auto'` and the documents say
- * `'AUTO'`, so declaring either would settle a vocabulary question ADR-116 did
- * not ask.
+ * browser convention, not a fact about `fontSize`.
+ *
+ * `lineHeight` is no longer among them. The contract spelled automatic leading
+ * `'auto'` in the member's own description and `'AUTO'` everywhere a document
+ * or a transform writes it; `'AUTO'` is now the only spelling the contract
+ * carries, and the member declares it.
  *
  * The list is asserted in both directions. A member removed from it must declare
  * a default, and a member added to it must be argued for in the ADR first.
@@ -187,7 +189,6 @@ const UNDECLARED = [
   'Typography.fontFamily',
   'Typography.fontSize',
   'Typography.fontStyle',
-  'Typography.lineHeight',
 ];
 
 const hasDefault = (node: any) => Object.prototype.hasOwnProperty.call(node, 'default');

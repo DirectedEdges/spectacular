@@ -1386,7 +1386,7 @@
         {
           "type": "string",
           "not": { "$ref": "#/definitions/MixedValue" },
-          "description": "Percentage (e.g., '150%') or 'auto'"
+          "description": "A percentage of the font size, e.g. '150%', or 'AUTO' for the font's own automatic leading. Uppercase only — 'auto' is not a value this contract carries."
         },
         {
           "type": "number",
@@ -1853,7 +1853,7 @@
             {
               "type": "string",
               "not": { "$ref": "#/definitions/MixedValue" },
-              "description": "Percentage (e.g., '150%') or 'auto'"
+              "description": "A percentage of the font size, e.g. '150%', or 'AUTO' for the font's own automatic leading. Uppercase only — 'auto' is not a value this contract carries."
             },
             {
               "type": "number",
@@ -1866,7 +1866,8 @@
               "$ref": "#/definitions/TokenReference"
             }
           ],
-          "description": "Line height (lineHeight primitive)"
+          "description": "Line height (lineHeight primitive)",
+          "default": "AUTO"
         },
         "letterSpacing": {
           "oneOf": [
