@@ -207,7 +207,7 @@
         { "type": "array", "items": { "type": "string" }, "minItems": 1 }
       ]
     },
-    "ElementAction": {
+    "ActionEntry": {
       "type": "object",
       "description": "One behavior this element performs when activated.",
       "required": [
@@ -226,12 +226,12 @@
       "description": "Platform extensions. com.figma carries extraction provenance.",
       "properties": {
         "com.figma": {
-          "$ref": "#/definitions/AnatomyElementFigmaExtension"
+          "$ref": "#/definitions/FigmaAnatomyElementExtension"
         }
       },
       "additionalProperties": false
     },
-    "AnatomyElementFigmaExtension": {
+    "FigmaAnatomyElementExtension": {
       "type": "object",
       "properties": {
         "name": {
@@ -285,7 +285,7 @@
         "actions": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ElementAction"
+            "$ref": "#/definitions/ActionEntry"
           },
           "description": "Behaviors invoked when this element is activated (ADR-087), generated from Dev Mode annotations of the form action:<concept>. An array so an element may perform more than one, and so each entry can grow properties of its own."
         }
