@@ -4,7 +4,7 @@
 **Created**: 2026-08-14
 **Status**: ACCEPTED
 **Summary**: A `clipsContent` boolean style replaces `clipContent`, joining `visible` and `locked` as element state consumers map to `overflow`.
-**Decides**: clipsContent, locked, visible
+**Decides**: styles.clipsContent
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

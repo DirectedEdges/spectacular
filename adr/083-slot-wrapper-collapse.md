@@ -4,7 +4,7 @@
 **Created**: 2026-09-01
 **Status**: ACCEPTED
 **Summary**: `collapsePrimitiveWrapper` extends to a root wrapping one `slot`, merging both containers and keeping the slot's value on shared keys.
-**Decides**: backgroundColor, backgroundImage, clipsContent, cornerRadius, cornerSmoothing, crossAxisAlignment, effects, itemSpacing, layoutMode, layoutSizingHorizontal, layoutSizingVertical, mainAxisAlignment, opacity, padding, primaryAxisSizingMode, rotation, strokeAlign, strokeWeight, strokes, wrap, wrapAlignment
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none — amends ADR-058)*
 

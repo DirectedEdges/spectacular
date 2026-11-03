@@ -4,7 +4,7 @@
 **Created**: 2026-07-09
 **Status**: ACCEPTED
 **Summary**: `textOverflow` and `maxLines` properties add truncation to styles already covering typography and layout.
-**Decides**: cornerSmoothing, maxLines, opacity, textOverflow, width
+**Decides**: styles.maxLines, styles.textOverflow
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

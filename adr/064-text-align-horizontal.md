@@ -4,7 +4,7 @@
 **Created**: 2026-08-03
 **Status**: ACCEPTED
 **Summary**: A `TextAlignHorizontal` enum types `textAlignHorizontal` as `START`, `CENTER`, `END` or `JUSTIFY`.
-**Decides**: textAlignHorizontal, textAlignVertical
+**Decides**: styles.textAlignHorizontal, styles.textAlignVertical
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

@@ -4,7 +4,7 @@
 **Created**: 2026-02-25
 **Status**: ACCEPTED
 **Summary**: An `aspectRatio` property carries an `x`/`y` ratio object on styles alongside width and height.
-**Decides**: aspectRatio, aspectRatio.x, aspectRatio.y, cornerRadius, height, width
+**Decides**: styles.aspectRatio, styles.aspectRatio.x, styles.aspectRatio.y, styles.cornerRadius, styles.height, styles.width
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

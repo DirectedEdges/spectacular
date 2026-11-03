@@ -4,7 +4,7 @@
 **Created**: 2026-02-28
 **Status**: ACCEPTED
 **Summary**: A single `TokenReference` type replaces `VariableStyle` and `FigmaStyle` for variables, named styles and composite references.
-**Decides**: effects, effects.shadows, effects.shadows.color, effects.shadows.inset, effects.shadows.offsetX, effects.shadows.offsetY, typography, typography.fontFamily
+**Decides**: styles.effects, styles.typography
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

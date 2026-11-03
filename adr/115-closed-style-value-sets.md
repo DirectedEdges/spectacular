@@ -4,7 +4,7 @@
 **Created**: 2026-11-01
 **Status**: ACCEPTED
 **Summary**: Five `Styles` keys that inherited an open string wrapper by accident become named closed value sets, each dropping three value forms nothing writes.
-**Decides**: layoutSizingHorizontal, layoutSizingVertical, primaryAxisSizingMode, strokeAlign, textAlignVertical
+**Decides**: styles.layoutSizingHorizontal, styles.layoutSizingVertical, styles.primaryAxisSizingMode, styles.strokeAlign, styles.textAlignVertical
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

@@ -4,7 +4,7 @@
 **Created**: 2026-03-25
 **Status**: ACCEPTED
 **Summary**: `Typography.leadingTrim` is a string enum, matching the values Figma actually reports.
-**Decides**: none
+**Decides**: styles.typography, styles.typography.leadingTrim
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

@@ -4,7 +4,7 @@
 **Created**: 2026-11-01
 **Status**: ACCEPTED
 **Summary**: Closed value sets declare `oneOf` branches of `const` with a description, so every option documents itself.
-**Decides**: position
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

@@ -81,7 +81,9 @@ const allPaths = (() => {
    * `GradientValue`'s branches are reached by path as a union, so
    * `backgroundColor.LinearGradient` is not something anyone writes.
    */
-  return [...new Set(out)].filter((p) => p.split('.').every((s) => s[0] !== s[0]?.toUpperCase()));
+  // `A-Z` only. Testing `toUpperCase()` also excluded `$image`, whose `$` is
+  // its own uppercase form, and `$image` is a real document key.
+  return [...new Set(out)].filter((p) => p.split('.').every((s) => !/^[A-Z]/.test(s)));
 })();
 
 const TOP = allPaths.filter((p) => !p.includes('.'));
@@ -97,10 +99,15 @@ const report = [];
 for (const file of readdirSync(adrDir).filter((n) => /^\d{3}-.*\.md$/.test(n))) {
   const path = join(adrDir, file);
   const src = readFileSync(path, 'utf8');
-  if (/^\*\*Decides\*\*:/m.test(src)) {
-    already++;
-    continue;
-  }
+  /**
+   * An existing line is REPLACED, not kept.
+   *
+   * That makes a re-run discard any hand correction, which is the opposite of
+   * what you want once review has started. This exists to seed the lists and
+   * to re-root them; after that the records are the source and this should not
+   * be run again.
+   */
+  const existing = src.match(/^\*\*Decides\*\*:.+$/m);
 
   // Placed after `**Summary**`, or after `**Status**` on the few records with
   // no summary line, so it sits with the other declarations either way.
@@ -123,14 +130,26 @@ for (const file of readdirSync(adrDir).filter((n) => /^\d{3}-.*\.md$/.test(n))) 
     }
   }
 
-  const list = [...found].sort().join(', ') || 'none';
+  /**
+   * Rooted at `styles.`, because `anatomy`, `props` and `layout` will declare
+   * paths here too and several names collide — `anatomy.<element>.content` and
+   * a style key are both reachable, and a bare leaf says which neither.
+   */
+  const list = [...found].sort().map((p) => `styles.${p}`).join(', ') || 'none';
   /**
    * Replaced with a function, not a string. ADR-023's summary contains
    * `` `$`-prefixed keys ``, and in a replacement string `$&` means the whole
    * match — so the string form spliced the record's own title into its summary
    * line.
    */
-  const next = src.replace(anchor[0], () => `${anchor[0]}\n**Decides**: ${list}`);
+  const line = `**Decides**: ${list}`;
+  const next = existing
+    ? src.replace(existing[0], () => line)
+    : src.replace(anchor[0], () => `${anchor[0]}\n${line}`);
+  if (existing && existing[0] === line) {
+    already++;
+    continue;
+  }
   if (!dry) writeFileSync(path, next);
   changed++;
   report.push(`${file}  ${list}`);

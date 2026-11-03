@@ -4,7 +4,7 @@
 **Created**: 2026-02-24
 **Status**: ACCEPTED
 **Summary**: An `effects` property with `Shadow`, `Blur` and `Effects` types replaces `effectStyleId` to describe shadows and blurs.
-**Decides**: effects, effects.backgroundBlur, effects.backgroundBlur.visible, effects.layerBlur, effects.layerBlur.visible, effects.shadows, effects.shadows.blur, effects.shadows.offsetX, effects.shadows.offsetY, effects.shadows.spread, effects.shadows.visible, visible
+**Decides**: styles.effects, styles.effects.backgroundBlur, styles.effects.backgroundBlur.visible, styles.effects.layerBlur, styles.effects.layerBlur.visible, styles.effects.shadows, styles.effects.shadows.blur, styles.effects.shadows.offsetX, styles.effects.shadows.offsetY, styles.effects.shadows.spread, styles.effects.shadows.visible, styles.visible
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

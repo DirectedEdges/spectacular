@@ -4,7 +4,7 @@
 **Created**: 2026-06-26
 **Status**: ACCEPTED
 **Summary**: A `strokeDashPattern` property adds dashes to strokes already supported with color, weight and alignment.
-**Decides**: strokeDashPattern, strokeDashPattern.dash, strokeDashPattern.gap
+**Decides**: styles.strokeDashPattern, styles.strokeDashPattern.dash, styles.strokeDashPattern.gap
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

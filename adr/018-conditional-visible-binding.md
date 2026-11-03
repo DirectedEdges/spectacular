@@ -4,7 +4,7 @@
 **Created**: 2026-03-10
 **Status**: ACCEPTED
 **Summary**: A `Conditional` type with condition expressions lets `visible` test a prop value rather than mirror it.
-**Decides**: visible
+**Decides**: styles.visible
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

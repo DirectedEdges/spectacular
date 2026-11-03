@@ -4,7 +4,7 @@
 **Created**: 2026-08-30
 **Status**: ACCEPTED
 **Summary**: A container promotes on `layoutMode` with its children as slot content, and `stylesProp` names each platform's styling prop.
-**Decides**: backgroundColor, cornerRadius, layoutMode, padding, strokes
+**Decides**: styles.layoutMode
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 
