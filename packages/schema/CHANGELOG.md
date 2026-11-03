@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ColorObject.colorSpace`, `Settings.spec.tokens`, `Settings.spec.color` — per-option descriptions, previously only a value list
 - `Settings.spec.variantDepth` — `9999` titled "Unlimited", naming a sentinel the value could not
 - `DSPEC-48`, `DSPEC-49`, `DSPEC-50` — closed value sets declare `oneOf` of `const`, describe every option, and keep branches disjoint
+- `Sides.top`, `Sides.end`, `Sides.bottom`, `Sides.start` — `default: 0`, agreeing with `padding` and `strokeWeight` (ADR-116)
+- `Corners.topStart`, `Corners.topEnd`, `Corners.bottomEnd`, `Corners.bottomStart` — `default: 0`, agreeing with `cornerRadius`
+- `ItemSpacing.horizontal`, `ItemSpacing.vertical` — `default: 0`, agreeing with `itemSpacing`
+- `ColorObject.alpha` — `default: 1`, fully opaque per DTCG Color §4.1
+- `ImageValue.objectFit` — `default: "COVER"`
+- `Shadow.inset` — `default: false`, a drop shadow rather than an inner one
+- `Typography.letterSpacing`, `Typography.paragraphIndent`, `Typography.paragraphSpacing`, `Typography.listSpacing` — `default: 0`
+- `Typography.textCase` — `default: "ORIGINAL"`; `Typography.textDecoration` and `Typography.leadingTrim` — `default: "NONE"`
+- `Typography.hangingPunctuation`, `Typography.hangingList` — `default: false`
+- `DSPEC-52`, `DSPEC-53` — an optional composite member declares a default; a required one declares none
 
 ### Changed
 

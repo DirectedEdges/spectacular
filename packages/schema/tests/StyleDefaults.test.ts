@@ -1,5 +1,5 @@
 /**
- * Enforces ADR-113 — DSPEC-44 and DSPEC-45.
+ * Enforces ADR-113 — DSPEC-44 and DSPEC-45 — and ADR-116 — DSPEC-52 and DSPEC-53.
  *
  * Every property of `Styles` must declare a `default`, and that default must be
  * a value the property itself accepts. A declared default that does not satisfy
@@ -11,6 +11,10 @@
  * value against the property's resolved value definition structurally rather than
  * by running a validator. That is narrower than full validation and is enough for
  * the failure this guards: a default of the wrong kind.
+ *
+ * ADR-116 extends the same question to the composite types a style property
+ * resolves to. An optional member can be absent, so it answers the question; a
+ * required member cannot, so declaring one there would describe nothing.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -95,5 +99,201 @@ describe('DSPEC-45 — a declared default is a literal', () => {
         expect(marker in (d as Record<string, unknown>), `${key}: default carries ${marker}`).toBe(false);
       }
     });
+  }
+});
+
+/**
+ * The four value forms are documented once at the schema root and are not style
+ * composites: they describe how any value may be written, not a shape a style
+ * key resolves to. A `default` is forbidden on all of them by DSPEC-45 anyway.
+ */
+const VALUE_FORMS = new Set([
+  'TokenReference',
+  'PropBinding',
+  'Conditional',
+  'ConditionArgs',
+  'ConditionExpression',
+  'ReferenceValue',
+  'VariableStyle',
+  'StyleIdValue',
+  'MixedValue',
+]);
+
+/** Every named object definition reachable from `Styles`, by traversal rather than by list. */
+const composites = (() => {
+  const found = new Map<string, any>();
+  const seen = new Set<string>();
+  const visit = (node: any, depth = 0) => {
+    if (!node || depth > 8) return;
+    if (typeof node.$ref === 'string' && node.$ref.startsWith('#/definitions/')) {
+      const name = node.$ref.replace('#/definitions/', '');
+      if (seen.has(name)) return;
+      seen.add(name);
+      const def = schema.definitions[name];
+      if (!def) return;
+      if (def.properties && !VALUE_FORMS.has(name)) found.set(name, def);
+      visit(def, depth + 1);
+      return;
+    }
+    for (const branch of ['oneOf', 'anyOf', 'allOf']) {
+      if (Array.isArray(node[branch])) node[branch].forEach((b: any) => visit(b, depth + 1));
+    }
+    if (node.items) visit(node.items, depth + 1);
+    if (node.not) visit(node.not, depth + 1);
+    for (const member of Object.values(node.properties ?? {})) visit(member, depth + 1);
+  };
+  for (const key of keys) visit(props[key]);
+  return found;
+})();
+
+/** `Type.member` for every member of every composite, split by whether it can be absent. */
+const members = (() => {
+  const optional: string[] = [];
+  const required: string[] = [];
+  for (const [type, def] of composites) {
+    const req = new Set<string>(def.required ?? []);
+    for (const member of Object.keys(def.properties)) {
+      (req.has(member) ? required : optional).push(`${type}.${member}`);
+    }
+  }
+  return { optional: optional.sort(), required: required.sort() };
+})();
+
+const memberSchema = (path: string): any => {
+  const [type, member] = path.split('.');
+  return composites.get(type).properties[member];
+};
+
+/**
+ * The optional members ADR-116 deliberately leaves without a `default`, each
+ * with the reason recorded there.
+ *
+ * Four are *unexpressible*: the member means "nothing of this kind applies" and
+ * its schema admits no `null` to say so. Three are *undetermined*: a literal
+ * would validate, but none follows from the member's own meaning — `16` is a
+ * browser convention, not a fact about `fontSize`. `lineHeight` is *disputed*:
+ * its own description spells automatic leading `'auto'` and the documents say
+ * `'AUTO'`, so declaring either would settle a vocabulary question ADR-116 did
+ * not ask.
+ *
+ * The list is asserted in both directions. A member removed from it must declare
+ * a default, and a member added to it must be argued for in the ADR first.
+ */
+const UNDECLARED = [
+  'ColorObject.hex',
+  'Effects.backgroundBlur',
+  'Effects.layerBlur',
+  'Effects.shadows',
+  'Typography.fontFamily',
+  'Typography.fontSize',
+  'Typography.fontStyle',
+  'Typography.lineHeight',
+];
+
+const hasDefault = (node: any) => Object.prototype.hasOwnProperty.call(node, 'default');
+
+describe('DSPEC-52 — an optional composite member declares a default', () => {
+  it('reaches the composite types it is meant to', () => {
+    // A traversal that silently stopped short would pass every assertion below
+    // on an empty set.
+    expect([...composites.keys()].sort()).toEqual([
+      'AngularGradient',
+      'AspectRatioValue',
+      'Blur',
+      'ColorObject',
+      'Corners',
+      'Effects',
+      'GradientCenter',
+      'GradientStop',
+      'ImageValue',
+      'ItemSpacing',
+      'LinearGradient',
+      'RadialGradient',
+      'Shadow',
+      'Sides',
+      'StrokeDashPattern',
+      'Typography',
+    ]);
+  });
+
+  for (const path of members.optional.filter((p) => !UNDECLARED.includes(p))) {
+    it(`${path} declares one`, () => {
+      expect(hasDefault(memberSchema(path))).toBe(true);
+    });
+  }
+
+  it('leaves undeclared only the members ADR-116 names', () => {
+    const missing = members.optional.filter((p) => !hasDefault(memberSchema(p)));
+    expect(missing).toEqual(UNDECLARED);
+  });
+});
+
+describe('DSPEC-52 — a declared member default is a value its member accepts', () => {
+  for (const path of members.optional.filter((p) => hasDefault(memberSchema(p)))) {
+    it(`${path}'s default is an admitted type`, () => {
+      const node = memberSchema(path);
+      const admitted = admittedTypes(node);
+      expect(admitted.size, `${path}: could not determine admitted types`).toBeGreaterThan(0);
+      expect(
+        admitted.has(jsonType(node.default)),
+        `${path}: default ${JSON.stringify(node.default)} is ${jsonType(node.default)}, member admits ${[...admitted].join(' | ')}`
+      ).toBe(true);
+    });
+  }
+});
+
+describe('DSPEC-45 — a declared member default is a literal', () => {
+  for (const path of members.optional.filter((p) => hasDefault(memberSchema(p)))) {
+    it(`${path}'s default carries no reference or conditional`, () => {
+      const d = memberSchema(path).default;
+      if (d === null || typeof d !== 'object') return;
+      for (const marker of ['$token', '$binding', '$image', '$slotContent', 'if']) {
+        expect(marker in (d as Record<string, unknown>), `${path}: default carries ${marker}`).toBe(false);
+      }
+    });
+  }
+});
+
+describe('DSPEC-53 — a required composite member declares no default', () => {
+  for (const path of members.required) {
+    it(`${path} declares none`, () => {
+      // A required member cannot be absent, so a default there answers a
+      // question no document can ask.
+      expect(hasDefault(memberSchema(path))).toBe(false);
+    });
+  }
+});
+
+/**
+ * `Sides`, `Corners` and `ItemSpacing` are the per-part expansion of a scalar
+ * style key: `padding: 8` and `padding: { top: 8, … }` say the same kind of
+ * thing. Their member defaults are declared once on the shared composite, so a
+ * style key reaching one must agree with it — `Sides` serves both `padding` and
+ * `strokeWeight`, and a third key defaulting to anything but `0` would make
+ * `Sides.top` wrong by that path with nothing else to catch it.
+ *
+ * Compared only where the two defaults are the same JSON type. `strokes`
+ * defaults to `null` and reaches `ColorObject`, whose `alpha` defaults to `1`;
+ * those answer different questions and are not each other's business.
+ */
+describe('A style key agrees with the member defaults of a composite it expands into', () => {
+  const arms = (key: string): any[] => {
+    const r = resolve(props[key]);
+    return Array.isArray(r?.oneOf) ? r.oneOf : [];
+  };
+
+  for (const key of keys) {
+    for (const arm of arms(key)) {
+      const name = typeof arm.$ref === 'string' ? arm.$ref.replace('#/definitions/', '') : null;
+      if (!name || !composites.has(name)) continue;
+      for (const member of Object.keys(composites.get(name).properties)) {
+        const node = composites.get(name).properties[member];
+        if (!hasDefault(node)) continue;
+        if (jsonType(node.default) !== jsonType(props[key].default)) continue;
+        it(`${key} and ${name}.${member} declare the same default`, () => {
+          expect(node.default).toEqual(props[key].default);
+        });
+      }
+    }
   }
 });

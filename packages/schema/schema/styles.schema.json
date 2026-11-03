@@ -752,7 +752,8 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1,
-          "description": "Alpha channel 0–1. Defaults to 1 (fully opaque) when omitted."
+          "description": "Alpha channel 0–1. Defaults to 1 (fully opaque) when omitted.",
+          "default": 1
         },
         "hex": {
           "type": "string",
@@ -814,7 +815,8 @@
           "description": "Pointer into an images registry, e.g. '#/images/hero' (single-file) or 'card.examples#/images/hero' (concern-split)."
         },
         "objectFit": {
-          "$ref": "#/definitions/ObjectFitValue"
+          "$ref": "#/definitions/ObjectFitValue",
+          "default": "COVER"
         }
       },
       "required": [
@@ -928,19 +930,23 @@
       "properties": {
         "top": {
           "$ref": "#/definitions/NumberStyleValue",
-          "description": "Block-start (top) value"
+          "description": "Block-start (top) value",
+          "default": 0
         },
         "end": {
           "$ref": "#/definitions/NumberStyleValue",
-          "description": "Inline-end value (right in LTR, left in RTL)"
+          "description": "Inline-end value (right in LTR, left in RTL)",
+          "default": 0
         },
         "bottom": {
           "$ref": "#/definitions/NumberStyleValue",
-          "description": "Block-end (bottom) value"
+          "description": "Block-end (bottom) value",
+          "default": 0
         },
         "start": {
           "$ref": "#/definitions/NumberStyleValue",
-          "description": "Inline-start value (left in LTR, right in RTL)"
+          "description": "Inline-start value (left in LTR, right in RTL)",
+          "default": 0
         }
       },
       "additionalProperties": false
@@ -952,19 +958,23 @@
       "properties": {
         "topStart": {
           "$ref": "#/definitions/NumberStyleValue",
-          "description": "Top-start corner (top-left in LTR, top-right in RTL)"
+          "description": "Top-start corner (top-left in LTR, top-right in RTL)",
+          "default": 0
         },
         "topEnd": {
           "$ref": "#/definitions/NumberStyleValue",
-          "description": "Top-end corner (top-right in LTR, top-left in RTL)"
+          "description": "Top-end corner (top-right in LTR, top-left in RTL)",
+          "default": 0
         },
         "bottomEnd": {
           "$ref": "#/definitions/NumberStyleValue",
-          "description": "Bottom-end corner (bottom-right in LTR, bottom-left in RTL)"
+          "description": "Bottom-end corner (bottom-right in LTR, bottom-left in RTL)",
+          "default": 0
         },
         "bottomStart": {
           "$ref": "#/definitions/NumberStyleValue",
-          "description": "Bottom-start corner (bottom-left in LTR, bottom-right in RTL)"
+          "description": "Bottom-start corner (bottom-left in LTR, bottom-right in RTL)",
+          "default": 0
         }
       },
       "additionalProperties": false
@@ -1012,11 +1022,13 @@
       "properties": {
         "horizontal": {
           "$ref": "#/definitions/NumberStyleValue",
-          "description": "Horizontal gap between items"
+          "description": "Horizontal gap between items",
+          "default": 0
         },
         "vertical": {
           "$ref": "#/definitions/NumberStyleValue",
-          "description": "Vertical gap between items"
+          "description": "Vertical gap between items",
+          "default": 0
         }
       },
       "additionalProperties": false
@@ -1415,7 +1427,8 @@
         },
         "inset": {
           "type": "boolean",
-          "description": "true for inner shadow; absent or false for drop shadow (DTCG)"
+          "description": "true for inner shadow; absent or false for drop shadow (DTCG)",
+          "default": false
         },
         "offsetX": {
           "oneOf": [
@@ -1867,7 +1880,8 @@
               "$ref": "#/definitions/TokenReference"
             }
           ],
-          "description": "Letter spacing in pixels; 'mixed' allowed (mixableNumber primitive)"
+          "description": "Letter spacing in pixels; 'mixed' allowed (mixableNumber primitive)",
+          "default": 0
         },
         "textCase": {
           "oneOf": [
@@ -1878,7 +1892,8 @@
               "$ref": "#/definitions/TokenReference"
             }
           ],
-          "description": "Text case (\"UPPER\", \"LOWER\", \"TITLE\", \"ORIGINAL\", or 'mixed') (mixableString primitive)"
+          "description": "Text case (\"UPPER\", \"LOWER\", \"TITLE\", \"ORIGINAL\", or 'mixed') (mixableString primitive)",
+          "default": "ORIGINAL"
         },
         "textDecoration": {
           "oneOf": [
@@ -1889,7 +1904,8 @@
               "$ref": "#/definitions/TokenReference"
             }
           ],
-          "description": "Text decoration (\"UNDERLINE\", \"STRIKETHROUGH\", \"NONE\", or 'mixed') (mixableString primitive)"
+          "description": "Text decoration (\"UNDERLINE\", \"STRIKETHROUGH\", \"NONE\", or 'mixed') (mixableString primitive)",
+          "default": "NONE"
         },
         "paragraphIndent": {
           "oneOf": [
@@ -1900,7 +1916,8 @@
               "$ref": "#/definitions/TokenReference"
             }
           ],
-          "description": "Paragraph indent in pixels (pureNumber primitive)"
+          "description": "Paragraph indent in pixels (pureNumber primitive)",
+          "default": 0
         },
         "paragraphSpacing": {
           "oneOf": [
@@ -1911,10 +1928,12 @@
               "$ref": "#/definitions/TokenReference"
             }
           ],
-          "description": "Spacing between paragraphs in pixels (pureNumber primitive)"
+          "description": "Spacing between paragraphs in pixels (pureNumber primitive)",
+          "default": 0
         },
         "leadingTrim": {
           "description": "Leading trim mode — 'NONE' or 'CAP_HEIGHT' per Figma API; 'mixed' when varied across selection",
+          "default": "NONE",
           "oneOf": [
             {
               "const": "NONE",
@@ -1938,7 +1957,8 @@
               "$ref": "#/definitions/TokenReference"
             }
           ],
-          "description": "Spacing for list items in pixels (pureNumber primitive)"
+          "description": "Spacing for list items in pixels (pureNumber primitive)",
+          "default": 0
         },
         "hangingPunctuation": {
           "oneOf": [
@@ -1949,7 +1969,8 @@
               "$ref": "#/definitions/TokenReference"
             }
           ],
-          "description": "Whether hanging punctuation is enabled (boolean primitive)"
+          "description": "Whether hanging punctuation is enabled (boolean primitive)",
+          "default": false
         },
         "hangingList": {
           "oneOf": [
@@ -1960,7 +1981,8 @@
               "$ref": "#/definitions/TokenReference"
             }
           ],
-          "description": "Whether hanging list is enabled (boolean primitive)"
+          "description": "Whether hanging list is enabled (boolean primitive)",
+          "default": false
         }
       },
       "additionalProperties": false

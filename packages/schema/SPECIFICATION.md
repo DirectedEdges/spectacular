@@ -175,6 +175,18 @@ A declared default is always a literal — never a `TokenReference`, `PropBindin
 
 **A default answers only one of three reasons a key can be absent.** A key may also be absent because a variant inherits it under layering (§4.4), or because its element type cannot carry it. Nothing in a document marks which applies, and the three are not distinguishable by a consumer reading one document. This specification does not yet resolve that; see `mappings/DEFAULTS.md`.
 
+### 4.1b An absent composite member resolves to its declared default
+
+Eight style properties resolve to a composite object — `Sides`, `Corners`, `ItemSpacing`, `Effects`, `Shadow`, `Typography`, `ColorObject`, `ImageValue`. A member of one of those objects absent from a document resolves to that member's declared `default`, read the same way §4.1a reads a property's, and a consumer MUST use it rather than substituting a platform convention of its own (DSPEC-52).
+
+A member default is conditional on its containing object being present. `Typography.textCase` → `"ORIGINAL"` states what an inline `typography` object with no `textCase` means; what an absent `typography` means is `styles.typography`'s own default (§4.1a).
+
+An **optional** member declares a `default` where its own schema can express the value an absent member carries. Eight do not, and an absent `default` keeps its §4.1a meaning of *undeclared*: four because the member means "nothing of this kind applies" and its schema admits no `null` to say so, three because no literal follows from the member's own meaning, and one because automatic leading is spelled two ways in the contract (`schema: styles.schema.json`; DSPEC-52).
+
+A **required** member declares no `default` (DSPEC-53). It cannot be absent, so a default there answers a question no document can ask.
+
+Where a style property's value may be written either as a scalar or as the composite that expands it — `padding`, `strokeWeight`, `cornerRadius`, `itemSpacing` — the property's own default and its composite's member defaults MUST agree (DSPEC-52). `Sides` serves both `padding` and `strokeWeight`, so its member defaults are declared once and are true by both paths.
+
 ### 4.2 `null` means unset
 
 In a prop configuration, `null` under a prop key means the prop is **unset** in that configuration. It is a value, not an absence: an absent key inherits from the layer beneath; a `null` key overrides an inherited value with "no value" (ADR-080; schema: `component.schema.json`).
@@ -403,6 +415,8 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-49 | Every branch of a closed value set carries a `description` or a `title` stating what choosing that option does | package | §4.5, ADR-114 |
 | DSPEC-50 | No value satisfies two branches of the same `oneOf`; in particular a `const` branch never sits beside an open branch admitting that value's own type | package | §4.5, ADR-114 |
 | DSPEC-51 | A consumer applies nothing for a `mixed` value, and never substitutes one of the varying values or a platform default | consumer | §4.6 |
+| DSPEC-52 | An optional member of a `Styles` composite type declares a `default` where its own schema can express the value an absent member carries, and any declared `default` validates against that member's schema | package | §4.1b, ADR-116 |
+| DSPEC-53 | A required member of a `Styles` composite type declares no `default` | package | §4.1b, ADR-116 |
 
 Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.
 
