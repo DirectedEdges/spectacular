@@ -92,7 +92,15 @@ content).
 All five run via `predev`/`prebuild`; `npm run dev` additionally watches
 `packages/schema/schema/` and `packages/schema/mappings/` and reruns the
 affected generators. The generated trees (`docs/adr/`, `schema/mappings/`,
-`schema/styles/`, `schema/props/`, `schema/specification.md`) are gitignored.
+`schema/styles/`, `schema/props/`, `schema/anatomy/`, `schema/specification.md`)
+are gitignored.
+
+**Build scripts carry no content.** Every sentence a generator emits lives in
+`scripts/content/` (one module per generator: `mappings.mjs`, `style-pages.mjs`,
+`prop-pages.mjs`, `anatomy-pages.mjs`); the scripts hold structure only —
+headings, labels, guards, assembly. Narrative that no schema member states
+lives further upstream in `packages/schema/mappings/_*-page-content.json`.
+Prose is edited in content modules, never in a build script.
 
 ## Verification
 

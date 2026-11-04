@@ -21,6 +21,12 @@
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+// All page copy lives in content/ — this script holds structure only:
+// headings, column headers, field labels, guards, and assembly.
+import {
+  CLUSTER, CLUSTER_INDEX, SURFACES, PLATFORM, DEPENDENT, OVERVIEW, BANNER,
+  PAGE_DESCRIPTIONS, clusterPageDescription, fallbackPageDescription,
+} from './content/mappings.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const site = resolve(here, '..');
@@ -178,13 +184,13 @@ const caseRowCount = (c) =>
  * sub-tables buried under their surfaces.
  */
 const clustersSection = (metas, platform) => {
-  if (!metas.length) return '*None declared.*';
+  if (!metas.length) return CLUSTER_INDEX.none;
   return `| Cluster | Surface | Disposition | Keys | Resolution |\n|---|---|---|---|---|\n${metas
     .slice()
     .sort((a, b) => a.surface.localeCompare(b.surface) || a.name.localeCompare(b.name))
     .map(({ name, surface, c }) =>
       `| [${name}](clusters/${platform}/${kebab(name)}.md) | ${surface} | ${badge(c.disposition)} | ${c.keys.map((k) => `\`${k}\``).join(', ')} | ${
-        c.form === 'cases' ? `${caseRowCount(c)}-row case table` : 'prose — not yet a case table'
+        c.form === 'cases' ? CLUSTER_INDEX.caseTable(caseRowCount(c)) : CLUSTER_INDEX.prose
       } |`
     )
     .join('\n')}`;
@@ -214,8 +220,7 @@ const clusterPage = ({ name, c, platform, title, lead }) => {
 
 ${headerFields}
 
-${lead ?? `A cluster of the [${title} binding](../${platform}.md). These keys resolve jointly — no
-one of them determines any single output, so the rule below *is* the mapping.`}
+${lead ?? CLUSTER.defaultLead(title, platform)}
 
 **Keys.** ${c.keys.map((k) => `\`${k}\``).join(', ')}
 `;
@@ -227,8 +232,8 @@ one of them determines any single output, so the rule below *is* the mapping.`}
 **Resolution.** ${c.resolution}
 
 **Partially present.** ${c.partial}
-${c.stage ? `\n**Stage.** \`${c.stage}\` — produced by a later pass, not read directly.\n` : ''}${c.notes ? `\n*${c.notes}*\n` : ''}
-> Stated as prose. Not yet converted to a case table, so it cannot be mechanically checked.
+${c.stage ? `\n${CLUSTER.stageLine(c.stage)}\n` : ''}${c.notes ? `\n*${c.notes}*\n` : ''}
+${CLUSTER.proseDebt}
 `;
   }
 
@@ -241,7 +246,7 @@ ${c.stage ? `\n**Stage.** \`${c.stage}\` — produced by a later pass, not read 
     : '';
 
   const caseTable = (label, list) =>
-    `\n## ${label}\n\nOrdered — first match wins.\n\n| # | When | Emits | Why |\n|---|---|---|---|\n${list
+    `\n## ${label}\n\n${CLUSTER.caseTableIntro}\n\n| # | When | Emits | Why |\n|---|---|---|---|\n${list
       .map((cs, i) => `| ${i + 1} | ${fmt(cs.when)} | ${cs.emit.length ? cs.emit.map(emitCell).join('<br>') : '*nothing*'} | ${cs.why ?? ''} |`)
       .join('\n')}\n`;
 
@@ -267,16 +272,16 @@ ${c.stage ? `\n**Stage.** \`${c.stage}\` — produced by a later pass, not read 
   return `${head}
 ## Operands
 
-Every fact the cluster reads. Nothing outside this set participates.
+${CLUSTER.operandsIntro}
 
 ${inputs}
 ${derived}${tables.map((t) => caseTable(t.label, t.list)).join('')}${
     c.otherwise
-      ? `\n## Otherwise\n\n${c.otherwise.emit?.length ? c.otherwise.emit.map((e) => `\`${e}\``).join(', ') : '*Nothing is emitted.*'}${
+      ? `\n## Otherwise\n\n${c.otherwise.emit?.length ? c.otherwise.emit.map((e) => `\`${e}\``).join(', ') : CLUSTER.otherwiseNothing}${
           c.otherwise.why ? ` — ${c.otherwise.why}` : ''
         }\n`
       : ''
-  }${c.stage ? `\n**Stage.** \`${c.stage}\` — produced by a later pass, not read directly.\n` : ''}${
+  }${c.stage ? `\n${CLUSTER.stageLine(c.stage)}\n` : ''}${
     c.notes ? `\n*${c.notes}*\n` : ''
   }`;
 };
@@ -380,13 +385,8 @@ const renderProps = (ctx) =>
     unitColumn: 'Prop kind',
     pageBase: '/schema/props/',
     heading: 'Props',
-    intro: `A prop is declared once in the spec and realised differently by kind on each platform.
-Unlike a style key, a kind may carry its own row *and* participate in a cluster — a kind
-is a population of props, and different populations of it resolve differently.`,
-    clustersHeading: 'Prop clusters',
-    clustersIntro: 'Rules that span kinds — where which kind a prop even IS, or where its platform shape, is resolved jointly rather than per kind.',
-    clusterLead: (title, platform) =>
-      `A prop cluster of the [${title} binding](../${platform}.md). The kinds named below resolve jointly here — which kind a prop even is, or what platform shape it takes, is decided by this rule rather than per kind.`,
+    intro: SURFACES.props.intro,
+    clusterLead: SURFACES.props.clusterLead,
   });
 
 const renderReferences = (ctx) =>
@@ -400,16 +400,8 @@ const renderReferences = (ctx) =>
     unitLink: (k) => REFERENCE_PAGES[k],
     withNotes: true,
     heading: 'Values and References',
-    intro: `What a platform does with each form a VALUE may take — the scalar forms (a
-literal, the \`mixed\` sentinel) and the pointer grammar (SPECIFICATION §5.1's six
-reserved-marker forms plus the \`$nested\` paths; DSPEC-42 for the style-value half).
-The set is closed: the safe key grammar admits no authored \`$\`-prefixed key, so no
-document can mint a new marker. Notes stay inline — the forms' reference pages are
-hand-written and carry no generated binding section yet.`,
-    clustersHeading: 'Reference clusters',
-    clustersIntro: 'Rules that span forms.',
-    clusterLead: (title, platform) =>
-      `A reference cluster of the [${title} binding](../${platform}.md).`,
+    intro: SURFACES.references.intro,
+    clusterLead: SURFACES.references.clusterLead,
   });
 
 const renderAnatomy = (ctx) =>
@@ -422,13 +414,8 @@ const renderAnatomy = (ctx) =>
     unitColumn: 'Element type',
     pageBase: '/schema/anatomy/',
     heading: 'Anatomy',
-    intro: `An anatomy element's names are the library's; its TYPE is the contract's, and the type is
-what each platform realises. A type may carry its own row *and* participate in a cluster —
-a type is a population of elements, and which type a node even becomes is itself a joint rule.`,
-    clustersHeading: 'Anatomy clusters',
-    clustersIntro: 'Rules that span element types — detection, collapse, promotion, and the semantics that decide a tag.',
-    clusterLead: (title, platform) =>
-      `An anatomy cluster of the [${title} binding](../${platform}.md). The element types named below resolve jointly here — which type a node becomes, or what tag and semantics an element takes, is decided by this rule rather than per type.`,
+    intro: SURFACES.anatomy.intro,
+    clusterLead: SURFACES.anatomy.clusterLead,
   });
 
 /**
@@ -453,21 +440,19 @@ const renderDependent = ({ platform, title, b, styles, dependsOn, file, propsSec
 
   return `# ${title} binding
 
-**Platform binding for the Specs document format — draft.**
+${PLATFORM.draftBanner}
 
-Normative frame: [\`SPECIFICATION.md\`](../SPECIFICATION.md) §11.
+${DEPENDENT.frame}
 
 ## Inherits from ${base}
 
 ${b.realises ?? ''}
 
-**Every style key is bound exactly as the ${base} binding states**, unless overridden below. This binding never restates an inherited mapping: a second copy of a rule is a second thing to keep true.
+${DEPENDENT.inheritsRule(base)}
 
 ## Clusters
 
-The rules that resolve jointly on this platform's own surfaces — props and anatomy are
-never inherited, so these are this binding's own. Each cluster's ordered case table is
-its own page.
+${DEPENDENT.clustersIntro}
 
 ${clustersIdx}
 
@@ -477,18 +462,18 @@ ${overrides.length
   ? `| Style key | Disposition | Realised by | Why it differs |\n|---|---|---|---|\n${overrides
       .map(([k, v]) => `| \`${k}\` | ${badge(v.disposition)} | ${v.target ?? v.module?.join(', ') ?? '—'} | ${v.why ?? ''} |`)
       .join('\n')}`
-  : '**None.** Every style key is inherited unchanged.'}
+  : DEPENDENT.overridesNone}
 
 ${propsSection ?? ''}
 ## Platform surfaces
 
 ${surfaces.note ?? ''}
 
-${surfaceRows ? `| Surface | Disposition |\n|---|---|\n${surfaceRows}` : '*None declared.*'}
+${surfaceRows ? `| Surface | Disposition |\n|---|---|\n${surfaceRows}` : DEPENDENT.surfacesNone}
 
 ## Absent keys
 
-Inherited. See [Absent keys on the Overview](/schema/mappings/#absent-keys).
+${DEPENDENT.absentKeys}
 `;
 };
 
@@ -636,9 +621,7 @@ const renderPlatform = (file) => {
 
     return `## Losses
 
-What this platform does is settled and stated above. Where a loss is real, its *acceptability* is a product question rather than a specification's to settle alone. ${flagged.length} of ${styleProps.length} keys raise one of ${entries.length} such questions${
-      open.length ? `, of which ${open.length} ${open.length === 1 ? 'remains' : 'remain'} open` : ' — all decided'
-    }.
+${PLATFORM.lossesIntro(flagged.length, styleProps.length, entries.length, open.length)}
 
 ${[...open, ...decided].map(section).join('\n\n')}
 `;
@@ -646,45 +629,27 @@ ${[...open, ...decided].map(section).join('\n\n')}
 
   return { clusterPages: [...clusterPages, ...propsOut.clusterPages, ...anatomyOut.clusterPages, ...referencesOut.clusterPages], page: `# ${title} binding
 
-**Platform binding for the Specs document format — draft.**
+${PLATFORM.draftBanner}
 
-Normative frame: [\`SPECIFICATION.md\`](../SPECIFICATION.md) §11. This document states how
-the ${title} binding realises the schema; it does not restate what the members mean —
-that is the reference at \`/schema\`.
-
-Generated from \`mappings/bindings/${platform}.json\` by \`scripts/build-mappings.mjs\`.
-Edit the binding file, never this page.
+${PLATFORM.baseFrame(title, platform)}
 
 ## Clusters
 
-The rules that resolve jointly — where no single key or kind determines any single
-output, the cluster's ordered case table IS the mapping, on its own page. Keys and
-kinds in the surface tables below link back here through their *cluster* column.
+${PLATFORM.clustersIntro}
 
 ${clusterIndex}
 
 ## Styles
 
-${tally}, of ${styleProps.length} style keys.
-
-A key whose row says *cluster* does not map on its own — its rule is a case table on the
-cluster's own page. Writing a per-key mapping for it would be false, not merely incomplete.
+${PLATFORM.stylesIntro(tally, styleProps.length)}
 
 ${(() => {
   // The legend sits with the table it explains, and lists only the dispositions
   // this binding uses. As its own section it was either the first thing on the
   // page, ahead of the thing it annotates, or a footnote nobody reached.
-  const meaning = {
-    bound: 'Realised, and confirmed against the implementation',
-    approximated: 'Realised with loss, and the loss is stated',
-    unsupported: 'Declared as not realised, with the resulting behaviour stated',
-    unverified: 'Coverage detected, mapping not yet confirmed by a human — **work, not a claim**',
-  };
   const used = DISPOSITION_ORDER.filter((d) => counts[d]);
-  const rows = used.map((d) => `| \`${d}\` | ${counts[d]} | ${meaning[d]} |`).join('\n');
-  const reliance = used.includes('unverified')
-    ? 'Every row below is a claim a reader may rely on, except `unverified`, which asserts nothing.'
-    : 'Every row below is a claim a reader may rely on.';
+  const rows = used.map((d) => `| \`${d}\` | ${counts[d]} | ${PLATFORM.dispositionMeaning[d]} |`).join('\n');
+  const reliance = used.includes('unverified') ? PLATFORM.relianceWithUnverified : PLATFORM.reliance;
   return `| Disposition | Keys | Meaning |\n|---|---|---|\n${rows}\n\n${reliance}`;
 })()}
 
@@ -696,14 +661,7 @@ ${anatomyOut.section}
 ${referencesOut.section}
 ## Defaults
 
-What an absent style key **means** is spec-level, not per-platform: two platforms that
-answer differently disagree about what the same document says. It is declared once in the
-schema — each style key's page marks its own default — and the ambiguity absence carries
-is stated on [the Overview](/schema/mappings/#absent-keys).
-
-What this platform **does** on absence is its own fact, and is recorded per key below.
-A key whose behaviour is not \`declaredDefault\` disagrees with the contract — visibly,
-and as a decision rather than an accident.
+${PLATFORM.defaultsSection}
 
 ${(() => {
   const counts = {};
@@ -715,9 +673,7 @@ ${(() => {
   return `| Behaviour | Keys | Meaning |\n|---|---|---|\n${rows}`;
 })()}
 
-${Object.values(styles).some((v) => v.onAbsentVerified === false)
-  ? '> Seeded from the transform’s documented policy and **not yet confirmed per key**. A seeded value is a starting point, not a finding.'
-  : ''}
+${Object.values(styles).some((v) => v.onAbsentVerified === false) ? PLATFORM.seededOnAbsent : ''}
 
 ${losses}` };
 };
@@ -731,14 +687,6 @@ ${losses}` };
 // straight to the site (#837).
 
 const outDir = resolve(site, 'src/content/docs/schema/mappings');
-
-const PAGE_DESCRIPTIONS = {
-  FIGMA: 'How the Figma binding realises the Specs schema — per-style-key disposition, value forms, and declared degradation',
-  CSS: 'How the CSS binding realises the Specs schema — per-style-key disposition, ordered case tables for jointly resolved keys, and declared degradation',
-  REACT: 'What the React binding adds to the CSS binding — platform surfaces and style overrides',
-  WEBCOMPONENTS: 'What the Web Components binding adds to the CSS binding — platform surfaces and style overrides',
-  INDEX: 'How each platform realises the Specs document format — the binding concept, the four platforms, and where the data lives',
-};
 
 const PAGE_TITLES = { CSS: 'CSS', WEBCOMPONENTS: 'Web Components', INDEX: 'Platform Mappings' };
 
@@ -765,14 +713,7 @@ const renderOverview = (files) => {
 
   return `# Platform Mappings
 
-A platform mapping is a one page per platform declaration of how a platform implements
-every part of the spec – styles, props, anatomy, slots and more – based on the schema.
-Each declared unit carries one of four dispositions (\`bound\`, \`approximated\`,
-\`unsupported\`, \`unverified\`), and completeness is enforced by the docs build: a unit
-in the schema with no row in a binding fails it.
-
-Some keys resolve jointly — no single key determines any single output. Those rules are
-*clusters*: ordered case tables, each on its own page.
+${OVERVIEW.intro}
 
 ## Supported Platforms
 
@@ -780,37 +721,15 @@ Some keys resolve jointly — no single key determines any single output. Those 
 |---|---|---|
 ${rows.join('\n')}
 
-React and Web Components inherit styles from CSS and declare only overrides. Props and
-anatomy are never inherited: how a prop becomes a parameter or an element becomes a tag
-is each platform's own fact.
+${OVERVIEW.inheritance}
 
 ## Specifications and Mappings
 
-The [specification](/schema/specification/) defines what a binding owes: a disposition
-for every unit of every surface, declared handling of each value form, and case tables
-rather than prose for jointly resolved rules. The mappings answer as data — one JSON
-file per platform in the schema package, with the
-[format documented beside it](https://github.com/DirectedEdges/spectacular/blob/main/packages/schema/mappings/bindings/FORMAT.md).
-Every page in this section is generated from those files, and the same declarations
-feed each style key's, prop kind's, and element type's own reference page. Edit the
-data, never a page.
+${OVERVIEW.specsAndMappings}
 
 ## Absent keys
 
-What an absent style key means is a property of the document, not a platform choice.
-Every \`Styles\` property declares a default in the schema, each key's page marks it,
-and a consumer applies it rather than substituting its own. A declared default answers
-only one of three reasons a key can be absent:
-
-| Reason | Recoverable by a consumer? |
-|---|---|
-| The value equalled the default and was dropped at generation | Yes — the schema's declared default is the value |
-| A variant inherits it from \`default\` under layering | Partly — by reading \`default\`, if it knows the run used layered details |
-| The element type cannot carry it | No — needs the per-type key tables, published on each [element type's page](/schema/anatomy/) |
-
-Nothing in a document marks which applies. Each binding declares what it does on
-absence in its own Defaults section, where anything other than the declared default is
-visible as a decision rather than an accident.
+${OVERVIEW.absentKeys}
 `;
 };
 
@@ -870,8 +789,8 @@ const sitePage = ({ label, body, platform, cluster }) => {
   const clusterName = cluster ? (body.match(/^# (.+)$/m)?.[1] ?? '').trim() : null;
   const title = clusterName ?? PAGE_TITLES[platform] ?? platform.charAt(0) + platform.slice(1).toLowerCase();
   const description = clusterName
-    ? `How the ${PAGE_TITLES[platform] ?? platform} binding resolves the ${clusterName} cluster — its operand set and ordered case table`
-    : (PAGE_DESCRIPTIONS[platform] ?? `How the ${title} binding realises the Specs schema`);
+    ? clusterPageDescription(PAGE_TITLES[platform] ?? platform, clusterName)
+    : (PAGE_DESCRIPTIONS[platform] ?? fallbackPageDescription(title));
 
   const out = cluster
     ? join(outDir, platform.toLowerCase(), 'clusters', `${cluster}.md`)
@@ -884,8 +803,7 @@ title: "${title}"
 description: "${description}"
 ---
 
-<!-- Generated by site/scripts/build-mappings.mjs from packages/schema/mappings/bindings/ —
-     edit the binding JSON, not this file. -->
+${BANNER}
 
 ${linked}`,
   };
