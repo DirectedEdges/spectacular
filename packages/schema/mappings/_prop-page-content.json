@@ -29,7 +29,7 @@
     },
     "object": {
       "sections": {
-        "Example": "```yaml\nprops:\n  margin:\n    type: object\n    members:\n      compact:\n        type: string\n        default: none\n        enum: [none, small, large]\n      expanded:\n        type: string\n        default: none\n        enum: [none, small, large]\n```\n\nFigma authors members as separator-delimited flat property names (`margin.compact`, `margin.expanded`), folded into one `ObjectProp` when [`conventions.platforms.figma.objectProps`](/schema/conventions/#platform-members) is declared. Each member's `$extensions['com.figma'].name` records the flat source name, so unfolding back to Figma is reversal, not re-derivation. Configurations set an object prop with a member-keyed value — see [Prop Configurations](/schema/prop-configurations/)."
+        "Figma folding": "```yaml\nprops:\n  margin:\n    type: object\n    members:\n      compact:\n        type: string\n        default: none\n        enum: [none, small, large]\n      expanded:\n        type: string\n        default: none\n        enum: [none, small, large]\n```\n\nFigma authors members as separator-delimited flat property names (`margin.compact`, `margin.expanded`), folded into one `ObjectProp` when [`conventions.platforms.figma.objectProps`](/schema/conventions/#platform-members) is declared. Each member's `$extensions['com.figma'].name` records the flat source name, so unfolding back to Figma is reversal, not re-derivation. Configurations set an object prop with a member-keyed value — see [Prop Configurations](/schema/prop-configurations/)."
       }
     }
   },
