@@ -1142,7 +1142,7 @@ ${
     // Only where there is no form list to carry them — a plain object or array
     // page like `Blur` or `effects.shadows`, which has no form to key by.
     !oneOfBranches && !valueSection?.consumedExamples && (examples.length || exampleBlocks)
-      ? `\n### Examples\n\n${examples.length ? `${exampleHead}\n${examples.join('\n')}\n` : ''}${
+      ? `\n### Example${examples.length + compositeExamples.length !== 1 ? 's' : ''}\n\n${examples.length ? `${exampleHead}\n${examples.join('\n')}\n` : ''}${
           exampleBlocks ? `${examples.length ? '\n' : ''}${exampleBlocks}\n` : ''
         }${settingsNote}`
       : ''

@@ -302,7 +302,7 @@ A prop of this kind is written with the discriminator \`type: ${discriminator}\`
 | Member | Type | Required | Description |
 |---|---|---|---|
 ${memberRows.join('\n')}
-${examples ? `\n### Example\n\n${examples}\n` : ''}
+${examples ? `\n### Example${(def.examples?.length ?? 0) > 1 ? 's' : ''}\n\n${examples}\n` : ''}
 ### Platform bindings
 
 | Platform | Disposition | Realised by |
