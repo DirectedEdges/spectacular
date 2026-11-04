@@ -283,10 +283,11 @@
         "notes": "External type references are a consumer concern (ADR-012)."
       },
       "image": {
-        "disposition": "unverified",
-        "realises": "expected: a served asset URL, as on React",
+        "disposition": "bound",
+        "realises": "a served asset URL",
         "direction": "spec-to-code",
-        "notes": "Carried with the props surface's image row: not yet confirmed against this emitter."
+        "basis": "implementation",
+        "notes": "An `$image` pointer resolves from the registry entry's own `src` under the emitted assets base; an entry without one is unresolved and nothing further is tried (ADR-063)."
       },
       "nested": {
         "disposition": "unsupported",
