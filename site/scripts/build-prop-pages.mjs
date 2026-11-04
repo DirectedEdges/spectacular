@@ -97,7 +97,11 @@ const toYaml = (value, indent = 0) => {
         const key = yamlScalar(k);
         if (v !== null && typeof v === 'object' && (Array.isArray(v) ? v.length : Object.keys(v).length)) {
           const body = toYaml(v, indent + 2);
-          if (!body.includes('\n')) return `${pad}${key}: ${body.trimStart()}`;
+          // Only an ARRAY body may join the key's line — a flow list is one
+          // value. A single-entry map body is one line too, but inlining it
+          // chains the keys into `$extensions: com.figma: visibilityProp: x`,
+          // which is not YAML.
+          if (!body.includes('\n') && Array.isArray(v)) return `${pad}${key}: ${body.trimStart()}`;
           return `${pad}${key}:\n${body}`;
         }
         return `${pad}${key}: ${toYaml(v, 0)}`;
@@ -285,7 +289,7 @@ for (const [kind, defName] of Object.entries(KINDS)) {
   }
 
   const page = `${header(defName, def.description ?? `The ${defName} prop kind`)}
-${def.description ?? ''}${kept.intro ? `\n\n${kept.intro}` : ''}
+${def.description ?? ''}${kept.intro ? ` ${kept.intro}` : ''}
 
 ### Path
 

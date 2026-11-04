@@ -518,7 +518,16 @@
     "StringProp": {
       "type": "object",
       "description": "String property definition for text content, glyph/instance swap, or other string-valued props.",
-      "examples": [{ "type": "string", "default": "Save", "nullable": false }],
+      "examples": [
+        { "type": "string", "default": "Save", "nullable": false, "examples": ["Save", "Submit", "Continue"] },
+        {
+          "type": "string",
+          "nullable": true,
+          "default": null,
+          "examples": ["New"],
+          "$extensions": { "com.figma": { "visibilityProp": "showBadge" } }
+        }
+      ],
       "properties": {
         "type": {
           "type": "string",

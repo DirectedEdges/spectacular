@@ -11,7 +11,7 @@
       "intro": "A `StringProp` is distinguished from an `EnumProp` by the absence of `enum` — the two share `type: string`, and the closed list is what separates a value set the library enumerates from one it leaves open."
     },
     "enum": {
-      "intro": "An `EnumProp` shares `type: string` with `StringProp`; the presence of `enum` is what discriminates it.",
+      "intro": "A prop of `type: string` without an `enum` is a [`StringProp`](/schema/props/string/).",
       "sections": {
         "States": "An enum prop named by a [`specs.states`](/schema/conventions/#specs-members) entry participates in state classification exactly as a boolean does — see the [statesToContract](/schema/mappings/react/clusters/states-to-contract/) cluster. An enum whose entries are all state values can leave the emitted contract entirely when every concept naming it is browser-managed."
       }

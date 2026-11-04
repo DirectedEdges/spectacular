@@ -137,8 +137,10 @@ const toYaml = (value, indent = 0) => {
           const body = toYaml(v, indent + 2);
           // A value that rendered to one line belongs on the key's line —
           // `components:` followed by `[1, 0.4, 0]` beneath it read as a
-          // block that happened to be short.
-          if (!body.includes('\n')) return `${pad}${key}: ${body.trimStart()}`;
+          // block that happened to be short. Arrays only: a single-entry map
+          // body is one line too, but inlining it chains the keys into
+          // `a: b: c`, which is not YAML.
+          if (!body.includes('\n') && Array.isArray(v)) return `${pad}${key}: ${body.trimStart()}`;
           return `${pad}${key}:\n${body}`;
         }
         return `${pad}${key}: ${toYaml(v, 0)}`;
