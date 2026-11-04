@@ -594,7 +594,7 @@
     "SlotProp": {
       "type": "object",
       "description": "Slot property definition for a prop a consumer fills with content rather than a scalar. What it accepts is declared in its own `anyOf` member, and how many children it admits in `minChildren` and `maxChildren`.",
-      "examples": [{ "type": "slot", "minChildren": 1, "maxChildren": 1, "anyOf": ["$text", "$glyph"] }],
+      "examples": [{ "type": "slot", "minChildren": 1, "maxChildren": 1, "anyOf": ["$glyph", "$text", "badge"] }],
       "properties": {
         "type": {
           "type": "string",
