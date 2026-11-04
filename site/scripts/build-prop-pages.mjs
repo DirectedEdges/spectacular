@@ -387,8 +387,9 @@ ${preserved.extensionsPage?.intro ?? defs.PropExtensions.description ?? ''}
 
 ...[\`props\`](/schema/props/).\`<prop>\`.\`$extensions\` — on every prop kind.
 
-${sections.join('\n')}
-### Decisions
+${sections.join('\n')}${Object.entries(preserved.extensionsPage?.sections ?? {})
+    .map(([name, body]) => `### ${name}\n\n${body}\n\n`)
+    .join('')}### Decisions
 
 ${decisionSection('$extensions', 'props.$extensions')}
 ### Source
