@@ -608,7 +608,7 @@
     "SlotProp": {
       "type": "object",
       "description": "Slot property definition for a prop a consumer fills with content rather than a scalar. What it accepts is declared in its own `anyOf` member, and how many children it admits in `minChildren` and `maxChildren`.",
-      "examples": [{ "type": "slot", "minChildren": 1, "maxChildren": 1, "anyOf": ["$glyph", "$text", "badge"] }],
+      "examples": [{ "type": "slot", "defaultSlot": true, "minChildren": 1, "maxChildren": 1, "anyOf": ["$glyph", "$text", "badge"] }],
       "properties": {
         "type": {
           "type": "string",
@@ -646,7 +646,7 @@
         },
         "defaultSlot": {
           "type": "boolean",
-          "description": "Whether this is the component's designated default slot \u2014 set by specs-from-figma when the slot prop matched the library's specs.slots.default.match convention at generation time. When true, an authored example may nest a filling instance as a plain child element instead of through an explicit SlotContentRef/SlotBinding. Absent means false: this is not the default slot, or the library declared no default-slot convention. At most one SlotProp per component may be true \u2014 an authoring/generator invariant, not schema-enforced. (ADR-099)"
+          "description": "Whether this is the component's designated default slot \u2014 the one slot an instance may fill by plain nesting instead of an explicit reference. Absent means false. At most one slot prop per component may be true. (ADR-099)"
         },
         "$extensions": {
           "$ref": "#/definitions/PropExtensions"

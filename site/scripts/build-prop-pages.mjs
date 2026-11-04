@@ -358,14 +358,19 @@ ${kindDecisionSection(kind, members.map(([m]) => m))}${
     const desc = node.description ?? '';
     const hasFieldDefault = Object.prototype.hasOwnProperty.call(node, 'default');
 
-    const valueLine = `${typeOf(node)}${required.has(m) ? ' · required' : ''}${
-      hasFieldDefault ? ` · absent means \`${JSON.stringify(node.default)}\`` : ''
-    }`;
-
+    /**
+     * Bounds ride the type they qualify, on one line — `minimum` is a fact
+     * about the declared `integer`, and a detached "Constraints:" line read
+     * as a separate mechanism when it is the same schema keyword away.
+     */
     const constraints = [];
-    if (node.minimum !== undefined) constraints.push(`minimum \`${node.minimum}\``);
+    if (node.minimum !== undefined) constraints.push(`\`${node.minimum}\` or greater`);
     if (node.minItems !== undefined) constraints.push(`at least ${node.minItems} ${node.minItems === 1 ? 'entry' : 'entries'}`);
     if (node.minProperties !== undefined) constraints.push(`at least ${node.minProperties} ${node.minProperties === 1 ? 'member' : 'members'}`);
+
+    const valueLine = `${typeOf(node)}${constraints.map((c) => ` · ${c}`).join('')}${required.has(m) ? ' · required' : ''}${
+      hasFieldDefault ? ` · absent means \`${JSON.stringify(node.default)}\`` : ''
+    }`;
 
     /**
      * Property-level `examples`, written as the member appears in a document.
@@ -385,11 +390,11 @@ ${desc}
 
 ### Path
 
-[\`component-api\`](/schema/documents/component-api/):[\`props\`](/schema/props/).\`<prop>\`.\`${m}\` — on a prop of kind [\`${defName}\`](/schema/props/${kind}/).
+[\`component-api\`](/schema/documents/component-api/):[\`props\`](/schema/props/).\`<\`[\`${defName}\`](/schema/props/${kind}/)\` prop>\`.\`${m}\`
 
 ### Value
 
-${valueLine}${constraints.length ? `\n\nConstraints: ${constraints.join('; ')}.` : ''}
+${valueLine}
 ${memberExamples ? `\n### Example${node.examples.length > 1 ? 's' : ''}\n\n${memberExamples}\n` : ''}
 ### Decisions
 
