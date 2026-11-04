@@ -1,5 +1,6 @@
 {
   "platform": "figma",
+  "realises": "The design surface — reads components into specs, and renders specs back onto the canvas. The one binding that runs in both directions.",
   "seededFrom": "/Users/nathanacurtis/Github Desktop/specs-transforms",
   "note": "disposition: bound (confirmed against the implementation) | approximated (maps with stated loss) | unsupported (declared, with stated behaviour) | unverified (coverage detected, mapping not yet confirmed by a human). Only bound rows are claims; unverified rows are work.",
   "concepts": {

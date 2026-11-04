@@ -145,6 +145,25 @@ const caseRowCount = (c) =>
     .reduce((n, [, v]) => n + v.length, 0);
 
 /**
+ * One Clusters table for the whole page — styles, props and anatomy clusters
+ * together, each tagged with its surface. The rules are the most consequential
+ * thing a binding declares, so they index once, near the top, instead of three
+ * sub-tables buried under their surfaces.
+ */
+const clustersSection = (metas, platform) => {
+  if (!metas.length) return '*None declared.*';
+  return `| Cluster | Surface | Disposition | Keys | Resolution |\n|---|---|---|---|---|\n${metas
+    .slice()
+    .sort((a, b) => a.surface.localeCompare(b.surface) || a.name.localeCompare(b.name))
+    .map(({ name, surface, c }) =>
+      `| [${name}](clusters/${platform}/${kebab(name)}.md) | ${surface} | ${badge(c.disposition)} | ${c.keys.map((k) => `\`${k}\``).join(', ')} | ${
+        c.form === 'cases' ? `${caseRowCount(c)}-row case table` : 'prose — not yet a case table'
+      } |`
+    )
+    .join('\n')}`;
+};
+
+/**
  * One cluster, as its own page.
  *
  * A cluster is the unit a reader arrives at: they have a key whose row says
@@ -294,17 +313,6 @@ const renderUnitSurface = ({ platform, title, b, file }, cfg) => {
     return `| [\`${k}\`](${cfg.pageBase}${k}/) | ${badge(v.disposition)} | ${realiseCell(v)}${clusterLink} | ${v.notes ?? ''} |`;
   });
 
-  const clusterIndex = Object.entries(clusters).length
-    ? `\n### ${cfg.clustersHeading}\n\n${cfg.clustersIntro}\n\n| Cluster | Disposition | ${cfg.unitColumn}s | Resolution |\n|---|---|---|---|\n${Object.entries(clusters)
-        .sort(([a], [z]) => a.localeCompare(z))
-        .map(([name, c]) =>
-          `| [${name}](clusters/${platform}/${kebab(name)}.md) | ${badge(c.disposition)} | ${c.keys.map((k) => `\`${k}\``).join(', ')} | ${
-            c.form === 'cases' ? `${caseRowCount(c)}-row case table` : 'prose — not yet a case table'
-          } |`
-        )
-        .join('\n')}\n`
-    : '';
-
   const section = `## ${cfg.heading}
 
 ${cfg.intro}
@@ -312,7 +320,7 @@ ${cfg.intro}
 | ${cfg.unitColumn} | Disposition | Realised by | Notes |
 |---|---|---|---|
 ${rows.join('\n')}
-${clusterIndex}`;
+`;
 
   const clusterPages = Object.entries(clusters).map(([name, c]) => ({
     name,
@@ -320,7 +328,12 @@ ${clusterIndex}`;
     body: clusterPage({ name, c, platform, title, lead: cfg.clusterLead(title, platform) }),
   }));
 
-  return { section, clusterPages };
+  // For the page-level Clusters table — every surface's clusters in one index.
+  const clusterMeta = Object.entries(clusters).map(([name, c]) => ({
+    name, surface: cfg.heading, c,
+  }));
+
+  return { section, clusterPages, clusterMeta };
 };
 
 const renderProps = (ctx) =>
@@ -367,7 +380,7 @@ a type is a population of elements, and which type a node even becomes is itself
  * how props become parameters, slots become children, variants become
  * selection, and how styles attach.
  */
-const renderDependent = ({ platform, title, b, styles, dependsOn, file, propsSection }) => {
+const renderDependent = ({ platform, title, b, styles, dependsOn, file, propsSection, clustersIdx }) => {
   const base = dependsOn.map((d) => `[${TITLES[d] ?? d}](${d.toUpperCase()}.md)`).join(", ");
   const overrides = Object.entries(styles);
 
@@ -392,6 +405,14 @@ Normative frame: [\`SPECIFICATION.md\`](../SPECIFICATION.md) §11.
 ${b.realises ?? ''}
 
 **Every style key is bound exactly as the ${base} binding states**, unless overridden below. This binding never restates an inherited mapping: a second copy of a rule is a second thing to keep true.
+
+## Clusters
+
+The rules that resolve jointly on this platform's own surfaces — props and anatomy are
+never inherited, so these are this binding's own. Each cluster's ordered case table is
+its own page.
+
+${clustersIdx}
 
 ## Style overrides
 
@@ -437,6 +458,7 @@ const renderPlatform = (file) => {
       page: renderDependent({
         platform, title, b, styles, dependsOn, file,
         propsSection: `${propsOut.section}\n${anatomyOut.section}`,
+        clustersIdx: clustersSection([...propsOut.clusterMeta, ...anatomyOut.clusterMeta], platform),
       }),
       clusterPages: [...propsOut.clusterPages, ...anatomyOut.clusterPages],
     };
@@ -520,16 +542,12 @@ const renderPlatform = (file) => {
    * operand set, and six of those inlined made the binding page a document you
    * scroll past rather than read.
    */
-  const clusterIndex = Object.entries(clusters).length
-    ? `| Cluster | Disposition | Keys | Resolution |\n|---|---|---|---|\n${Object.entries(clusters)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([name, c]) =>
-          `| [${name}](clusters/${platform}/${kebab(name)}.md) | ${badge(c.disposition)} | ${c.keys.length} | ${
-            c.form === 'cases' ? `${caseRowCount(c)}-row case table` : 'prose — not yet a case table'
-          } |`
-        )
-        .join('\n')}`
-    : '*None declared.*';
+  const allClusterMeta = [
+    ...Object.entries(clusters).map(([name, c]) => ({ name, surface: 'Styles', c })),
+    ...propsOut.clusterMeta,
+    ...anatomyOut.clusterMeta,
+  ];
+  const clusterIndex = clustersSection(allClusterMeta, platform);
 
   /**
    * Losses, last. What the platform does is settled by everything above it;
@@ -576,6 +594,14 @@ that is the reference at \`/schema\`.
 Generated from \`mappings/bindings/${platform}.json\` by \`scripts/build-mappings.mjs\`.
 Edit the binding file, never this page.
 
+## Clusters
+
+The rules that resolve jointly — where no single key or kind determines any single
+output, the cluster's ordered case table IS the mapping, on its own page. Keys and
+kinds in the surface tables below link back here through their *cluster* column.
+
+${clusterIndex}
+
 ## Styles
 
 ${tally}, of ${styleProps.length} style keys.
@@ -604,6 +630,8 @@ ${(() => {
 ${header}
 ${rows.join('\n')}
 
+${propsOut.section}
+${anatomyOut.section}
 ## Values
 
 ${b.valueForms?.summary ?? ''}
@@ -660,18 +688,6 @@ ${(() => {
 ${Object.values(styles).some((v) => v.onAbsentVerified === false)
   ? '> Seeded from the transform’s documented policy and **not yet confirmed per key**. A seeded value is a starting point, not a finding.'
   : ''}
-
-## Clusters
-
-Keys that resolve jointly. No single key in a cluster determines any single output, so the
-resolution rule is the mapping rather than a row in the Styles table. Each cluster's rule
-is its own page.
-
-${clusterIndex}
-
-${propsOut.section}
-
-${anatomyOut.section}
 
 ${losses}` };
 };
@@ -745,10 +761,82 @@ const PAGE_DESCRIPTIONS = {
   CSS: 'How the CSS binding realises the Specs schema — per-style-key disposition, ordered case tables for jointly resolved keys, and declared degradation',
   REACT: 'What the React binding adds to the CSS binding — platform surfaces and style overrides',
   WEBCOMPONENTS: 'What the Web Components binding adds to the CSS binding — platform surfaces and style overrides',
+  INDEX: 'How each platform realises the Specs document format — the binding concept, the four platforms, and where the data lives',
   DEFAULTS: 'What a consumer assumes when a style key is absent from a document — the spec-level default table, and why absence is ambiguous',
 };
 
-const PAGE_TITLES = { DEFAULTS: 'Style Defaults', CSS: 'CSS', WEBCOMPONENTS: 'Web Components' };
+const PAGE_TITLES = { DEFAULTS: 'Style Defaults', CSS: 'CSS', WEBCOMPONENTS: 'Web Components', INDEX: 'Platform Mappings' };
+
+/**
+ * The section's front door: what a binding IS, who the platforms are, and
+ * where the data lives. Everything countable is counted from the binding
+ * files, so the page cannot drift from them.
+ */
+const renderOverview = (files) => {
+  const surfaceCell = (entries, units) => {
+    const total = units.length;
+    const counts = {};
+    for (const u of units) {
+      const d = entries?.[u]?.disposition ?? 'unverified';
+      counts[d] = (counts[d] ?? 0) + 1;
+    }
+    const reliable = (counts.bound ?? 0) + (counts.approximated ?? 0) + (counts.unsupported ?? 0);
+    return `${reliable}/${total} declared${counts.unverified ? `, ${counts.unverified} unverified` : ''}`;
+  };
+
+  const NAV_ORDER = ['figma', 'css', 'react', 'webcomponents'];
+  const rows = files.slice().sort((a, b) => NAV_ORDER.indexOf(a.replace(/\.json$/, '')) - NAV_ORDER.indexOf(b.replace(/\.json$/, ''))).map((file) => {
+    const platform = file.replace(/\.json$/, '');
+    const b = JSON.parse(readFileSync(join(bindingsDir, file), 'utf8'));
+    const styleCell = b.dependsOn?.length
+      ? `inherits [${b.dependsOn.map((d) => TITLES[d] ?? d).join(', ')}](${b.dependsOn[0].toUpperCase()}.md)${Object.keys(b.concepts?.styles ?? {}).length ? `, ${Object.keys(b.concepts.styles).length} overrides` : ''}`
+      : surfaceCell(b.concepts?.styles, styleProps);
+    const clusterCount =
+      Object.keys(b.concepts?.styleClusters ?? {}).length +
+      Object.keys(b.concepts?.propClusters ?? {}).length +
+      Object.keys(b.concepts?.anatomyClusters ?? {}).length;
+    return `| [${TITLES[platform] ?? platform}](${platform.toUpperCase()}.md) | ${b.realises ?? ''} | ${styleCell} | ${surfaceCell(b.concepts?.props, propKinds)} | ${surfaceCell(b.concepts?.anatomy, elementTypes)} | ${clusterCount} |`;
+  });
+
+  return `# Platform Mappings
+
+**How each platform realises the Specs document format.**
+
+A Specs document says what a component *is*; it does not say what any platform must do
+with one. A **platform binding** closes that gap: one page per platform, generated from a
+checked-in declaration file, stating how that platform realises each surface of the
+schema — every style key, every prop kind, every element type — with one of four
+dispositions (\`bound\`, \`approximated\`, \`unsupported\`, \`unverified\`). Completeness is
+enforced at build time: a unit in the schema with no row in a binding file fails the
+build, so a mapping can be wrong but it cannot be silently missing.
+
+Where several keys or kinds resolve **jointly** — no one of them determining any single
+output — the rule is a *cluster*: an ordered case table over a declared operand set, on
+its own page, linked from each binding's Clusters index.
+
+## The platforms
+
+| Binding | Role | Styles | Props | Anatomy | Clusters |
+|---|---|---|---|---|---|
+${rows.join('\n')}
+
+React and Web Components inherit their style surface from CSS and declare only
+overrides; props and anatomy are never inherited — how a prop becomes a parameter or an
+element becomes a tag is each platform's own fact.
+
+## The data
+
+Every page in this section is generated. The declarations live in the schema package —
+[\`packages/schema/mappings/bindings/\`](bindings/FORMAT.md) — one JSON file per platform,
+with the format documented beside them. Edit the data, never a page.
+
+## Absent keys
+
+What an absent style key *means* is a property of the document, not a platform choice —
+declared once in the schema and summarised in [Style Defaults](DEFAULTS.md), along with
+why absence is ambiguous.
+`;
+};
 
 /**
  * Style keys that have a generated reference page. Read from the page tree
@@ -853,6 +941,7 @@ for (const file of files) {
   }
 }
 pages.push({ label: 'DEFAULTS.md', body: renderDefaults(), platform: 'DEFAULTS' });
+pages.push({ label: 'INDEX.md', body: renderOverview(files), platform: 'INDEX' });
 
 for (const { label, body } of pages) checkNoLeaks(label, body);
 
