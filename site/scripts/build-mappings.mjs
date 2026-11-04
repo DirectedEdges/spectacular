@@ -765,19 +765,14 @@ const renderOverview = (files) => {
 
   return `# Platform Mappings
 
-**How each platform realises the Specs document format.**
+A platform mapping is a one page per platform declaration of how a platform implements
+every part of the spec – styles, props, anatomy, slots and more – based on the schema.
+Each declared unit carries one of four dispositions (\`bound\`, \`approximated\`,
+\`unsupported\`, \`unverified\`), and completeness is enforced by the docs build: a unit
+in the schema with no row in a binding fails it.
 
-A Specs document says what a component *is*; it does not say what any platform must do
-with one. A **platform binding** closes that gap: one page per platform, generated from a
-checked-in declaration file, stating how that platform realises each surface of the
-schema — every style key, every prop kind, every element type — with one of four
-dispositions (\`bound\`, \`approximated\`, \`unsupported\`, \`unverified\`). Completeness is
-enforced at build time: a unit in the schema with no row in a binding file fails the
-build, so a mapping can be wrong but it cannot be silently missing.
-
-Where several keys or kinds resolve **jointly** — no one of them determining any single
-output — the rule is a *cluster*: an ordered case table over a declared operand set, on
-its own page, linked from each binding's Clusters index.
+Some keys resolve jointly — no single key determines any single output. Those rules are
+*clusters*: ordered case tables, each on its own page.
 
 ## Supported Platforms
 
@@ -785,35 +780,27 @@ its own page, linked from each binding's Clusters index.
 |---|---|---|
 ${rows.join('\n')}
 
-React and Web Components inherit their style surface from CSS and declare only
-overrides; props and anatomy are never inherited — how a prop becomes a parameter or an
-element becomes a tag is each platform's own fact.
+React and Web Components inherit styles from CSS and declare only overrides. Props and
+anatomy are never inherited: how a prop becomes a parameter or an element becomes a tag
+is each platform's own fact.
 
 ## Specifications and Mappings
 
-The [specification](/schema/specification/) is the normative frame: its §11 defines what
-a binding owes — a disposition for every unit of every surface, declared handling of each
-value form, case tables rather than prose for jointly resolved rules — and its rule
-catalogue is what the words MUST and NEVER on these pages refer back to.
-
-The mappings are the per-platform answers to those obligations: one declaration file per
-platform, checked into the schema package at
-[\`packages/schema/mappings/bindings/\`](https://github.com/DirectedEdges/spectacular/blob/main/packages/schema/mappings/bindings/FORMAT.md),
-with the format documented beside the data. Every page in this section is generated from
-those files — the same declarations also feed each style key's, prop kind's and element
-type's own reference page, so a binding fact appears wherever its unit is documented
-without a second copy existing anywhere. Edit the data, never a page.
+The [specification](/schema/specification/) defines what a binding owes: a disposition
+for every unit of every surface, declared handling of each value form, and case tables
+rather than prose for jointly resolved rules. The mappings answer as data — one JSON
+file per platform in the schema package, with the
+[format documented beside it](https://github.com/DirectedEdges/spectacular/blob/main/packages/schema/mappings/bindings/FORMAT.md).
+Every page in this section is generated from those files, and the same declarations
+feed each style key's, prop kind's, and element type's own reference page. Edit the
+data, never a page.
 
 ## Absent keys
 
-What an absent style key *means* is a property of the document, not a platform choice:
-every \`Styles\` property declares a \`default\` in the schema, each key's reference page
-marks it, and a consumer MUST use it rather than substituting a platform convention of
-its own. Two platforms that answered differently would disagree about what the same
-document says.
-
-A declared default answers only one of the three reasons a key can be absent, and a
-consumer reading one document cannot tell them apart:
+What an absent style key means is a property of the document, not a platform choice.
+Every \`Styles\` property declares a default in the schema, each key's page marks it,
+and a consumer applies it rather than substituting its own. A declared default answers
+only one of three reasons a key can be absent:
 
 | Reason | Recoverable by a consumer? |
 |---|---|
@@ -821,9 +808,8 @@ consumer reading one document cannot tell them apart:
 | A variant inherits it from \`default\` under layering | Partly — by reading \`default\`, if it knows the run used layered details |
 | The element type cannot carry it | No — needs the per-type key tables, published on each [element type's page](/schema/anatomy/) |
 
-Nothing in a serialized document marks which applies — no sentinel, no metadata member,
-no \`$extensions\` marker. Each platform binding declares what it *does* on absence in
-its own Defaults section, where anything other than applying the declared default is
+Nothing in a document marks which applies. Each binding declares what it does on
+absence in its own Defaults section, where anything other than the declared default is
 visible as a decision rather than an accident.
 `;
 };
