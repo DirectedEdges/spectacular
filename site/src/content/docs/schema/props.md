@@ -3,12 +3,7 @@ title: "Props"
 description: "Prop kinds, defaults, nullability, and extensions"
 ---
 
-Props define the configurable inputs of a component. Each prop is one of seven kinds, discriminated by its `type` member — a consumer reads `type` before interpreting the rest. Each kind has its own reference page, generated from the schema; this page is the map.
-
-```ts
-type Props = Record<string, AnyProp>;
-type AnyProp = BooleanProp | StringProp | EnumProp | NumberProp | SlotProp | ImageProp | ObjectProp;
-```
+Props define the configurable inputs of a component — an open, name-keyed map, where each entry is one of seven kinds discriminated by its `type` member. A consumer reads `type` before interpreting the rest. Each kind has its own reference page, generated from the schema; this page is the map.
 
 ## Kinds
 
