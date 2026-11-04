@@ -1,5 +1,6 @@
 {
   "platform": "react",
+  "role": "Emits React components and stories; styling delegated to CSS",
   "dependsOn": [
     "css"
   ],

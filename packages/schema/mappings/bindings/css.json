@@ -1,5 +1,6 @@
 {
   "platform": "css",
+  "role": "Declares every style key as CSS; shared by the web platforms",
   "seededFrom": "/Users/nathanacurtis/Github Desktop/spectacular",
   "note": "disposition: bound (confirmed against the implementation) | approximated (maps with stated loss) | unsupported (declared, with stated behaviour) | unverified (coverage detected, mapping not yet confirmed by a human). Only bound rows are claims; unverified rows are work.",
   "concepts": {

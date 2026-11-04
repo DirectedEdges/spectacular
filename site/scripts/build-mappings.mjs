@@ -741,7 +741,7 @@ const renderOverview = (files) => {
       Object.keys(b.concepts?.styleClusters ?? {}).length +
       Object.keys(b.concepts?.propClusters ?? {}).length +
       Object.keys(b.concepts?.anatomyClusters ?? {}).length;
-    return `| [${TITLES[platform] ?? platform}](${platform.toUpperCase()}.md) | ${b.realises ?? ''} | ${styleCell} | ${surfaceCell(b.concepts?.props, propKinds)} | ${surfaceCell(b.concepts?.anatomy, elementTypes)} | ${clusterCount} |`;
+    return `| [${TITLES[platform] ?? platform}](${platform.toUpperCase()}.md) | ${b.role ?? b.realises ?? ''} | ${styleCell} | ${surfaceCell(b.concepts?.props, propKinds)} | ${surfaceCell(b.concepts?.anatomy, elementTypes)} | ${clusterCount} |`;
   });
 
   return `# Platform Mappings
@@ -760,7 +760,7 @@ Where several keys or kinds resolve **jointly** — no one of them determining a
 output — the rule is a *cluster*: an ordered case table over a declared operand set, on
 its own page, linked from each binding's Clusters index.
 
-## The platforms
+## Supported Platforms
 
 | Binding | Role | Styles | Props | Anatomy | Clusters |
 |---|---|---|---|---|---|
@@ -770,11 +770,20 @@ React and Web Components inherit their style surface from CSS and declare only
 overrides; props and anatomy are never inherited — how a prop becomes a parameter or an
 element becomes a tag is each platform's own fact.
 
-## The data
+## Specifications and Mappings
 
-Every page in this section is generated. The declarations live in the schema package —
-[\`packages/schema/mappings/bindings/\`](bindings/FORMAT.md) — one JSON file per platform,
-with the format documented beside them. Edit the data, never a page.
+The [specification](/schema/specification/) is the normative frame: its §11 defines what
+a binding owes — a disposition for every unit of every surface, declared handling of each
+value form, case tables rather than prose for jointly resolved rules — and its rule
+catalogue is what the words MUST and NEVER on these pages refer back to.
+
+The mappings are the per-platform answers to those obligations: one declaration file per
+platform, checked into the schema package at
+[\`packages/schema/mappings/bindings/\`](https://github.com/DirectedEdges/spectacular/blob/main/packages/schema/mappings/bindings/FORMAT.md),
+with the format documented beside the data. Every page in this section is generated from
+those files — the same declarations also feed each style key's, prop kind's and element
+type's own reference page, so a binding fact appears wherever its unit is documented
+without a second copy existing anywhere. Edit the data, never a page.
 
 ## Absent keys
 

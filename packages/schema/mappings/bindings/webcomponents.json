@@ -1,5 +1,6 @@
 {
   "platform": "webcomponents",
+  "role": "Emits Lit custom elements; styling delegated to CSS",
   "dependsOn": [
     "css"
   ],
