@@ -10,6 +10,10 @@ export default defineConfig({
   redirects: {
     // Page renamed when the glyphs convention outgrew the single name pattern (ADR-103)
     '/settings/glyph-name-pattern/': '/settings/glyphs/',
+    // Retired (#849) — per-key CSS claims live in the generated, guard-checked
+    // CSS binding; the hand page drifted (#691) and two documents about one
+    // mapping is how the drift started.
+    '/code/style-mapping/': '/schema/mappings/css/',
     // Retired — the defaults table was redundant with the per-key style pages;
     // the absence-is-ambiguous narrative moved to the mappings Overview
     '/schema/mappings/defaults/': '/schema/mappings/',
