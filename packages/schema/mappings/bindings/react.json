@@ -204,11 +204,78 @@
         "disposition": "bound",
         "direction": "spec-to-code",
         "basis": "implementation",
-        "form": "prose",
+        "form": "cases",
         "keys": ["text", "container", "instance"],
-        "outputs": ["the element's tag, its ARIA attributes, and its composed event handlers"],
-        "resolution": "Three independent inputs describe one element — a role (what it IS, at most one), state classifications (which prop carries a concept), and actions (what activating it DOES) — and none supersedes another by authority, so precedence is declared: the role decides the mechanism for any concept it claims (a roled button emits the real `disabled` attribute, suppressing the generic `aria-disabled` emission for that concept AND for any concept sharing its prop); the tag is the role's, else `span` for text or in a phrasing context, else `div`; event handlers compose role-then-action in one closure, so a consumer's listener hears the event before an action can unmount the component. On an `instance`, a role is a routing signal — the instanced component keeps its own control, and the role's contract props route to its matching parts.",
-        "partial": "An element with no role, no state entry and no action gets the default tag and no ARIA — exactly the pre-roles behavior.",
+        "inputs": [
+          { "ref": "element.type", "from": "spec document" },
+          { "ref": "element.role", "from": "spec anatomy (ADR-067) — what the element IS, at most one" },
+          { "ref": "element.actions", "from": "spec anatomy (ADR-087) — what activating it DOES, any number" },
+          { "ref": "conventions.specs.states", "from": "declared conventions, through the shared concept table — which prop carries a concept" },
+          { "ref": "context.phrasing", "from": "the emitting tree — whether an ancestor role constrains this element to phrasing content" }
+        ],
+        "tagCases": [
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "element.role" } },
+            "emit": ["the role's tag — a `button`, an `a`, an `input` — void tags self-closing"],
+            "why": "A role names a control the platform has a native element for"
+          },
+          {
+            "when": { "operation": "any", "args": [
+              { "operation": "equals", "args": { "value": "element.type", "compareTo": "text" } },
+              { "operation": "equals", "args": { "value": "context.phrasing", "compareTo": true } }
+            ] },
+            "emit": ["`span`"],
+            "why": "Text is phrasing content, and inside a phrasing ancestor a `div` would be invalid HTML"
+          },
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "element.type" } },
+            "emit": ["`div`"],
+            "why": "The structural default"
+          }
+        ],
+        "ariaCases": [
+          {
+            "when": { "operation": "equals", "args": { "value": "concept", "compareTo": "claimed by this element's role" } },
+            "emit": ["nothing from the generic path — the role emits the platform-native mechanism: a real `disabled`, a real `checked`"],
+            "why": "Role over states for the mechanism; the states entry still names the driving prop, and the stylesheet still writes the concept's selector"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "concept.prop", "compareTo": "shared with a concept the role claimed" } },
+            "emit": ["nothing"],
+            "why": "One prop cannot announce two ways at once — a button carrying both `aria-pressed` and `aria-selected` disagrees with itself, and the second is not even valid on that role"
+          },
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "concept" } },
+            "emit": ["the concept's aria attribute, written when the driving prop is set"],
+            "why": "The generic path, from the shared concept table"
+          }
+        ],
+        "handlerCases": [
+          {
+            "when": { "operation": "any", "args": [
+              { "operation": "isNotNull", "args": { "value": "element.role's own wiring logic" } },
+              { "operation": "isNotNull", "args": { "value": "element.actions" } }
+            ] },
+            "emit": ["one composed closure per event: the role's logic, then the role's contract prop, then each action body in annotation order"],
+            "why": "A consumer listening on the prop hears the event before an action can unmount the component"
+          },
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "element.role's contract prop, alone" } },
+            "emit": ["the plain pass-through — `onClick={p.onClick}`"],
+            "why": "Composing costs nothing when nothing composes"
+          }
+        ],
+        "routingCases": [
+          {
+            "when": { "operation": "all", "args": [
+              { "operation": "equals", "args": { "value": "element.type", "compareTo": "instance" } },
+              { "operation": "isNotNull", "args": { "value": "element.role" } }
+            ] },
+            "emit": ["no control of this component's own — the role's contract props route to the instanced component's matching parts (ADR-067 rule 5)"],
+            "why": "A role on an instance is a routing signal; the composed component keeps its own control and renders it itself"
+          }
+        ],
+        "otherwise": { "emit": ["the default tag, no ARIA, no handlers"], "why": "An element with no role, no state entry and no action keeps the pre-roles behavior" },
         "notes": "The precedence module is shared with the Web Components emitter, so the two platforms resolve collisions identically. Cross-concern by nature: it reads anatomy roles, props classifications and actions to emit one element."
       }
     }

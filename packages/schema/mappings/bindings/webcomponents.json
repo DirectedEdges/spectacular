@@ -169,12 +169,49 @@
         "disposition": "bound",
         "direction": "spec-to-code",
         "basis": "implementation",
-        "form": "prose",
+        "form": "cases",
         "keys": ["text", "container"],
-        "outputs": ["the element's tag, its ARIA attributes, and its composed event handlers"],
-        "resolution": "The same declared precedence as the React binding, from the same shared module: the role decides the mechanism for any concept it claims; the tag is the role's, else `span` for text, else `div`; handlers compose role-then-action. The host element adds the platform's own wrinkle — reflected attributes carry variant state on `:host`, so a role's attributes land inside the shadow tree while selection attributes land on the host.",
-        "partial": "An element with no role, no state entry and no action gets the default tag and no ARIA.",
-        "notes": "`instance` is left off the keys until role routing is confirmed here — the React binding's cluster states the intended rule."
+        "inputs": [
+          { "ref": "element.type", "from": "spec document" },
+          { "ref": "element.role", "from": "spec anatomy (ADR-067)" },
+          { "ref": "conventions.specs.states", "from": "declared conventions, through the shared concept table" }
+        ],
+        "tagCases": [
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "element.role" } },
+            "emit": ["the role's tag, inside the shadow tree"],
+            "why": "A role names a control the platform has a native element for"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "element.type", "compareTo": "text" } },
+            "emit": ["`span`"],
+            "why": "Text is phrasing content"
+          },
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "element.type" } },
+            "emit": ["`div`"],
+            "why": "The structural default — no phrasing-context arm here; the shadow tree starts its own content model"
+          }
+        ],
+        "ariaCases": [
+          {
+            "when": { "operation": "equals", "args": { "value": "concept", "compareTo": "claimed by this element's role" } },
+            "emit": ["nothing from the generic path — the role emits the platform-native mechanism"],
+            "why": "Role over states for the mechanism, from the same shared module as React"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "concept.prop", "compareTo": "shared with a concept the role claimed" } },
+            "emit": ["nothing"],
+            "why": "One prop cannot announce two ways at once"
+          },
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "concept" } },
+            "emit": ["the concept's aria attribute inside the shadow tree, when the driving prop is set"],
+            "why": "The generic path; selection attributes land on `:host` while a role's attributes land in the shadow tree"
+          }
+        ],
+        "otherwise": { "emit": ["the default tag, no ARIA"], "why": "An element with no role and no state entry keeps the pre-roles behavior" },
+        "notes": "Event-handler composition is expected to mirror the React binding's handlerCases through the shared events model, and `instance` role routing the same — both left undeclared here until confirmed against this emitter. The precedence module is shared, so suppression cannot diverge."
       }
     }
   },

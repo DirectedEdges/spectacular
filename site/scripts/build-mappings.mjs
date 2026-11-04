@@ -128,7 +128,21 @@ const CASE_TABLE_LABELS = {
   memberCases: 'Member cases',
   relationCases: 'Related keys',
   axisCases: 'Per-axis cases',
+  tagCases: 'Tag cases',
+  ariaCases: 'ARIA cases',
+  handlerCases: 'Handler cases',
+  routingCases: 'Instance routing',
 };
+
+/**
+ * Every case row a cluster declares, across all of its tables. The index line
+ * used to read `c.cases.length`, which crashes on a multi-table cluster whose
+ * decision has no unqualified `cases` — three outputs, three named tables.
+ */
+const caseRowCount = (c) =>
+  Object.entries(c)
+    .filter(([k, v]) => (/Cases$/.test(k) || k === 'cases') && Array.isArray(v))
+    .reduce((n, [, v]) => n + v.length, 0);
 
 /**
  * One cluster, as its own page.
@@ -139,16 +153,20 @@ const CASE_TABLE_LABELS = {
  * `autoLayout`, with no URL of its own to link or cite.
  */
 const clusterPage = ({ name, c, platform, title, lead }) => {
-  const basisMark =
-    c.basis === 'intent'
-      ? ' · **asserted**, not mechanically checked'
-      : c.basis === 'implementation'
-        ? ' · verified against an implementation'
-        : '';
+  // Labeled fields, not a bare value run — three unlabeled words read as a
+  // phrase, and a reader should not need the FORMAT doc to parse the header.
+  const headerFields = [
+    ['disposition', c.disposition === 'unverified' ? '**`unverified`**' : `\`${c.disposition}\``],
+    ['direction', c.direction ? `\`${c.direction}\`` : null],
+    ['basis', c.basis ? `\`${c.basis}\`` : null],
+  ]
+    .filter(([, v]) => v)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join(', ');
 
   const head = `# ${name}
 
-${badge(c.disposition)}${c.direction ? ` · ${c.direction}` : ''}${basisMark}
+${headerFields}
 
 ${lead ?? `A cluster of the [${title} binding](../${platform}.md). These keys resolve jointly — no
 one of them determines any single output, so the rule below *is* the mapping.`}
@@ -251,9 +269,12 @@ const renderUnitSurface = ({ platform, title, b, file }, cfg) => {
     }
     if (c.form === 'cases') {
       if (!c.inputs?.length) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" declares cases but no inputs — the operand set must be finite and visible`);
-      for (const [i, cs] of (c.cases ?? []).entries()) {
-        if (!cs.when) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" case ${i} has no predicate`);
-        if (!Array.isArray(cs.emit)) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" case ${i} has no emit list — an empty array is a claim, a missing one is an omission`);
+      if (caseRowCount(c) === 0) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" is form cases with no case table at all`);
+      for (const [tableName, table] of Object.entries(c).filter(([k, v]) => (/Cases$/.test(k) || k === 'cases') && Array.isArray(v))) {
+        for (const [i, cs] of table.entries()) {
+          if (!cs.when) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" ${tableName}[${i}] has no predicate`);
+          if (!Array.isArray(cs.emit)) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" ${tableName}[${i}] has no emit list — an empty array is a claim, a missing one is an omission`);
+        }
       }
     } else {
       if (!c.resolution) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" has no resolution rule — the rule IS the mapping`);
@@ -278,7 +299,7 @@ const renderUnitSurface = ({ platform, title, b, file }, cfg) => {
         .sort(([a], [z]) => a.localeCompare(z))
         .map(([name, c]) =>
           `| [${name}](clusters/${platform}/${kebab(name)}.md) | ${badge(c.disposition)} | ${c.keys.map((k) => `\`${k}\``).join(', ')} | ${
-            c.form === 'cases' ? `${c.cases.length}-row case table` : 'prose — not yet a case table'
+            c.form === 'cases' ? `${caseRowCount(c)}-row case table` : 'prose — not yet a case table'
           } |`
         )
         .join('\n')}\n`
@@ -504,7 +525,7 @@ const renderPlatform = (file) => {
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([name, c]) =>
           `| [${name}](clusters/${platform}/${kebab(name)}.md) | ${badge(c.disposition)} | ${c.keys.length} | ${
-            c.form === 'cases' ? `${c.cases.length}-row case table` : 'prose — not yet a case table'
+            c.form === 'cases' ? `${caseRowCount(c)}-row case table` : 'prose — not yet a case table'
           } |`
         )
         .join('\n')}`
