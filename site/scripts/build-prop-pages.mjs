@@ -336,6 +336,19 @@ ${decisionSection(kind, `props.${kind}`)}${
     if (node.minItems !== undefined) constraints.push(`at least ${node.minItems} ${node.minItems === 1 ? 'entry' : 'entries'}`);
     if (node.minProperties !== undefined) constraints.push(`at least ${node.minProperties} ${node.minProperties === 1 ? 'member' : 'members'}`);
 
+    /**
+     * Property-level `examples`, written as the member appears in a document.
+     * A one-line value becomes a bullet; a composite gets its own block.
+     */
+    const memberExamples = Array.isArray(node.examples) && node.examples.length
+      ? node.examples
+          .map((ex) => {
+            const body = toYaml({ [m]: ex });
+            return body.includes('\n') ? `\`\`\`yaml\n${body}\n\`\`\`` : `- \`${body}\``;
+          })
+          .join(node.examples.every((ex) => !toYaml({ [m]: ex }).includes('\n')) ? '\n' : '\n\n')
+      : '';
+
     const memberPage = `${header(m, desc || `The ${m} member of ${defName}`)}
 ${desc}
 
@@ -346,7 +359,7 @@ ${desc}
 ### Value
 
 ${valueLine}${constraints.length ? `\n\nConstraints: ${constraints.join('; ')}.` : ''}
-
+${memberExamples ? `\n### Example${node.examples.length > 1 ? 's' : ''}\n\n${memberExamples}\n` : ''}
 ### Decisions
 
 ${decisionSection(m, `props.${kind}.${m}`)}${sourceSection(kind)}`;

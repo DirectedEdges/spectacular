@@ -583,7 +583,12 @@
             "type": "string"
           },
           "minItems": 1,
-          "description": "The closed list of accepted values, in authored order — it is the variant axis, and the render direction rebuilds the component set from it positionally."
+          "description": "The closed list of accepted values, in authored order — it is the variant axis, and the render direction rebuilds the component set from it positionally.",
+          "examples": [
+            ["solid", "outline", "flat"],
+            ["rest", "hover", "pressed"],
+            ["small", "medium", "large"]
+          ]
         },
         "nullable": {
           "type": "boolean",
