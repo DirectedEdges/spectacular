@@ -61,12 +61,18 @@ const elementTypes = componentSchema.definitions.ElementType.oneOf.map((b) => b.
  * binding fails). The set is closed by the safe-key grammar: no authored key
  * may begin with `$`, so no document can mint an eighth marker.
  */
-const referenceForms = ['token', 'binding', 'slotContent', 'subcomponent', 'elementType', 'image', 'nested'];
+const referenceForms = [
+  'literal', 'mixed', 'token', 'binding', 'conditional',
+  'slotContent', 'subcomponent', 'elementType', 'image', 'nested',
+];
 
 /** Each form's documentation home — hand pages at the schema root, not a generated tree. */
 const REFERENCE_PAGES = {
+  literal: '/schema/styles/',
+  mixed: '/schema/specification/',
   token: '/schema/token-reference/',
   binding: '/schema/prop-binding/',
+  conditional: '/schema/conditional/',
   slotContent: '/schema/slot-content-ref/',
   subcomponent: '/schema/subcomponents/',
   elementType: '/schema/anatomy/#elementtyperef',
@@ -393,12 +399,13 @@ const renderReferences = (ctx) =>
     unitColumn: 'Reference form',
     unitLink: (k) => REFERENCE_PAGES[k],
     withNotes: true,
-    heading: 'References',
-    intro: `A document composes by pointing: six pointer forms plus the \`$nested\` path grammar
-(SPECIFICATION §5.1), each discriminated by a reserved marker the safe key grammar
-guarantees no authored key can shadow. What a platform does when it meets each form is
-declared here. Notes stay inline — the forms' reference pages are hand-written and
-carry no generated binding section yet.`,
+    heading: 'Values and References',
+    intro: `What a platform does with each form a VALUE may take — the scalar forms (a
+literal, the \`mixed\` sentinel) and the pointer grammar (SPECIFICATION §5.1's six
+reserved-marker forms plus the \`$nested\` paths; DSPEC-42 for the style-value half).
+The set is closed: the safe key grammar admits no authored \`$\`-prefixed key, so no
+document can mint a new marker. Notes stay inline — the forms' reference pages are
+hand-written and carry no generated binding section yet.`,
     clustersHeading: 'Reference clusters',
     clustersIntro: 'Rules that span forms.',
     clusterLead: (title, platform) =>
@@ -687,39 +694,6 @@ ${rows.join('\n')}
 ${propsOut.section}
 ${anatomyOut.section}
 ${referencesOut.section}
-## Values
-
-${b.valueForms?.summary ?? ''}
-
-${(() => {
-  const vf = b.valueForms ?? {};
-  /**
-   * `mixedValue` is a fifth form rather than a kind of literal: the document is
-   * stating that the property varies, not giving a value. A binding that treats
-   * it as a literal emits the string "mixed" into output.
-   */
-  const forms = [
-    ['literal', 'Literal'],
-    ['mixedValue', '`mixed`'],
-    ['tokenReference', '`TokenReference`'],
-    ['propBinding', '`PropBinding`'],
-    ['conditional', '`Conditional`'],
-  ];
-  const rows = forms.map(([k, label]) => {
-    const d = vf[k] ?? 'unverified';
-    const flag = vf[`${k}Verified`] === false ? ' *(not confirmed per key)*' : '';
-    return `| ${label} | ${badge(d)}${flag} | ${vf[`${k}Note`] ?? ''} |`;
-  }).join('\n');
-  const decisions = forms
-    .filter(([k]) => vf[`${k}NeedsDecision`])
-    .map(([k, label]) => `**${label}.** ${vf[`${k}DecisionNote`] ?? ''}`);
-  return `| Form | Disposition | Behaviour |\n|---|---|---|\n${rows}${
-    decisions.length
-      ? `\n\n### Needs a decision\n\nThese are not open questions about what the platform does — that is settled above. They are open questions about what it *should* do, which is not a specification's call to make alone.\n\n${decisions.join('\n\n')}`
-      : ''
-  }`;
-})()}
-
 ## Defaults
 
 What an absent style key **means** is spec-level, not per-platform: two platforms that

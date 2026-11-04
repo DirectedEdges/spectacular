@@ -263,16 +263,30 @@
         "direction": "spec-to-code",
         "basis": "implementation",
         "notes": "As on React: never read; deep configuration arrives through the slot-content graph."
+      },
+      "literal": {
+        "disposition": "bound",
+        "realises": "through the CSS binding's stylesheet",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Style values are the CSS binding's; the emitter never reads them."
+      },
+      "mixed": {
+        "disposition": "unsupported",
+        "realises": "—",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "As the CSS binding declares: nothing is emitted for the sentinel."
+      },
+      "conditional": {
+        "disposition": "unsupported",
+        "realises": "—",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "As the CSS binding declares: the condition is discarded on the way to a stylesheet."
       }
     },
     "referenceClusters": {}
-  },
-  "valueForms": {
-    "summary": "Inherited from the CSS binding unless restated here.",
-    "literal": "inherited",
-    "tokenReference": "inherited",
-    "propBinding": "inherited",
-    "conditional": "inherited"
   },
   "surfaces": {
     "note": "The platform-shaped questions this binding owes, none of which are CSS. propsToParameters, slotsToChildren and variantsToSelection graduated into concepts.props and concepts.propClusters above; variant selection itself is the CSS binding's propsToSelectors cluster.",

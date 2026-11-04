@@ -1638,14 +1638,35 @@
         "target": "Figma Variables",
         "direction": "both",
         "basis": "implementation",
-        "notes": "Capture records the bound variable as a `$token`; render resolves the token path back to a variable and binds it. The per-style-value behaviour is declared in this binding's Values section."
+        "notes": "Capture records the bound variable as a `$token`; render resolves the token path back to a variable and binds it. Where the variable cannot be resolved, the value falls back to the cached raw value the document carries — a degradation using only data the document holds (DSPEC-43)."
       },
       "binding": {
         "disposition": "bound",
         "target": "component property bindings",
         "direction": "both",
         "basis": "implementation",
-        "notes": "Capture writes a `$binding` wherever a Figma property drives an element member — `content`, `visible`, `instanceOf`. Render re-creates the property and re-attaches the binding by the id map the property pass returns."
+        "notes": "Capture writes a `$binding` wherever a Figma property drives an element member — `content`, `visible`, `instanceOf`. Render re-creates the property and re-attaches the binding by the id map the property pass returns; on a style value, the dedicated binding path wires the node field to the component property, not yet confirmed per key."
+      },
+      "literal": {
+        "disposition": "bound",
+        "target": "node properties, directly",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "The ordinary case for every style value."
+      },
+      "mixed": {
+        "disposition": "unsupported",
+        "target": "—",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Nothing is applied. A mixed value records that the source layer had no single value, so there is nothing to render and a rendered guess would be invented data. The sentinel is a defect signal about the Figma file, not a value a binding realises."
+      },
+      "conditional": {
+        "disposition": "bound",
+        "target": "render-path conditional evaluation",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "The ADR-018 conditional form is implemented on the render path: the condition's binding target is resolved dynamically and the then/else branch applied. The one platform that honours it; not yet confirmed per key."
       },
       "slotContent": {
         "disposition": "bound",
@@ -1684,21 +1705,6 @@
       }
     },
     "referenceClusters": {}
-  },
-  "valueForms": {
-    "summary": "Every style value may be a literal, the `mixed` sentinel, a TokenReference, a PropBinding, or a Conditional. A disposition for a key means little without saying what happens to each form (DSPEC-42).",
-    "mixedValue": "unsupported",
-    "mixedValueNote": "Nothing is applied. A mixed value records that the source layer had no single value, so there is nothing to render and a rendered guess would be invented data. The sentinel is a defect signal about the Figma file, not a value a binding realises.",
-    "literal": "bound",
-    "literalNote": "The ordinary case.",
-    "tokenReference": "bound",
-    "tokenReferenceNote": "Recognised by its `$token` key and resolved to a Figma variable. Where the variable cannot be resolved, the value falls back to the cached raw value the document carries, which is a degradation using only data the document holds (DSPEC-43).",
-    "propBinding": "bound",
-    "propBindingNote": "A dedicated binding path parses `{ $binding: \"#/props/NAME\" }` and wires the corresponding Figma node field to the component property.",
-    "propBindingVerified": false,
-    "conditional": "bound",
-    "conditionalNote": "The ADR-018 conditional form is implemented on the render path: the condition’s binding target is resolved dynamically and the then/else branch applied. This is the one platform that honours it.",
-    "conditionalVerified": false
   },
   "directions": {
     "figma-to-spec": "Capture. A Figma file becomes a document.",

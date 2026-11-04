@@ -2351,14 +2351,35 @@
         "module": ["tokens"],
         "direction": "spec-to-css",
         "basis": "implementation",
-        "notes": "A `$token` becomes a custom-property reference. Behaviour per style value is declared in this binding's Values section — one home until the merge ruling."
+        "notes": "Emitted per `settings.spec.tokens`: a dedicated token-value path recognises `$token` and renders it in the configured notation."
       },
       "binding": {
+        "disposition": "approximated",
+        "module": ["Css"],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "notes": "A `$binding` never reaches a declaration. As selection it participates through the props surface; as a STYLE VALUE it is not applied — `visible` is the one possible exception and is not currently realised either, because the check is a literal `false` comparison a `$binding` object fails. Declared scope, not an unfound gap."
+      },
+      "literal": {
         "disposition": "bound",
         "module": ["Css"],
         "direction": "spec-to-css",
         "basis": "implementation",
-        "notes": "A `$binding` never reaches a declaration; it reaches selectors — a bound visibility or a Conditional guard becomes the rule block's condition. Per-style-value behaviour is in the Values section."
+        "notes": "The ordinary case; every style cluster's case table is written against literals."
+      },
+      "mixed": {
+        "disposition": "unsupported",
+        "module": [],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "notes": "A mixed value states that the property varies across the text it was read from, so there is no single value to emit. Nothing is emitted, and this row says so rather than leaving a consumer to guess. Applies equally to React and Web Components, which delegate styling here."
+      },
+      "conditional": {
+        "disposition": "unsupported",
+        "module": [],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "notes": "Not yet implemented: nothing in the transform matches a conditional, so a `visible` carrying the ADR-018 form renders permanently visible and the condition is discarded. The Figma render path does implement it, so a document survives a round trip and loses the condition only on the way to CSS."
       },
       "slotContent": {
         "disposition": "unsupported",
@@ -2397,19 +2418,6 @@
       }
     },
     "referenceClusters": {}
-  },
-  "valueForms": {
-    "summary": "Every style value may be a literal, the `mixed` sentinel, a TokenReference, a PropBinding, or a Conditional. A disposition for a key means little without saying what happens to each form (DSPEC-42).",
-    "mixedValue": "unsupported",
-    "mixedValueNote": "A mixed value states that the property varies across the text it was read from, so there is no single value to emit. Nothing is emitted for it, and the declaration below says so rather than leaving a consumer to guess. Applies equally to React and Web Components, which inherit this binding.",
-    "literal": "bound",
-    "literalNote": "The ordinary case; every case table above is written against literals.",
-    "tokenReference": "bound",
-    "tokenReferenceNote": "Emitted per `settings.spec.tokens`. A dedicated token-value path recognises `$token` and renders it in the configured notation.",
-    "propBinding": "unsupported",
-    "propBindingNote": "A PropBinding is not applied to any style value. `visible` is the one possible exception and is not currently realised either: the check is a literal `false` comparison, which a `{ $binding }` object fails, so a bound visibility emits nothing. Declared scope, not an unfound gap.",
-    "conditional": "unsupported",
-    "conditionalNote": "Not yet implemented. Nothing in the transform matches a conditional, so a `visible` carrying the ADR-018 conditional form renders permanently visible and the condition is discarded. The render path does implement it, so a document survives a Figma round trip and loses the condition only on the way to CSS."
   },
   "realises": "The style surface. Every output in this binding is a CSS declaration, so it is shared by every platform that styles with CSS rather than belonging to any one of them.",
   "dependedOnBy": [
