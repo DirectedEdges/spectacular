@@ -2232,6 +2232,117 @@
         "otherwise": { "emit": [], "why": "A prop no variant configuration names selects nothing" },
         "notes": "Props never become declarations. They decide WHICH rule block applies; the styles surface above decides what the block says. Values are normalized by the enumCase contract on both sides of the selector."
       }
+    },
+    "anatomy": {
+      "text": {
+        "disposition": "bound",
+        "module": ["Css"],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "cluster": "elementSelectors",
+        "notes": "Its rule block is where typography and text alignment land — the only element type that carries them."
+      },
+      "glyph": {
+        "disposition": "bound",
+        "module": ["Css"],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "cluster": "elementSelectors",
+        "notes": "The rule block styles the glyph's box and color; the artwork itself is the emitting platform's concern, not the stylesheet's."
+      },
+      "vector": {
+        "disposition": "approximated",
+        "module": ["Css"],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "cluster": "elementSelectors",
+        "notes": "Box, fill and stroke only. Path geometry is not expressible as a rule block, so a vector styles as the rectangle it occupies."
+      },
+      "container": {
+        "disposition": "bound",
+        "module": ["Css"],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "cluster": "elementSelectors",
+        "notes": "Where the layout clusters realize — auto-layout, sizing, positioning all emit into container rule blocks."
+      },
+      "slot": {
+        "disposition": "bound",
+        "module": ["Css", "contentStyles"],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "cluster": "elementSelectors",
+        "notes": "The slot element's own styles emit as any element's do. Its `contentStyles` — formatting for primitive fills, keyed by the `$text`/`$glyph` markers — emit as additional blocks scoped to the primitive content (ADR-102)."
+      },
+      "instance": {
+        "disposition": "bound",
+        "module": ["Css"],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "cluster": "elementSelectors",
+        "notes": "The instanced component's own stylesheet owns its interior; this component's sheet writes only the instance element's own box — size, spacing, position."
+      },
+      "line": {
+        "disposition": "approximated",
+        "module": ["Css"],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "cluster": "elementSelectors",
+        "notes": "A stroke-styled box; the line is its border or background, not a drawn segment."
+      },
+      "ellipse": {
+        "disposition": "approximated",
+        "module": ["Css"],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "cluster": "elementSelectors",
+        "notes": "A box with full corner rounding; arc data has no CSS counterpart."
+      },
+      "rectangle": {
+        "disposition": "bound",
+        "module": ["Css"],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "cluster": "elementSelectors",
+        "notes": "The one shape CSS speaks natively — size, fills, corners, strokes all land directly."
+      },
+      "polygon": {
+        "disposition": "unsupported",
+        "module": [],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "notes": "No rule block can draw an n-gon. The element's box styles emit; the shape does not. `clip-path` could approximate one and is deliberately not emitted — point data is not in the spec."
+      },
+      "star": {
+        "disposition": "unsupported",
+        "module": [],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "notes": "Same as polygon: box styles only, no shape. Point count and inner radius are not in the spec."
+      }
+    },
+    "anatomyClusters": {
+      "elementSelectors": {
+        "disposition": "bound",
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["text", "glyph", "vector", "container", "slot", "instance", "line", "ellipse", "rectangle"],
+        "inputs": [
+          { "ref": "element.key", "from": "spec document" },
+          { "ref": "context.rootAs", "from": "emitting platform — `class` for React, `host` for Web Components" }
+        ],
+        "cases": [
+          { "when": { "operation": "equals", "args": { "value": "element.key", "compareTo": "the component root" } },
+            "emit": ["`.<block>` under rootAs `class`; `:host` under rootAs `host`"],
+            "why": "The root is the component, not an anatomy element — its selector is the block itself" },
+          { "when": { "operation": "isNotNull", "args": { "value": "element.key" } },
+            "emit": ["`.<block>__<element>` — one rule block per element key, nested under the root selector and its variant/state guards"],
+            "why": "The element key, not the element type, names the block: types decide which keys apply, keys decide where" }
+        ],
+        "otherwise": { "emit": [], "why": "An element no variant styles emits no block" },
+        "notes": "Everything generated sits in one `@layer specs` cascade layer, so consumer rules win without specificity races. The selector derivation is shared with the emitters — an element class the scaffold does not write would be a rule that matches nothing."
+      }
     }
   },
   "valueForms": {

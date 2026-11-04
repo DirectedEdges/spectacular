@@ -112,6 +112,8 @@ Where a key is post-processed rather than read, `notes` says so and names the st
 
 Props reuse the two-section shape with one change of unit: the keys are the **prop kinds** — `boolean`, `string`, `enum`, `number`, `slot`, `image`, `object` — read off `AnyProp`'s own union, not individual prop names, which are open. Completeness is enforced the same way: every kind must appear in every binding file's `concepts.props`, so an eighth kind added to the schema fails every binding that has not answered for it.
 
+`concepts.anatomy` and `concepts.anatomyClusters` follow the identical contract with **element types** as the unit, read off `ElementType`'s own union — the same open-names/closed-shapes move. Everything below about props holds for anatomy unchanged, including non-inheritance by dependent bindings.
+
 Two rules differ from styles, both because a kind is a *population* of props rather than a single key:
 
 - **A kind may carry its own row and belong to a cluster.** `boolean` reads natively on its own AND participates in `variantAxes` — different populations of the kind resolve differently. The styles rule (a clustered key has no mapping of its own) does not transfer.

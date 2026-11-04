@@ -31,21 +31,21 @@ Only the `com.figma` extension is defined.
 
 ### ElementType
 
-One of 11 string literals:
+One of 11 string literals. Each type has its own reference page — which style keys it carries, how each platform realises it, and the rules that decide it:
 
 | Type | Description |
 |------|-------------|
-| `text` | Text content |
-| `glyph` | Icon or symbol |
-| `vector` | Vector shape |
-| `container` | Layout container (frame, group) |
-| `slot` | Insertion point for child content |
-| `instance` | Component instance |
-| `line` | Line element |
-| `ellipse` | Ellipse/circle |
-| `rectangle` | Rectangle |
-| `polygon` | Polygon |
-| `star` | Star shape |
+| [`text`](/schema/anatomy/text/) | Renders a string — the only type that carries typography |
+| [`glyph`](/schema/anatomy/glyph/) | Renders an icon, identified by the library's glyph convention |
+| [`vector`](/schema/anatomy/vector/) | An arbitrary vector shape not recognised as a glyph |
+| [`container`](/schema/anatomy/container/) | Holds other elements and carries layout |
+| [`slot`](/schema/anatomy/slot/) | Insertion point for child content |
+| [`instance`](/schema/anatomy/instance/) | Component instance |
+| [`line`](/schema/anatomy/line/) | Line element |
+| [`ellipse`](/schema/anatomy/ellipse/) | Ellipse/circle |
+| [`rectangle`](/schema/anatomy/rectangle/) | Rectangle |
+| [`polygon`](/schema/anatomy/polygon/) | Polygon |
+| [`star`](/schema/anatomy/star/) | Star shape |
 
 ### ElementTypeRef
 

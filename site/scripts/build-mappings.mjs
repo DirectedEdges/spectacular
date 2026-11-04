@@ -46,6 +46,13 @@ const propKinds = componentSchema.definitions.AnyProp.oneOf.map((b) =>
   b.$ref.replace(/^.*#\/definitions\//, '').replace(/Prop$/, '').toLowerCase()
 );
 
+/**
+ * The element types, read off `ElementType`'s own union — the anatomy surface's
+ * unit, guarded exactly as the prop kinds are: a type added to the schema fails
+ * every binding file that has not answered for it.
+ */
+const elementTypes = componentSchema.definitions.ElementType.oneOf.map((b) => b.const);
+
 const TITLES = { figma: 'Figma', css: 'CSS', react: 'React', webcomponents: 'Web Components' };
 const DISPOSITION_ORDER = ['bound', 'approximated', 'unsupported', 'unverified'];
 
@@ -221,50 +228,53 @@ ${derived}${tables.map((t) => caseTable(t.label, t.list)).join('')}${
  * own union, so adding an eighth kind breaks every binding that has not
  * answered for it.
  */
-const renderProps = ({ platform, title, b, file }) => {
-  const props = b.concepts?.props ?? {};
-  const clusters = b.concepts?.propClusters ?? {};
+/**
+ * One unit-keyed concept surface: a per-unit table plus the clusters whose
+ * rules span units. Props and anatomy share this shape — the unit is a closed,
+ * schema-derived population (prop kinds off `AnyProp`, element types off
+ * `ElementType`) while the instances' names stay the library's. Unlike a style
+ * key, a unit may carry its own row AND participate in a cluster: a unit is a
+ * population, and different populations of it resolve differently.
+ */
+const renderUnitSurface = ({ platform, title, b, file }, cfg) => {
+  const entries = b.concepts?.[cfg.conceptKey] ?? {};
+  const clusters = b.concepts?.[cfg.clustersKey] ?? {};
 
-  const extra = Object.keys(props).filter((k) => !propKinds.includes(k));
-  if (extra.length) failures.push(`${file}: prop kinds not in the schema's AnyProp — ${extra.join(', ')}`);
-  const missing = propKinds.filter((k) => !(k in props));
-  if (missing.length) failures.push(`${file}: missing prop kinds — ${missing.join(', ')}`);
+  const extra = Object.keys(entries).filter((k) => !cfg.units.includes(k));
+  if (extra.length) failures.push(`${file}: ${cfg.unitNoun}s not in the schema's ${cfg.unitSource} — ${extra.join(', ')}`);
+  const missing = cfg.units.filter((k) => !(k in entries));
+  if (missing.length) failures.push(`${file}: missing ${cfg.unitNoun}s — ${missing.join(', ')}`);
 
   for (const [name, c] of Object.entries(clusters)) {
     for (const k of c.keys ?? []) {
-      if (!(k in props)) failures.push(`${file}: prop cluster "${name}" names \`${k}\`, absent from concepts.props`);
+      if (!(k in entries)) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" names \`${k}\`, absent from concepts.${cfg.conceptKey}`);
     }
     if (c.form === 'cases') {
-      if (!c.inputs?.length) failures.push(`${file}: prop cluster "${name}" declares cases but no inputs — the operand set must be finite and visible`);
+      if (!c.inputs?.length) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" declares cases but no inputs — the operand set must be finite and visible`);
       for (const [i, cs] of (c.cases ?? []).entries()) {
-        if (!cs.when) failures.push(`${file}: prop cluster "${name}" case ${i} has no predicate`);
-        if (!Array.isArray(cs.emit)) failures.push(`${file}: prop cluster "${name}" case ${i} has no emit list — an empty array is a claim, a missing one is an omission`);
+        if (!cs.when) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" case ${i} has no predicate`);
+        if (!Array.isArray(cs.emit)) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" case ${i} has no emit list — an empty array is a claim, a missing one is an omission`);
       }
     } else {
-      if (!c.resolution) failures.push(`${file}: prop cluster "${name}" has no resolution rule — the rule IS the mapping`);
-      if (!c.partial) failures.push(`${file}: prop cluster "${name}" does not say what a partially present cluster does`);
+      if (!c.resolution) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" has no resolution rule — the rule IS the mapping`);
+      if (!c.partial) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" does not say what a partially present cluster does`);
     }
   }
-  // One direction only: a kind may belong to a cluster AND keep a direct row,
-  // because a kind is a population of props, not a single key — `boolean`
-  // reads natively on its own and ALSO participates in variantAxes. The
-  // styles-side rule (a clustered key has no mapping of its own) is about
-  // single keys and does not transfer.
-  for (const [k, v] of Object.entries(props)) {
-    if (v.cluster && !(v.cluster in clusters)) failures.push(`${file}: prop kind \`${k}\` names cluster "${v.cluster}", which is not declared`);
+  for (const [k, v] of Object.entries(entries)) {
+    if (v.cluster && !(v.cluster in clusters)) failures.push(`${file}: ${cfg.unitNoun} \`${k}\` names cluster "${v.cluster}", which is not declared`);
   }
 
   const realiseCell = (v) =>
     v.target ? `\`${v.target}\`` : v.module ? (v.module.length ? v.module.map((m) => `\`${m}\``).join(', ') : '—') : (v.realises ?? '—');
 
-  const rows = propKinds.map((k) => {
-    const v = props[k] ?? { disposition: 'unverified' };
+  const rows = cfg.units.map((k) => {
+    const v = entries[k] ?? { disposition: 'unverified' };
     const clusterLink = v.cluster ? ` · cluster [${v.cluster}](clusters/${platform}/${kebab(v.cluster)}.md)` : '';
-    return `| [\`${k}\`](/schema/props/${k}/) | ${badge(v.disposition)} | ${realiseCell(v)}${clusterLink} | ${v.notes ?? ''} |`;
+    return `| [\`${k}\`](${cfg.pageBase}${k}/) | ${badge(v.disposition)} | ${realiseCell(v)}${clusterLink} | ${v.notes ?? ''} |`;
   });
 
   const clusterIndex = Object.entries(clusters).length
-    ? `\n### Prop clusters\n\nRules that span kinds — where which kind a prop even IS, or where its platform shape, is resolved jointly rather than per kind.\n\n| Cluster | Disposition | Kinds | Resolution |\n|---|---|---|---|\n${Object.entries(clusters)
+    ? `\n### ${cfg.clustersHeading}\n\n${cfg.clustersIntro}\n\n| Cluster | Disposition | ${cfg.unitColumn}s | Resolution |\n|---|---|---|---|\n${Object.entries(clusters)
         .sort(([a], [z]) => a.localeCompare(z))
         .map(([name, c]) =>
           `| [${name}](clusters/${platform}/${kebab(name)}.md) | ${badge(c.disposition)} | ${c.keys.map((k) => `\`${k}\``).join(', ')} | ${
@@ -274,13 +284,11 @@ const renderProps = ({ platform, title, b, file }) => {
         .join('\n')}\n`
     : '';
 
-  const section = `## Props
+  const section = `## ${cfg.heading}
 
-A prop is declared once in the spec and realised differently by kind on each platform.
-Unlike a style key, a kind may carry its own row *and* participate in a cluster — a kind
-is a population of props, and different populations of it resolve differently.
+${cfg.intro}
 
-| Prop kind | Disposition | Realised by | Notes |
+| ${cfg.unitColumn} | Disposition | Realised by | Notes |
 |---|---|---|---|
 ${rows.join('\n')}
 ${clusterIndex}`;
@@ -288,14 +296,49 @@ ${clusterIndex}`;
   const clusterPages = Object.entries(clusters).map(([name, c]) => ({
     name,
     slug: kebab(name),
-    body: clusterPage({
-      name, c, platform, title,
-      lead: `A prop cluster of the [${title} binding](../${platform}.md). The kinds named below resolve jointly here — which kind a prop even is, or what platform shape it takes, is decided by this rule rather than per kind.`,
-    }),
+    body: clusterPage({ name, c, platform, title, lead: cfg.clusterLead(title, platform) }),
   }));
 
   return { section, clusterPages };
 };
+
+const renderProps = (ctx) =>
+  renderUnitSurface(ctx, {
+    conceptKey: 'props',
+    clustersKey: 'propClusters',
+    units: propKinds,
+    unitNoun: 'prop kind',
+    unitSource: 'AnyProp',
+    unitColumn: 'Prop kind',
+    pageBase: '/schema/props/',
+    heading: 'Props',
+    intro: `A prop is declared once in the spec and realised differently by kind on each platform.
+Unlike a style key, a kind may carry its own row *and* participate in a cluster — a kind
+is a population of props, and different populations of it resolve differently.`,
+    clustersHeading: 'Prop clusters',
+    clustersIntro: 'Rules that span kinds — where which kind a prop even IS, or where its platform shape, is resolved jointly rather than per kind.',
+    clusterLead: (title, platform) =>
+      `A prop cluster of the [${title} binding](../${platform}.md). The kinds named below resolve jointly here — which kind a prop even is, or what platform shape it takes, is decided by this rule rather than per kind.`,
+  });
+
+const renderAnatomy = (ctx) =>
+  renderUnitSurface(ctx, {
+    conceptKey: 'anatomy',
+    clustersKey: 'anatomyClusters',
+    units: elementTypes,
+    unitNoun: 'element type',
+    unitSource: 'ElementType',
+    unitColumn: 'Element type',
+    pageBase: '/schema/anatomy/',
+    heading: 'Anatomy',
+    intro: `An anatomy element's names are the library's; its TYPE is the contract's, and the type is
+what each platform realises. A type may carry its own row *and* participate in a cluster —
+a type is a population of elements, and which type a node even becomes is itself a joint rule.`,
+    clustersHeading: 'Anatomy clusters',
+    clustersIntro: 'Rules that span element types — detection, collapse, promotion, and the semantics that decide a tag.',
+    clusterLead: (title, platform) =>
+      `An anatomy cluster of the [${title} binding](../${platform}.md). The element types named below resolve jointly here — which type a node becomes, or what tag and semantics an element takes, is decided by this rule rather than per type.`,
+  });
 
 /**
  * A binding that inherits its style surface from another. It states only
@@ -360,17 +403,21 @@ const renderPlatform = (file) => {
   const extra = Object.keys(styles).filter((k) => !styleProps.includes(k));
   if (extra.length) failures.push(`${file}: style keys not in the schema — ${extra.join(', ')}`);
 
-  // The props surface renders on every binding, base and dependent alike —
-  // a prop's platform shape is never inherited.
+  // The props and anatomy surfaces render on every binding, base and dependent
+  // alike — a unit's platform shape is never inherited.
   const propsOut = renderProps({ platform, title, b, file });
+  const anatomyOut = renderAnatomy({ platform, title, b, file });
 
   // A dependent binding declares only what it changes, so completeness is the
   // base binding's obligation, not its. What it must not do is silently restate
   // a key identically — that recreates the second source the dependency removed.
   if (dependsOn.length) {
     return {
-      page: renderDependent({ platform, title, b, styles, dependsOn, file, propsSection: propsOut.section }),
-      clusterPages: propsOut.clusterPages,
+      page: renderDependent({
+        platform, title, b, styles, dependsOn, file,
+        propsSection: `${propsOut.section}\n${anatomyOut.section}`,
+      }),
+      clusterPages: [...propsOut.clusterPages, ...anatomyOut.clusterPages],
     };
   }
 
@@ -497,7 +544,7 @@ ${[...open, ...decided].map(section).join('\n\n')}
 `;
   })();
 
-  return { clusterPages: [...clusterPages, ...propsOut.clusterPages], page: `# ${title} binding
+  return { clusterPages: [...clusterPages, ...propsOut.clusterPages, ...anatomyOut.clusterPages], page: `# ${title} binding
 
 **Platform binding for the Specs document format — draft.**
 
@@ -602,6 +649,8 @@ is its own page.
 ${clusterIndex}
 
 ${propsOut.section}
+
+${anatomyOut.section}
 
 ${losses}` };
 };

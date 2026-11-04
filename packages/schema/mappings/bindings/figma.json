@@ -1424,6 +1424,147 @@
         "partial": "A candidate pair that fails cross-variant validation leaves both props standing as read.",
         "notes": "The consolidation rule: two Figma properties become one spec prop. The render direction re-creates the boolean from the nullable content prop's visible-binding."
       }
+    },
+    "anatomy": {
+      "text": {
+        "disposition": "bound",
+        "target": "TEXT node",
+        "direction": "both",
+        "basis": "implementation",
+        "cluster": "typeDetection",
+        "notes": "Reads from a TEXT node; render creates one. The only type that carries typography, and the only one whose `content` is a string or a content binding."
+      },
+      "glyph": {
+        "disposition": "bound",
+        "target": "INSTANCE or VECTOR reclassified by the library's glyphs convention",
+        "direction": "both",
+        "basis": "implementation",
+        "cluster": "typeDetection",
+        "notes": "No Figma node type is a glyph. Membership comes from the declared glyphs convention — name pattern or structural form (ADR-103) — and `content` carries the glyph name. Render swaps in the glyph component's instance by name."
+      },
+      "vector": {
+        "disposition": "approximated",
+        "target": "VECTOR node",
+        "direction": "both",
+        "basis": "implementation",
+        "cluster": "typeDetection",
+        "notes": "Capture records the type, position and styles — never the path geometry, which the schema does not carry. Render therefore creates an empty vector node of the right size and styling: the shape's actual paths are lost on any round trip. The declared seam, not an accident."
+      },
+      "container": {
+        "disposition": "bound",
+        "target": "FRAME or COMPONENT node",
+        "direction": "both",
+        "basis": "implementation",
+        "cluster": "typeDetection",
+        "notes": "The default classification: any node type without a mapping of its own. The transforms' internal key tables speak `frame` and `component` where the contract says `container` — the component ROOT is the component, not an anatomy element, and a nested frame folds to `container`. That vocabulary mapping is declared here and nowhere else."
+      },
+      "slot": {
+        "disposition": "bound",
+        "target": "SLOT node",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Native slot nodes. The prop side of the same fact — constraints, markers, the default slot — is the props surface's `slot` kind; the element side carries `contentStyles` keyed by the primitive markers its prop's `anyOf` names (ADR-102)."
+      },
+      "instance": {
+        "disposition": "bound",
+        "target": "INSTANCE node",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "`instanceOf` resolves to the main component's name — the component set's where the main component sits inside one. A primitive layer in composed content may be PROMOTED to an instance by the primitives convention (ADR-074), recorded in `$extensions['com.figma']`."
+      },
+      "line": {
+        "disposition": "bound",
+        "target": "LINE node",
+        "direction": "both",
+        "basis": "implementation",
+        "cluster": "typeDetection",
+        "notes": "Direct node-type mapping both ways; stroke styling carries the appearance."
+      },
+      "ellipse": {
+        "disposition": "bound",
+        "target": "ELLIPSE node",
+        "direction": "both",
+        "basis": "implementation",
+        "cluster": "typeDetection",
+        "notes": "Direct node-type mapping both ways. Arc data (sweep, ratio) is not carried by the spec; a plain ellipse round-trips cleanly."
+      },
+      "rectangle": {
+        "disposition": "bound",
+        "target": "RECTANGLE node",
+        "direction": "both",
+        "basis": "implementation",
+        "cluster": "typeDetection",
+        "notes": "Direct node-type mapping both ways; size, fills and corner radii carry the appearance."
+      },
+      "polygon": {
+        "disposition": "approximated",
+        "target": "POLYGON node",
+        "direction": "both",
+        "basis": "implementation",
+        "cluster": "typeDetection",
+        "notes": "The node type maps directly, but the point count is not carried by the spec — render creates the default polygon."
+      },
+      "star": {
+        "disposition": "approximated",
+        "target": "STAR node",
+        "direction": "both",
+        "basis": "implementation",
+        "cluster": "typeDetection",
+        "notes": "The node type maps directly, but the point count and inner-radius ratio are not carried by the spec — render creates the default star."
+      }
+    },
+    "anatomyClusters": {
+      "typeDetection": {
+        "disposition": "bound",
+        "direction": "figma-to-spec",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["text", "glyph", "vector", "container", "line", "ellipse", "rectangle", "polygon", "star"],
+        "inputs": [
+          { "ref": "node.type", "from": "Figma node" },
+          { "ref": "conventions.platforms.figma.glyphs", "from": "declared conventions" }
+        ],
+        "derived": {
+          "isGlyph": {
+            "expression": { "operation": "equals", "args": { "value": "node", "compareTo": "matches the glyphs convention — by name pattern, or by structural form after membership is established from the node (ADR-103)" } },
+            "source": "capture-side glyph convention matcher"
+          }
+        },
+        "cases": [
+          { "when": { "operation": "equals", "args": { "value": "derived.isGlyph", "compareTo": true } },
+            "emit": ["`glyph` — whatever the node type, with the glyph name as `content`"],
+            "why": "A glyph is a convention fact, not a node-type fact; an INSTANCE and a VECTOR can both be one" },
+          { "when": { "operation": "equals", "args": { "value": "node.type", "compareTo": "SLOT" } },
+            "emit": ["`slot`"], "why": "Checked before the main table" },
+          { "when": { "operation": "equals", "args": { "value": "node.type", "compareTo": "one of TEXT, VECTOR, LINE, STAR, POLYGON, RECTANGLE, ELLIPSE, INSTANCE" } },
+            "emit": ["the same-named element type, lowercased"],
+            "why": "Direct table" }
+        ],
+        "otherwise": { "emit": ["`container`"], "why": "FRAME, COMPONENT, and any node type without a mapping of its own — the default is structural, so a new Figma node type degrades to a container rather than failing" },
+        "notes": "One node resolves to one of eleven types, and the glyph arm means no single node type determines the answer."
+      },
+      "wrapperCollapse": {
+        "disposition": "bound",
+        "direction": "figma-to-spec",
+        "basis": "implementation",
+        "form": "prose",
+        "keys": ["container", "text", "glyph"],
+        "outputs": ["one anatomy element where Figma has two layers; `$extensions['com.figma'].name` and `childRole` carry the provenance"],
+        "resolution": "A container wrapping exactly one primitive collapses into a single element (ADR-058), keyed by the wrapper and typed by the primitive. The pre-collapse layer name is always recorded, and a role annotated on the collapsed child is recorded as `childRole` so render can put each annotation back on the layer that carried it (ADR-083's collapse family).",
+        "partial": "A wrapper holding more than one child, or a non-primitive, does not collapse — both layers stay elements.",
+        "notes": "Gated by the collapse-primitive-wrapper setting. This is a cross-concern rule: it rewrites anatomy, element styles and binding refs together."
+      },
+      "primitivePromotion": {
+        "disposition": "bound",
+        "direction": "figma-to-spec",
+        "basis": "implementation",
+        "form": "prose",
+        "keys": ["text", "glyph", "instance"],
+        "outputs": ["an `instance` element with `promotedPrimitive`, optional `multipleMatches`, and the consumed content in `$extensions['com.figma']`"],
+        "resolution": "A primitive layer inside composed example content whose shape matches a `conventions.primitives` entry is promoted to an instance of the matching design system component (ADR-074) — a text layer becomes a Typography instance, a glyph a dsIcon. The promotion records itself and what it consumed, so reversal and auditing stay possible; several matching entries record `multipleMatches` with the highest-scoring one chosen.",
+        "partial": "A primitive matching no entry stays a primitive element.",
+        "notes": "Applies in composed/example content, not to the component's own anatomy."
+      }
     }
   },
   "valueForms": {

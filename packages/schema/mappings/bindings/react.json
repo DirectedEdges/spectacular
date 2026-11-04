@@ -116,6 +116,101 @@
         "otherwise": { "emit": ["the prop is an ordinary parameter"], "why": "A prop no state entry names is not a state" },
         "notes": "A prop is omitted only when EVERY concept entry naming it says omit. The concept table — selector and contract disposition per concept — is shared between both emitters and the CSS transform, so the three cannot disagree."
       }
+    },
+    "anatomy": {
+      "text": {
+        "disposition": "bound",
+        "realises": "a `span` carrying the element's content",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "cluster": "semanticsAndTags",
+        "notes": "`span` by default — or the tag a role decides. `content` emits as the text child; a content binding reads the bound prop instead."
+      },
+      "glyph": {
+        "disposition": "approximated",
+        "realises": "an `aria-hidden` span painted by CSS mask",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "React has no glyph component to instantiate, so the exported asset paints as a mask over `currentColor` — visually faithful, but a decorative box rather than an SVG the consumer can reach into."
+      },
+      "vector": {
+        "disposition": "approximated",
+        "realises": "a styled `div` occupying the vector's box",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Path geometry is not in the spec, so nothing can draw it. The declared seam, shared with the Figma binding's render direction."
+      },
+      "container": {
+        "disposition": "bound",
+        "realises": "a `div` — or the tag its role decides",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "cluster": "semanticsAndTags",
+        "notes": "Carries its element class for the stylesheet and the root carries the variant data attributes. In a phrasing context the default drops to `span` so the emitted HTML stays valid."
+      },
+      "slot": {
+        "disposition": "bound",
+        "realises": "the fill render site — `children` for the default slot, the named prop otherwise",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "The element side of the props surface's slot kind: the element's place in the tree is where the fill renders, and its `contentStyles` style a primitive fill."
+      },
+      "instance": {
+        "disposition": "bound",
+        "realises": "the composed component, imported and configured",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "cluster": "semanticsAndTags",
+        "notes": "`instanceOf` becomes an import; `propConfigurations` become its props. A roled instance routes the role's contract props to the instanced component's matching parts (ADR-067 rule 5)."
+      },
+      "line": {
+        "disposition": "approximated",
+        "realises": "a styled `div`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Stroke styling on a box."
+      },
+      "ellipse": {
+        "disposition": "approximated",
+        "realises": "a fully-rounded `div`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Box plus full corner rounding; arc data is not in the spec."
+      },
+      "rectangle": {
+        "disposition": "bound",
+        "realises": "a styled `div`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "The one shape the platform speaks natively."
+      },
+      "polygon": {
+        "disposition": "unsupported",
+        "realises": "a styled `div` — box only, no shape",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Point data is not in the spec; the element's box emits so layout holds, and the shape is declared lost."
+      },
+      "star": {
+        "disposition": "unsupported",
+        "realises": "a styled `div` — box only, no shape",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Same as polygon."
+      }
+    },
+    "anatomyClusters": {
+      "semanticsAndTags": {
+        "disposition": "bound",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "form": "prose",
+        "keys": ["text", "container", "instance"],
+        "outputs": ["the element's tag, its ARIA attributes, and its composed event handlers"],
+        "resolution": "Three independent inputs describe one element — a role (what it IS, at most one), state classifications (which prop carries a concept), and actions (what activating it DOES) — and none supersedes another by authority, so precedence is declared: the role decides the mechanism for any concept it claims (a roled button emits the real `disabled` attribute, suppressing the generic `aria-disabled` emission for that concept AND for any concept sharing its prop); the tag is the role's, else `span` for text or in a phrasing context, else `div`; event handlers compose role-then-action in one closure, so a consumer's listener hears the event before an action can unmount the component. On an `instance`, a role is a routing signal — the instanced component keeps its own control, and the role's contract props route to its matching parts.",
+        "partial": "An element with no role, no state entry and no action gets the default tag and no ARIA — exactly the pre-roles behavior.",
+        "notes": "The precedence module is shared with the Web Components emitter, so the two platforms resolve collisions identically. Cross-concern by nature: it reads anatomy roles, props classifications and actions to emit one element."
+      }
     }
   },
   "valueForms": {

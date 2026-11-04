@@ -4,7 +4,7 @@
 **Created**: 2026-06-16
 **Status**: ACCEPTED
 **Summary**: A `collapsePrimitiveWrapper` processing option strips plain wrappers, promoting a single text or glyph child to the spec root.
-**Decides**: none
+**Decides**: anatomy.container, anatomy.text, anatomy.glyph
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

@@ -85,6 +85,97 @@
         "otherwise": { "emit": ["the prop is an ordinary property"], "why": "A prop no state entry names is not a state" },
         "notes": "Identical rule to the React binding by construction: the concept table — selector and contract disposition per concept — is one shared module, so the two emitters and the CSS transform cannot disagree."
       }
+    },
+    "anatomy": {
+      "text": {
+        "disposition": "bound",
+        "realises": "a `span` in the shadow tree carrying the element's content",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "cluster": "semanticsAndTags",
+        "notes": "`span` by default — or the tag a role decides, through the same shared precedence module React uses."
+      },
+      "glyph": {
+        "disposition": "unverified",
+        "realises": "expected to mirror the React mask-painted span",
+        "direction": "spec-to-code",
+        "notes": "The emitter carries a glyph module mirroring React's, but its per-case behavior has not been confirmed the way React's has."
+      },
+      "vector": {
+        "disposition": "approximated",
+        "realises": "a styled `div` occupying the vector's box",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Path geometry is not in the spec on any platform; the box emits, the shape is lost."
+      },
+      "container": {
+        "disposition": "bound",
+        "realises": "a `div` in the shadow tree — or the tag its role decides",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "cluster": "semanticsAndTags",
+        "notes": "The host element is the component root (`:host` in the stylesheet); containers are shadow-tree structure beneath it."
+      },
+      "slot": {
+        "disposition": "unverified",
+        "realises": "`<slot>` projection — unnamed for the declared default slot, named otherwise",
+        "direction": "spec-to-code",
+        "notes": "The intended rule, matching the props surface's declaration; per-case behavior not yet confirmed."
+      },
+      "instance": {
+        "disposition": "unverified",
+        "realises": "the composed custom element, configured",
+        "direction": "spec-to-code",
+        "notes": "The emitter carries an instance module mirroring React's; role routing and configuration spelling not yet confirmed."
+      },
+      "line": {
+        "disposition": "approximated",
+        "realises": "a styled `div`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Stroke styling on a box."
+      },
+      "ellipse": {
+        "disposition": "approximated",
+        "realises": "a fully-rounded `div`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Box plus full corner rounding."
+      },
+      "rectangle": {
+        "disposition": "bound",
+        "realises": "a styled `div`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "The one shape the platform speaks natively."
+      },
+      "polygon": {
+        "disposition": "unsupported",
+        "realises": "a styled `div` — box only, no shape",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Point data is not in the spec; declared lost, as on React."
+      },
+      "star": {
+        "disposition": "unsupported",
+        "realises": "a styled `div` — box only, no shape",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Same as polygon."
+      }
+    },
+    "anatomyClusters": {
+      "semanticsAndTags": {
+        "disposition": "bound",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "form": "prose",
+        "keys": ["text", "container"],
+        "outputs": ["the element's tag, its ARIA attributes, and its composed event handlers"],
+        "resolution": "The same declared precedence as the React binding, from the same shared module: the role decides the mechanism for any concept it claims; the tag is the role's, else `span` for text, else `div`; handlers compose role-then-action. The host element adds the platform's own wrinkle — reflected attributes carry variant state on `:host`, so a role's attributes land inside the shadow tree while selection attributes land on the host.",
+        "partial": "An element with no role, no state entry and no action gets the default tag and no ARIA.",
+        "notes": "`instance` is left off the keys until role routing is confirmed here — the React binding's cluster states the intended rule."
+      }
     }
   },
   "valueForms": {
