@@ -326,8 +326,6 @@ ${def.description ?? ''}${kept.intro ? ` ${kept.intro}` : ''}
 
 [\`component-api\`](/schema/documents/component-api/):[\`props\`](/schema/props/).\`<prop>\`
 
-A prop of this kind is written with the discriminator \`type: ${discriminator}\`.
-
 ### Members
 
 | Member | Type | Required | Description |
@@ -364,11 +362,11 @@ ${kindDecisionSection(kind, members.map(([m]) => m))}${
      * as a separate mechanism when it is the same schema keyword away.
      */
     const constraints = [];
-    if (node.minimum !== undefined) constraints.push(`\`${node.minimum}\` or greater`);
+    if (node.minimum !== undefined) constraints.push(`minimum \`${node.minimum}\``);
     if (node.minItems !== undefined) constraints.push(`at least ${node.minItems} ${node.minItems === 1 ? 'entry' : 'entries'}`);
     if (node.minProperties !== undefined) constraints.push(`at least ${node.minProperties} ${node.minProperties === 1 ? 'member' : 'members'}`);
 
-    const valueLine = `${typeOf(node)}${constraints.map((c) => ` · ${c}`).join('')}${required.has(m) ? ' · required' : ''}${
+    const valueLine = `${typeOf(node)}${constraints.length ? `, ${constraints.join(', ')}` : ''}${required.has(m) ? ' · required' : ''}${
       hasFieldDefault ? ` · absent means \`${JSON.stringify(node.default)}\`` : ''
     }`;
 
@@ -385,17 +383,23 @@ ${kindDecisionSection(kind, members.map(([m]) => m))}${
           .join(node.examples.every((ex) => !toYaml({ [m]: ex }).includes('\n')) ? '\n' : '\n\n')
       : '';
 
+    // Narrative carried from the replaced pages, homed on the member it
+    // documents rather than on the kind page — the kind page stays a map.
+    const memberSections = Object.entries(preserved.members?.[`${kind}.${m}`]?.sections ?? {})
+      .map(([name, body]) => `\n### ${name}\n\n${body}\n`)
+      .join('');
+
     const memberPage = `${header(m, desc || `The ${m} member of ${defName}`)}
 ${desc}
 
 ### Path
 
-[\`component-api\`](/schema/documents/component-api/):[\`props\`](/schema/props/).\`<\`[\`${defName}\`](/schema/props/${kind}/)\` prop>\`.\`${m}\`
+[\`component-api\`](/schema/documents/component-api/):[\`props\`](/schema/props/).[\`<${defName} prop>\`](/schema/props/${kind}/).\`${m}\`
 
 ### Value
 
 ${valueLine}
-${memberExamples ? `\n### Example${node.examples.length > 1 ? 's' : ''}\n\n${memberExamples}\n` : ''}
+${memberExamples ? `\n### Example${node.examples.length > 1 ? 's' : ''}\n\n${memberExamples}\n` : ''}${memberSections}
 ### Decisions
 
 ${decisionSection(m, `props.${kind}.${m}`)}${sourceSection(kind)}`;

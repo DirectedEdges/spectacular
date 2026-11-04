@@ -642,11 +642,11 @@
             "$ref": "#/definitions/ComponentName"
           },
           "minItems": 1,
-          "description": "What this slot permits — the one list of its accepted content. Each entry is either a component type name from the library's own namespace, or a reserved PrimitiveSlotContent marker naming a primitive kind ($text, $glyph). The two populations cannot collide, because the safe key grammar (ADR-066) admits no leading `$` in a component key. Absent means any component and no primitive. Items stay typed as plain strings rather than an enum, because the array holds arbitrary component names alongside the reserved markers. Examples: [$glyph, $text, badge] takes a glyph, a label, or a composed Badge; [$text] is text-only with no component permitted; [badge] is Badge-only with no primitive permitted. (ADR-102)"
+          "description": "What this slot permits — the one list of its accepted content. Each entry is a component type name, or a reserved primitive marker ($text, $glyph). Absent means any component and no primitive."
         },
         "defaultSlot": {
           "type": "boolean",
-          "description": "Whether this is the component's designated default slot \u2014 the one slot an instance may fill by plain nesting instead of an explicit reference. Absent means false. At most one slot prop per component may be true. (ADR-099)"
+          "description": "Whether this is the component's designated default slot \u2014 the one slot an instance may fill by plain nesting instead of an explicit reference. Absent means false. At most one slot prop per component may be true."
         },
         "$extensions": {
           "$ref": "#/definitions/PropExtensions"
@@ -1241,7 +1241,7 @@
     },
     "ImageProp": {
       "type": "object",
-      "description": "Image-valued property definition (ADR-063). An authoring-default image sits either on the ImageBinding at a binding site (describing that site) or in examples here (describing the image the component itself was authored with, ADR-088); the binding is the more specific statement where both apply.",
+      "description": "Image property definition for a prop a consumer fills with an image — a registry reference or an external source.",
       "examples": [{ "type": "image", "default": "#/images/avatarPlaceholder", "nullable": true }],
       "properties": {
         "type": {
