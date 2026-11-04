@@ -1184,7 +1184,15 @@
     "NumberProp": {
       "type": "object",
       "description": "Number property definition for numeric-valued props, whether inferred from a TEXT code-only prop or from a VARIANT whose options are all numbers.",
-      "examples": [{ "type": "number", "default": 1 }],
+      "examples": [
+        { "type": "number", "default": 1 },
+        {
+          "type": "number",
+          "default": 2,
+          "examples": [2],
+          "$extensions": { "com.figma": { "type": "TEXT", "source": { "kind": "codeOnlyProp", "layer": "headingLevel" } } }
+        }
+      ],
       "properties": {
         "type": {
           "type": "string",
