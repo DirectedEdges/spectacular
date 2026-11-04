@@ -197,6 +197,44 @@
       }
     },
     "anatomyClusters": {
+      "layoutWalk": {
+        "disposition": "bound",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["container", "text", "glyph", "instance", "slot"],
+        "inputs": [
+          { "ref": "layout", "from": "spec document — ordered LayoutNodes: a leaf is an element name, a branch is one name over ordered children" },
+          { "ref": "variants[].layout", "from": "spec document — a variant's layout is a WHOLE structure layered over the default" },
+          { "ref": "element.instanceOf", "from": "spec document" },
+          { "ref": "element.type", "from": "spec document" }
+        ],
+        "derived": {
+          "conditions": {
+            "expression": { "operation": "equals", "args": { "value": "node.conditions", "compareTo": "the variant configurations that place this element here, state-classified props stripped; entries OR'd, each entry a conjunction" } },
+            "source": "shared layout-tree analysis"
+          }
+        },
+        "cases": [
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "node.excludeConditions" } },
+            "emit": ["the element, guarded to NOT render here under the configurations where a variant re-parents it"],
+            "why": "A re-parented element renders in the variant's position when it matches and in its default position otherwise — never both"
+          },
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "derived.conditions" } },
+            "emit": ["the element wrapped in its render condition in the lit template"],
+            "why": "An element only some variants place exists in the shadow tree exactly when a placing configuration matches"
+          },
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "node.key" } },
+            "emit": ["the element at its tree position, children recursed in authored order — slots project, instances compose, everything else a shadow-tree node whose tag the semanticsAndTags cluster decides"],
+            "why": "The walk is the structure; order is the spec's"
+          }
+        ],
+        "otherwise": { "emit": [], "why": "An element absent from every layout renders nowhere" },
+        "notes": "The tree operations are the same shared module React walks, so the two emitters cannot diverge on structure — only on what each node becomes."
+      },
       "semanticsAndTags": {
         "disposition": "bound",
         "direction": "spec-to-code",
