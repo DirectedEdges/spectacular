@@ -719,29 +719,19 @@ const PAGE_TITLES = { CSS: 'CSS', WEBCOMPONENTS: 'Web Components', INDEX: 'Platf
  * files, so the page cannot drift from them.
  */
 const renderOverview = (files) => {
-  const surfaceCell = (entries, units) => {
-    const total = units.length;
-    const counts = {};
-    for (const u of units) {
-      const d = entries?.[u]?.disposition ?? 'unverified';
-      counts[d] = (counts[d] ?? 0) + 1;
-    }
-    const reliable = (counts.bound ?? 0) + (counts.approximated ?? 0) + (counts.unsupported ?? 0);
-    return `${reliable}/${total} declared${counts.unverified ? `, ${counts.unverified} unverified` : ''}`;
-  };
-
+  // No per-surface completeness columns: completeness is build-ENFORCED, so a
+  // "46/46 declared" cell can never read anything else — a guard reported as a
+  // score. The surfaces will also multiply, and a column per surface grows the
+  // table sideways forever. Each platform page's own legends carry the detail.
   const NAV_ORDER = ['figma', 'css', 'react', 'webcomponents'];
   const rows = files.slice().sort((a, b) => NAV_ORDER.indexOf(a.replace(/\.json$/, '')) - NAV_ORDER.indexOf(b.replace(/\.json$/, ''))).map((file) => {
     const platform = file.replace(/\.json$/, '');
     const b = JSON.parse(readFileSync(join(bindingsDir, file), 'utf8'));
-    const styleCell = b.dependsOn?.length
-      ? `inherits [${b.dependsOn.map((d) => TITLES[d] ?? d).join(', ')}](${b.dependsOn[0].toUpperCase()}.md)${Object.keys(b.concepts?.styles ?? {}).length ? `, ${Object.keys(b.concepts.styles).length} overrides` : ''}`
-      : surfaceCell(b.concepts?.styles, styleProps);
     const clusterCount =
       Object.keys(b.concepts?.styleClusters ?? {}).length +
       Object.keys(b.concepts?.propClusters ?? {}).length +
       Object.keys(b.concepts?.anatomyClusters ?? {}).length;
-    return `| [${TITLES[platform] ?? platform}](${platform.toUpperCase()}.md) | ${b.role ?? b.realises ?? ''} | ${styleCell} | ${surfaceCell(b.concepts?.props, propKinds)} | ${surfaceCell(b.concepts?.anatomy, elementTypes)} | ${clusterCount} |`;
+    return `| [${TITLES[platform] ?? platform}](${platform.toUpperCase()}.md) | ${b.role ?? b.realises ?? ''} | ${clusterCount} |`;
   });
 
   return `# Platform Mappings
@@ -762,8 +752,8 @@ its own page, linked from each binding's Clusters index.
 
 ## Supported Platforms
 
-| Binding | Role | Styles | Props | Anatomy | Clusters |
-|---|---|---|---|---|---|
+| Binding | Role | Clusters |
+|---|---|---|
 ${rows.join('\n')}
 
 React and Web Components inherit their style surface from CSS and declare only
