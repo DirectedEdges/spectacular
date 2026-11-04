@@ -1417,11 +1417,35 @@
         "disposition": "bound",
         "direction": "figma-to-spec",
         "basis": "implementation",
-        "form": "prose",
+        "form": "cases",
         "keys": ["boolean"],
-        "outputs": ["the paired content prop, made nullable; the boolean prop, consumed"],
-        "resolution": "A BOOLEAN property that only ever toggles the visibility of the element a content prop fills is not a second fact — it is the content prop's nullability. Where visible- and content-bindings co-occur on one element across variants and the pairing validates, the boolean is consumed and the content prop records `nullable: true`; `null` then means what the toggle meant.",
-        "partial": "A candidate pair that fails cross-variant validation leaves both props standing as read.",
+        "inputs": [
+          { "ref": "element.visibleBinding", "from": "element bindings, per variant" },
+          { "ref": "element.contentBinding", "from": "element bindings, per variant" },
+          { "ref": "booleanProp.default", "from": "Figma ComponentPropertyDefinitions" }
+        ],
+        "derived": {
+          "pairValidates": {
+            "expression": { "operation": "equals", "args": { "value": "the visible- and content-bindings", "compareTo": "co-occur on one element, consistently across every variant" } },
+            "source": "capture-side cross-variant pair validation"
+          }
+        },
+        "cases": [
+          {
+            "when": { "operation": "all", "args": [
+              { "operation": "equals", "args": { "value": "derived.pairValidates", "compareTo": true } },
+              { "operation": "equals", "args": { "value": "booleanProp.default", "compareTo": false } }
+            ] },
+            "emit": ["the boolean prop, consumed", "the content prop: `nullable: true`, `default: null`, and the consumed boolean named in `$extensions['com.figma'].visibilityProp`"],
+            "why": "A toggle that defaults off means the content's resting state is absent — `null` is the default, not just a possibility"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "derived.pairValidates", "compareTo": true } },
+            "emit": ["the boolean prop, consumed", "the content prop: `nullable: true` and the consumed boolean named in `$extensions['com.figma'].visibilityProp`"],
+            "why": "A BOOLEAN that only ever toggles the element a content prop fills is not a second fact — it is the content prop's nullability"
+          }
+        ],
+        "otherwise": { "emit": ["both props, standing as read"], "why": "A candidate pair that fails cross-variant validation consolidates nothing" },
         "notes": "The consolidation rule: two Figma properties become one spec prop. The render direction re-creates the boolean from the nullable content prop's visible-binding."
       }
     },
@@ -1547,22 +1571,62 @@
         "disposition": "bound",
         "direction": "figma-to-spec",
         "basis": "implementation",
-        "form": "prose",
+        "form": "cases",
         "keys": ["container", "text", "glyph"],
-        "outputs": ["one anatomy element where Figma has two layers; `$extensions['com.figma'].name` and `childRole` carry the provenance"],
-        "resolution": "A container wrapping exactly one primitive collapses into a single element (ADR-058), keyed by the wrapper and typed by the primitive. The pre-collapse layer name is always recorded, and a role annotated on the collapsed child is recorded as `childRole` so render can put each annotation back on the layer that carried it (ADR-083's collapse family).",
-        "partial": "A wrapper holding more than one child, or a non-primitive, does not collapse — both layers stay elements.",
-        "notes": "Gated by the collapse-primitive-wrapper setting. This is a cross-concern rule: it rewrites anatomy, element styles and binding refs together."
+        "inputs": [
+          { "ref": "settings.spec.collapsePrimitiveWrapper", "from": "declared settings" },
+          { "ref": "root.children", "from": "the root container's anatomy-visible children, per variant" },
+          { "ref": "root.styles", "from": "the root's non-default style keys, after default removal" }
+        ],
+        "derived": {
+          "semanticFrame": {
+            "expression": { "operation": "equals", "args": { "value": "root.styles", "compareTo": "carries any disqualifying key — clipsContent, cornerRadius, strokes, strokeAlign, strokeWeight, itemSpacing, padding, effects, backgroundColor, cornerSmoothing" } },
+            "source": "capture-side collapse eligibility — a non-default value on one of these means the container is a semantic frame, not a Figma wrapper"
+          }
+        },
+        "cases": [
+          {
+            "when": { "operation": "all", "args": [
+              { "operation": "equals", "args": { "value": "settings.spec.collapsePrimitiveWrapper", "compareTo": true } },
+              { "operation": "equals", "args": { "value": "root.children", "compareTo": "exactly one, in every variant" } },
+              { "operation": "equals", "args": { "value": "derived.semanticFrame", "compareTo": false } }
+            ] },
+            "emit": ["one anatomy element where Figma has two layers — keyed by the wrapper, typed by the leaf", "positioning and base keys conveyed from the wrapper always; size keys conveyed only where the leaf lacks its own", "the pre-collapse layer name in `$extensions['com.figma'].name`; a role the collapsed child carried in `childRole`"],
+            "why": "ADR-058: the wrapper existed for Figma's sake, so the spec records the one element the design means — provenance keeps the round trip honest (ADR-083's collapse family)"
+          }
+        ],
+        "otherwise": { "emit": ["no collapse — both layers stay elements"], "why": "All-or-nothing across variants: one ineligible variant means no variant collapses, or the same element would exist in some variants and not others" },
+        "notes": "A cross-concern rule: it rewrites anatomy, element styles and binding refs together."
       },
       "primitivePromotion": {
         "disposition": "bound",
         "direction": "figma-to-spec",
         "basis": "implementation",
-        "form": "prose",
+        "form": "cases",
         "keys": ["text", "glyph", "instance"],
-        "outputs": ["an `instance` element with `promotedPrimitive`, optional `multipleMatches`, and the consumed content in `$extensions['com.figma']`"],
-        "resolution": "A primitive layer inside composed example content whose shape matches a `conventions.primitives` entry is promoted to an instance of the matching design system component (ADR-074) — a text layer becomes a Typography instance, a glyph a dsIcon. The promotion records itself and what it consumed, so reversal and auditing stay possible; several matching entries record `multipleMatches` with the highest-scoring one chosen.",
-        "partial": "A primitive matching no entry stays a primitive element.",
+        "inputs": [
+          { "ref": "layer", "from": "a primitive layer inside composed example content" },
+          { "ref": "conventions.primitives", "from": "declared conventions — each entry names a design system component and the primitive shape it claims" }
+        ],
+        "derived": {
+          "matchCount": {
+            "expression": { "operation": "equals", "args": { "value": "conventions.primitives", "compareTo": "the number of entries that resolve against this layer" } },
+            "source": "capture-side primitive resolution (ADR-074)"
+          }
+        },
+        "cases": [
+          {
+            "when": { "operation": "equals", "args": { "value": "derived.matchCount", "compareTo": 1 } },
+            "emit": ["an `instance` element of the matching component, with `promotedPrimitive: true` and the consumed content — the text layer's string or the glyph's name — in `$extensions['com.figma']`"],
+            "why": "The promotion records itself and what it consumed, so reversal and auditing stay possible"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "derived.matchCount", "compareTo": "more than 1" } },
+            "emit": ["the same promotion to the highest-scoring entry's component, plus `multipleMatches: true`"],
+            "why": "Two components claiming one layer may describe the design system or a drifted conventions file — either way the ambiguity is a property of this element, durable rather than a warning that scrolls past"
+          }
+        ],
+        "otherwise": { "emit": ["the layer stays a primitive element"], "why": "A primitive matching no entry is just a primitive" },
         "notes": "Applies in composed/example content, not to the component's own anatomy."
       }
     }
