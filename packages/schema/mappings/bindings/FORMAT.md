@@ -124,3 +124,5 @@ Two rules differ from styles, both because a kind is a *population* of props rat
 Prop clusters carry the joint rules: which kind a Figma VARIANT property even becomes (`variantAxes`, `numberInference`), consolidation (`booleanContentPairing`), provenance minting (`codeOnlyProps`), platform shape (`slotsToChildren`, `statesToContract`, `propsToSelectors`). The `form: cases` / `form: prose` contract, the declared operand set, and the leak guard all apply unchanged.
 
 There is no `onAbsent` for props and no prop `_defaults.json`: what an absent or null prop value means is the schema's own per-kind nullability contract (ADR-065), declared once in `component.schema.json` and published on the generated kind pages.
+
+`scripts/verify-bindings.mjs` mechanically checks the **styles** surface only. The props, anatomy and references surfaces are not checkable yet because no transform declares comparable implementation-side data (styles have `style-bindings.json` to diff against); their rows carry `basis: implementation` — human-verified at authoring — until one does.

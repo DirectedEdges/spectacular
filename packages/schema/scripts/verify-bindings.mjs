@@ -13,6 +13,16 @@
  * missing sibling is not a failure. Exit code is 0 on skip, 0 on agreement,
  * 1 on drift.
  *
+ * Scope: the STYLES surface only. The props, anatomy and references surfaces
+ * are not mechanically checkable yet, and the gap is on the implementation
+ * side, not here: styles are verifiable because figma-from-specs ships a
+ * declared key table (`style-bindings.json`) to diff against, while no
+ * transform declares a per-prop-kind, per-element-type, or per-reference-form
+ * table of its own. Those rows carry `basis: implementation` — human-verified
+ * against the code at authoring time — and become checkable the day the
+ * transforms declare comparable data (the same move specs#689 forced for
+ * style keys).
+ *
  * Usage:
  *   node scripts/verify-bindings.mjs                 # all platforms it can reach
  *   node scripts/verify-bindings.mjs --strict        # absent implementation is a failure
