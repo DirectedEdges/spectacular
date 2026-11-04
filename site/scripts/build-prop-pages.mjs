@@ -293,7 +293,7 @@ ${def.description ?? ''}${kept.intro ? ` ${kept.intro}` : ''}
 
 ### Path
 
-...[\`props\`](/schema/props/).\`<prop>\`
+[\`component-api\`](/schema/documents/component-api/):[\`props\`](/schema/props/).\`<prop>\`
 
 A prop of this kind is written with the discriminator \`type: ${discriminator}\`.
 
@@ -354,7 +354,7 @@ ${desc}
 
 ### Path
 
-...[\`props\`](/schema/props/).\`<prop>\`.\`${m}\` — on a prop of kind [\`${defName}\`](/schema/props/${kind}/).
+[\`component-api\`](/schema/documents/component-api/):[\`props\`](/schema/props/).\`<prop>\`.\`${m}\` — on a prop of kind [\`${defName}\`](/schema/props/${kind}/).
 
 ### Value
 
@@ -398,7 +398,7 @@ ${preserved.extensionsPage?.intro ?? defs.PropExtensions.description ?? ''}
 
 ### Path
 
-...[\`props\`](/schema/props/).\`<prop>\`.\`$extensions\` — on every prop kind.
+[\`component-api\`](/schema/documents/component-api/):[\`props\`](/schema/props/).\`<prop>\`.\`$extensions\` — on every prop kind.
 
 ${sections.join('\n')}${Object.entries(preserved.extensionsPage?.sections ?? {})
     .map(([name, body]) => `### ${name}\n\n${body}\n\n`)
