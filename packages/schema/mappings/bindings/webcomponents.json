@@ -214,7 +214,58 @@
         "otherwise": { "emit": ["the default tag, no ARIA"], "why": "An element with no role and no state entry keeps the pre-roles behavior" },
         "notes": "Event-handler composition is expected to mirror the React binding's handlerCases through the shared events model, and `instance` role routing the same — both left undeclared here until confirmed against this emitter. The precedence module is shared, so suppression cannot diverge."
       }
-    }
+    },
+    "references": {
+      "token": {
+        "disposition": "bound",
+        "realises": "nothing directly — styling is the CSS binding's",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "As on React: the emitter never reads a `$token`."
+      },
+      "binding": {
+        "disposition": "bound",
+        "realises": "property access on the element",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Bindings resolve through the same shared pointer machinery React uses; the lit-side spelling lives in this emitter's own props module."
+      },
+      "slotContent": {
+        "disposition": "bound",
+        "realises": "recursive lit-template composition from the registries",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "The composition walker mirrors React's by declared intent — same contentStyles rule, same wording, the two targets move together. Instances of real custom elements where `instanceOf` names one; raw elements otherwise."
+      },
+      "subcomponent": {
+        "disposition": "bound",
+        "realises": "the sibling subcomponent's emitted custom element",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "`#/subcomponents/<key>` resolves through the same instance-target resolution React uses."
+      },
+      "elementType": {
+        "disposition": "unsupported",
+        "realises": "—",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "External type references are a consumer concern (ADR-012)."
+      },
+      "image": {
+        "disposition": "unverified",
+        "realises": "expected: a served asset URL, as on React",
+        "direction": "spec-to-code",
+        "notes": "Carried with the props surface's image row: not yet confirmed against this emitter."
+      },
+      "nested": {
+        "disposition": "unsupported",
+        "realises": "—",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "As on React: never read; deep configuration arrives through the slot-content graph."
+      }
+    },
+    "referenceClusters": {}
   },
   "valueForms": {
     "summary": "Inherited from the CSS binding unless restated here.",

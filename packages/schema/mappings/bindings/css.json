@@ -2344,7 +2344,59 @@
         "otherwise": { "emit": [], "why": "An element no variant styles emits no block" },
         "notes": "Everything generated sits in one `@layer specs` cascade layer, so consumer rules win without specificity races. The selector derivation is shared with the emitters — an element class the scaffold does not write would be a rule that matches nothing."
       }
-    }
+    },
+    "references": {
+      "token": {
+        "disposition": "bound",
+        "module": ["tokens"],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "notes": "A `$token` becomes a custom-property reference. Behaviour per style value is declared in this binding's Values section — one home until the merge ruling."
+      },
+      "binding": {
+        "disposition": "bound",
+        "module": ["Css"],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "notes": "A `$binding` never reaches a declaration; it reaches selectors — a bound visibility or a Conditional guard becomes the rule block's condition. Per-style-value behaviour is in the Values section."
+      },
+      "slotContent": {
+        "disposition": "unsupported",
+        "module": [],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "notes": "Composition leaves no trace in a stylesheet: a fill's own component styles itself, and the slot's primitive formatting is the `contentStyles` surface, already declared under anatomy."
+      },
+      "subcomponent": {
+        "disposition": "unsupported",
+        "module": [],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "notes": "A subcomponent gets its own stylesheet; the reference itself emits nothing."
+      },
+      "elementType": {
+        "disposition": "unsupported",
+        "module": [],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "notes": "External type references are a consumer concern (ADR-012); the stylesheet keys off element keys, never type URIs."
+      },
+      "image": {
+        "disposition": "bound",
+        "module": ["Css"],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "notes": "An `$image` reaching a style value emits through `backgroundImage` as a custom property the emitting platform fills with the served URL."
+      },
+      "nested": {
+        "disposition": "unsupported",
+        "module": [],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "notes": "Deep configuration is structure, not styling; nothing to emit."
+      }
+    },
+    "referenceClusters": {}
   },
   "valueForms": {
     "summary": "Every style value may be a literal, the `mixed` sentinel, a TokenReference, a PropBinding, or a Conditional. A disposition for a key means little without saying what happens to each form (DSPEC-42).",

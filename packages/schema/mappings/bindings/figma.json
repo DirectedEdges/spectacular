@@ -1631,7 +1631,59 @@
         "otherwise": { "emit": ["the layer stays a primitive element"], "why": "A primitive matching no entry is just a primitive" },
         "notes": "Applies in composed/example content, not to the component's own anatomy."
       }
-    }
+    },
+    "references": {
+      "token": {
+        "disposition": "bound",
+        "target": "Figma Variables",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Capture records the bound variable as a `$token`; render resolves the token path back to a variable and binds it. The per-style-value behaviour is declared in this binding's Values section."
+      },
+      "binding": {
+        "disposition": "bound",
+        "target": "component property bindings",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Capture writes a `$binding` wherever a Figma property drives an element member — `content`, `visible`, `instanceOf`. Render re-creates the property and re-attaches the binding by the id map the property pass returns."
+      },
+      "slotContent": {
+        "disposition": "bound",
+        "target": "nested instances and override subtrees",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Capture deduplicates structured fills into the registries by structural equality and writes `$slotContent` pointers at the fill sites; render composes nested instances through the instance manifests."
+      },
+      "subcomponent": {
+        "disposition": "bound",
+        "target": "sibling components in one component set or file",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "A `$ref` into `#/subcomponents/` captures from and renders back to the sibling component the pattern match identified."
+      },
+      "elementType": {
+        "disposition": "unsupported",
+        "target": "—",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Never produced: capture writes plain `ElementType` strings. An authored `ElementTypeRef` passes through opaque — resolution is a consumer concern by design (ADR-012)."
+      },
+      "image": {
+        "disposition": "bound",
+        "target": "image fills and the images registry",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Capture deduplicates image bytes into the registry and writes `$image` pointers (ADR-063); render restores fills and source layers from the registry."
+      },
+      "nested": {
+        "disposition": "approximated",
+        "target": "nested instance overrides",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Capture writes `$nested` paths for configuration deeper than one instance boundary (ADR-052). Render declares them unimplemented and skips them, reporting the skip — a stated loss, not a silent one."
+      }
+    },
+    "referenceClusters": {}
   },
   "valueForms": {
     "summary": "Every style value may be a literal, the `mixed` sentinel, a TokenReference, a PropBinding, or a Conditional. A disposition for a key means little without saying what happens to each form (DSPEC-42).",

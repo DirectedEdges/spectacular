@@ -53,6 +53,27 @@ const propKinds = componentSchema.definitions.AnyProp.oneOf.map((b) =>
  */
 const elementTypes = componentSchema.definitions.ElementType.oneOf.map((b) => b.const);
 
+/**
+ * The reference forms — SPECIFICATION §5.1's pointer grammar plus the
+ * `$nested` path grammar. No single schema union declares this set, so §5.1's
+ * own table is the declaration and this list mirrors it; the guard still runs
+ * both ways (a binding declaring an unknown form fails, a form missing from a
+ * binding fails). The set is closed by the safe-key grammar: no authored key
+ * may begin with `$`, so no document can mint an eighth marker.
+ */
+const referenceForms = ['token', 'binding', 'slotContent', 'subcomponent', 'elementType', 'image', 'nested'];
+
+/** Each form's documentation home — hand pages at the schema root, not a generated tree. */
+const REFERENCE_PAGES = {
+  token: '/schema/token-reference/',
+  binding: '/schema/prop-binding/',
+  slotContent: '/schema/slot-content-ref/',
+  subcomponent: '/schema/subcomponents/',
+  elementType: '/schema/anatomy/#elementtyperef',
+  image: '/schema/styles/background-image/',
+  nested: '/schema/prop-configurations/',
+};
+
 const TITLES = { figma: 'Figma', css: 'CSS', react: 'React', webcomponents: 'Web Components' };
 const DISPOSITION_ORDER = ['bound', 'approximated', 'unsupported', 'unverified'];
 
@@ -310,18 +331,22 @@ const renderUnitSurface = ({ platform, title, b, file }, cfg) => {
   // No Notes column: a note is a fact about one unit on one platform, so it
   // renders on the unit's own page, where it is one paragraph under one
   // platform heading — not here, where 46 of them stack into a wall.
+  // `withNotes`: the references table keeps its Notes column — its unit pages
+  // are hand-written and carry no generated binding section for a note to
+  // move to, and seven rows is a table, not a wall.
   const rows = cfg.units.map((k) => {
     const v = entries[k] ?? { disposition: 'unverified' };
     const clusterLink = v.cluster ? ` · cluster [${v.cluster}](clusters/${platform}/${kebab(v.cluster)}.md)` : '';
-    return `| [\`${k}\`](${cfg.pageBase}${k}/) | ${badge(v.disposition)} | ${realiseCell(v)}${clusterLink} |`;
+    const link = cfg.unitLink ? cfg.unitLink(k) : `${cfg.pageBase}${k}/`;
+    return `| [\`${k}\`](${link}) | ${badge(v.disposition)} | ${realiseCell(v)}${clusterLink} |${cfg.withNotes ? ` ${v.notes ?? ''} |` : ''}`;
   });
 
   const section = `## ${cfg.heading}
 
 ${cfg.intro}
 
-| ${cfg.unitColumn} | Disposition | Realised by |
-|---|---|---|
+| ${cfg.unitColumn} | Disposition | Realised by |${cfg.withNotes ? ' Notes |' : ''}
+|---|---|---|${cfg.withNotes ? '---|' : ''}
 ${rows.join('\n')}
 `;
 
@@ -356,6 +381,28 @@ is a population of props, and different populations of it resolve differently.`,
     clustersIntro: 'Rules that span kinds — where which kind a prop even IS, or where its platform shape, is resolved jointly rather than per kind.',
     clusterLead: (title, platform) =>
       `A prop cluster of the [${title} binding](../${platform}.md). The kinds named below resolve jointly here — which kind a prop even is, or what platform shape it takes, is decided by this rule rather than per kind.`,
+  });
+
+const renderReferences = (ctx) =>
+  renderUnitSurface(ctx, {
+    conceptKey: 'references',
+    clustersKey: 'referenceClusters',
+    units: referenceForms,
+    unitNoun: 'reference form',
+    unitSource: 'SPECIFICATION §5.1 pointer grammar',
+    unitColumn: 'Reference form',
+    unitLink: (k) => REFERENCE_PAGES[k],
+    withNotes: true,
+    heading: 'References',
+    intro: `A document composes by pointing: six pointer forms plus the \`$nested\` path grammar
+(SPECIFICATION §5.1), each discriminated by a reserved marker the safe key grammar
+guarantees no authored key can shadow. What a platform does when it meets each form is
+declared here. Notes stay inline — the forms' reference pages are hand-written and
+carry no generated binding section yet.`,
+    clustersHeading: 'Reference clusters',
+    clustersIntro: 'Rules that span forms.',
+    clusterLead: (title, platform) =>
+      `A reference cluster of the [${title} binding](../${platform}.md).`,
   });
 
 const renderAnatomy = (ctx) =>
@@ -448,10 +495,11 @@ const renderPlatform = (file) => {
   const extra = Object.keys(styles).filter((k) => !styleProps.includes(k));
   if (extra.length) failures.push(`${file}: style keys not in the schema — ${extra.join(', ')}`);
 
-  // The props and anatomy surfaces render on every binding, base and dependent
-  // alike — a unit's platform shape is never inherited.
+  // The props, anatomy and references surfaces render on every binding, base
+  // and dependent alike — a unit's platform shape is never inherited.
   const propsOut = renderProps({ platform, title, b, file });
   const anatomyOut = renderAnatomy({ platform, title, b, file });
+  const referencesOut = renderReferences({ platform, title, b, file });
 
   // A dependent binding declares only what it changes, so completeness is the
   // base binding's obligation, not its. What it must not do is silently restate
@@ -460,10 +508,10 @@ const renderPlatform = (file) => {
     return {
       page: renderDependent({
         platform, title, b, styles, dependsOn, file,
-        propsSection: `${propsOut.section}\n${anatomyOut.section}`,
-        clustersIdx: clustersSection([...propsOut.clusterMeta, ...anatomyOut.clusterMeta], platform),
+        propsSection: `${propsOut.section}\n${anatomyOut.section}\n${referencesOut.section}`,
+        clustersIdx: clustersSection([...propsOut.clusterMeta, ...anatomyOut.clusterMeta, ...referencesOut.clusterMeta], platform),
       }),
-      clusterPages: [...propsOut.clusterPages, ...anatomyOut.clusterPages],
+      clusterPages: [...propsOut.clusterPages, ...anatomyOut.clusterPages, ...referencesOut.clusterPages],
     };
   }
 
@@ -551,6 +599,7 @@ const renderPlatform = (file) => {
     ...Object.entries(clusters).map(([name, c]) => ({ name, surface: 'Styles', c })),
     ...propsOut.clusterMeta,
     ...anatomyOut.clusterMeta,
+    ...referencesOut.clusterMeta,
   ];
   const clusterIndex = clustersSection(allClusterMeta, platform);
 
@@ -588,7 +637,7 @@ ${[...open, ...decided].map(section).join('\n\n')}
 `;
   })();
 
-  return { clusterPages: [...clusterPages, ...propsOut.clusterPages, ...anatomyOut.clusterPages], page: `# ${title} binding
+  return { clusterPages: [...clusterPages, ...propsOut.clusterPages, ...anatomyOut.clusterPages, ...referencesOut.clusterPages], page: `# ${title} binding
 
 **Platform binding for the Specs document format — draft.**
 
@@ -637,6 +686,7 @@ ${rows.join('\n')}
 
 ${propsOut.section}
 ${anatomyOut.section}
+${referencesOut.section}
 ## Values
 
 ${b.valueForms?.summary ?? ''}

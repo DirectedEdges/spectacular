@@ -114,6 +114,8 @@ Props reuse the two-section shape with one change of unit: the keys are the **pr
 
 `concepts.anatomy` and `concepts.anatomyClusters` follow the identical contract with **element types** as the unit, read off `ElementType`'s own union — the same open-names/closed-shapes move. Everything below about props holds for anatomy unchanged, including non-inheritance by dependent bindings.
 
+`concepts.references` and `concepts.referenceClusters` follow it with **reference forms** as the unit — SPECIFICATION §5.1's six pointer forms plus the `$nested` path grammar. No single schema union declares the set, so §5.1's table is the declaration and the generator mirrors it; the set stays closed because the safe key grammar admits no authored `$`-prefixed key. Two notes particular to this surface: its table keeps a Notes column, because the forms' reference pages are hand-written and have no generated section for a note to move to; and whether the styles-scoped `valueForms` section merges into it is an open ruling — until then, a form declared in both (`$token`, `$binding`) carries its behaviour in Values and a pointer here, never two copies.
+
 Two rules differ from styles, both because a kind is a *population* of props rather than a single key:
 
 - **A kind may carry its own row and belong to a cluster.** `boolean` reads natively on its own AND participates in `variantAxes` — different populations of the kind resolve differently. The styles rule (a clustered key has no mapping of its own) does not transfer.

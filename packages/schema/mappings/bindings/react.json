@@ -279,7 +279,59 @@
         "otherwise": { "emit": ["the default tag, no ARIA, no handlers"], "why": "An element with no role, no state entry and no action keeps the pre-roles behavior" },
         "notes": "The precedence module is shared with the Web Components emitter, so the two platforms resolve collisions identically. Cross-concern by nature: it reads anatomy roles, props classifications and actions to emit one element."
       }
-    }
+    },
+    "references": {
+      "token": {
+        "disposition": "bound",
+        "realises": "nothing directly — styling is the CSS binding's",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "The emitter never reads a `$token`; tokens reach React only through the stylesheet the CSS binding declares."
+      },
+      "binding": {
+        "disposition": "bound",
+        "realises": "prop access on the component — `p.<key>`, member pointers through member access",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "A `$binding` at a content, instanceOf or configuration site reads the bound prop at render; a member pointer (`#/props/x/members/y`, ADR-111) reads through the object prop. An image-bearing binding emits its authoring-default example as the fallback (ADR-063/088)."
+      },
+      "slotContent": {
+        "disposition": "bound",
+        "realises": "recursive JSX composition from the registries",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "A `$slotContent` pointer resolves its registry entry and composes it — imports collected, nested fills recursed, provenance commented. Which render site it lands in is the slotsToChildren cluster under Props."
+      },
+      "subcomponent": {
+        "disposition": "bound",
+        "realises": "an import of the sibling subcomponent's emitted component",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "`#/subcomponents/<key>` resolves to the emitted sibling and renders as an ordinary composed instance."
+      },
+      "elementType": {
+        "disposition": "unsupported",
+        "realises": "—",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "External type references are a consumer concern (ADR-012); the emitter types elements by `ElementType` string only."
+      },
+      "image": {
+        "disposition": "bound",
+        "realises": "a served asset URL",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "An `$image` pointer resolves to the registry entry's served URL at emit — in props, configurations, and composed content alike."
+      },
+      "nested": {
+        "disposition": "unsupported",
+        "realises": "—",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "The emitter never reads `$nested`: deep configuration reaches emitted examples through the slot-content graph instead — each registry entry carries its own configurations, and composition recurses (DSPEC-05's division of labour)."
+      }
+    },
+    "referenceClusters": {}
   },
   "valueForms": {
     "summary": "Inherited from the CSS binding unless restated here.",
