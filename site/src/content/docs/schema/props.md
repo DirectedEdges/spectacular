@@ -30,11 +30,11 @@ type AnyProp = BooleanProp | StringProp | EnumProp | NumberProp | SlotProp | Ima
 
 | Prop kind | Absent `nullable` means | Why |
 |-----------|-------------------------|-----|
-| [`StringProp`](/schema/props/string/nullable/) | `true` | Open value set — nothing enumerates it |
-| [`NumberProp`](/schema/props/number/nullable/) | `true` | Open value set |
-| [`SlotProp`](/schema/props/slot/nullable/) | `true` | Open content set; a slot may be empty |
-| [`ImageProp`](/schema/props/image/nullable/) | `true` | Open value set |
-| [`EnumProp`](/schema/props/enum/nullable/) | `false` | `enum` lists every accepted value, and `null` is not one of them |
+| [`StringProp`](/schema/props/string/) | `true` | Open value set — nothing enumerates it |
+| [`NumberProp`](/schema/props/number/) | `true` | Open value set |
+| [`SlotProp`](/schema/props/slot/) | `true` | Open content set; a slot may be empty |
+| [`ImageProp`](/schema/props/image/) | `true` | Open value set |
+| [`EnumProp`](/schema/props/enum/) | `false` | `enum` lists every accepted value, and `null` is not one of them |
 | [`BooleanProp`](/schema/props/boolean/) | *(no member)* | Booleans are never nullable |
 
 An explicit `nullable: false` on an open-valued prop asserts that a value always exists — useful when a code-only prop was authored with a non-empty default:

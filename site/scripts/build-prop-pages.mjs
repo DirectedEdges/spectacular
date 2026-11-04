@@ -152,6 +152,33 @@ const decisionSection = (key, path) => {
   return `${adrs.map((a) => `- [ADR-${a.num}](/adr/${a.file.replace(/\.md$/, '')}/) — ${a.title}`).join('\n')}\n`;
 };
 
+/**
+ * Members whose concept is the same on every kind that carries them. They get
+ * no page of their own — seven near-identical `default` pages said nothing the
+ * kind table's gloss and the hub's nullability table did not. A kind page's
+ * Decisions therefore answers for these members' paths too, so an ADR deciding
+ * `props.string.nullable` still surfaces.
+ */
+const SHARED_MEMBERS = new Set(['default', 'nullable', 'examples']);
+
+/** Decisions for a kind page: its own path plus its pageless members' paths. */
+const kindDecisionSection = (kind, memberNames) => {
+  const seen = new Set();
+  const out = [];
+  const collect = (key, path) => {
+    for (const a of adrsFor(key, path)) {
+      if (seen.has(a.num)) continue;
+      seen.add(a.num);
+      out.push(a);
+    }
+  };
+  collect(kind, `props.${kind}`);
+  for (const m of memberNames.filter((n) => SHARED_MEMBERS.has(n))) collect(m, `props.${kind}.${m}`);
+  if (!out.length) return 'None.\n';
+  out.sort((a, b) => a.num.localeCompare(b.num));
+  return `${out.map((a) => `- [ADR-${a.num}](/adr/${a.file.replace(/\.md$/, '')}/) — ${a.title}`).join('\n')}\n`;
+};
+
 // ── Member typing ────────────────────────────────────────────────────────────
 /** The display type of one property node, in the schema's own names. */
 const typeOf = (node) => {
@@ -222,12 +249,16 @@ for (const [kind, defName] of Object.entries(KINDS)) {
   const discriminator = def.properties?.type?.const;
 
   const memberRows = members.map(([m, node]) => {
-    const hasPage = m !== 'type' && m !== '$extensions';
+    const hasPage = m !== 'type' && m !== '$extensions' && !SHARED_MEMBERS.has(m);
     const name = hasPage
       ? `[\`${m}\`](/schema/props/${kind}/${kebab(m)}/)`
       : m === '$extensions'
         ? `[\`$extensions\`](/schema/props/extensions/)`
-        : `\`${m}\``;
+        : m === 'nullable'
+          // The per-kind variation — what absence means — is one cell of the
+          // hub's cross-kind table, so the row links there, not to a page.
+          ? `[\`nullable\`](/schema/props/#nullability)`
+          : `\`${m}\``;
     const g = m === 'type'
       ? `The discriminator — always \`'${discriminator}'\`.`
       : m === '$extensions'
@@ -311,7 +342,7 @@ ${bindingRows}
 ${jointly ? `\n### Resolved jointly\n\nRules that span kinds — where which kind a prop even is, or what platform shape it takes, is decided by a cluster rather than per kind.\n\n${jointly}\n` : ''}${keptSections}
 ### Decisions
 
-${decisionSection(kind, `props.${kind}`)}${
+${kindDecisionSection(kind, members.map(([m]) => m))}${
     rules.length ? `\n### Rules\n\n| Rule | Statement |\n|---|---|\n${rules.join('\n')}\n` : ''
   }${sourceSection(kind)}`;
 
@@ -320,7 +351,7 @@ ${decisionSection(kind, `props.${kind}`)}${
 
   // Member pages — every property except the discriminator and `$extensions`.
   for (const [m, node] of members) {
-    if (m === 'type' || m === '$extensions') continue;
+    if (m === 'type' || m === '$extensions' || SHARED_MEMBERS.has(m)) continue;
     const dir = join(outRoot, kind);
     mkdirSync(dir, { recursive: true });
 
