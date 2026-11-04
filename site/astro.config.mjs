@@ -10,6 +10,9 @@ export default defineConfig({
   redirects: {
     // Page renamed when the glyphs convention outgrew the single name pattern (ADR-103)
     '/settings/glyph-name-pattern/': '/settings/glyphs/',
+    // Retired — the defaults table was redundant with the per-key style pages;
+    // the absence-is-ambiguous narrative moved to the mappings Overview
+    '/schema/mappings/defaults/': '/schema/mappings/',
     // Retired — content merged into the schema overview
     '/schema/document-map/': '/schema/',
     // The style reference became a tree mirroring the schema's own containment,
@@ -121,23 +124,6 @@ export default defineConfig({
           items: [
             { label: 'Overview', slug: 'schema' },
             { label: 'Specification', slug: 'schema/specification' },
-            { label: 'Platform Neutrality', slug: 'schema/platform-neutrality' },
-            {
-              // Cluster pages are deliberately NOT in the nav: a cluster is
-              // reached from the platform page's Clusters table or from a key's
-              // row, and forty generated rule pages would bury the four pages
-              // that matter. Style Defaults likewise — linked from Overview and
-              // every Defaults section, not navigated to.
-              label: 'Platform Mappings',
-              collapsed: true,
-              items: [
-                { label: 'Overview', slug: 'schema/mappings' },
-                { label: 'Figma', slug: 'schema/mappings/figma' },
-                { label: 'CSS', slug: 'schema/mappings/css' },
-                { label: 'React', slug: 'schema/mappings/react' },
-                { label: 'Web Components', slug: 'schema/mappings/webcomponents' },
-              ],
-            },
             { label: 'Decision Records (ADRs)', slug: 'adr' },
             {
               label: 'Parts',
@@ -182,6 +168,22 @@ export default defineConfig({
                 { label: 'Composition API', slug: 'schema/documents/composition-api' },
                 { label: 'Composition Variants', slug: 'schema/documents/composition-variants' },
                 { label: 'Composition Examples', slug: 'schema/documents/composition-examples' },
+              ],
+            },
+            {
+              // Cluster pages are deliberately NOT in the nav: a cluster is
+              // reached from the platform page's Clusters table or from a key's
+              // row, and forty generated rule pages would bury the five pages
+              // that matter.
+              label: 'Platform Mappings',
+              collapsed: true,
+              items: [
+                { label: 'Overview', slug: 'schema/mappings' },
+                { label: 'Neutrality', slug: 'schema/platform-neutrality' },
+                { label: 'Figma', slug: 'schema/mappings/figma' },
+                { label: 'CSS', slug: 'schema/mappings/css' },
+                { label: 'React', slug: 'schema/mappings/react' },
+                { label: 'Web Components', slug: 'schema/mappings/webcomponents' },
               ],
             },
           ],

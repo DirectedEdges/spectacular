@@ -431,7 +431,7 @@ ${surfaceRows ? `| Surface | Disposition |\n|---|---|\n${surfaceRows}` : '*None 
 
 ## Absent keys
 
-Inherited. See [Style defaults](DEFAULTS.md).
+Inherited. See [Absent keys on the Overview](/schema/mappings/#absent-keys).
 `;
 };
 
@@ -669,7 +669,8 @@ ${(() => {
 
 What an absent style key **means** is spec-level, not per-platform: two platforms that
 answer differently disagree about what the same document says. It is declared once in the
-schema and summarised in [\`DEFAULTS.md\`](DEFAULTS.md).
+schema — each style key's page marks its own default — and the ambiguity absence carries
+is stated on [the Overview](/schema/mappings/#absent-keys).
 
 What this platform **does** on absence is its own fact, and is recorded per key below.
 A key whose behaviour is not \`declaredDefault\` disagrees with the contract — visibly,
@@ -692,60 +693,6 @@ ${Object.values(styles).some((v) => v.onAbsentVerified === false)
 ${losses}` };
 };
 
-/** The spec-level default table — one page, not per platform. */
-const renderDefaults = () => {
-  const b = JSON.parse(readFileSync(join(bindingsDir, '_defaults.json'), 'utf8'));
-  const d = b.defaults ?? {};
-  const missing = styleProps.filter((k) => !(k in d));
-  if (missing.length) failures.push(`_defaults.json: missing style keys — ${missing.join(', ')}`);
-
-  const undeclared = styleProps.filter((k) => d[k]?.declaredBy === 'none');
-  const rows = styleProps.map((k) => {
-    const v = d[k] ?? {};
-    const assumed = v.assumed === null ? '*apply nothing*' : `\`${JSON.stringify(v.assumed)}\``;
-    return `| \`${k}\` | ${assumed} | ${v.declaredBy === 'none' ? '**none**' : v.declaredBy} |`;
-  });
-
-  return `# Style defaults
-
-**What a consumer assumes when a style key is absent from a document — draft.**
-
-Normative frame: [\`SPECIFICATION.md\`](../SPECIFICATION.md) §11. Generated from
-\`mappings/bindings/_defaults.json\`; edit that file, never this page.
-
-This is **not** a per-platform concern. "An absent key means X" is a statement about the
-document, and two platforms that answer differently disagree about what the same document
-says.
-
-## The problem
-
-${b.homeProblem ?? ''}
-
-## Absence is ambiguous
-
-${b.caveat ?? ''}
-
-A key can be absent for at least three reasons, and a consumer reading one document cannot
-tell them apart:
-
-| Reason | Recoverable by a consumer? |
-|---|---|
-| The value equalled a default and was dropped at generation | No — needs the table below |
-| A variant inherits it from \`default\` under layering | Partly — by reading \`default\`, if it knows the run used layered details |
-| The element type cannot carry it | No — needs the per-element-type key table, which ships in no published artefact |
-
-Nothing in a serialized document marks which applies. There is no sentinel, no metadata
-member, no \`$extensions\` marker.
-
-## Defaults
-
-${undeclared.length ? `${undeclared.length} of ${styleProps.length} keys have no declared default.` : `All ${styleProps.length} keys have a declared default.`}
-
-| Style key | Assumed when absent | Declared by |
-|---|---|---|
-${rows.join('\n')}
-`;
-};
 
 // ─── Site rendering ──────────────────────────────────────────────────────────
 //
@@ -762,10 +709,9 @@ const PAGE_DESCRIPTIONS = {
   REACT: 'What the React binding adds to the CSS binding — platform surfaces and style overrides',
   WEBCOMPONENTS: 'What the Web Components binding adds to the CSS binding — platform surfaces and style overrides',
   INDEX: 'How each platform realises the Specs document format — the binding concept, the four platforms, and where the data lives',
-  DEFAULTS: 'What a consumer assumes when a style key is absent from a document — the spec-level default table, and why absence is ambiguous',
 };
 
-const PAGE_TITLES = { DEFAULTS: 'Style Defaults', CSS: 'CSS', WEBCOMPONENTS: 'Web Components', INDEX: 'Platform Mappings' };
+const PAGE_TITLES = { CSS: 'CSS', WEBCOMPONENTS: 'Web Components', INDEX: 'Platform Mappings' };
 
 /**
  * The section's front door: what a binding IS, who the platforms are, and
@@ -832,9 +778,25 @@ with the format documented beside them. Edit the data, never a page.
 
 ## Absent keys
 
-What an absent style key *means* is a property of the document, not a platform choice —
-declared once in the schema and summarised in [Style Defaults](DEFAULTS.md), along with
-why absence is ambiguous.
+What an absent style key *means* is a property of the document, not a platform choice:
+every \`Styles\` property declares a \`default\` in the schema, each key's reference page
+marks it, and a consumer MUST use it rather than substituting a platform convention of
+its own. Two platforms that answered differently would disagree about what the same
+document says.
+
+A declared default answers only one of the three reasons a key can be absent, and a
+consumer reading one document cannot tell them apart:
+
+| Reason | Recoverable by a consumer? |
+|---|---|
+| The value equalled the default and was dropped at generation | Yes — the schema's declared default is the value |
+| A variant inherits it from \`default\` under layering | Partly — by reading \`default\`, if it knows the run used layered details |
+| The element type cannot carry it | No — needs the per-type key tables, published on each [element type's page](/schema/anatomy/) |
+
+Nothing in a serialized document marks which applies — no sentinel, no metadata member,
+no \`$extensions\` marker. Each platform binding declares what it *does* on absence in
+its own Defaults section, where anything other than applying the declared default is
+visible as a decision rather than an accident.
 `;
 };
 
@@ -866,8 +828,7 @@ const sitePage = ({ label, body, platform, cluster }) => {
     .replace(/\]\(clusters\/([a-z]+)\/([a-z-]+)\.md\)/g, (_, p, c) => `](/schema/mappings/${p}/clusters/${c}/)`)
     .replace(/\]\(\.\.\/([a-z]+)\.md\)/g, (_, p) => `](/schema/mappings/${p}/)`);
 
-  // A dependent binding links its base as `CSS.md`, and every page links
-  // `DEFAULTS.md`.
+  // A dependent binding links its base as `CSS.md`.
   linked = linked.replace(/\]\(([A-Z]+)\.md\)/g, (_, p) => `](/schema/mappings/${p.toLowerCase()}/)`);
 
   // Binding data is published in the package but not served by the site.
@@ -940,7 +901,6 @@ for (const file of files) {
     });
   }
 }
-pages.push({ label: 'DEFAULTS.md', body: renderDefaults(), platform: 'DEFAULTS' });
 pages.push({ label: 'INDEX.md', body: renderOverview(files), platform: 'INDEX' });
 
 for (const { label, body } of pages) checkNoLeaks(label, body);
