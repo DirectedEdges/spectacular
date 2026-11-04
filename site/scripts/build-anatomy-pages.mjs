@@ -128,9 +128,12 @@ for (const { type, description } of TYPES) {
       const cluster = v.cluster
         ? ` · cluster [${v.cluster}](/schema/mappings/${platform}/clusters/${kebab(v.cluster)}/)`
         : '';
-      return `| [${PLATFORM[platform]}](/schema/mappings/${platform}/) | ${v.disposition === 'unverified' ? '**unverified**' : v.disposition} | ${realises}${cluster} |`;
+      // One subheading per platform: the binding's notes live here, where each
+      // is one paragraph about this type, not a wall on the platform page.
+      const fields = `**Disposition**: ${v.disposition === 'unverified' ? '**unverified**' : v.disposition} · **Realised by**: ${realises}${cluster}`;
+      return `##### [${PLATFORM[platform]}](/schema/mappings/${platform}/)\n\n${fields}${v.notes ? `\n\n${v.notes}` : ''}`;
     })
-    .join('\n');
+    .join('\n\n');
 
   const jointly = (() => {
     const groups = [];
@@ -186,8 +189,6 @@ ${description}${kept.intro ? ` ${kept.intro}` : ''}
 
 ### Platform bindings
 
-| Platform | Disposition | Realised by |
-|---|---|---|
 ${bindingRows}
 ${jointly ? `\n### Resolved jointly\n\nRules that span element types — which type a node becomes, or what tag and semantics an element takes, is decided by a cluster rather than per type.\n\n${jointly}\n` : ''}${
     carries ? `\n### Carries\n\nThe style keys an element of this type may carry, from the transforms' declared key tables:\n\n${carries}\n` : ''

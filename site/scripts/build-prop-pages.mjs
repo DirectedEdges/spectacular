@@ -282,9 +282,12 @@ for (const [kind, defName] of Object.entries(KINDS)) {
       const cluster = v.cluster
         ? ` · cluster [${v.cluster}](/schema/mappings/${platform}/clusters/${kebab(v.cluster)}/)`
         : '';
-      return `| [${PLATFORM[platform]}](/schema/mappings/${platform}/) | ${v.disposition === 'unverified' ? '**unverified**' : v.disposition} | ${realises}${cluster} |`;
+      // One subheading per platform: the binding's notes live here, where each
+      // is one paragraph about this kind, not a wall on the platform page.
+      const fields = `**Disposition**: ${v.disposition === 'unverified' ? '**unverified**' : v.disposition} · **Realised by**: ${realises}${cluster}`;
+      return `##### [${PLATFORM[platform]}](/schema/mappings/${platform}/)\n\n${fields}${v.notes ? `\n\n${v.notes}` : ''}`;
     })
-    .join('\n');
+    .join('\n\n');
 
   /**
    * Clusters this kind participates in, grouped per platform — same shape as
@@ -334,8 +337,6 @@ ${memberRows.join('\n')}
 ${examples ? `\n### Example${(def.examples?.length ?? 0) > 1 ? 's' : ''}\n\n${examples}\n` : ''}
 ### Platform bindings
 
-| Platform | Disposition | Realised by |
-|---|---|---|
 ${bindingRows}
 ${jointly ? `\n### Resolved jointly\n\nRules that span kinds — where which kind a prop even is, or what platform shape it takes, is decided by a cluster rather than per kind.\n\n${jointly}\n` : ''}${keptSections}
 ### Decisions

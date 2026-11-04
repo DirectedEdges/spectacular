@@ -919,14 +919,20 @@ for (const node of nodes) {
 
   const valueSection = oneOfBranches ?? memberSection;
 
+  /**
+   * One subheading per platform rather than a table: the binding's `notes`
+   * live here now — a note is a fact about one key on one platform, and this
+   * is the page where it is one paragraph instead of a wall of 46.
+   */
   const bindingRows = isStyleKey
     ? Object.entries(bindings).map(([platform, b]) => {
         const v = b.concepts.styles[key] ?? { disposition: 'unverified' };
         const realises = v.cluster
-          ? `[\`${v.cluster}\`](/schema/mappings/${platform}/clusters/${kebab(v.cluster)}/)`
+          ? `cluster [\`${v.cluster}\`](/schema/mappings/${platform}/clusters/${kebab(v.cluster)}/)`
           : (v.target ? `\`${v.target}\`` : (v.module?.length ? v.module.map((m) => `\`${m}\``).join(', ') : '—'));
-        return `| [${PLATFORM[platform]}](/schema/mappings/${platform}/) | ${v.disposition === 'unverified' ? '**unverified**' : v.disposition} | ${realises} |`;
-      }).join('\n')
+        const fields = `**Disposition**: ${v.disposition === 'unverified' ? '**unverified**' : v.disposition} · **Realised by**: ${realises}`;
+        return `##### [${PLATFORM[platform]}](/schema/mappings/${platform}/)\n\n${fields}${v.notes ? `\n\n${v.notes}` : ''}`;
+      }).join('\n\n')
     : null;
 
   /**
@@ -1153,7 +1159,7 @@ ${
     kids.length && !valueSection
       ? `\n### Contains\n\n${kids.map((c) => `- [\`${c.path[c.path.length - 1]}\`](${urlOf(c.path)})`).join('\n')}\n`
       : ''
-  }${bindingRows ? `\n### Platform bindings\n\n| Platform | Disposition | Realised by |\n|---|---|---|\n${bindingRows}\n` : ''}${usedBy ? `\n### Used by\n\n${usedBy}\n` : ''}${supportedOn ? `\n### Supported on\n\n${supportedOn}\n` : ''}${
+  }${bindingRows ? `\n### Platform bindings\n\n${bindingRows}\n` : ''}${usedBy ? `\n### Used by\n\n${usedBy}\n` : ''}${supportedOn ? `\n### Supported on\n\n${supportedOn}\n` : ''}${
     siblingList
       ? `\n### Resolved jointly with\n\nThis key does not map on its own. Its cluster's ordered case table is linked above.\n\n${siblingList}\n`
       : ''

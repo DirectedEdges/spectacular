@@ -307,18 +307,21 @@ const renderUnitSurface = ({ platform, title, b, file }, cfg) => {
   const realiseCell = (v) =>
     v.target ? `\`${v.target}\`` : v.module ? (v.module.length ? v.module.map((m) => `\`${m}\``).join(', ') : '—') : (v.realises ?? '—');
 
+  // No Notes column: a note is a fact about one unit on one platform, so it
+  // renders on the unit's own page, where it is one paragraph under one
+  // platform heading — not here, where 46 of them stack into a wall.
   const rows = cfg.units.map((k) => {
     const v = entries[k] ?? { disposition: 'unverified' };
     const clusterLink = v.cluster ? ` · cluster [${v.cluster}](clusters/${platform}/${kebab(v.cluster)}.md)` : '';
-    return `| [\`${k}\`](${cfg.pageBase}${k}/) | ${badge(v.disposition)} | ${realiseCell(v)}${clusterLink} | ${v.notes ?? ''} |`;
+    return `| [\`${k}\`](${cfg.pageBase}${k}/) | ${badge(v.disposition)} | ${realiseCell(v)}${clusterLink} |`;
   });
 
   const section = `## ${cfg.heading}
 
 ${cfg.intro}
 
-| ${cfg.unitColumn} | Disposition | Realised by | Notes |
-|---|---|---|---|
+| ${cfg.unitColumn} | Disposition | Realised by |
+|---|---|---|
 ${rows.join('\n')}
 `;
 
@@ -523,12 +526,14 @@ const renderPlatform = (file) => {
       ? (v.elements?.length === 12 ? 'all' : (v.elements?.length ? v.elements.join(', ') : '—'))
       : '';
     const realises = v.cluster ? `cluster [${v.cluster}](clusters/${platform}/${kebab(v.cluster)}.md)` : cell(v);
-    return `| \`${k}\` | ${badge(v.disposition)} | ${realises} | ${isFigma ? scope + ' | ' : ''}${v.notes ?? ''} |`;
+    // No Notes column — a note renders on the key's own page, under the
+    // platform it belongs to, instead of 46 of them stacking into a wall here.
+    return `| \`${k}\` | ${badge(v.disposition)} | ${realises} |${isFigma ? ` ${scope} |` : ''}`;
   });
 
   const header = isFigma
-    ? `| Style key | Disposition | ${col} | Element types | Notes |\n|---|---|---|---|---|`
-    : `| Style key | Disposition | ${col} | Notes |\n|---|---|---|---|`;
+    ? `| Style key | Disposition | ${col} | Element types |\n|---|---|---|---|`
+    : `| Style key | Disposition | ${col} |\n|---|---|---|`;
 
   const clusterPages = Object.entries(clusters).map(([name, c]) => ({
     name,
