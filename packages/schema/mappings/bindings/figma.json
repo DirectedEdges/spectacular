@@ -29,6 +29,7 @@
       },
       "visible": {
         "disposition": "bound",
+        "target": "node.visible",
         "elements": [
           "component",
           "frame",
@@ -91,7 +92,8 @@
         "basis": "implementation"
       },
       "backgroundColor": {
-        "disposition": "approximated",
+        "disposition": "bound",
+        "target": "node.fills",
         "elements": [
           "component",
           "frame",
@@ -106,6 +108,7 @@
       },
       "backgroundImage": {
         "disposition": "approximated",
+        "target": "node.fills",
         "elements": [
           "component",
           "frame",
@@ -118,7 +121,8 @@
         "needsDecision": "partialOnUnresolved"
       },
       "fillColor": {
-        "disposition": "approximated",
+        "disposition": "bound",
+        "target": "node.fills",
         "elements": [
           "vector",
           "ellipse",
@@ -134,7 +138,8 @@
         "needsDecision": "colorSpace"
       },
       "textColor": {
-        "disposition": "approximated",
+        "disposition": "bound",
+        "target": "node.fills",
         "elements": [
           "text"
         ],
@@ -178,6 +183,7 @@
       },
       "cornerRadius": {
         "disposition": "bound",
+        "target": "node.cornerRadius",
         "elements": [
           "component",
           "frame",
@@ -233,7 +239,8 @@
         "basis": "implementation"
       },
       "minWidth": {
-        "disposition": "approximated",
+        "disposition": "bound",
+        "target": "node.minWidth",
         "elements": [
           "component",
           "frame",
@@ -255,7 +262,8 @@
         "needsDecision": "explicitZero"
       },
       "minHeight": {
-        "disposition": "approximated",
+        "disposition": "bound",
+        "target": "node.minHeight",
         "elements": [
           "component",
           "frame",
@@ -278,6 +286,7 @@
       },
       "maxWidth": {
         "disposition": "bound",
+        "target": "node.maxWidth",
         "elements": [
           "component",
           "frame",
@@ -299,6 +308,7 @@
       },
       "maxHeight": {
         "disposition": "bound",
+        "target": "node.maxHeight",
         "elements": [
           "component",
           "frame",
@@ -517,7 +527,8 @@
         "basis": "implementation"
       },
       "strokes": {
-        "disposition": "approximated",
+        "disposition": "bound",
+        "target": "node.strokes",
         "elements": [
           "component",
           "frame",
@@ -537,6 +548,7 @@
       },
       "strokeAlign": {
         "disposition": "bound",
+        "target": "node.strokeAlign",
         "elements": [
           "component",
           "frame",
@@ -555,6 +567,7 @@
       },
       "strokeWeight": {
         "disposition": "bound",
+        "target": "node.strokeWeight",
         "elements": [
           "component",
           "frame",
@@ -573,6 +586,7 @@
       },
       "strokeDashPattern": {
         "disposition": "bound",
+        "target": "node.dashPattern",
         "elements": [
           "component",
           "frame",
@@ -602,6 +616,7 @@
       },
       "textAlignHorizontal": {
         "disposition": "bound",
+        "target": "node.textAlignHorizontal",
         "elements": [
           "text"
         ],
@@ -612,6 +627,7 @@
       },
       "textAlignVertical": {
         "disposition": "bound",
+        "target": "node.textAlignVertical",
         "elements": [
           "text"
         ],
@@ -622,6 +638,7 @@
       },
       "textOverflow": {
         "disposition": "bound",
+        "target": "node.textTruncation",
         "elements": [
           "text"
         ],
@@ -743,7 +760,8 @@
         "basis": "implementation"
       },
       "padding": {
-        "disposition": "approximated",
+        "disposition": "bound",
+        "target": "node.paddingTop / paddingRight / paddingBottom / paddingLeft",
         "elements": [
           "component",
           "frame",

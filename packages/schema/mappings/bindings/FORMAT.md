@@ -34,6 +34,7 @@ So the format carries **two** sections, and a key appears in exactly one of them
 | Field | Meaning |
 |---|---|
 | `disposition` | `bound` \| `approximated` \| `unsupported` \| `unverified` (§11.1) |
+| | **The boundary**: `bound` means exact over the values the engine produces; a declared edge loss — a schema corner the engine never emits, like a non-sRGB ColorObject — rides as a `needsDecision` loss entry on a bound row, surfacing in the Losses section. `approximated` is reserved for keys whose ORDINARY values lose fidelity (`backgroundImage`'s binary `objectFit`). A deterministic mapping with a stated edge loss is bound, not approximated — the badge measures what a reader will experience, the loss entry preserves the caveat |
 | `target` / `module` | What realises it. Figma declares a node property; React declares the emitting module |
 | `elements` | Which element types carry it. Figma only — transcribed from the writer's declared key table |
 | `notes` | Degradation, ordering constraints, and anything a consumer needs. Required when the disposition is `approximated` or `unsupported` |
