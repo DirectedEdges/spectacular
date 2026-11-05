@@ -627,13 +627,3 @@ html[data-has-hero] .hero .tagline {
 .sl-markdown-content :is(h2, h3, h4, h5, h6) + p {
 	margin-top: 0.25rem;
 }
-
-/* ── The Path access line ── */
-
-/* The Path section's one line is composed entirely of inline code spans, and
-   Starlight sizes inline code below body text — a whole line of it reads as a
-   caption. Scoped to the paragraph after the Path heading so ordinary inline
-   code keeps its size everywhere else. */
-.sl-markdown-content h2#path + p code {
-	font-size: 1em;
-}
