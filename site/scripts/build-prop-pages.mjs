@@ -271,29 +271,29 @@ for (const [kind, defName] of Object.entries(KINDS)) {
         : v.module
           ? (v.module.length ? v.module.map((m) => `\`${m}\``).join(', ') : '—')
           : (v.realises ?? '—');
-      const cluster = v.cluster
-        ? ` · cluster [${v.cluster}](/schema/mappings/${platform}/clusters/${kebab(v.cluster)}/)`
+      const rule = v.rule
+        ? ` · rule [${v.rule}](/schema/mappings/${platform}/rules/${kebab(v.rule)}/)`
         : '';
       // One subheading per platform: the binding's notes live here, where each
       // is one paragraph about this kind, not a wall on the platform page.
-      const fields = `**Disposition**: ${v.disposition === 'unverified' ? '**unverified**' : v.disposition} · **Realised by**: ${realises}${cluster}`;
+      const fields = `**Disposition**: ${v.disposition === 'unverified' ? '**unverified**' : v.disposition} · **Realised by**: ${realises}${rule}`;
       return `##### [${PLATFORM[platform]}](/schema/mappings/${platform}/)\n\n${fields}${v.notes ? `\n\n${v.notes}` : ''}`;
     })
     .join('\n\n');
 
   /**
-   * Clusters this kind participates in, grouped per platform — same shape as
+   * Rules this kind participates in, grouped per platform — same shape as
    * the style pages' "Resolved jointly with", except a kind keeps its own row
-   * too: a kind is a population of props, and only some of it is clustered.
+   * too: a kind is a population of props, and only some of it is governed by a rule.
    */
   const jointly = (() => {
     const groups = [];
     for (const [platform, b] of Object.entries(bindings)) {
-      for (const [name, c] of Object.entries(b.concepts?.propClusters ?? {})) {
+      for (const [name, c] of Object.entries(b.concepts?.propRules ?? {})) {
         if (!(c.keys ?? []).includes(kind)) continue;
         const others = c.keys.filter((k) => k !== kind);
         groups.push(
-          `**[${name}](/schema/mappings/${platform}/clusters/${kebab(name)}/)** — ${PLATFORM[platform]}${
+          `**[${name}](/schema/mappings/${platform}/rules/${kebab(name)}/)** — ${PLATFORM[platform]}${
             others.length ? `, with ${others.map((k) => `[\`${k}\`](/schema/props/${k}/)`).join(', ')}` : ''
           }`
         );

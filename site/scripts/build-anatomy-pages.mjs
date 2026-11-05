@@ -129,12 +129,12 @@ for (const { type, description } of TYPES) {
         : v.module
           ? (v.module.length ? v.module.map((m) => `\`${m}\``).join(', ') : '—')
           : (v.realises ?? '—');
-      const cluster = v.cluster
-        ? ` · cluster [${v.cluster}](/schema/mappings/${platform}/clusters/${kebab(v.cluster)}/)`
+      const rule = v.rule
+        ? ` · rule [${v.rule}](/schema/mappings/${platform}/rules/${kebab(v.rule)}/)`
         : '';
       // One subheading per platform: the binding's notes live here, where each
       // is one paragraph about this type, not a wall on the platform page.
-      const fields = `**Disposition**: ${v.disposition === 'unverified' ? '**unverified**' : v.disposition} · **Realised by**: ${realises}${cluster}`;
+      const fields = `**Disposition**: ${v.disposition === 'unverified' ? '**unverified**' : v.disposition} · **Realised by**: ${realises}${rule}`;
       return `##### [${PLATFORM[platform]}](/schema/mappings/${platform}/)\n\n${fields}${v.notes ? `\n\n${v.notes}` : ''}`;
     })
     .join('\n\n');
@@ -142,11 +142,11 @@ for (const { type, description } of TYPES) {
   const jointly = (() => {
     const groups = [];
     for (const [platform, b] of Object.entries(bindings)) {
-      for (const [name, c] of Object.entries(b.concepts?.anatomyClusters ?? {})) {
+      for (const [name, c] of Object.entries(b.concepts?.anatomyRules ?? {})) {
         if (!(c.keys ?? []).includes(type)) continue;
         const others = c.keys.filter((k) => k !== type);
         groups.push(
-          `- **[${name}](/schema/mappings/${platform}/clusters/${kebab(name)}/)** — ${PLATFORM[platform]}${
+          `- **[${name}](/schema/mappings/${platform}/rules/${kebab(name)}/)** — ${PLATFORM[platform]}${
             others.length ? `, with ${others.map((k) => `[\`${k}\`](/schema/anatomy/${k}/)`).join(', ')}` : ''
           }`
         );

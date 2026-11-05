@@ -206,7 +206,7 @@
           "glyph"
         ],
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout",
+        "rule": "autoVsAbsoluteLayout",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -226,7 +226,7 @@
           "glyph"
         ],
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout",
+        "rule": "autoVsAbsoluteLayout",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -333,7 +333,7 @@
           "glyph"
         ],
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout",
+        "rule": "autoVsAbsoluteLayout",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -354,7 +354,7 @@
           "glyph"
         ],
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout",
+        "rule": "autoVsAbsoluteLayout",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -375,7 +375,7 @@
           "glyph"
         ],
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout",
+        "rule": "autoVsAbsoluteLayout",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -396,7 +396,7 @@
           "glyph"
         ],
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout",
+        "rule": "autoVsAbsoluteLayout",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -417,7 +417,7 @@
           "glyph"
         ],
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout",
+        "rule": "autoVsAbsoluteLayout",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -438,7 +438,7 @@
           "glyph"
         ],
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout",
+        "rule": "autoVsAbsoluteLayout",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -459,7 +459,7 @@
           "glyph"
         ],
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout",
+        "rule": "autoVsAbsoluteLayout",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -480,7 +480,7 @@
           "glyph"
         ],
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout",
+        "rule": "autoVsAbsoluteLayout",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -501,7 +501,7 @@
           "glyph"
         ],
         "notes": null,
-        "cluster": "autoVsAbsoluteLayout",
+        "rule": "autoVsAbsoluteLayout",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -585,7 +585,7 @@
         ],
         "target": "Typography.apply",
         "notes": "Accepts Typography or TokenReference. A font that fails to load degrades to Inter Regular with a warning, never aborts.",
-        "cluster": "namedStyleVersusInline",
+        "rule": "namedStyleVersusInline",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -636,7 +636,7 @@
           "frame",
           "slot"
         ],
-        "cluster": "wrapping",
+        "rule": "wrapping",
         "notes": "Remaps all four schema values to Figma's primary-axis vocabulary. Gated on the node actually having the property, which effectively means an auto-layout container.",
         "onAbsent": "unverified",
         "basis": "implementation"
@@ -660,7 +660,7 @@
           "frame",
           "slot"
         ],
-        "cluster": "wrapping",
+        "rule": "wrapping",
         "notes": "Remaps `START`, `END`, `CENTER` and `BASELINE`. Loss: `STRETCH` is a schema value Figma's counter-axis property cannot express, and it is skipped with a warning — a declared degradation that applies nothing and says so, which is exactly what DSPEC-43 asks for.",
         "onAbsent": "unverified",
         "basis": "implementation"
@@ -673,7 +673,7 @@
           "slot"
         ],
         "notes": null,
-        "cluster": "wrapping",
+        "rule": "wrapping",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -685,7 +685,7 @@
           "slot"
         ],
         "notes": null,
-        "cluster": "wrapping",
+        "rule": "wrapping",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -697,7 +697,7 @@
           "slot"
         ],
         "notes": null,
-        "cluster": "wrapping",
+        "rule": "wrapping",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -721,7 +721,7 @@
           "slot"
         ],
         "notes": null,
-        "cluster": "wrapping",
+        "rule": "wrapping",
         "onAbsent": "unverified",
         "basis": "implementation"
       },
@@ -775,7 +775,7 @@
         "basis": "implementation"
       }
     },
-    "styleClusters": {
+    "styleRules": {
       "autoVsAbsoluteLayout": {
         "disposition": "bound",
         "keys": [
@@ -1263,7 +1263,7 @@
         "target": "ComponentPropertyDefinitions (BOOLEAN, or a two-option VARIANT)",
         "direction": "both",
         "basis": "implementation",
-        "cluster": "variantAxes",
+        "rule": "variantAxes",
         "notes": "A native BOOLEAN property reads directly. A VARIANT whose options are exactly true/false (case-insensitive) also reads as a boolean, recording `$extensions['com.figma'].type: VARIANT` so the render direction rebuilds the variant axis rather than a BOOLEAN property. Render creates a BOOLEAN property where the prop is bound to an element's `visible`."
       },
       "string": {
@@ -1271,7 +1271,7 @@
         "target": "ComponentPropertyDefinitions (TEXT or INSTANCE_SWAP)",
         "direction": "both",
         "basis": "implementation",
-        "cluster": "numberInference",
+        "rule": "numberInference",
         "notes": "TEXT and INSTANCE_SWAP both collapse to `string`; the Figma property type survives in `$extensions['com.figma'].type`. An INSTANCE_SWAP default resolves the component id to a name, reduced to the glyph name where the glyphs convention identifies one (ADR-103). The read default lands in `examples`, never `default` (ADR-014). Render re-derives the property type from where the prop is bound: `content` → TEXT, `instanceOf` → INSTANCE_SWAP."
       },
       "enum": {
@@ -1279,7 +1279,7 @@
         "target": "VARIANT property options / ComponentSet variant axes",
         "direction": "both",
         "basis": "implementation",
-        "cluster": "variantAxes",
+        "rule": "variantAxes",
         "notes": "The option list is the variant axis, authored order preserved — the render direction rebuilds the component set from it positionally. `nullable: false` is recorded: the enum lists every accepted value."
       },
       "number": {
@@ -1287,7 +1287,7 @@
         "target": "TEXT default or all-numeric VARIANT options, under `platforms.figma.inferNumberProps`",
         "direction": "both",
         "basis": "implementation",
-        "cluster": "variantAxes",
+        "rule": "variantAxes",
         "notes": "Opt-in inference (ADR-029). A TEXT property whose default passes the numeric guard becomes a NumberProp; a VARIANT whose every option is numeric becomes a NumberProp carrying the options as `enum` (ADR-072). With the convention off, both stay strings."
       },
       "slot": {
@@ -1302,7 +1302,7 @@
         "target": "code-only container layer named in `figma.images.sourceProps`",
         "direction": "both",
         "basis": "implementation",
-        "cluster": "codeOnlyProps",
+        "rule": "codeOnlyProps",
         "notes": "An image prop has no native Figma property type; it is read from a code-only layer (ADR-063) and carries authoring-default images in `examples` (ADR-088). Render mints the hidden layer back."
       },
       "object": {
@@ -1313,7 +1313,7 @@
         "notes": "Figma cannot author an object natively. Flat names fold into one ObjectProp before key formatting (ADR-111); each member's `$extensions['com.figma'].name` records the flat source name, so unfolding on render is reversal, not re-derivation. A name colliding with the fold outcome stays flat. Render emits one flat property per member — BOOLEAN for boolean members, TEXT otherwise; enum members are variant axes and belong to the component set."
       }
     },
-    "propClusters": {
+    "propRules": {
       "variantAxes": {
         "disposition": "bound",
         "direction": "figma-to-spec",
@@ -1359,7 +1359,7 @@
             "why": "The default case: a closed option list"
           }
         ],
-        "otherwise": { "emit": [], "why": "Non-VARIANT property types resolve per kind, outside this cluster" },
+        "otherwise": { "emit": [], "why": "Non-VARIANT property types resolve per kind, outside this rule" },
         "notes": "One Figma VARIANT property resolves to one of three prop kinds, and no kind alone states the rule."
       },
       "numberInference": {
@@ -1440,7 +1440,7 @@
         "target": "TEXT node",
         "direction": "both",
         "basis": "implementation",
-        "cluster": "typeDetection",
+        "rule": "typeDetection",
         "notes": "Reads from a TEXT node; render creates one. The only type that carries typography, and the only one whose `content` is a string or a content binding."
       },
       "glyph": {
@@ -1448,7 +1448,7 @@
         "target": "INSTANCE or VECTOR reclassified by the library's glyphs convention",
         "direction": "both",
         "basis": "implementation",
-        "cluster": "typeDetection",
+        "rule": "typeDetection",
         "notes": "No Figma node type is a glyph. Membership comes from the declared glyphs convention — name pattern or structural form (ADR-103) — and `content` carries the glyph name. Render swaps in the glyph component's instance by name."
       },
       "vector": {
@@ -1456,7 +1456,7 @@
         "target": "VECTOR node",
         "direction": "both",
         "basis": "implementation",
-        "cluster": "typeDetection",
+        "rule": "typeDetection",
         "notes": "Capture records the type, position and styles — never the path geometry, which the schema does not carry. Render therefore creates an empty vector node of the right size and styling: the shape's actual paths are lost on any round trip. The declared seam, not an accident."
       },
       "container": {
@@ -1464,7 +1464,7 @@
         "target": "FRAME or COMPONENT node",
         "direction": "both",
         "basis": "implementation",
-        "cluster": "typeDetection",
+        "rule": "typeDetection",
         "notes": "The default classification: any node type without a mapping of its own. The transforms' internal key tables speak `frame` and `component` where the contract says `container` — the component ROOT is the component, not an anatomy element, and a nested frame folds to `container`. That vocabulary mapping is declared here and nowhere else."
       },
       "slot": {
@@ -1486,7 +1486,7 @@
         "target": "LINE node",
         "direction": "both",
         "basis": "implementation",
-        "cluster": "typeDetection",
+        "rule": "typeDetection",
         "notes": "Direct node-type mapping both ways; stroke styling carries the appearance."
       },
       "ellipse": {
@@ -1494,7 +1494,7 @@
         "target": "ELLIPSE node",
         "direction": "both",
         "basis": "implementation",
-        "cluster": "typeDetection",
+        "rule": "typeDetection",
         "notes": "Direct node-type mapping both ways. Arc data (sweep, ratio) is not carried by the spec; a plain ellipse round-trips cleanly."
       },
       "rectangle": {
@@ -1502,7 +1502,7 @@
         "target": "RECTANGLE node",
         "direction": "both",
         "basis": "implementation",
-        "cluster": "typeDetection",
+        "rule": "typeDetection",
         "notes": "Direct node-type mapping both ways; size, fills and corner radii carry the appearance."
       },
       "polygon": {
@@ -1510,7 +1510,7 @@
         "target": "POLYGON node",
         "direction": "both",
         "basis": "implementation",
-        "cluster": "typeDetection",
+        "rule": "typeDetection",
         "notes": "The node type maps directly, but the point count is not carried by the spec — render creates the default polygon."
       },
       "star": {
@@ -1518,11 +1518,11 @@
         "target": "STAR node",
         "direction": "both",
         "basis": "implementation",
-        "cluster": "typeDetection",
+        "rule": "typeDetection",
         "notes": "The node type maps directly, but the point count and inner-radius ratio are not carried by the spec — render creates the default star."
       }
     },
-    "anatomyClusters": {
+    "anatomyRules": {
       "typeDetection": {
         "disposition": "bound",
         "direction": "figma-to-spec",
@@ -1687,7 +1687,7 @@
         "notes": "Capture writes `$nested` paths for configuration deeper than one instance boundary (ADR-052). Render declares them unimplemented and skips them, reporting the skip — a stated loss, not a silent one."
       }
     },
-    "referenceClusters": {}
+    "referenceRules": {}
   },
   "directions": {
     "figma-to-spec": "Capture. A Figma file becomes a document.",

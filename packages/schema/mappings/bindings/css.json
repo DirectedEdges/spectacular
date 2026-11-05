@@ -136,7 +136,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "intrinsicSize",
+        "rule": "intrinsicSize",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -149,7 +149,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "intrinsicSize",
+        "rule": "intrinsicSize",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -210,7 +210,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "absolutePositioning",
+        "rule": "absolutePositioning",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -222,7 +222,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "absolutePositioning",
+        "rule": "absolutePositioning",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -234,7 +234,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "absolutePositioning",
+        "rule": "absolutePositioning",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -247,7 +247,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "absolutePositioning",
+        "rule": "absolutePositioning",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -260,7 +260,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "absolutePositioning",
+        "rule": "absolutePositioning",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -272,7 +272,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "absolutePositioning",
+        "rule": "absolutePositioning",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -284,7 +284,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "absolutePositioning",
+        "rule": "absolutePositioning",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -296,7 +296,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "autoLayoutSizing",
+        "rule": "autoLayoutSizing",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -308,7 +308,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "autoLayoutSizing",
+        "rule": "autoLayoutSizing",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -321,7 +321,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "strokeRendering",
+        "rule": "strokeRendering",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -333,7 +333,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "strokeRendering",
+        "rule": "strokeRendering",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -345,7 +345,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "strokeRendering",
+        "rule": "strokeRendering",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -397,7 +397,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "textTruncation",
+        "rule": "textTruncation",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -410,7 +410,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "textTruncation",
+        "rule": "textTruncation",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -422,7 +422,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "autoLayout",
+        "rule": "autoLayout",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -431,7 +431,7 @@
         "disposition": "unsupported",
         "module": [],
         "declarations": null,
-        "notes": "Not emitted. Sizing is derived instead from `layoutSizingHorizontal` and `layoutSizingVertical` against the parent axis, which the `autoLayoutSizing` cluster states. This key is never read.",
+        "notes": "Not emitted. Sizing is derived instead from `layoutSizingHorizontal` and `layoutSizingVertical` against the parent axis, which the `autoLayoutSizing` rule states. This key is never read.",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -443,7 +443,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "autoLayout",
+        "rule": "autoLayout",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -455,7 +455,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "autoLayout",
+        "rule": "autoLayout",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -467,7 +467,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "autoLayout",
+        "rule": "autoLayout",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -479,7 +479,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "autoLayout",
+        "rule": "autoLayout",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -500,7 +500,7 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "autoLayout",
+        "rule": "autoLayout",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
@@ -532,13 +532,13 @@
         ],
         "declarations": null,
         "notes": null,
-        "cluster": "intrinsicSize",
+        "rule": "intrinsicSize",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
         "basis": "implementation"
       }
     },
-    "styleClusters": {
+    "styleRules": {
       "autoLayout": {
         "disposition": "bound",
         "keys": [
@@ -611,7 +611,7 @@
               ]
             },
             "emit": [],
-            "why": "without a layout mode the whole cluster is inert; the element stays in flow"
+            "why": "without a layout mode the whole rule is inert; the element stays in flow"
           },
           {
             "when": {
@@ -1164,7 +1164,7 @@
         ],
         "otherwise": {
           "emit": [],
-          "why": "FIXED or absent contributes nothing from this cluster"
+          "why": "FIXED or absent contributes nothing from this rule"
         },
         "form": "cases",
         "basis": "implementation"
@@ -2039,7 +2039,7 @@
         "module": [
           "truncation"
         ],
-        "notes": "css/style/truncation.ts:12-37. The multi-line case sets display, so it interacts with the autoLayout cluster on the same element.",
+        "notes": "css/style/truncation.ts:12-37. The multi-line case sets display, so it interacts with the autoLayout rule on the same element.",
         "inputs": [
           {
             "ref": "self.textOverflow",
@@ -2145,7 +2145,7 @@
         "module": ["Css", "states"],
         "direction": "spec-to-css",
         "basis": "implementation",
-        "cluster": "propsToSelectors",
+        "rule": "propsToSelectors",
         "notes": "A boolean prop is a selection fact, not a declaration: a variant configuration naming it becomes an attribute selector on the emitting platform's surface. A boolean classified as a state concept selects by the concept's selector instead (pseudo-class or aria attribute)."
       },
       "string": {
@@ -2160,7 +2160,7 @@
         "module": ["Css", "enumCase"],
         "direction": "spec-to-css",
         "basis": "implementation",
-        "cluster": "propsToSelectors",
+        "rule": "propsToSelectors",
         "notes": "An enum prop's values become attribute selectors, lowercased by the enumCase contract — HTML attribute selectors are case-sensitive, and the emitting platform writes the same normalized spelling. An enum classified as a state concept selects by the concept's selector instead."
       },
       "number": {
@@ -2168,7 +2168,7 @@
         "module": ["Css"],
         "direction": "spec-to-css",
         "basis": "implementation",
-        "cluster": "propsToSelectors",
+        "rule": "propsToSelectors",
         "notes": "A number prop with a closed `enum` is a variant axis and selects like an enum, on the numeric spelling. An open-valued number is content and emits nothing."
       },
       "slot": {
@@ -2190,11 +2190,11 @@
         "module": ["Css"],
         "direction": "spec-to-css",
         "basis": "implementation",
-        "cluster": "propsToSelectors",
+        "rule": "propsToSelectors",
         "notes": "An object prop participates member-wise: each member is a scalar, flattened to a dotted arg key, and an enum member is a variant axis selecting exactly as a top-level enum does."
       }
     },
-    "propClusters": {
+    "propRules": {
       "propsToSelectors": {
         "disposition": "bound",
         "direction": "spec-to-css",
@@ -2240,7 +2240,7 @@
         "module": ["Css"],
         "direction": "spec-to-css",
         "basis": "implementation",
-        "cluster": "elementSelectors",
+        "rule": "elementSelectors",
         "notes": "Its rule block is where typography and text alignment land — the only element type that carries them."
       },
       "glyph": {
@@ -2248,7 +2248,7 @@
         "module": ["Css"],
         "direction": "spec-to-css",
         "basis": "implementation",
-        "cluster": "elementSelectors",
+        "rule": "elementSelectors",
         "notes": "The rule block styles the glyph's box and color; the artwork itself is the emitting platform's concern, not the stylesheet's."
       },
       "vector": {
@@ -2256,7 +2256,7 @@
         "module": ["Css"],
         "direction": "spec-to-css",
         "basis": "implementation",
-        "cluster": "elementSelectors",
+        "rule": "elementSelectors",
         "notes": "Box, fill and stroke only. Path geometry is not expressible as a rule block, so a vector styles as the rectangle it occupies."
       },
       "container": {
@@ -2264,15 +2264,15 @@
         "module": ["Css"],
         "direction": "spec-to-css",
         "basis": "implementation",
-        "cluster": "elementSelectors",
-        "notes": "Where the layout clusters realize — auto-layout, sizing, positioning all emit into container rule blocks."
+        "rule": "elementSelectors",
+        "notes": "Where the layout rules realize — auto-layout, sizing, positioning all emit into container rule blocks."
       },
       "slot": {
         "disposition": "bound",
         "module": ["Css", "contentStyles"],
         "direction": "spec-to-css",
         "basis": "implementation",
-        "cluster": "elementSelectors",
+        "rule": "elementSelectors",
         "notes": "The slot element's own styles emit as any element's do. Its `contentStyles` — formatting for primitive fills, keyed by the `$text`/`$glyph` markers — emit as additional blocks scoped to the primitive content (ADR-102)."
       },
       "instance": {
@@ -2280,7 +2280,7 @@
         "module": ["Css"],
         "direction": "spec-to-css",
         "basis": "implementation",
-        "cluster": "elementSelectors",
+        "rule": "elementSelectors",
         "notes": "The instanced component's own stylesheet owns its interior; this component's sheet writes only the instance element's own box — size, spacing, position."
       },
       "line": {
@@ -2288,7 +2288,7 @@
         "module": ["Css"],
         "direction": "spec-to-css",
         "basis": "implementation",
-        "cluster": "elementSelectors",
+        "rule": "elementSelectors",
         "notes": "A stroke-styled box; the line is its border or background, not a drawn segment."
       },
       "ellipse": {
@@ -2296,7 +2296,7 @@
         "module": ["Css"],
         "direction": "spec-to-css",
         "basis": "implementation",
-        "cluster": "elementSelectors",
+        "rule": "elementSelectors",
         "notes": "A box with full corner rounding; arc data has no CSS counterpart."
       },
       "rectangle": {
@@ -2304,7 +2304,7 @@
         "module": ["Css"],
         "direction": "spec-to-css",
         "basis": "implementation",
-        "cluster": "elementSelectors",
+        "rule": "elementSelectors",
         "notes": "The one shape CSS speaks natively — size, fills, corners, strokes all land directly."
       },
       "polygon": {
@@ -2322,7 +2322,7 @@
         "notes": "Same as polygon: box styles only, no shape. Point count and inner radius are not in the spec."
       }
     },
-    "anatomyClusters": {
+    "anatomyRules": {
       "elementSelectors": {
         "disposition": "bound",
         "direction": "spec-to-css",
@@ -2365,7 +2365,7 @@
         "module": ["Css"],
         "direction": "spec-to-css",
         "basis": "implementation",
-        "notes": "The ordinary case; every style cluster's case table is written against literals."
+        "notes": "The ordinary case; every style rule's case table is written against literals."
       },
       "mixed": {
         "disposition": "unsupported",
@@ -2417,7 +2417,7 @@
         "notes": "Deep configuration is structure, not styling; nothing to emit."
       }
     },
-    "referenceClusters": {}
+    "referenceRules": {}
   },
   "realises": "The style surface. Every output in this binding is a CSS declaration, so it is shared by every platform that styles with CSS rather than belonging to any one of them.",
   "dependedOnBy": [

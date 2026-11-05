@@ -8,14 +8,14 @@
   "note": "Declares only what this platform adds to or changes from the CSS binding. A style key absent here is bound exactly as css.json states; this file never restates one. Props are NOT inherited: how a prop becomes a parameter is this platform's own surface, declared in full below.",
   "concepts": {
     "styles": {},
-    "styleClusters": {},
+    "styleRules": {},
     "props": {
       "boolean": {
         "disposition": "bound",
         "realises": "a `boolean` member of the component's Props interface",
         "direction": "spec-to-code",
         "basis": "implementation",
-        "cluster": "statesToContract",
+        "rule": "statesToContract",
         "notes": "Declared in the generated types file with its `default` in the Defaults export. In JSX a true value spells as the bare attribute, false as `{false}`. A boolean classified as a browser-managed state concept never reaches the contract."
       },
       "string": {
@@ -30,8 +30,8 @@
         "realises": "a named union type, one member per `enum` value",
         "direction": "spec-to-code",
         "basis": "implementation",
-        "cluster": "statesToContract",
-        "notes": "The union is named for the component and prop; values are lowercased by the enumCase contract, and the declared `default` is normalized with them. The scaffold writes the current value as a `data-<prop>` attribute on the component's root, which is the selector surface the CSS binding's propsToSelectors cluster states."
+        "rule": "statesToContract",
+        "notes": "The union is named for the component and prop; values are lowercased by the enumCase contract, and the declared `default` is normalized with them. The scaffold writes the current value as a `data-<prop>` attribute on the component's root, which is the selector surface the CSS binding's propsToSelectors rule states."
       },
       "number": {
         "disposition": "bound",
@@ -45,7 +45,7 @@
         "realises": "`children`, or a named prop of `React.ReactNode`",
         "direction": "spec-to-code",
         "basis": "implementation",
-        "cluster": "slotsToChildren",
+        "rule": "slotsToChildren",
         "notes": "A slot prop never reaches the platform-neutral contract — its type is the one part of a contract that cannot be platform-neutral, so each target spells its own. React spells the designated default slot as `children` and every other slot as a named `React.ReactNode` prop."
       },
       "image": {
@@ -63,7 +63,7 @@
         "notes": "The contract spells the object shape as its own interface (ADR-111). Stories and controls work on the flat view — each member under a dotted arg key (`margin.compact`) — and reassemble the object at the call site. A member binding pointer (`#/props/margin/members/compact`) reads through member access on the host."
       }
     },
-    "propClusters": {
+    "propRules": {
       "slotsToChildren": {
         "disposition": "bound",
         "direction": "spec-to-code",
@@ -124,7 +124,7 @@
         "realises": "a `span` carrying the element's content",
         "direction": "spec-to-code",
         "basis": "implementation",
-        "cluster": "semanticsAndTags",
+        "rule": "semanticsAndTags",
         "notes": "`span` by default — or the tag a role decides. `content` emits as the text child; a content binding reads the bound prop instead."
       },
       "glyph": {
@@ -146,7 +146,7 @@
         "realises": "a `div` — or the tag its role decides",
         "direction": "spec-to-code",
         "basis": "implementation",
-        "cluster": "semanticsAndTags",
+        "rule": "semanticsAndTags",
         "notes": "Carries its element class for the stylesheet and the root carries the variant data attributes. In a phrasing context the default drops to `span` so the emitted HTML stays valid."
       },
       "slot": {
@@ -161,7 +161,7 @@
         "realises": "the composed component, imported and configured",
         "direction": "spec-to-code",
         "basis": "implementation",
-        "cluster": "semanticsAndTags",
+        "rule": "semanticsAndTags",
         "notes": "`instanceOf` becomes an import; `propConfigurations` become its props. A roled instance routes the role's contract props to the instanced component's matching parts (ADR-067 rule 5)."
       },
       "line": {
@@ -200,7 +200,7 @@
         "notes": "Same as polygon."
       }
     },
-    "anatomyClusters": {
+    "anatomyRules": {
       "layoutWalk": {
         "disposition": "bound",
         "direction": "spec-to-code",
@@ -232,7 +232,7 @@
           },
           {
             "when": { "operation": "isNotNull", "args": { "value": "node.key" } },
-            "emit": ["the element at its tree position, children recursed in authored order — instances and glyphs claimed by their emitters, everything else a container whose tag the semanticsAndTags cluster decides"],
+            "emit": ["the element at its tree position, children recursed in authored order — instances and glyphs claimed by their emitters, everything else a container whose tag the semanticsAndTags rule decides"],
             "why": "The walk is the structure; order is the spec's"
           }
         ],
@@ -338,7 +338,7 @@
         "realises": "recursive JSX composition from the registries",
         "direction": "spec-to-code",
         "basis": "implementation",
-        "notes": "A `$slotContent` pointer resolves its registry entry and composes it — imports collected, nested fills recursed, provenance commented. Which render site it lands in is the slotsToChildren cluster under Props."
+        "notes": "A `$slotContent` pointer resolves its registry entry and composes it — imports collected, nested fills recursed, provenance commented. Which render site it lands in is the slotsToChildren rule under Props."
       },
       "subcomponent": {
         "disposition": "bound",
@@ -390,10 +390,10 @@
         "notes": "As the CSS binding declares: the condition is discarded on the way to a stylesheet."
       }
     },
-    "referenceClusters": {}
+    "referenceRules": {}
   },
   "surfaces": {
-    "note": "The platform-shaped questions this binding owes, none of which are CSS. propsToParameters, slotsToChildren and variantsToSelection graduated into concepts.props and concepts.propClusters above; variant selection itself is the CSS binding's propsToSelectors cluster.",
+    "note": "The platform-shaped questions this binding owes, none of which are CSS. propsToParameters, slotsToChildren and variantsToSelection graduated into concepts.props and concepts.propRules above; variant selection itself is the CSS binding's propsToSelectors rule.",
     "styleAttachment": "unverified"
   }
 }

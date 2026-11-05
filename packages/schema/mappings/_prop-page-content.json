@@ -4,7 +4,7 @@
   "kinds": {
     "boolean": {
       "sections": {
-        "States": "A boolean prop named by a [`specs.states`](/schema/conventions/#specs-members) entry is a state concept, not an ordinary parameter. Whether it stays in the emitted contract follows the concept's disposition — browser-managed concepts (hover, focus, active) leave the contract entirely, consumer-set ones (disabled, selected, invalid) stay and also surface as an aria attribute. The rule's case table is the [statesToContract](/schema/mappings/react/clusters/states-to-contract/) cluster, shared by both emitters and the CSS transform."
+        "States": "A boolean prop named by a [`specs.states`](/schema/conventions/#specs-members) entry is a state concept, not an ordinary parameter. Whether it stays in the emitted contract follows the concept's disposition — browser-managed concepts (hover, focus, active) leave the contract entirely, consumer-set ones (disabled, selected, invalid) stay and also surface as an aria attribute. The rule's case table is the [statesToContract](/schema/mappings/react/rules/states-to-contract/) rule, shared by both emitters and the CSS transform."
       }
     },
     "string": {
@@ -13,7 +13,7 @@
     "enum": {
       "intro": "A prop of `type: string` without an `enum` is a [`StringProp`](/schema/props/string/).",
       "sections": {
-        "States": "An enum prop named by a [`specs.states`](/schema/conventions/#specs-members) entry participates in state classification exactly as a boolean does — see the [statesToContract](/schema/mappings/react/clusters/states-to-contract/) cluster. An enum whose entries are all state values can leave the emitted contract entirely when every concept naming it is browser-managed."
+        "States": "An enum prop named by a [`specs.states`](/schema/conventions/#specs-members) entry participates in state classification exactly as a boolean does — see the [statesToContract](/schema/mappings/react/rules/states-to-contract/) rule. An enum whose entries are all state values can leave the emitted contract entirely when every concept naming it is browser-managed."
       }
     },
     "number": {},

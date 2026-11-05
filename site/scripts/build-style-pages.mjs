@@ -933,8 +933,8 @@ for (const node of nodes) {
   const bindingRows = isStyleKey
     ? Object.entries(bindings).map(([platform, b]) => {
         const v = b.concepts.styles[key] ?? { disposition: 'unverified' };
-        const realises = v.cluster
-          ? `cluster [\`${v.cluster}\`](/schema/mappings/${platform}/clusters/${kebab(v.cluster)}/)`
+        const realises = v.rule
+          ? `rule [\`${v.rule}\`](/schema/mappings/${platform}/rules/${kebab(v.rule)}/)`
           : (v.target ? `\`${v.target}\`` : (v.module?.length ? v.module.map((m) => `\`${m}\``).join(', ') : '—'));
         const fields = `**Disposition**: ${v.disposition === 'unverified' ? '**unverified**' : v.disposition} · **Realised by**: ${realises}`;
         return `##### [${PLATFORM[platform]}](/schema/mappings/${platform}/)\n\n${fields}${v.notes ? `\n\n${v.notes}` : ''}`;
@@ -987,24 +987,24 @@ for (const node of nodes) {
   })();
 
   /**
-   * Keys this one resolves alongside, grouped by cluster.
+   * Keys this one resolves alongside, grouped by rule.
    *
-   * Every clustered key belongs to a *different* cluster on each platform —
+   * Every rule-governed key belongs to a *different* rule on each platform —
    * `width` is in CSS's `intrinsicSize` and Figma's `autoVsAbsoluteLayout` — so
    * one flat list annotated with platform names merged two unrelated groupings
-   * into a set that matched neither. A key appearing under two clusters is
+   * into a set that matched neither. A key appearing under two rules is
    * correct and is repeated.
    */
   const siblingList = (() => {
     if (!isStyleKey) return null;
     const groups = [];
     for (const [platform, b] of Object.entries(bindings)) {
-      const name = b.concepts.styles[key]?.cluster;
+      const name = b.concepts.styles[key]?.rule;
       if (!name) continue;
-      const others = (b.concepts.styleClusters[name].keys ?? []).filter((k) => k !== key);
+      const others = (b.concepts.styleRules[name].keys ?? []).filter((k) => k !== key);
       if (!others.length) continue;
       groups.push(
-        `**[${name}](/schema/mappings/${platform}/clusters/${kebab(name)}/)** — ${PLATFORM[platform]}\n\n${others
+        `**[${name}](/schema/mappings/${platform}/rules/${kebab(name)}/)** — ${PLATFORM[platform]}\n\n${others
           .sort()
           .map((k) => `- [\`${k}\`](/schema/styles/${kebab(k)}/)`)
           .join('\n')}`

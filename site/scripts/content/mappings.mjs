@@ -8,19 +8,19 @@
  * The split rule: a sentence lives here, a label lives in the script.
  */
 
-// ── Cluster pages ────────────────────────────────────────────────────────────
+// ── Rule pages ───────────────────────────────────────────────────────────────
 
-export const CLUSTER = {
-  defaultLead: (title, platform) => `A cluster of the [${title} binding](../${platform}.md). These keys resolve jointly — no
+export const RULE = {
+  defaultLead: (title, platform) => `A rule of the [${title} binding](../${platform}.md). These keys resolve jointly — no
 one of them determines any single output, so the rule below *is* the mapping.`,
-  operandsIntro: 'Every fact the cluster reads. Nothing outside this set participates.',
+  operandsIntro: 'Every fact the rule reads. Nothing outside this set participates.',
   caseTableIntro: 'Ordered — first match wins.',
   stageLine: (stage) => `**Stage.** \`${stage}\` — produced by a later pass, not read directly.`,
   proseDebt: '> Stated as prose. Not yet converted to a case table, so it cannot be mechanically checked.',
   otherwiseNothing: '*Nothing is emitted.*',
 };
 
-export const CLUSTER_INDEX = {
+export const RULE_INDEX = {
   none: '*None declared.*',
   caseTable: (rows) => `${rows}-row case table`,
   prose: 'prose — not yet a case table',
@@ -31,10 +31,10 @@ export const CLUSTER_INDEX = {
 export const SURFACES = {
   props: {
     intro: `A prop is declared once in the spec and realised differently by kind on each platform.
-Unlike a style key, a kind may carry its own row *and* participate in a cluster — a kind
+Unlike a style key, a kind may carry its own row *and* be governed by a rule — a kind
 is a population of props, and different populations of it resolve differently.`,
-    clusterLead: (title, platform) =>
-      `A prop cluster of the [${title} binding](../${platform}.md). The kinds named below resolve jointly here — which kind a prop even is, or what platform shape it takes, is decided by this rule rather than per kind.`,
+    ruleLead: (title, platform) =>
+      `A prop rule of the [${title} binding](../${platform}.md). The kinds named below resolve jointly here — which kind a prop even is, or what platform shape it takes, is decided by this rule rather than per kind.`,
   },
   references: {
     intro: `What a platform does with each form a VALUE may take — the scalar forms (a
@@ -43,15 +43,15 @@ reserved-marker forms plus the \`$nested\` paths; DSPEC-42 for the style-value h
 The set is closed: the safe key grammar admits no authored \`$\`-prefixed key, so no
 document can mint a new marker. Notes stay inline — the forms' reference pages are
 hand-written and carry no generated binding section yet.`,
-    clusterLead: (title, platform) =>
-      `A reference cluster of the [${title} binding](../${platform}.md).`,
+    ruleLead: (title, platform) =>
+      `A reference rule of the [${title} binding](../${platform}.md).`,
   },
   anatomy: {
     intro: `An anatomy element's names are the library's; its TYPE is the contract's, and the type is
-what each platform realises. A type may carry its own row *and* participate in a cluster —
+what each platform realises. A type may carry its own row *and* be governed by a rule —
 a type is a population of elements, and which type a node even becomes is itself a joint rule.`,
-    clusterLead: (title, platform) =>
-      `An anatomy cluster of the [${title} binding](../${platform}.md). The element types named below resolve jointly here — which type a node becomes, or what tag and semantics an element takes, is decided by this rule rather than per type.`,
+    ruleLead: (title, platform) =>
+      `An anatomy rule of the [${title} binding](../${platform}.md). The element types named below resolve jointly here — which type a node becomes, or what tag and semantics an element takes, is decided by this rule rather than per type.`,
   },
 };
 
@@ -65,13 +65,13 @@ that is the reference at \`/schema\`.
 
 Generated from \`mappings/bindings/${platform}.json\` by \`scripts/build-mappings.mjs\`.
 Edit the binding file, never this page.`,
-  clustersIntro: `The rules that resolve jointly — where no single key or kind determines any single
-output, the cluster's ordered case table IS the mapping, on its own page. Keys and
-kinds in the surface tables below link back here through their *cluster* column.`,
+  rulesIntro: `The rules that resolve jointly — where no single key or kind determines any single
+output, the rule's ordered case table IS the mapping, on its own page. Keys and
+kinds in the surface tables below link back here through their *rule* column.`,
   stylesIntro: (tally, total) => `${tally}, of ${total} style keys.
 
-A key whose row says *cluster* does not map on its own — its rule is a case table on the
-cluster's own page. Writing a per-key mapping for it would be false, not merely incomplete.`,
+A key whose row says *rule* does not map on its own — its rule is a case table on the
+rule's own page. Writing a per-key mapping for it would be false, not merely incomplete.`,
   dispositionMeaning: {
     bound: 'Realised, and confirmed against the implementation',
     approximated: 'Realised with loss, and the loss is stated',
@@ -97,8 +97,8 @@ and as a decision rather than an accident.`,
 export const DEPENDENT = {
   frame: 'Normative frame: [`SPECIFICATION.md`](../SPECIFICATION.md) §11.',
   inheritsRule: (base) => `**Every style key is bound exactly as the ${base} binding states**, unless overridden below. This binding never restates an inherited mapping: a second copy of a rule is a second thing to keep true.`,
-  clustersIntro: `The rules that resolve jointly on this platform's own surfaces — props and anatomy are
-never inherited, so these are this binding's own. Each cluster's ordered case table is
+  rulesIntro: `The rules that resolve jointly on this platform's own surfaces — props and anatomy are
+never inherited, so these are this binding's own. Each rule's ordered case table is
 its own page.`,
   overridesNone: '**None.** Every style key is inherited unchanged.',
   surfacesNone: '*None declared.*',
@@ -115,7 +115,7 @@ Each declared unit carries one of four dispositions (\`bound\`, \`approximated\`
 in the schema with no row in a binding fails it.
 
 Some keys resolve jointly — no single key determines any single output. Those rules are
-*clusters*: ordered case tables, each on its own page.`,
+ordered case tables, each on its own page.`,
   inheritance: `React and Web Components inherit styles from CSS and declare only overrides. Props and
 anatomy are never inherited: how a prop becomes a parameter or an element becomes a tag
 is each platform's own fact.`,
@@ -157,7 +157,7 @@ export const PAGE_DESCRIPTIONS = {
   INDEX: 'How each platform realises the Specs document format — the binding concept, the four platforms, and where the data lives',
 };
 
-export const clusterPageDescription = (platformTitle, clusterName) =>
-  `How the ${platformTitle} binding resolves the ${clusterName} cluster — its operand set and ordered case table`;
+export const rulePageDescription = (platformTitle, ruleName) =>
+  `How the ${platformTitle} binding resolves the ${ruleName} rule — its operand set and ordered case table`;
 
 export const fallbackPageDescription = (title) => `How the ${title} binding realises the Specs schema`;

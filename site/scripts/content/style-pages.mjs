@@ -90,7 +90,7 @@ export const ARRAY_OF = 'An array of:';
 
 export const NO_ELEMENT_TYPE = '*No element type carries this key.*';
 
-export const JOINTLY_INTRO = "This key does not map on its own. Its cluster's ordered case table is linked above.";
+export const JOINTLY_INTRO = "This key does not map on its own. Its rule's ordered case table is linked above.";
 
 /** Said rather than left blank — a missing section reads as a failed render. */
 export const DECISIONS_NONE = 'None.\n';

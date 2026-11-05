@@ -24,8 +24,8 @@ import { fileURLToPath } from 'node:url';
 // All page copy lives in content/ — this script holds structure only:
 // headings, column headers, field labels, guards, and assembly.
 import {
-  CLUSTER, CLUSTER_INDEX, SURFACES, PLATFORM, DEPENDENT, OVERVIEW, BANNER,
-  PAGE_DESCRIPTIONS, clusterPageDescription, fallbackPageDescription,
+  RULE, RULE_INDEX, SURFACES, PLATFORM, DEPENDENT, OVERVIEW, BANNER,
+  PAGE_DESCRIPTIONS, rulePageDescription, fallbackPageDescription,
 } from './content/mappings.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -151,7 +151,7 @@ const fmt = (p) => {
 const kebab = (s) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`).replace(/^-/, '');
 
 /**
- * What each declared case table is called on the page. A cluster may qualify
+ * What each declared case table is called on the page. A rule may qualify
  * its main table with further ones — per axis, per member, per relation — and
  * each needs a heading that says which.
  */
@@ -168,8 +168,8 @@ const CASE_TABLE_LABELS = {
 };
 
 /**
- * Every case row a cluster declares, across all of its tables. The index line
- * used to read `c.cases.length`, which crashes on a multi-table cluster whose
+ * Every case row a rule declares, across all of its tables. The index line
+ * used to read `c.cases.length`, which crashes on a multi-table rule whose
  * decision has no unqualified `cases` — three outputs, three named tables.
  */
 const caseRowCount = (c) =>
@@ -178,33 +178,31 @@ const caseRowCount = (c) =>
     .reduce((n, [, v]) => n + v.length, 0);
 
 /**
- * One Clusters table for the whole page — styles, props and anatomy clusters
+ * One Rules table for the whole page — styles, props and anatomy rules
  * together, each tagged with its surface. The rules are the most consequential
  * thing a binding declares, so they index once, near the top, instead of three
  * sub-tables buried under their surfaces.
  */
-const clustersSection = (metas, platform) => {
-  if (!metas.length) return CLUSTER_INDEX.none;
-  return `| Cluster | Surface | Disposition | Keys | Resolution |\n|---|---|---|---|---|\n${metas
+const rulesSection = (metas, platform) => {
+  if (!metas.length) return RULE_INDEX.none;
+  return `| Rule | Surface | Keys |\n|---|---|---|\n${metas
     .slice()
     .sort((a, b) => a.surface.localeCompare(b.surface) || a.name.localeCompare(b.name))
     .map(({ name, surface, c }) =>
-      `| [${name}](clusters/${platform}/${kebab(name)}.md) | ${surface} | ${badge(c.disposition)} | ${c.keys.map((k) => `\`${k}\``).join(', ')} | ${
-        c.form === 'cases' ? CLUSTER_INDEX.caseTable(caseRowCount(c)) : CLUSTER_INDEX.prose
-      } |`
+      `| [${name}](rules/${platform}/${kebab(name)}.md) | ${surface} | ${c.keys.map((k) => `\`${k}\``).join(', ')} |`
     )
     .join('\n')}`;
 };
 
 /**
- * One cluster, as its own page.
+ * One rule, as its own page.
  *
- * A cluster is the unit a reader arrives at: they have a key whose row says
- * *cluster*, and they want the rule. Inlining nine of these under one heading
+ * A rule is the unit a reader arrives at: they have a key whose row says
+ * *rule*, and they want the rule. Inlining nine of these under one heading
  * meant the rule for `textTruncation` sat four case tables below the rule for
  * `autoLayout`, with no URL of its own to link or cite.
  */
-const clusterPage = ({ name, c, platform, title, lead }) => {
+const rulePage = ({ name, c, platform, title, lead }) => {
   // Labeled fields, not a bare value run — three unlabeled words read as a
   // phrase, and a reader should not need the FORMAT doc to parse the header.
   const headerFields = [
@@ -220,7 +218,7 @@ const clusterPage = ({ name, c, platform, title, lead }) => {
 
 ${headerFields}
 
-${lead ?? CLUSTER.defaultLead(title, platform)}
+${lead ?? RULE.defaultLead(title, platform)}
 
 **Keys.** ${c.keys.map((k) => `\`${k}\``).join(', ')}
 `;
@@ -232,8 +230,8 @@ ${lead ?? CLUSTER.defaultLead(title, platform)}
 **Resolution.** ${c.resolution}
 
 **Partially present.** ${c.partial}
-${c.stage ? `\n${CLUSTER.stageLine(c.stage)}\n` : ''}${c.notes ? `\n*${c.notes}*\n` : ''}
-${CLUSTER.proseDebt}
+${c.stage ? `\n${RULE.stageLine(c.stage)}\n` : ''}${c.notes ? `\n*${c.notes}*\n` : ''}
+${RULE.proseDebt}
 `;
   }
 
@@ -246,14 +244,14 @@ ${CLUSTER.proseDebt}
     : '';
 
   const caseTable = (label, list) =>
-    `\n## ${label}\n\n${CLUSTER.caseTableIntro}\n\n| # | When | Emits | Why |\n|---|---|---|---|\n${list
+    `\n## ${label}\n\n${RULE.caseTableIntro}\n\n| # | When | Emits | Why |\n|---|---|---|---|\n${list
       .map((cs, i) => `| ${i + 1} | ${fmt(cs.when)} | ${cs.emit.length ? cs.emit.map(emitCell).join('<br>') : '*nothing*'} | ${cs.why ?? ''} |`)
       .join('\n')}\n`;
 
   /**
-   * Every case table the cluster declares, discovered rather than listed.
+   * Every case table the rule declares, discovered rather than listed.
    *
-   * A hardcoded allowlist of three names silently dropped this cluster's
+   * A hardcoded allowlist of three names silently dropped this rule's
    * `relationCases` — three declared cases that appeared on no page, which is
    * the exact failure these generated pages exist to prevent. An unrecognised
    * table now fails the build instead of vanishing.
@@ -262,7 +260,7 @@ ${CLUSTER.proseDebt}
     .filter((k) => /Cases$/.test(k) || k === 'cases')
     .map((k) => {
       const label = CASE_TABLE_LABELS[k];
-      if (!label) failures.push(`${platform}.json: cluster "${name}" declares "${k}", which has no label — add one to CASE_TABLE_LABELS or the table renders nowhere`);
+      if (!label) failures.push(`${platform}.json: rule "${name}" declares "${k}", which has no label — add one to CASE_TABLE_LABELS or the table renders nowhere`);
       return { key: k, label: label ?? k, list: c[k] };
     })
     .filter((t) => Array.isArray(t.list) && t.list.length)
@@ -272,23 +270,23 @@ ${CLUSTER.proseDebt}
   return `${head}
 ## Operands
 
-${CLUSTER.operandsIntro}
+${RULE.operandsIntro}
 
 ${inputs}
 ${derived}${tables.map((t) => caseTable(t.label, t.list)).join('')}${
     c.otherwise
-      ? `\n## Otherwise\n\n${c.otherwise.emit?.length ? c.otherwise.emit.map((e) => `\`${e}\``).join(', ') : CLUSTER.otherwiseNothing}${
+      ? `\n## Otherwise\n\n${c.otherwise.emit?.length ? c.otherwise.emit.map((e) => `\`${e}\``).join(', ') : RULE.otherwiseNothing}${
           c.otherwise.why ? ` — ${c.otherwise.why}` : ''
         }\n`
       : ''
-  }${c.stage ? `\n${CLUSTER.stageLine(c.stage)}\n` : ''}${
+  }${c.stage ? `\n${RULE.stageLine(c.stage)}\n` : ''}${
     c.notes ? `\n*${c.notes}*\n` : ''
   }`;
 };
 
 /**
- * The props surface of one binding: a per-kind table plus the clusters whose
- * rules span kinds. Unlike styles, props are NOT inherited by a dependent
+ * The props surface of one binding: a per-kind table plus the rules whose
+ * cases span kinds. Unlike styles, props are NOT inherited by a dependent
  * binding — how a prop becomes a parameter is each platform's own fact — so
  * every binding file declares all kinds and this renders for all four.
  *
@@ -298,42 +296,42 @@ ${derived}${tables.map((t) => caseTable(t.label, t.list)).join('')}${
  * answered for it.
  */
 /**
- * One unit-keyed concept surface: a per-unit table plus the clusters whose
- * rules span units. Props and anatomy share this shape — the unit is a closed,
+ * One unit-keyed concept surface: a per-unit table plus the rules whose
+ * cases span units. Props and anatomy share this shape — the unit is a closed,
  * schema-derived population (prop kinds off `AnyProp`, element types off
  * `ElementType`) while the instances' names stay the library's. Unlike a style
- * key, a unit may carry its own row AND participate in a cluster: a unit is a
+ * key, a unit may carry its own row AND be governed by a rule: a unit is a
  * population, and different populations of it resolve differently.
  */
 const renderUnitSurface = ({ platform, title, b, file }, cfg) => {
   const entries = b.concepts?.[cfg.conceptKey] ?? {};
-  const clusters = b.concepts?.[cfg.clustersKey] ?? {};
+  const rules = b.concepts?.[cfg.rulesKey] ?? {};
 
   const extra = Object.keys(entries).filter((k) => !cfg.units.includes(k));
   if (extra.length) failures.push(`${file}: ${cfg.unitNoun}s not in the schema's ${cfg.unitSource} — ${extra.join(', ')}`);
   const missing = cfg.units.filter((k) => !(k in entries));
   if (missing.length) failures.push(`${file}: missing ${cfg.unitNoun}s — ${missing.join(', ')}`);
 
-  for (const [name, c] of Object.entries(clusters)) {
+  for (const [name, c] of Object.entries(rules)) {
     for (const k of c.keys ?? []) {
-      if (!(k in entries)) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" names \`${k}\`, absent from concepts.${cfg.conceptKey}`);
+      if (!(k in entries)) failures.push(`${file}: ${cfg.unitNoun} rule "${name}" names \`${k}\`, absent from concepts.${cfg.conceptKey}`);
     }
     if (c.form === 'cases') {
-      if (!c.inputs?.length) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" declares cases but no inputs — the operand set must be finite and visible`);
-      if (caseRowCount(c) === 0) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" is form cases with no case table at all`);
+      if (!c.inputs?.length) failures.push(`${file}: ${cfg.unitNoun} rule "${name}" declares cases but no inputs — the operand set must be finite and visible`);
+      if (caseRowCount(c) === 0) failures.push(`${file}: ${cfg.unitNoun} rule "${name}" is form cases with no case table at all`);
       for (const [tableName, table] of Object.entries(c).filter(([k, v]) => (/Cases$/.test(k) || k === 'cases') && Array.isArray(v))) {
         for (const [i, cs] of table.entries()) {
-          if (!cs.when) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" ${tableName}[${i}] has no predicate`);
-          if (!Array.isArray(cs.emit)) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" ${tableName}[${i}] has no emit list — an empty array is a claim, a missing one is an omission`);
+          if (!cs.when) failures.push(`${file}: ${cfg.unitNoun} rule "${name}" ${tableName}[${i}] has no predicate`);
+          if (!Array.isArray(cs.emit)) failures.push(`${file}: ${cfg.unitNoun} rule "${name}" ${tableName}[${i}] has no emit list — an empty array is a claim, a missing one is an omission`);
         }
       }
     } else {
-      if (!c.resolution) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" has no resolution rule — the rule IS the mapping`);
-      if (!c.partial) failures.push(`${file}: ${cfg.unitNoun} cluster "${name}" does not say what a partially present cluster does`);
+      if (!c.resolution) failures.push(`${file}: ${cfg.unitNoun} rule "${name}" has no resolution rule — the rule IS the mapping`);
+      if (!c.partial) failures.push(`${file}: ${cfg.unitNoun} rule "${name}" does not say what a partially present rule does`);
     }
   }
   for (const [k, v] of Object.entries(entries)) {
-    if (v.cluster && !(v.cluster in clusters)) failures.push(`${file}: ${cfg.unitNoun} \`${k}\` names cluster "${v.cluster}", which is not declared`);
+    if (v.rule && !(v.rule in rules)) failures.push(`${file}: ${cfg.unitNoun} \`${k}\` names rule "${v.rule}", which is not declared`);
   }
 
   const realiseCell = (v) =>
@@ -345,12 +343,21 @@ const renderUnitSurface = ({ platform, title, b, file }, cfg) => {
   // `withNotes`: the references table keeps its Notes column — its unit pages
   // are hand-written and carry no generated binding section for a note to
   // move to, and seven rows is a table, not a wall.
-  const rows = cfg.units.map((k) => {
-    const v = entries[k] ?? { disposition: 'unverified' };
-    const clusterLink = v.cluster ? ` · cluster [${v.cluster}](clusters/${platform}/${kebab(v.cluster)}.md)` : '';
-    const link = cfg.unitLink ? cfg.unitLink(k) : `${cfg.pageBase}${k}/`;
-    return `| [\`${k}\`](${link}) | ${badge(v.disposition)} | ${realiseCell(v)}${clusterLink} |${cfg.withNotes ? ` ${v.notes ?? ''} |` : ''}`;
-  });
+  //
+  // Sorted by disposition, then by unit name — a reader scanning for what is
+  // unverified or unsupported should not have to read the whole table.
+  const rows = [...cfg.units]
+    .sort((a, b) => {
+      const da = DISPOSITION_ORDER.indexOf((entries[a] ?? { disposition: 'unverified' }).disposition);
+      const db = DISPOSITION_ORDER.indexOf((entries[b] ?? { disposition: 'unverified' }).disposition);
+      return da - db || a.localeCompare(b);
+    })
+    .map((k) => {
+      const v = entries[k] ?? { disposition: 'unverified' };
+      const ruleLink = v.rule ? ` · rule [${v.rule}](rules/${platform}/${kebab(v.rule)}.md)` : '';
+      const link = cfg.unitLink ? cfg.unitLink(k) : `${cfg.pageBase}${k}/`;
+      return `| [\`${k}\`](${link}) | ${badge(v.disposition)} | ${realiseCell(v)}${ruleLink} |${cfg.withNotes ? ` ${v.notes ?? ''} |` : ''}`;
+    });
 
   const section = `## ${cfg.heading}
 
@@ -361,24 +368,24 @@ ${cfg.intro}
 ${rows.join('\n')}
 `;
 
-  const clusterPages = Object.entries(clusters).map(([name, c]) => ({
+  const rulePages = Object.entries(rules).map(([name, c]) => ({
     name,
     slug: kebab(name),
-    body: clusterPage({ name, c, platform, title, lead: cfg.clusterLead(title, platform) }),
+    body: rulePage({ name, c, platform, title, lead: cfg.ruleLead(title, platform) }),
   }));
 
-  // For the page-level Clusters table — every surface's clusters in one index.
-  const clusterMeta = Object.entries(clusters).map(([name, c]) => ({
+  // For the page-level Rules table — every surface's rules in one index.
+  const ruleMeta = Object.entries(rules).map(([name, c]) => ({
     name, surface: cfg.heading, c,
   }));
 
-  return { section, clusterPages, clusterMeta };
+  return { section, rulePages, ruleMeta };
 };
 
 const renderProps = (ctx) =>
   renderUnitSurface(ctx, {
     conceptKey: 'props',
-    clustersKey: 'propClusters',
+    rulesKey: 'propRules',
     units: propKinds,
     unitNoun: 'prop kind',
     unitSource: 'AnyProp',
@@ -386,13 +393,13 @@ const renderProps = (ctx) =>
     pageBase: '/schema/props/',
     heading: 'Props',
     intro: SURFACES.props.intro,
-    clusterLead: SURFACES.props.clusterLead,
+    ruleLead: SURFACES.props.ruleLead,
   });
 
 const renderReferences = (ctx) =>
   renderUnitSurface(ctx, {
     conceptKey: 'references',
-    clustersKey: 'referenceClusters',
+    rulesKey: 'referenceRules',
     units: referenceForms,
     unitNoun: 'reference form',
     unitSource: 'SPECIFICATION §5.1 pointer grammar',
@@ -401,13 +408,13 @@ const renderReferences = (ctx) =>
     withNotes: true,
     heading: 'Values and References',
     intro: SURFACES.references.intro,
-    clusterLead: SURFACES.references.clusterLead,
+    ruleLead: SURFACES.references.ruleLead,
   });
 
 const renderAnatomy = (ctx) =>
   renderUnitSurface(ctx, {
     conceptKey: 'anatomy',
-    clustersKey: 'anatomyClusters',
+    rulesKey: 'anatomyRules',
     units: elementTypes,
     unitNoun: 'element type',
     unitSource: 'ElementType',
@@ -415,7 +422,7 @@ const renderAnatomy = (ctx) =>
     pageBase: '/schema/anatomy/',
     heading: 'Anatomy',
     intro: SURFACES.anatomy.intro,
-    clusterLead: SURFACES.anatomy.clusterLead,
+    ruleLead: SURFACES.anatomy.ruleLead,
   });
 
 /**
@@ -424,7 +431,7 @@ const renderAnatomy = (ctx) =>
  * how props become parameters, slots become children, variants become
  * selection, and how styles attach.
  */
-const renderDependent = ({ platform, title, b, styles, dependsOn, file, propsSection, clustersIdx }) => {
+const renderDependent = ({ platform, title, b, styles, dependsOn, file, propsSection, rulesIdx }) => {
   const base = dependsOn.map((d) => `[${TITLES[d] ?? d}](${d.toUpperCase()}.md)`).join(", ");
   const overrides = Object.entries(styles);
 
@@ -450,11 +457,11 @@ ${b.realises ?? ''}
 
 ${DEPENDENT.inheritsRule(base)}
 
-## Clusters
+## Rules
 
-${DEPENDENT.clustersIntro}
+${DEPENDENT.rulesIntro}
 
-${clustersIdx}
+${rulesIdx}
 
 ## Style overrides
 
@@ -501,9 +508,9 @@ const renderPlatform = (file) => {
       page: renderDependent({
         platform, title, b, styles, dependsOn, file,
         propsSection: `${propsOut.section}\n${anatomyOut.section}\n${referencesOut.section}`,
-        clustersIdx: clustersSection([...propsOut.clusterMeta, ...anatomyOut.clusterMeta, ...referencesOut.clusterMeta], platform),
+        rulesIdx: rulesSection([...propsOut.ruleMeta, ...anatomyOut.ruleMeta, ...referencesOut.ruleMeta], platform),
       }),
-      clusterPages: [...propsOut.clusterPages, ...anatomyOut.clusterPages, ...referencesOut.clusterPages],
+      rulePages: [...propsOut.rulePages, ...anatomyOut.rulePages, ...referencesOut.rulePages],
     };
   }
 
@@ -529,71 +536,73 @@ const renderPlatform = (file) => {
     .join(', ');
 
   const isFigma = platform === 'figma';
-  const col = isFigma ? 'Figma target' : 'CSS module';
+  const col = 'Realised by';
   const cell = (v) =>
     isFigma
       ? v.target ? `\`${v.target}\`` : '—'
       : v.module?.length ? v.module.map((m) => `\`${m}\``).join(', ') : '—';
 
-  const clusters = b.concepts?.styleClusters ?? {};
+  const rules = b.concepts?.styleRules ?? {};
 
   // Cross-reference both ways. A key cannot quietly leave the table by being
-  // "handled elsewhere", and a cluster cannot claim a key the table disowns.
-  for (const [name, c] of Object.entries(clusters)) {
+  // "handled elsewhere", and a rule cannot claim a key the table disowns.
+  for (const [name, c] of Object.entries(rules)) {
     for (const k of c.keys ?? []) {
-      if (!(k in styles)) failures.push(`${file}: cluster "${name}" names \`${k}\`, absent from concepts.styles`);
-      else if (styles[k].cluster !== name) failures.push(`${file}: \`${k}\` is in cluster "${name}" but declares cluster "${styles[k].cluster ?? 'none'}"`);
+      if (!(k in styles)) failures.push(`${file}: rule "${name}" names \`${k}\`, absent from concepts.styles`);
+      else if (styles[k].rule !== name) failures.push(`${file}: \`${k}\` is in rule "${name}" but declares rule "${styles[k].rule ?? 'none'}"`);
     }
     if (c.form === 'cases') {
-      if (!c.inputs?.length) failures.push(`${file}: cluster "${name}" declares cases but no inputs — the operand set must be finite and visible`);
+      if (!c.inputs?.length) failures.push(`${file}: rule "${name}" declares cases but no inputs — the operand set must be finite and visible`);
       for (const [i, cs] of (c.cases ?? []).entries()) {
-        if (!cs.when) failures.push(`${file}: cluster "${name}" case ${i} has no predicate`);
-        if (!Array.isArray(cs.emit)) failures.push(`${file}: cluster "${name}" case ${i} has no emit list — an empty array is a claim, a missing one is an omission`);
+        if (!cs.when) failures.push(`${file}: rule "${name}" case ${i} has no predicate`);
+        if (!Array.isArray(cs.emit)) failures.push(`${file}: rule "${name}" case ${i} has no emit list — an empty array is a claim, a missing one is an omission`);
       }
     } else {
-      if (!c.resolution) failures.push(`${file}: cluster "${name}" has no resolution rule — the rule IS the mapping`);
-      if (!c.partial) failures.push(`${file}: cluster "${name}" does not say what a partially present cluster does`);
+      if (!c.resolution) failures.push(`${file}: rule "${name}" has no resolution rule — the rule IS the mapping`);
+      if (!c.partial) failures.push(`${file}: rule "${name}" does not say what a partially present rule does`);
     }
   }
   for (const [k, v] of Object.entries(styles)) {
-    if (v.cluster && !(v.cluster in clusters)) failures.push(`${file}: \`${k}\` names cluster "${v.cluster}", which is not declared`);
+    if (v.rule && !(v.rule in rules)) failures.push(`${file}: \`${k}\` names rule "${v.rule}", which is not declared`);
   }
 
-  // Alphabetical, not schema order: this table is looked up by key name.
-  const rows = [...styleProps].sort().map((k) => {
-    const v = styles[k] ?? { disposition: 'unverified' };
-    const scope = isFigma
-      ? (v.elements?.length === 12 ? 'all' : (v.elements?.length ? v.elements.join(', ') : '—'))
-      : '';
-    const realises = v.cluster ? `cluster [${v.cluster}](clusters/${platform}/${kebab(v.cluster)}.md)` : cell(v);
-    // No Notes column — a note renders on the key's own page, under the
-    // platform it belongs to, instead of 46 of them stacking into a wall here.
-    return `| \`${k}\` | ${badge(v.disposition)} | ${realises} |${isFigma ? ` ${scope} |` : ''}`;
-  });
+  // Sorted by disposition, then alphabetically — a reader scanning for what
+  // is unverified or unsupported should not have to read the whole table.
+  const rows = [...styleProps]
+    .sort((a, b) => {
+      const da = DISPOSITION_ORDER.indexOf((styles[a] ?? { disposition: 'unverified' }).disposition);
+      const db = DISPOSITION_ORDER.indexOf((styles[b] ?? { disposition: 'unverified' }).disposition);
+      return da - db || a.localeCompare(b);
+    })
+    .map((k) => {
+      const v = styles[k] ?? { disposition: 'unverified' };
+      const realises = v.rule ? `rule [${v.rule}](rules/${platform}/${kebab(v.rule)}.md)` : cell(v);
+      // No Notes column — a note renders on the key's own page, under the
+      // platform it belongs to, instead of 46 of them stacking into a wall here.
+      return `| \`${k}\` | ${badge(v.disposition)} | ${realises} |`;
+    });
 
-  const header = isFigma
-    ? `| Style key | Disposition | ${col} | Element types |\n|---|---|---|---|`
-    : `| Style key | Disposition | ${col} |\n|---|---|---|`;
+  const header = `| Style key | Disposition | ${col} |\n|---|---|---|`;
 
-  const clusterPages = Object.entries(clusters).map(([name, c]) => ({
+  const rulePages = Object.entries(rules).map(([name, c]) => ({
     name,
     slug: kebab(name),
-    body: clusterPage({ name, c, platform, title }),
+    body: rulePage({ name, c, platform, title }),
   }));
 
   /**
-   * The clusters index. The resolution rule itself lives on the cluster's own
+   * The rules index. The resolution rule itself lives on the rule's own
    * page: `autoLayoutSizing` alone is an eleven-row case table over its own
    * operand set, and six of those inlined made the binding page a document you
    * scroll past rather than read.
    */
-  const allClusterMeta = [
-    ...Object.entries(clusters).map(([name, c]) => ({ name, surface: 'Styles', c })),
-    ...propsOut.clusterMeta,
-    ...anatomyOut.clusterMeta,
-    ...referencesOut.clusterMeta,
+  const allRuleMeta = [
+    ...Object.entries(rules).map(([name, c]) => ({ name, surface: 'Styles', c })),
+    ...propsOut.ruleMeta,
+    ...anatomyOut.ruleMeta,
+    ...referencesOut.ruleMeta,
   ];
-  const clusterIndex = clustersSection(allClusterMeta, platform);
+  const ruleIndex = rulesSection(allRuleMeta, platform);
 
   /**
    * Losses, last. What the platform does is settled by everything above it;
@@ -606,14 +615,14 @@ const renderPlatform = (file) => {
     const themes = b.decisionThemes ?? {};
     const byTheme = {};
     for (const [k, v] of flagged) (byTheme[v.needsDecision] ??= []).push(k);
-    const section = ([t, keys]) => {
+    const bullet = ([t, keys]) => {
       const theme = themes[t] ?? {};
       const status = theme.decided
         ? theme.decided.startsWith('Open')
           ? `**Open.** ${theme.decided.replace(/^Open\.?\s*/, '')}`
           : `**Decided.** ${theme.decided}`
         : '**Open.**';
-      return `### ${theme.title ?? t}\n\nAffects ${keys.map((k) => `\`${k}\``).join(', ')}.\n\n${theme.note ?? ''}\n\n${status}`;
+      return `- **${theme.title ?? t}**. Affects ${keys.map((k) => `\`${k}\``).join(', ')}. ${theme.note ?? ''} ${status}`;
     };
     const entries = Object.entries(byTheme);
     const decided = entries.filter(([t]) => themes[t]?.decided && !themes[t].decided.startsWith('Open'));
@@ -623,21 +632,21 @@ const renderPlatform = (file) => {
 
 ${PLATFORM.lossesIntro(flagged.length, styleProps.length, entries.length, open.length)}
 
-${[...open, ...decided].map(section).join('\n\n')}
+${[...open, ...decided].map(bullet).join('\n')}
 `;
   })();
 
-  return { clusterPages: [...clusterPages, ...propsOut.clusterPages, ...anatomyOut.clusterPages, ...referencesOut.clusterPages], page: `# ${title} binding
+  return { rulePages: [...rulePages, ...propsOut.rulePages, ...anatomyOut.rulePages, ...referencesOut.rulePages], page: `# ${title} binding
 
 ${PLATFORM.draftBanner}
 
 ${PLATFORM.baseFrame(title, platform)}
 
-## Clusters
+## Rules
 
-${PLATFORM.clustersIntro}
+${PLATFORM.rulesIntro}
 
-${clusterIndex}
+${ruleIndex}
 
 ## Styles
 
@@ -704,11 +713,11 @@ const renderOverview = (files) => {
   const rows = files.slice().sort((a, b) => NAV_ORDER.indexOf(a.replace(/\.json$/, '')) - NAV_ORDER.indexOf(b.replace(/\.json$/, ''))).map((file) => {
     const platform = file.replace(/\.json$/, '');
     const b = JSON.parse(readFileSync(join(bindingsDir, file), 'utf8'));
-    const clusterCount =
-      Object.keys(b.concepts?.styleClusters ?? {}).length +
-      Object.keys(b.concepts?.propClusters ?? {}).length +
-      Object.keys(b.concepts?.anatomyClusters ?? {}).length;
-    return `| [${TITLES[platform] ?? platform}](${platform.toUpperCase()}.md) | ${b.role ?? b.realises ?? ''} | ${clusterCount} |`;
+    const ruleCount =
+      Object.keys(b.concepts?.styleRules ?? {}).length +
+      Object.keys(b.concepts?.propRules ?? {}).length +
+      Object.keys(b.concepts?.anatomyRules ?? {}).length;
+    return `| [${TITLES[platform] ?? platform}](${platform.toUpperCase()}.md) | ${b.role ?? b.realises ?? ''} | ${ruleCount} |`;
   });
 
   return `# Platform Mappings
@@ -717,7 +726,7 @@ ${OVERVIEW.intro}
 
 ## Supported Platforms
 
-| Binding | Role | Clusters |
+| Binding | Role | Rules |
 |---|---|---|
 ${rows.join('\n')}
 
@@ -748,17 +757,17 @@ const STYLE_KEYS = (() => {
 })();
 
 /** One rendered body, wrapped as a Starlight page with its links rewritten. */
-const sitePage = ({ label, body, platform, cluster }) => {
+const sitePage = ({ label, body, platform, rule }) => {
   // Starlight renders the frontmatter title as the H1; drop the body's own.
   let linked = body.replace(/^# .+\n/, '');
 
   // The rendered body links `../SPECIFICATION.md`, which is not a site route.
   linked = linked.replace(/\]\(\.\.\/SPECIFICATION\.md\)/g, '](/schema/specification/)');
 
-  // A binding links its clusters as `clusters/<platform>/<name>.md`; a cluster
+  // A binding links its rules as `rules/<platform>/<name>.md`; a rule
   // links back to its binding as `../<platform>.md`.
   linked = linked
-    .replace(/\]\(clusters\/([a-z]+)\/([a-z-]+)\.md\)/g, (_, p, c) => `](/schema/mappings/${p}/clusters/${c}/)`)
+    .replace(/\]\(rules\/([a-z]+)\/([a-z-]+)\.md\)/g, (_, p, c) => `](/schema/mappings/${p}/rules/${c}/)`)
     .replace(/\]\(\.\.\/([a-z]+)\.md\)/g, (_, p) => `](/schema/mappings/${p}/)`);
 
   // A dependent binding links its base as `CSS.md`.
@@ -785,15 +794,15 @@ const sitePage = ({ label, body, platform, cluster }) => {
     return linked.replace(re, (_, k) => `[\`${k}\`](/schema/styles/${kebab(k)}/)`);
   })();
 
-  // A cluster's own name is its title, taken from the H1 the body drops.
-  const clusterName = cluster ? (body.match(/^# (.+)$/m)?.[1] ?? '').trim() : null;
-  const title = clusterName ?? PAGE_TITLES[platform] ?? platform.charAt(0) + platform.slice(1).toLowerCase();
-  const description = clusterName
-    ? clusterPageDescription(PAGE_TITLES[platform] ?? platform, clusterName)
+  // A rule's own name is its title, taken from the H1 the body drops.
+  const ruleName = rule ? (body.match(/^# (.+)$/m)?.[1] ?? '').trim() : null;
+  const title = ruleName ?? PAGE_TITLES[platform] ?? platform.charAt(0) + platform.slice(1).toLowerCase();
+  const description = ruleName
+    ? rulePageDescription(PAGE_TITLES[platform] ?? platform, ruleName)
     : (PAGE_DESCRIPTIONS[platform] ?? fallbackPageDescription(title));
 
-  const out = cluster
-    ? join(outDir, platform.toLowerCase(), 'clusters', `${cluster}.md`)
+  const out = rule
+    ? join(outDir, platform.toLowerCase(), 'rules', `${rule}.md`)
     : join(outDir, `${label.replace(/\.md$/, '').toLowerCase()}.md`);
 
   return {
@@ -812,24 +821,24 @@ ${linked}`,
 const files = readdirSync(bindingsDir).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
 
 /**
- * Every rendered page, as `{ label, body, platform, cluster }`.
+ * Every rendered page, as `{ label, body, platform, rule }`.
  *
  * `label` is the name the page used to be written under in
- * `packages/schema/mappings/` — `CSS.md`, `clusters/css/auto-layout.md`. It is
+ * `packages/schema/mappings/` — `CSS.md`, `rules/css/auto-layout.md`. It is
  * kept because the bodies link each other by those names, and the rewriting
  * below turns them into site routes.
  */
 const pages = [];
 for (const file of files) {
   const platform = file.replace(/\.json$/, '');
-  const { page, clusterPages = [] } = renderPlatform(file);
+  const { page, rulePages = [] } = renderPlatform(file);
   pages.push({ label: `${platform.toUpperCase()}.md`, body: page, platform: platform.toUpperCase() });
-  for (const cl of clusterPages) {
+  for (const rl of rulePages) {
     pages.push({
-      label: `clusters/${platform}/${cl.slug}.md`,
-      body: cl.body,
+      label: `rules/${platform}/${rl.slug}.md`,
+      body: rl.body,
       platform: platform.toUpperCase(),
-      cluster: cl.slug,
+      rule: rl.slug,
     });
   }
 }
@@ -838,7 +847,7 @@ pages.push({ label: 'INDEX.md', body: renderOverview(files), platform: 'INDEX' }
 for (const { label, body } of pages) checkNoLeaks(label, body);
 
 if (!failures.length) {
-  // Replaced wholesale, so a renamed or deleted cluster cannot leave a page.
+  // Replaced wholesale, so a renamed or deleted rule cannot leave a page.
   if (existsSync(outDir)) rmSync(outDir, { recursive: true, force: true });
   mkdirSync(outDir, { recursive: true });
 
