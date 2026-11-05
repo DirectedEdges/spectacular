@@ -2,7 +2,7 @@
  * The generated reference pages, checked for the sections they must carry.
  *
  * This exists because a generator rewrite silently dropped five sections —
- * `Supported on`, `Resolved jointly with`, `Decision records`, `Rules`, and the
+ * `Elements Supported`, `Resolved jointly with`, `Decision records`, `Rules`, and the
  * TypeScript source row — and nothing failed. A page that loses a section still
  * builds, still renders, and still reads as complete, so the loss is only
  * visible to someone who remembers what used to be there.
@@ -42,8 +42,9 @@ const allPages = (): string[] => {
 const sectionsOf = (rel: string) =>
   readFileSync(join(pagesRoot, rel), 'utf8')
     .split('\n')
-    .filter((l) => l.startsWith('### '))
-    .map((l) => l.slice(4).trim());
+    // Sections are h2 — h3 is the platform names, h4 the value-form branches.
+    .filter((l) => l.startsWith('## ') && !l.startsWith('### '))
+    .map((l) => l.slice(3).trim());
 
 describe('generated schema reference pages', () => {
   const pages = allPages();
@@ -70,7 +71,7 @@ describe('generated schema reference pages', () => {
    * admits many — so a lost default shows as a missing marker. That is
    * asserted below against the schema rather than by section name.
    */
-  for (const section of ['Value', 'Platform bindings', 'Supported on', 'Rules', 'Decisions', 'Source']) {
+  for (const section of ['Value', 'Platform bindings', 'Elements Supported', 'Rules', 'Decisions', 'Source']) {
     it(`renders "${section}" on every style key page`, () => {
       const missing = styleKeys
         .map((k) => `${kebab(k)}.md`)
