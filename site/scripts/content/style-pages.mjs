@@ -90,7 +90,6 @@ export const ARRAY_OF = 'An array of:';
 
 export const NO_ELEMENT_TYPE = '*No element type carries this key.*';
 
-export const SUPPORTED_INTRO = "The element types that may carry this key, from the transforms' declared key tables:";
 
 export const JOINTLY_INTRO = "This key does not map on its own. Its rule's ordered case table is linked above.";
 

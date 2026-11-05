@@ -29,7 +29,7 @@ import { fileURLToPath } from 'node:url';
 // structure only: headings, labels, traversal, and assembly.
 import {
   TYPE_PAGE_HOME, REHOMED, STALE_CONTENT_FOLDERS,
-  BANNER, PATH_ROOT, settingsSentence, ARRAY_OF, NO_ELEMENT_TYPE, SUPPORTED_INTRO,
+  BANNER, PATH_ROOT, settingsSentence, ARRAY_OF, NO_ELEMENT_TYPE,
   JOINTLY_INTRO, DECISIONS_NONE, fallbackDescription, RULES, SOURCE_SECTION,
 } from './content/style-pages.mjs';
 
@@ -990,7 +990,7 @@ for (const node of nodes) {
     const linked = [...new Set([...union].map(schemaType))].sort().map((t) =>
       t === 'component' ? `\`${t}\`` : `[\`${t}\`](/schema/anatomy/${t}/)`
     );
-    return `${SUPPORTED_INTRO}\n\n${linked.join(' · ')}`;
+    return linked.join(' · ');
   })();
 
   /**
@@ -1132,7 +1132,7 @@ ${BANNER}
 
 ${spec.description ?? rehome(kept.intro) ?? ""}
 
-${pathSection}${supportedOn ? `\n### Supported on\n\n${supportedOn}\n` : ''}
+${pathSection}${supportedOn ? `\n### Elements Supported\n\n${supportedOn}\n` : ''}
 ${
   // One section, not two. The member list and the one-line type list state the
   // same fact — what may be written here — so a page carrying both said it
