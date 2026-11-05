@@ -29,7 +29,7 @@ import { fileURLToPath } from 'node:url';
 // structure only: headings, labels, traversal, and assembly.
 import {
   TYPE_PAGE_HOME, REHOMED, STALE_CONTENT_FOLDERS,
-  BANNER, PATH_ROOT, settingsSentence, ARRAY_OF, NO_ELEMENT_TYPE,
+  BANNER, PATH_ROOT, settingsSentence, ARRAY_OF, NO_ELEMENT_TYPE, SUPPORTED_INTRO,
   JOINTLY_INTRO, DECISIONS_NONE, fallbackDescription, RULES, SOURCE_SECTION,
 } from './content/style-pages.mjs';
 
@@ -983,7 +983,14 @@ for (const node of nodes) {
       for (const [type, keys] of Object.entries(table)) if (keys.includes(key)) union.add(type);
     }
     if (!union.size) return NO_ELEMENT_TYPE;
-    return [...union].sort().map((t) => `- [\`${t}\`](/schema/anatomy/#elementtype)`).join('\n');
+    // The tables speak the transforms' vocabulary: `frame` is the contract's
+    // `container`, and `component` is the root — a real carrier but not an
+    // anatomy type, so it renders unlinked.
+    const schemaType = (t) => (t === 'frame' ? 'container' : t);
+    const linked = [...new Set([...union].map(schemaType))].sort().map((t) =>
+      t === 'component' ? `\`${t}\`` : `[\`${t}\`](/schema/anatomy/${t}/)`
+    );
+    return `${SUPPORTED_INTRO}\n\n${linked.join(' · ')}`;
   })();
 
   /**
@@ -1125,7 +1132,7 @@ ${BANNER}
 
 ${spec.description ?? rehome(kept.intro) ?? ""}
 
-${pathSection}
+${pathSection}${supportedOn ? `\n### Supported on\n\n${supportedOn}\n` : ''}
 ${
   // One section, not two. The member list and the one-line type list state the
   // same fact — what may be written here — so a page carrying both said it
@@ -1163,7 +1170,7 @@ ${
     kids.length && !valueSection
       ? `\n### Contains\n\n${kids.map((c) => `- [\`${c.path[c.path.length - 1]}\`](${urlOf(c.path)})`).join('\n')}\n`
       : ''
-  }${usedBy ? `\n### Used by\n\n${usedBy}\n` : ''}${supportedOn ? `\n### Supported on\n\n${supportedOn}\n` : ''}${bindingRows ? `\n### Platform bindings\n\n${bindingRows}\n` : ''}${
+  }${usedBy ? `\n### Used by\n\n${usedBy}\n` : ''}${bindingRows ? `\n### Platform bindings\n\n${bindingRows}\n` : ''}${
     siblingList
       ? `\n### Resolved jointly with\n\n${JOINTLY_INTRO}\n\n${siblingList}\n`
       : ''
