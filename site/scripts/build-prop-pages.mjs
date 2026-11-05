@@ -327,10 +327,11 @@ ${PATH_ROOT}.\`<prop>\`
 |---|---|---|---|
 ${memberRows.join('\n')}
 ${examples ? `\n### Example${(def.examples?.length ?? 0) > 1 ? 's' : ''}\n\n${examples}\n` : ''}
+${keptSections}
 ### Platform bindings
 
 ${bindingRows}
-${jointly ? `\n### Resolved jointly\n\n${JOINTLY_INTRO}\n\n${jointly}\n` : ''}${keptSections}
+${jointly ? `\n### Resolved jointly\n\n${JOINTLY_INTRO}\n\n${jointly}\n` : ''}
 ### Decisions
 
 ${kindDecisionSection(kind, members.map(([m]) => m))}${

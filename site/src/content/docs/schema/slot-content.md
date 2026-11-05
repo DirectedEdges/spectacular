@@ -5,15 +5,7 @@ description: "The anatomy + elements + layout triplet used as a named slot fill"
 
 A `SlotContent` is the anonymous structural triplet — [`anatomy`](/schema/anatomy/), [`elements`](/schema/elements/), and [`layout`](/schema/layout/) — used as a named fill for a slot. It carries no metadata of its own; its identity lives at the key under which it is stored.
 
-```ts
-interface SlotContent {
-  anatomy: Anatomy;
-  elements: Elements;
-  layout: Layout;
-}
-```
-
-## Properties
+## Members
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|

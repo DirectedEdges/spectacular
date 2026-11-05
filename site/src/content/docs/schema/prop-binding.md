@@ -3,13 +3,7 @@ title: "PropBinding"
 description: "Dynamic links between props and element or style properties"
 ---
 
-A `PropBinding` creates a dynamic link between a prop and an element or style property. When the bound prop changes value, the linked property updates accordingly.
-
-```ts
-interface PropBinding {
-  $binding: string;   // JSON Pointer to a prop, e.g. "#/props/label"
-}
-```
+A `PropBinding` creates a dynamic link between a prop and an element or style property. When the bound prop changes value, the linked property updates accordingly. It is a single-key object whose `$binding` value is a JSON Pointer to a prop, e.g. `"#/props/label"`.
 
 ## Where PropBindings Can Appear
 

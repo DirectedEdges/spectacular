@@ -1163,7 +1163,7 @@ ${
     kids.length && !valueSection
       ? `\n### Contains\n\n${kids.map((c) => `- [\`${c.path[c.path.length - 1]}\`](${urlOf(c.path)})`).join('\n')}\n`
       : ''
-  }${bindingRows ? `\n### Platform bindings\n\n${bindingRows}\n` : ''}${usedBy ? `\n### Used by\n\n${usedBy}\n` : ''}${supportedOn ? `\n### Supported on\n\n${supportedOn}\n` : ''}${
+  }${usedBy ? `\n### Used by\n\n${usedBy}\n` : ''}${supportedOn ? `\n### Supported on\n\n${supportedOn}\n` : ''}${bindingRows ? `\n### Platform bindings\n\n${bindingRows}\n` : ''}${
     siblingList
       ? `\n### Resolved jointly with\n\n${JOINTLY_INTRO}\n\n${siblingList}\n`
       : ''

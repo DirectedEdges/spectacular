@@ -190,12 +190,11 @@ ${description}${kept.intro ? ` ${kept.intro}` : ''}
 
 ${PATH_ROOT}.\`<element>\`.\`type: ${type}\`
 
+${carries ? `### Styles\n\n${CARRIES_INTRO}\n\n${carries}\n` : ''}${keptSections}
 ### Platform bindings
 
 ${bindingRows}
-${jointly ? `\n### Resolved jointly\n\n${JOINTLY_INTRO}\n\n${jointly}\n` : ''}${
-    carries ? `\n### Carries\n\n${CARRIES_INTRO}\n\n${carries}\n` : ''
-  }${keptSections}
+${jointly ? `\n### Resolved jointly\n\n${JOINTLY_INTRO}\n\n${jointly}\n` : ''}
 ### Decisions
 
 ${decisions}
