@@ -146,7 +146,7 @@ for (const { type, description } of TYPES) {
           }`;
         });
       const ruleLine = ruleEntries.length ? `\n\n**Rules**: ${ruleEntries.join(' · ')}` : '';
-      return `#### [${PLATFORM[platform]}](/schema/mappings/${platform}/)\n\n${fields}${ruleLine}${v.notes ? `\n\n${v.notes}` : ''}`;
+      return `### [${PLATFORM[platform]}](/schema/mappings/${platform}/)\n\n${fields}${ruleLine}${v.notes ? `\n\n${v.notes}` : ''}`;
     })
     .join('\n\n');
 
@@ -163,7 +163,7 @@ for (const { type, description } of TYPES) {
   })();
 
   const keptSections = Object.entries(kept.sections ?? {})
-    .map(([name, body]) => `\n### ${name}\n\n${body}\n`)
+    .map(([name, body]) => `\n## ${name}\n\n${body}\n`)
     .join('');
 
   const decisions = (() => {
@@ -181,16 +181,16 @@ ${BANNER}
 
 ${description}${kept.intro ? ` ${kept.intro}` : ''}
 
-### Path
+## Path
 
 ${PATH_ROOT}.\`<element>\`.\`type: ${type}\`
 
-${carries ? `### Styles\n\n${CARRIES_INTRO}\n\n${carries}\n` : ''}${keptSections}
-### Platform bindings
+${carries ? `## Styles\n\n${CARRIES_INTRO}\n\n${carries}\n` : ''}${keptSections}
+## Platform bindings
 
 ${bindingRows}
 
-### Decisions
+## Decisions
 
 ${decisions}
 ${SOURCE_SECTION}

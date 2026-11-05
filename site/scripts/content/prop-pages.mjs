@@ -40,7 +40,7 @@ export const SOURCE_FILES = {
 };
 
 export const sourceSection = (kind) => `
-### Source
+## Source
 
 | Format | File |
 |---|---|

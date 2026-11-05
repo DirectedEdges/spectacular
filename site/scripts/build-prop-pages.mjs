@@ -288,12 +288,12 @@ for (const [kind, defName] of Object.entries(KINDS)) {
           }`;
         });
       const ruleLine = ruleEntries.length ? `\n\n**Rules**: ${ruleEntries.join(' · ')}` : '';
-      return `#### [${PLATFORM[platform]}](/schema/mappings/${platform}/)\n\n${fields}${ruleLine}${v.notes ? `\n\n${v.notes}` : ''}`;
+      return `### [${PLATFORM[platform]}](/schema/mappings/${platform}/)\n\n${fields}${ruleLine}${v.notes ? `\n\n${v.notes}` : ''}`;
     })
     .join('\n\n');
 
   const keptSections = Object.entries(kept.sections ?? {})
-    .map(([name, body]) => `\n### ${name}\n\n${body}\n`)
+    .map(([name, body]) => `\n## ${name}\n\n${body}\n`)
     .join('');
 
   const rules = [];
@@ -307,25 +307,25 @@ for (const [kind, defName] of Object.entries(KINDS)) {
   const page = `${header(defName, def.description ?? `The ${defName} prop kind`)}
 ${def.description ?? ''}${kept.intro ? ` ${kept.intro}` : ''}
 
-### Path
+## Path
 
 ${PATH_ROOT}.\`<prop>\`
 
-### Members
+## Members
 
 | Member | Type | Required | Description |
 |---|---|---|---|
 ${memberRows.join('\n')}
-${examples ? `\n### Example${(def.examples?.length ?? 0) > 1 ? 's' : ''}\n\n${examples}\n` : ''}
+${examples ? `\n## Example${(def.examples?.length ?? 0) > 1 ? 's' : ''}\n\n${examples}\n` : ''}
 ${keptSections}
-### Platform bindings
+## Platform bindings
 
 ${bindingRows}
 
-### Decisions
+## Decisions
 
 ${kindDecisionSection(kind, members.map(([m]) => m))}${
-    rules.length ? `\n### Rules\n\n| Rule | Statement |\n|---|---|\n${rules.join('\n')}\n` : ''
+    rules.length ? `\n## Rules\n\n| Rule | Statement |\n|---|---|\n${rules.join('\n')}\n` : ''
   }${sourceSection(kind)}`;
 
   mkdirSync(outRoot, { recursive: true });
@@ -370,21 +370,21 @@ ${kindDecisionSection(kind, members.map(([m]) => m))}${
     // Narrative carried from the replaced pages, homed on the member it
     // documents rather than on the kind page — the kind page stays a map.
     const memberSections = Object.entries(preserved.members?.[`${kind}.${m}`]?.sections ?? {})
-      .map(([name, body]) => `\n### ${name}\n\n${body}\n`)
+      .map(([name, body]) => `\n## ${name}\n\n${body}\n`)
       .join('');
 
     const memberPage = `${header(m, desc || fallbackMemberDescription(m, defName))}
 ${desc}
 
-### Path
+## Path
 
 ${PATH_ROOT}.[\`<${defName} prop>\`](/schema/props/${kind}/).\`${m}\`
 
-### Value
+## Value
 
 ${valueLine}
-${memberExamples ? `\n### Example${node.examples.length > 1 ? 's' : ''}\n\n${memberExamples}\n` : ''}${memberSections}
-### Decisions
+${memberExamples ? `\n## Example${node.examples.length > 1 ? 's' : ''}\n\n${memberExamples}\n` : ''}${memberSections}
+## Decisions
 
 ${decisionSection(m, `props.${kind}.${m}`)}${sourceSection(kind)}`;
 
@@ -407,7 +407,7 @@ ${decisionSection(m, `props.${kind}.${m}`)}${sourceSection(kind)}`;
     const example = Array.isArray(def.examples) && def.examples.length
       ? `\n\`\`\`yaml\n${toYaml(def.examples[0])}\n\`\`\`\n`
       : '';
-    return `### ${name}
+    return `## ${name}
 
 ${def.description ?? ''}
 
@@ -420,13 +420,13 @@ ${example}`;
   const page = `${header(EXTENSIONS_PAGE.title, EXTENSIONS_PAGE.description)}
 ${preserved.extensionsPage?.intro ?? defs.PropExtensions.description ?? ''}
 
-### Path
+## Path
 
 ${PATH_ROOT}.\`<prop>\`.\`$extensions\` ${EXTENSIONS_PAGE.pathSuffix}
 
 ${sections.join('\n')}${Object.entries(preserved.extensionsPage?.sections ?? {})
-    .map(([name, body]) => `### ${name}\n\n${body}\n\n`)
-    .join('')}### Decisions
+    .map(([name, body]) => `## ${name}\n\n${body}\n\n`)
+    .join('')}## Decisions
 
 ${decisionSection('$extensions', 'props.$extensions')}${sourceSection()}`;
 

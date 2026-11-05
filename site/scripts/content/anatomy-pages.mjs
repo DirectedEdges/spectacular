@@ -18,7 +18,7 @@ export const CARRIES_INTRO = "The style keys an element of this type may carry, 
 /** Said rather than left blank — a missing section reads as a failed render. */
 export const DECISIONS_NONE = 'None.\n';
 
-export const SOURCE_SECTION = `### Source
+export const SOURCE_SECTION = `## Source
 
 | Format | File |
 |---|---|

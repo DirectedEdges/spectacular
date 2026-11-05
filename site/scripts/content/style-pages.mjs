@@ -105,7 +105,7 @@ export const RULES = {
   dspec47: '| [DSPEC-47](/schema/specification/#9-rule-catalogue) | Jointly resolved keys are stated as an ordered case table, not prose |',
 };
 
-export const SOURCE_SECTION = `### Source
+export const SOURCE_SECTION = `## Source
 
 | Format | File |
 |---|---|

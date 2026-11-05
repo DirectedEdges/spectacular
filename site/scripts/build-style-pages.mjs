@@ -847,7 +847,7 @@ for (const node of nodes) {
 
       // `#####`, a level below the `###` sections, so a value reads as
       // subordinate to `Values` rather than competing with it.
-      return [`##### ${label}${defaultMark(br)}`, gloss, members, shown].filter(Boolean).join('\n\n');
+      return [`#### ${label}${defaultMark(br)}`, gloss, members, shown].filter(Boolean).join('\n\n');
     });
 
     return { heading: 'Value', body: [sections.join('\n\n'), tailOf()].filter(Boolean).join('\n\n') };
@@ -882,7 +882,7 @@ for (const node of nodes) {
       const why = defs[itemType].title ?? node.description ?? defs[itemType].description ?? '';
       return {
         heading: 'Value',
-        body: `${ARRAY_OF}\n\n##### \`${itemType}\`\n\n${[why, membersOf(itemType, '')].filter(Boolean).join('\n\n')}`,
+        body: `${ARRAY_OF}\n\n#### \`${itemType}\`\n\n${[why, membersOf(itemType, '')].filter(Boolean).join('\n\n')}`,
       };
     }
 
@@ -916,7 +916,7 @@ for (const node of nodes) {
         .join('\n\n');
       return {
         heading: 'Value',
-        body: [`##### ${typeLabel(only)}`, gloss, shown].filter(Boolean).join('\n\n'),
+        body: [`#### ${typeLabel(only)}`, gloss, shown].filter(Boolean).join('\n\n'),
         consumedExamples: true,
       };
     }
@@ -937,7 +937,7 @@ for (const node of nodes) {
           ? `rule [\`${v.rule}\`](/schema/mappings/${platform}/rules/${kebab(v.rule)}/)`
           : (v.target ? `\`${v.target}\`` : (v.module?.length ? v.module.map((m) => `\`${m}\``).join(', ') : '—'));
         const fields = `**Disposition**: ${v.disposition === 'unverified' ? '**unverified**' : v.disposition} · **Realised by**: ${realises}`;
-        return `#### [${PLATFORM[platform]}](/schema/mappings/${platform}/)\n\n${fields}${v.notes ? `\n\n${v.notes}` : ''}`;
+        return `### [${PLATFORM[platform]}](/schema/mappings/${platform}/)\n\n${fields}${v.notes ? `\n\n${v.notes}` : ''}`;
       }).join('\n\n')
     : null;
 
@@ -962,11 +962,11 @@ for (const node of nodes) {
    */
   if (!schemaExamples?.length) {
     for (const name of ['Values', 'Examples', 'Example']) {
-      if (carried[name]) carriedSections.push(`\n### ${name}\n\n${rehome(carried[name])}\n`);
+      if (carried[name]) carriedSections.push(`\n## ${name}\n\n${rehome(carried[name])}\n`);
     }
   }
   const furtherReading = carried['Further Reading']
-    ? `\n### Further reading\n\n${rehome(carried['Further Reading'])}\n`
+    ? `\n## Further reading\n\n${rehome(carried['Further Reading'])}\n`
     : '';
 
   /**
@@ -1120,7 +1120,7 @@ for (const node of nodes) {
     // wrong half the time, and starting at `elements` read as a top-level key.
     // Unbacketed and with no separator of its own, so it reads as an elision
     // rather than as a segment named "...".
-    return `### Path\n\n${PATH_ROOT}.${segments.join('.')}\n`;
+    return `## Path\n\n${PATH_ROOT}.${segments.join('.')}\n`;
   })();
 
   const page = `---
@@ -1132,20 +1132,20 @@ ${BANNER}
 
 ${spec.description ?? rehome(kept.intro) ?? ""}
 
-${pathSection}${supportedOn ? `\n### Elements Supported\n\n${supportedOn}\n` : ''}
+${pathSection}${supportedOn ? `\n## Elements Supported\n\n${supportedOn}\n` : ''}
 ${
   // One section, not two. The member list and the one-line type list state the
   // same fact — what may be written here — so a page carrying both said it
   // twice, once without the meanings and once with them.
   valueSection
-    ? `### ${valueSection.heading}\n\n${valueSection.body}\n${required.has(key) ? '\nRequired.\n' : ''}`
+    ? `## ${valueSection.heading}\n\n${valueSection.body}\n${required.has(key) ? '\nRequired.\n' : ''}`
     : // `Values` here too — a leaf whose value is a bare `boolean` answers the
       // same question as a five-form union, and two names for it put `Type` on
       // 14 pages and `Values` on the other 85.
       // The default marks the single type, the way it marks a branch on a
       // union page — otherwise a key whose value is one plain type is the only
       // kind of page with a `Default` section of its own.
-      `### Value\n\n${types}${hasDefault ? ` (default: \`${JSON.stringify(spec.default)}\`)` : ''}${
+      `## Value\n\n${types}${hasDefault ? ` (default: \`${JSON.stringify(spec.default)}\`)` : ''}${
         required.has(key) ? ' · required' : ''
       }\n`
 }${
@@ -1159,7 +1159,7 @@ ${
     // Only where there is no form list to carry them — a plain object or array
     // page like `Blur` or `effects.shadows`, which has no form to key by.
     !oneOfBranches && !valueSection?.consumedExamples && (examples.length || exampleBlocks)
-      ? `\n### Example${examples.length + compositeExamples.length !== 1 ? 's' : ''}\n\n${examples.length ? `${exampleHead}\n${examples.join('\n')}\n` : ''}${
+      ? `\n## Example${examples.length + compositeExamples.length !== 1 ? 's' : ''}\n\n${examples.length ? `${exampleHead}\n${examples.join('\n')}\n` : ''}${
           exampleBlocks ? `${examples.length ? '\n' : ''}${exampleBlocks}\n` : ''
         }${settingsNote}`
       : ''
@@ -1168,17 +1168,17 @@ ${
     // owns them, rather than in a sibling section that attributed them to the
     // page. This is the fallback for a page whose children belong to neither.
     kids.length && !valueSection
-      ? `\n### Contains\n\n${kids.map((c) => `- [\`${c.path[c.path.length - 1]}\`](${urlOf(c.path)})`).join('\n')}\n`
+      ? `\n## Contains\n\n${kids.map((c) => `- [\`${c.path[c.path.length - 1]}\`](${urlOf(c.path)})`).join('\n')}\n`
       : ''
-  }${usedBy ? `\n### Used by\n\n${usedBy}\n` : ''}${bindingRows ? `\n### Platform bindings\n\n${bindingRows}\n` : ''}${
+  }${usedBy ? `\n## Used by\n\n${usedBy}\n` : ''}${bindingRows ? `\n## Platform bindings\n\n${bindingRows}\n` : ''}${
     siblingList
-      ? `\n### Resolved jointly with\n\n${JOINTLY_INTRO}\n\n${siblingList}\n`
+      ? `\n## Resolved jointly with\n\n${JOINTLY_INTRO}\n\n${siblingList}\n`
       : ''
-  }${kept.figmaKeyNote ? `\n### Figma key\n\n${rehome(kept.figmaKeyNote)}\n` : ''}${carriedSections.join('')}${
-    decisionRecords ? `\n### Decisions\n\n${decisionRecords}` : ''
+  }${kept.figmaKeyNote ? `\n## Figma key\n\n${rehome(kept.figmaKeyNote)}\n` : ''}${carriedSections.join('')}${
+    decisionRecords ? `\n## Decisions\n\n${decisionRecords}` : ''
   }${furtherReading}${
     isStyleKey
-      ? `\n### Rules\n\n| Rule | Statement |\n|---|---|\n${RULES.dspec44}\n${RULES.dspec45}\n${
+      ? `\n## Rules\n\n| Rule | Statement |\n|---|---|\n${RULES.dspec44}\n${RULES.dspec45}\n${
           siblingList
             ? `${RULES.dspec47}\n`
             : ''
