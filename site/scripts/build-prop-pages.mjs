@@ -24,7 +24,7 @@
 import { readFileSync, writeFileSync, mkdirSync, rmSync, readdirSync, existsSync } from 'node:fs';
 // All page copy lives in content/ — this script holds structure only.
 import {
-  BANNER, PATH_ROOT, discriminatorGloss, EXTENSIONS_GLOSS, JOINTLY_INTRO,
+  BANNER, PATH_ROOT, discriminatorGloss, EXTENSIONS_GLOSS,
   DECISIONS_NONE, CONSTRAINTS, absentMeans, fallbackMemberDescription,
   sourceSection, EXTENSIONS_PAGE,
 } from './content/prop-pages.mjs';
@@ -263,6 +263,13 @@ for (const [kind, defName] of Object.entries(KINDS)) {
     ? def.examples.map((ex) => `\`\`\`yaml\n${toYaml(ex)}\n\`\`\``).join('\n\n')
     : '';
 
+  /**
+   * One subheading per platform, carrying the whole per-platform story: the
+   * binding's fields, EVERY rule the kind participates in on that platform —
+   * declared on its row or reached only through a rule's key list — with the
+   * sibling kinds, and the notes. The former Resolved jointly section split
+   * these facts across two places, and neither was complete.
+   */
   const bindingRows = Object.entries(bindings)
     .map(([platform, b]) => {
       const v = b.concepts?.props?.[kind] ?? { disposition: 'unverified' };
@@ -271,36 +278,19 @@ for (const [kind, defName] of Object.entries(KINDS)) {
         : v.module
           ? (v.module.length ? v.module.map((m) => `\`${m}\``).join(', ') : '—')
           : (v.realises ?? '—');
-      const rule = v.rule
-        ? ` · rule [${v.rule}](/schema/mappings/${platform}/rules/${kebab(v.rule)}/)`
-        : '';
-      // One subheading per platform: the binding's notes live here, where each
-      // is one paragraph about this kind, not a wall on the platform page.
-      const fields = `**Disposition**: ${v.disposition === 'unverified' ? '**unverified**' : v.disposition} · **Realised by**: ${realises}${rule}`;
-      return `##### [${PLATFORM[platform]}](/schema/mappings/${platform}/)\n\n${fields}${v.notes ? `\n\n${v.notes}` : ''}`;
+      const fields = `**Disposition**: ${v.disposition === 'unverified' ? '**unverified**' : v.disposition} · **Realised by**: ${realises}`;
+      const ruleEntries = Object.entries(b.concepts?.propRules ?? {})
+        .filter(([, c]) => (c.keys ?? []).includes(kind))
+        .map(([name, c]) => {
+          const others = c.keys.filter((k) => k !== kind);
+          return `[${name}](/schema/mappings/${platform}/rules/${kebab(name)}/)${
+            others.length ? ` — with ${others.map((k) => `[\`${k}\`](/schema/props/${k}/)`).join(', ')}` : ''
+          }`;
+        });
+      const ruleLine = ruleEntries.length ? `\n\n**Rules**: ${ruleEntries.join(' · ')}` : '';
+      return `#### [${PLATFORM[platform]}](/schema/mappings/${platform}/)\n\n${fields}${ruleLine}${v.notes ? `\n\n${v.notes}` : ''}`;
     })
     .join('\n\n');
-
-  /**
-   * Rules this kind participates in, grouped per platform — same shape as
-   * the style pages' "Resolved jointly with", except a kind keeps its own row
-   * too: a kind is a population of props, and only some of it is governed by a rule.
-   */
-  const jointly = (() => {
-    const groups = [];
-    for (const [platform, b] of Object.entries(bindings)) {
-      for (const [name, c] of Object.entries(b.concepts?.propRules ?? {})) {
-        if (!(c.keys ?? []).includes(kind)) continue;
-        const others = c.keys.filter((k) => k !== kind);
-        groups.push(
-          `**[${name}](/schema/mappings/${platform}/rules/${kebab(name)}/)** — ${PLATFORM[platform]}${
-            others.length ? `, with ${others.map((k) => `[\`${k}\`](/schema/props/${k}/)`).join(', ')}` : ''
-          }`
-        );
-      }
-    }
-    return groups.length ? groups.map((g) => `- ${g}`).join('\n') : null;
-  })();
 
   const keptSections = Object.entries(kept.sections ?? {})
     .map(([name, body]) => `\n### ${name}\n\n${body}\n`)
@@ -331,7 +321,7 @@ ${keptSections}
 ### Platform bindings
 
 ${bindingRows}
-${jointly ? `\n### Resolved jointly\n\n${JOINTLY_INTRO}\n\n${jointly}\n` : ''}
+
 ### Decisions
 
 ${kindDecisionSection(kind, members.map(([m]) => m))}${

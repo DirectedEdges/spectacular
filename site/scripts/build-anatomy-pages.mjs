@@ -18,7 +18,7 @@
 import { readFileSync, writeFileSync, mkdirSync, rmSync, readdirSync, existsSync } from 'node:fs';
 // All page copy lives in content/ — this script holds structure only.
 import {
-  BANNER, PATH_ROOT, JOINTLY_INTRO, CARRIES_INTRO, DECISIONS_NONE, SOURCE_SECTION,
+  BANNER, PATH_ROOT, CARRIES_INTRO, DECISIONS_NONE, SOURCE_SECTION,
 } from './content/anatomy-pages.mjs';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -121,6 +121,13 @@ let written = 0;
 for (const { type, description } of TYPES) {
   const kept = preserved.types?.[type] ?? {};
 
+  /**
+   * One subheading per platform, carrying the whole per-platform story: the
+   * binding's fields, EVERY rule the type participates in on that platform —
+   * declared on its row or reached only through a rule's key list — with the
+   * sibling types, and the notes. The former Resolved jointly section split
+   * these facts across two places, and neither was complete.
+   */
   const bindingRows = Object.entries(bindings)
     .map(([platform, b]) => {
       const v = b.concepts?.anatomy?.[type] ?? { disposition: 'unverified' };
@@ -129,31 +136,19 @@ for (const { type, description } of TYPES) {
         : v.module
           ? (v.module.length ? v.module.map((m) => `\`${m}\``).join(', ') : '—')
           : (v.realises ?? '—');
-      const rule = v.rule
-        ? ` · rule [${v.rule}](/schema/mappings/${platform}/rules/${kebab(v.rule)}/)`
-        : '';
-      // One subheading per platform: the binding's notes live here, where each
-      // is one paragraph about this type, not a wall on the platform page.
-      const fields = `**Disposition**: ${v.disposition === 'unverified' ? '**unverified**' : v.disposition} · **Realised by**: ${realises}${rule}`;
-      return `##### [${PLATFORM[platform]}](/schema/mappings/${platform}/)\n\n${fields}${v.notes ? `\n\n${v.notes}` : ''}`;
+      const fields = `**Disposition**: ${v.disposition === 'unverified' ? '**unverified**' : v.disposition} · **Realised by**: ${realises}`;
+      const ruleEntries = Object.entries(b.concepts?.anatomyRules ?? {})
+        .filter(([, c]) => (c.keys ?? []).includes(type))
+        .map(([name, c]) => {
+          const others = c.keys.filter((k) => k !== type);
+          return `[${name}](/schema/mappings/${platform}/rules/${kebab(name)}/)${
+            others.length ? ` — with ${others.map((k) => `[\`${k}\`](/schema/anatomy/${k}/)`).join(', ')}` : ''
+          }`;
+        });
+      const ruleLine = ruleEntries.length ? `\n\n**Rules**: ${ruleEntries.join(' · ')}` : '';
+      return `#### [${PLATFORM[platform]}](/schema/mappings/${platform}/)\n\n${fields}${ruleLine}${v.notes ? `\n\n${v.notes}` : ''}`;
     })
     .join('\n\n');
-
-  const jointly = (() => {
-    const groups = [];
-    for (const [platform, b] of Object.entries(bindings)) {
-      for (const [name, c] of Object.entries(b.concepts?.anatomyRules ?? {})) {
-        if (!(c.keys ?? []).includes(type)) continue;
-        const others = c.keys.filter((k) => k !== type);
-        groups.push(
-          `- **[${name}](/schema/mappings/${platform}/rules/${kebab(name)}/)** — ${PLATFORM[platform]}${
-            others.length ? `, with ${others.map((k) => `[\`${k}\`](/schema/anatomy/${k}/)`).join(', ')}` : ''
-          }`
-        );
-      }
-    }
-    return groups.length ? groups.join('\n') : null;
-  })();
 
   /**
    * Which style keys an element of this type carries — the inverse of the
@@ -194,7 +189,7 @@ ${carries ? `### Styles\n\n${CARRIES_INTRO}\n\n${carries}\n` : ''}${keptSections
 ### Platform bindings
 
 ${bindingRows}
-${jointly ? `\n### Resolved jointly\n\n${JOINTLY_INTRO}\n\n${jointly}\n` : ''}
+
 ### Decisions
 
 ${decisions}

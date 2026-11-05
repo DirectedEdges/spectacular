@@ -20,7 +20,6 @@ export const PATH_ROOT = '[`component-api`](/schema/documents/component-api/):[`
 export const discriminatorGloss = (value) => `The discriminator — always \`'${value}'\`.`;
 export const EXTENSIONS_GLOSS = 'Platform provenance under reverse-domain keys.';
 
-export const JOINTLY_INTRO = 'Rules that span kinds — where which kind a prop even is, or what platform shape it takes, is decided by a rule rather than per kind.';
 
 /** Said rather than left blank — a missing section reads as a failed render. */
 export const DECISIONS_NONE = 'None.\n';
