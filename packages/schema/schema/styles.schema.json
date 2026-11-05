@@ -82,8 +82,10 @@
           "examples": [
             {
               "shadows": [
-                { "visible": true, "offsetX": 0, "offsetY": 2, "blur": 4, "spread": 0, "color": "#0000001FFF" }
-              ]
+                { "visible": true, "offsetX": 0, "offsetY": 1, "blur": 2, "spread": 0, "color": "#0000003D" },
+                { "visible": true, "offsetX": 0, "offsetY": 8, "blur": 24, "spread": -4, "color": "#0000001F" }
+              ],
+              "layerBlur": { "visible": true, "radius": 4 }
             },
             { "$token": "Light/elevation.shadow.overlay", "$type": "shadow" }
           ]
@@ -1463,7 +1465,7 @@
     "Effects": {
       "type": "object",
       "description": "Inline effects grouped by role. Each key is optional; a key is omitted when no effects of that type are present on the node.",
-      "examples": [{ "shadows": [{ "visible": true, "offsetX": 0, "offsetY": 1, "blur": 2, "spread": 0, "color": "#0000001FFF" }] }],
+      "examples": [{ "shadows": [{ "visible": true, "offsetX": 0, "offsetY": 1, "blur": 2, "spread": 0, "color": "#0000001F" }] }],
       "properties": {
         "shadows": {
           "type": "array",
