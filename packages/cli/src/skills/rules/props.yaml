@@ -15,6 +15,10 @@ enum:
       adr: 72
     - should: "keep the whole prop a string enum when any one option is non-numeric"
       adr: 72
+glyphProps:
+  guidelines:
+    - must: "spell a glyph-bound prop's `default` and every entry in its `examples` in the workspace's formatted key spelling (`info`, `caretRight`) — a glyph name is a reference into the icon key space, exactly as `instanceOf` is into the component key space, and the renderer matches it against `formatKey(<cache name>, format.keys)`; the raw cache spelling (`Info`, `Caret Right`) matches nothing and the glyph silently drops"
+      note: "deliberately opposite to enum option values, which are vocabulary and keep the library's own spelling verbatim (`Primary inverse`) — references are formatted, vocabulary is verbatim; when unsure which a value is, ask whether something resolves it (reference) or displays it (vocabulary)"
 default:
   guidelines:
     - should: "put demo content in `examples` and reserve `default` for a genuine contractual fallback (a Figma-authored `Label` value is an example, not a default)"
