@@ -126,6 +126,7 @@ Invoke the highest-level skill that covers the task; each one loads its own prer
 | Task | Skill |
 |---|---|
 | Set up a new workspace | `specs-cli.workspace.setup` |
+| Turn on the live posture (Storybook, emit, canvas) — do this before authoring if it is down | `specs-cli.posture` |
 | Author a new component spec | `specs-cli.component.author` |
 | Author a composition spec | `specs-cli.authoring.primer` + its `references/slots-layout.md` §Compositions, with `component.author`'s validate loop — a dedicated `composition.author` skill is pending |
 | Author anything by hand — read this first | `specs-cli.authoring.primer` (rules and references ride it) |

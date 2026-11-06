@@ -51,6 +51,7 @@ import TEMPLATE_VARIANTS from './templates/variants.yaml';
 import TEMPLATE_EXAMPLES from './templates/examples.yaml';
 import TEMPLATE_SUPPLEMENTAL from './templates/supplemental.yaml';
 import TEMPLATE_GUIDELINES_RULES from './templates/guidelinesRules.yaml';
+import POSTURE from './posture.md';
 import RULES_ANATOMY from './rules/anatomy.yaml';
 import RULES_STYLES from './rules/styles.yaml';
 import RULES_LAYOUT from './rules/layoutStyling.yaml';
@@ -75,6 +76,7 @@ export interface SkillAsset {
 export const SKILL_ASSETS: SkillAsset[] = [
   { name: 'specs-cli.primer', markdown: PRIMER },
   { name: 'specs-cli.workspace.setup', markdown: WORKSPACE_SETUP },
+  { name: 'specs-cli.posture', markdown: POSTURE },
   { name: 'specs-cli.premerge', markdown: PREMERGE },
   { name: 'specs-cli.release', markdown: RELEASE },
   { name: 'specs-cli.roles.propose', markdown: ROLES_PROPOSE },

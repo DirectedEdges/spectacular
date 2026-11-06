@@ -14,6 +14,10 @@ description: Author a new component spec from a request — requirements split, 
 
 Templates ship beside this skill in `templates/` — `api.yaml`, `variants.yaml`, `examples.yaml`, `supplemental.yaml`. Copy them; never author a file from a blank page or from another spec's structure.
 
+## 0. Ensure the posture
+
+This procedure compiles live — saving a spec must re-emit into Storybook and onto the canvas. If the posture is down (the Storybook port does not answer), run `specs-cli.posture` first; it is idempotent, so checking by running it is fine.
+
 ## 1. Split the requirements
 
 Before writing anything, restate every requirement from the request as a table:
