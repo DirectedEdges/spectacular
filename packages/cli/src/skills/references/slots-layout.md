@@ -39,7 +39,7 @@ Positioning is two decisions, made on different elements:
 
 Element-type selection — including the rule that a styled decorative block (a notch, a badge dot) is a `container`, never a shape primitive — lives in `rules/anatomy.yaml` beside the primer skill, with the worked notch example; positioning judgments are in `rules/layoutStyling.yaml`. Placement variants swap which offset edge is set — null the old edge, set the new one.
 
-Sizing per element: `layoutSizingHorizontal` / `layoutSizingVertical` take the auto-layout sizing vocabulary (`FILL`, `HUG`, `FIXED`); `width`/`height`/min/max constrain the FIXED case. Prefer `HUG`/`FILL` over fixed dimensions wherever the content should drive size — fixed dimensions are the most common authored-layout defect.
+Sizing per element: `layoutSizingHorizontal` / `layoutSizingVertical` take the auto-layout sizing vocabulary (`FILL`, `HUG`, `FIXED`); `width`/`height` belong to the FIXED case, while `min`/`max` bounds are legal under **any** sizing mode — hug-with-a-floor and fill-with-a-ceiling included. Prefer `HUG`/`FILL` over fixed dimensions wherever the content should drive size — fixed dimensions are the most common authored-layout defect.
 
 ## Slots: one relationship across three files
 

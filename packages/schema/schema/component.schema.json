@@ -652,8 +652,7 @@
           "items": {
             "$ref": "#/definitions/ComponentName"
           },
-          "minItems": 1,
-          "description": "What this slot permits — the one list of its accepted content. Each entry is a component type name, or a reserved primitive marker ($text, $glyph). Absent means any component and no primitive."
+          "description": "What this slot permits — the one list of its accepted content. Each entry is a component type name, or a reserved primitive marker ($text, $glyph); no entry kind is ever required. Absent or empty means any component and no primitive."
         },
         "defaultSlot": {
           "type": "boolean",

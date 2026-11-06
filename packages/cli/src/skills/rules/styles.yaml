@@ -61,8 +61,11 @@ backgroundImage:
 layoutSizingHorizontal|layoutSizingVertical:
   when:
     FIXED:
-      opens: [width|height, minWidth|minHeight, maxWidth|maxHeight]
+      opens: [width|height]
     FILL:
       requires: parent layoutMode HORIZONTAL|VERTICAL
+    any:
+      opens: [minWidth|minHeight, maxWidth|maxHeight]
   guidelines:
     - should: "prefer `HUG`/`FILL` so content drives size; `FIXED` plus `width`/`height` only when the design truly fixes the dimension"
+    - could: "bound any sizing mode with `min`/`max` — hug-with-a-floor (`HUG` + `minWidth`) and fill-with-a-ceiling (`FILL` + `maxWidth`) are both legal and useful"
