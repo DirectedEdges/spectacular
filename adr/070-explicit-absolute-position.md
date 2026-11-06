@@ -4,6 +4,7 @@
 **Created**: 2026-08-17
 **Status**: ACCEPTED
 **Summary**: Children of non-auto-layout parents always emit `position: ABSOLUTE` explicitly, so consumers never infer positioning from a suppressed `layoutMode`.
+**Decides**: styles.bottom, styles.centerHorizontalOffset, styles.centerVerticalOffset, styles.end, styles.layoutMode, styles.position, styles.start, styles.top
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none — clarifies the presence contract introduced by ADR-041)*
 

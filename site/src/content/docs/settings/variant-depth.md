@@ -1,27 +1,32 @@
 ---
-title: "Variant Depth"
+title: "variantDepth"
 description: "Control how many variant property dimensions are expanded"
 ---
 
-Maximum variant property depth to process. A run choice in `config/settings.yaml` — deeper depth means more thorough (and slower) variant analysis, not more correct output.
+Maximum variant property depth to process. Deeper depth means more thorough (and slower) variant analysis, not more correct output.
+
+| | |
+|---|---|
+| **File** | `config/settings.yaml` |
+| **Path** | `spec.variantDepth` |
+| **Type** | number |
+| **Default** | `9999` (unlimited) |
 
 ## Options
 
-- **Default**: `9999` (unlimited)
-- **Values**: `1`, `2`, `3`, or `9999` (unlimited)
+| Value | Description |
+|---|---|
+| `1`, `2`, `3` | Process up to that many levels of variant properties |
+| `9999` | Unlimited — every variant property dimension is expanded |
 
-## Path
-
-`spec.variantDepth` in `config/settings.yaml`
-
-### Example
+## Example
 
 ```yaml
 spec:
   variantDepth: 3  # Process up to 3 levels of variant properties
 ```
 
-## See Also
+## Further reading
 
-- [Variant Depth guide](/guides/variant-depth/) - How depth affects variant expansion
-- [Variant Layering guide](/guides/variant-layering/) - How properties accumulate across variants
+- [Variant Depth guide](/guides/variant-depth/) for how depth affects variant expansion.
+- [Variant Layering guide](/guides/variant-layering/) for how properties accumulate across variants.

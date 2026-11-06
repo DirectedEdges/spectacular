@@ -1,130 +1,36 @@
 ---
 title: "Props"
-description: "Prop kinds, defaults, and extensions"
+description: "Prop kinds, defaults, nullability, and extensions"
 ---
 
-Props define the configurable inputs of a component. Each prop has a type, a default value, and optional extensions.
+Props define the configurable inputs of a component — an open, name-keyed map, where each entry is one of seven kinds discriminated by its `type` member. A consumer reads `type` before interpreting the rest. Each kind has its own reference page, generated from the schema; this page is the map.
 
-```ts
-type Props = Record<string, AnyProp>;
-type AnyProp = BooleanProp | StringProp | EnumProp | NumberProp | SlotProp | ImageProp;
-```
+## Kinds
 
-## Prop Kinds
+| Kind | Discriminator | What it is |
+|---|---|---|
+| [`BooleanProp`](/schema/props/boolean/) | `type: boolean` | A prop a consumer sets on or off |
+| [`StringProp`](/schema/props/string/) | `type: string`, no `enum` | Text content, glyph/instance swap, or other open string values |
+| [`EnumProp`](/schema/props/enum/) | `type: string` + `enum` | One of a closed list — the variant axis |
+| [`NumberProp`](/schema/props/number/) | `type: number` | A numeric value, open or enumerated |
+| [`SlotProp`](/schema/props/slot/) | `type: slot` | A place content goes, filled with structure rather than a scalar |
+| [`ImageProp`](/schema/props/image/) | `type: image` | An image-valued prop |
+| [`ObjectProp`](/schema/props/object/) | `type: object` | Named, individually typed scalar members |
 
-### BooleanProp
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `type` | `'boolean'` | Yes | |
-| `default` | `boolean` | Yes | Default value |
-| `$extensions` | `PropExtensions` | No | Vendor extensions |
-
-### EnumProp
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `type` | `'string'` | Yes | |
-| `default` | `string` | Yes | Default value (must be in `enum`) |
-| `enum` | `string[]` | Yes | Allowed values |
-| `nullable` | `boolean` | No | Whether `null` is a valid value — absent means `false` |
-| `$extensions` | `PropExtensions` | No | Vendor extensions |
-
-### StringProp
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `type` | `'string'` | Yes | |
-| `default` | `string \| null` | No | Deprecated — use `examples` |
-| `nullable` | `boolean` | No | Whether `null` is a valid value — absent means `true` |
-| `examples` | `string[]` | No | Example values |
-| `$extensions` | `PropExtensions` | No | Vendor extensions |
-
-A `StringProp` is distinguished from an `EnumProp` by the absence of `enum`.
-
-### NumberProp
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `type` | `'number'` | Yes | |
-| `default` | `number` | No | Default value |
-| `enum` | `number[]` | No | Closed set of allowed values, recorded when the prop was inferred from a VARIANT prop's finite value set (ADR-072) |
-| `nullable` | `boolean` | No | Whether `null` is a valid value — absent means `true` (since 0.29.0) |
-| `examples` | `number[]` | No | Example values |
-
-Inferred from Figma variant values when [`conventions.platforms.figma.inferNumberProps`](/schema/conventions/#platform-members) is enabled; a prop inferred from a VARIANT source carries the variant's values as `enum`.
-
-### SlotProp
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `type` | `'slot'` | Yes | |
-| `default` | `string \| null` | No | Default slot content |
-| `nullable` | `boolean` | No | Whether `null` is a valid value — absent means `true` |
-| `minChildren` | `number` | No | Minimum number of children the slot accepts (since 0.25.0) |
-| `maxChildren` | `number` | No | Maximum number of children the slot accepts (since 0.25.0) |
-| `anyOf` | `string[]` | No | Permitted component type names (since 0.14.0) |
-| `defaultSlot` | `boolean` | No | Whether this is the component's designated default slot. Absent means `false` |
-| `$extensions` | `PropExtensions` | No | Vendor extensions |
-
-Slot constraint properties (`minChildren`, `maxChildren`, `anyOf`) are emitted when [`conventions.platforms.figma.slotConstraints`](/schema/conventions/#platform-members) is declared.
-
-`defaultSlot` marks the one slot a layout component always composes through. It is set at generation time, when the prop's name matched the library's [`specs.slots.default.match`](/schema/conventions/#slots) convention, and is read off the spec thereafter — a consumer needs no access to those conventions to know which slot it is:
-
-```yaml
-props:
-  children:
-    type: slot
-    defaultSlot: true
-```
-
-An instance filling a `defaultSlot` prop may be nested as a plain [child](/schema/children/) rather than through a [`SlotContentRef`](/schema/slot-content-ref/). Every other slot binds explicitly, which is the only shape that can say *which* of several slots a fill belongs to.
-
-**At most one `SlotProp` per component may be `true`.** This is a constraint over sibling entries in one `props` map, which JSON Schema cannot express without reaching into a named prop's value to compare it against its siblings. It is therefore an authoring and generator contract, not schema-validated: `specs generate` marks at most one and reports a component whose declared convention matches several, and a hand-authored spec that breaks the invariant is malformed input a consumer may reject.
-
-### ImageProp
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `type` | `'image'` | Yes | |
-| `default` | `string \| null` | No | Default image — an `images` registry reference, or null |
-| `nullable` | `boolean` | No | Whether `null` is a valid value — absent means `true` |
-| `examples` | `ImageValue[]` | No | Authoring-default images the component was authored with (since 0.33.0) |
-| `$extensions` | `PropExtensions` | No | Vendor extensions |
-
-An image-valued property (e.g. a `dsImage` `source` prop). Emitted for code-only props named in [`figma.images.sourceProps`](/schema/conventions/#images) (since 0.28.0).
-
-An authoring-default image sits in one of two places, and they describe different things:
-
-| Location | Describes |
-|----------|-----------|
-| [`ImageBinding.examples`](/schema/prop-configurations/) | The image at *that binding site* — how one consumer placed it |
-| `ImageProp.examples` | The image *the component itself* was authored with |
-
-Where both apply to one rendered instance, the binding is the more specific statement. A designated image component is the origin of an image rather than a consumer of one, so it has no binding site in its own spec — `examples` on the prop is its only home for this.
-
-`examples` is non-contractual reference material, parallel to `StringProp.examples`, and is distinct from `default`: a default states what the prop resolves to when a consumer omits it, while examples only demonstrate typical content.
-
-```yaml
-props:
-  imageSource:
-    type: image
-    examples:
-      - $image: "#/components/dsImage/images/dsImage__image"
-```
+`StringProp` and `EnumProp` share `type: string`; the presence of `enum` is what discriminates them.
 
 ## Nullability
 
-`nullable` is optional on every prop kind that carries it. Its absence is meaningful, and what it means depends on whether the prop's value set is open or closed:
+`nullable` is optional on every kind that carries it. Its absence is meaningful, and what it means depends on whether the kind's value set is open or closed:
 
 | Prop kind | Absent `nullable` means | Why |
 |-----------|-------------------------|-----|
-| `StringProp` | `true` | Open value set — nothing enumerates it |
-| `NumberProp` | `true` | Open value set |
-| `SlotProp` | `true` | Open content set; a slot may be empty |
-| `ImageProp` | `true` | Open value set |
-| `EnumProp` | `false` | `enum` lists every accepted value, and `null` is not one of them |
-| `BooleanProp` | *(no field)* | Booleans are never nullable |
+| [`StringProp`](/schema/props/string/) | `true` | Open value set — nothing enumerates it |
+| [`NumberProp`](/schema/props/number/) | `true` | Open value set |
+| [`SlotProp`](/schema/props/slot/) | `true` | Open content set; a slot may be empty |
+| [`ImageProp`](/schema/props/image/) | `true` | Open value set |
+| [`EnumProp`](/schema/props/enum/) | `false` | `enum` lists every accepted value, and `null` is not one of them |
+| [`BooleanProp`](/schema/props/boolean/) | *(no member)* | Booleans are never nullable |
 
 An explicit `nullable: false` on an open-valued prop asserts that a value always exists — useful when a code-only prop was authored with a non-empty default:
 
@@ -142,30 +48,19 @@ props:
 
 ## Extensions
 
-The `$extensions` object holds vendor-specific metadata. Currently only the `com.figma` extension is defined.
+Every kind carries an optional [`$extensions`](/schema/props/extensions/) object — vendor provenance under reverse-domain keys, currently `com.figma` only. A consumer never needs it to interpret the prop; the render direction reads it to reverse what capture recorded.
 
-### FigmaPropExtension
+## Platform bindings
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `type` | `string` | Figma property type (e.g. `BOOLEAN`, `TEXT`, `INSTANCE_SWAP`, `VARIANT`) |
-| `source` | `FigmaCodeOnlySource` | Present when the prop originates from a code-only prop layer |
-| `name` | `string` | The Figma property name, present only when the prop key cannot reconstruct it — see [Key Formatting](/guides/key-formatting/) |
+How each kind is realised per platform — and the joint rules deciding which kind a Figma property even becomes — is declared in the platform bindings:
 
-### FigmaCodeOnlySource
+- [Figma](/schema/mappings/figma/) — property definitions, variant axes, code-only props, object folding
+- [React](/schema/mappings/react/) — typed parameters, slots to `children`, state classification
+- [Web Components](/schema/mappings/webcomponents/) — properties and reflected attributes
+- [CSS](/schema/mappings/css/) — props as selection, never declarations
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `kind` | `'codeOnlyProp'` | Always `'codeOnlyProp'` |
-| `layer` | `string` | Sub-layer name in the code-only container |
-| `instanceOf` | `string` | Component name, for enum code-only props |
+## See Also
 
-## Further Reading
-
-- [ADR 027 — Code-Only Props](https://github.com/DirectedEdges/specs/blob/main/adr/027-code-only-props.md) — surfaces Figma code-only props with `$extensions` source metadata
-- [ADR 028 — Slot Quantity and Content Constraints](https://github.com/DirectedEdges/specs/blob/main/adr/028-slot-constraints.md) — adds `anyOf` to SlotProp; originally added `minItems`/`maxItems` (renamed in ADR-056)
-- [ADR 056 — Rename SlotProp.minItems/maxItems → minChildren/maxChildren](https://github.com/DirectedEdges/specs/blob/main/adr/056-slot-children-constraints.md) — aligns field names with Figma native `slotSettings`; adds native `preferredValues` resolution
-- [ADR 029 — NumberProp](https://github.com/DirectedEdges/specs/blob/main/adr/029-number-prop.md) — adds the `NumberProp` type with opt-in inference
-- [ADR 063 — Image Content](https://github.com/DirectedEdges/specs/blob/main/adr/063-image-content.md) — adds the `ImageProp` type and image fills/registry
-- [ADR 088 — Authoring-default images on `ImageProp`](https://github.com/DirectedEdges/specs/blob/main/adr/088-image-prop-examples.md) — adds `ImageProp.examples`
-- [ADR 066 — Lossless Key Formatting](https://github.com/DirectedEdges/specs/blob/main/adr/066-lossless-key-formatting.md) — adds `name` to `FigmaPropExtension` so lossy key formats stay reversible
+- [Prop Configurations](/schema/prop-configurations/) — how a variant or example sets prop values
+- [Prop Binding](/schema/prop-binding/) — how an element member binds to a prop
+- [Key Formatting](/guides/key-formatting/) — how Figma property names become prop keys

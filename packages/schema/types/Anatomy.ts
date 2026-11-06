@@ -39,9 +39,10 @@ export interface FigmaAnatomyElementExtension {
    * - the name was already written in the destination format and passed through
    *   unformatted, making reversal identity rather than re-derivation (ADR-066).
    *
-   * The latter two apply only when `format.figmaKeys` is not NONE. Under NONE no
-   * source convention is declared, so format divergence is not evaluated and this
-   * field is absent however the key was derived.
+   * Under NONE no source convention is declared, so nothing can be re-derived from
+   * a key — reversal hands the key back as the name. The key therefore reconstructs
+   * the name only where the two are already identical, and this field is recorded
+   * wherever formatting changed the name at all.
    * @since 0.30.0 — renamed from `originalName`
    */
   name?: string;
@@ -104,6 +105,16 @@ export interface FigmaAnatomyElementExtension {
  * @since 0.30.0
  */
 export type RoleConceptName = string;
+
+/**
+ * A semantic behavior role concept, or a non-empty list of them.
+ *
+ * The named union behind `AnatomyElement.role` and
+ * `FigmaAnatomyElementExtension.childRole`. The list form is meaningful only on
+ * an element of type `instance` — see `AnatomyElement.role`.
+ * @since 0.39.0
+ */
+export type ElementRole = RoleConceptName | RoleConceptName[];
 
 /**
  * Behavior invoked when an element is activated (ADR-087).

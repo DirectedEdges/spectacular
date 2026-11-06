@@ -554,6 +554,7 @@ export class ConfigLoader {
       naming: 'NONE',
       slotConstraints: raw.slotConstraints === true,
       inferNumberProps: raw.inferNumberProps === true,
+      slotPrimitives: raw.slotPrimitives !== false,
     };
 
     // naming
@@ -586,6 +587,26 @@ export class ConfigLoader {
       const match = typeof raw.codeOnlyProps === 'object' ? raw.codeOnlyProps.match : undefined;
       if (typeof match === 'string' && match.trim() !== '') {
         platform.codeOnlyProps = { match };
+      }
+    }
+
+    // objectProps (ADR-111). Presence of the block is the on-switch; separator
+    // defaults to "." inside a declared block. Absence means no folding.
+    if (raw.objectProps !== undefined) {
+      if (raw.objectProps === null || typeof raw.objectProps !== 'object') {
+        console.warn(`Invalid ${where} objectProps: expected an object. Using default: { separator: "." }`);
+        platform.objectProps = { separator: '.' };
+      } else {
+        const sep = (raw.objectProps as Record<string, unknown>).separator;
+        let separator = '.';
+        if (sep !== undefined) {
+          if (typeof sep === 'string' && sep !== '') {
+            separator = sep;
+          } else {
+            console.warn(`Invalid ${where} objectProps.separator: expected a non-empty string. Using default: "."`);
+          }
+        }
+        platform.objectProps = { separator };
       }
     }
 
@@ -775,8 +796,16 @@ export class ConfigLoader {
     spec.color = enumCheck('color', spec.color, validColors as readonly typeof spec.color[], DEFAULT_SETTINGS.spec.color);
     spec.variantDepth = enumCheck('variantDepth', spec.variantDepth, validVariantDepths as readonly typeof spec.variantDepth[], DEFAULT_SETTINGS.spec.variantDepth);
     spec.details = enumCheck('details', spec.details, validDetails as readonly typeof spec.details[], DEFAULT_SETTINGS.spec.details);
+    // An invalid value falls back to the schema default, like every other field
+    // here. Naming a value of its own would make this a second place a default is
+    // stated, which is how the schema and the scaffold drifted (ADR-112).
     if (typeof spec.collapsePrimitiveWrapper !== 'boolean') {
-      spec.collapsePrimitiveWrapper = false;
+      if (spec.collapsePrimitiveWrapper !== undefined) {
+        console.warn(
+          `Invalid settings.spec.collapsePrimitiveWrapper: expected boolean, got ${typeof spec.collapsePrimitiveWrapper}. Using default: ${DEFAULT_SETTINGS.spec.collapsePrimitiveWrapper}`
+        );
+      }
+      spec.collapsePrimitiveWrapper = DEFAULT_SETTINGS.spec.collapsePrimitiveWrapper;
     }
 
     // roleValidation (ADR-067) — severity for unmet required role obligations

@@ -58,9 +58,9 @@ describe('InitCommand', () => {
       expect(settings).toContain('spectacular.systems/settings/');
     });
 
-    it('states the commenting contract', () => {
+    it('states the writing contract', () => {
       const settings = generateConfigTemplates()['config/settings.yaml'];
-      expect(settings).toContain('Every commented line is the opposite of the default');
+      expect(settings).toContain('Every setting is written out at the value this workspace');
     });
 
     it('should have consistent YAML indentation', () => {
@@ -181,6 +181,7 @@ describe('InitCommand', () => {
 
       expect(conventions).toContain('subcomponents:');
       expect(conventions).toContain('slotConstraints');
+      expect(conventions).toContain('slotPrimitives');
     });
 
     it('settings template has serialization settings', () => {

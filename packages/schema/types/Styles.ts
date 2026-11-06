@@ -6,9 +6,9 @@ import { ImageValue } from "./Image.js";
 
 export type Styles = Partial<{
   rotation: Style;
-  visible: Style;
+  visible: boolean | TokenReference | PropBinding | Conditional;
   opacity: Style;
-  locked: Style;
+  locked: boolean;
   backgroundColor: ColorStyle;
   /** Image fill painted on a layer. Present on container element types. Fallback representation used when no image component is configured. A `TokenReference` when the image fill comes from an applied Figma fill style (the style reference routes here — not to `backgroundColor` — when the styled paint is an image). Absent when there is no image fill. @since 0.28.0 */
   backgroundImage: ImageValue | TokenReference | null;
@@ -16,7 +16,7 @@ export type Styles = Partial<{
   fillColor: ColorStyle;
   effects: TokenReference | Effects;
   /** Whether the element clips content that overflows its box. @since 0.30.0 */
-  clipsContent: Style;
+  clipsContent: boolean;
   /** Corner radius. Scalar when uniform; `Corners` object when per-corner values differ. @since 1.0.0 */
   cornerRadius: Style | Corners;
   width: Style;
@@ -39,41 +39,121 @@ export type Styles = Partial<{
   centerHorizontalOffset: PositionOffset;
   /** Vertical offset from center. Emitted only alongside `position` (ADR-070). Present when vertical constraint is CENTER. @since 0.19.0 */
   centerVerticalOffset: PositionOffset;
-  layoutSizingHorizontal: Style;
-  layoutSizingVertical: Style;
+  /** What determines the element's width. Structural property — not token-bindable. @since 0.40.0 */
+  layoutSizingHorizontal: LayoutSizing | null;
+  /** What determines the element's height. Structural property — not token-bindable. @since 0.40.0 */
+  layoutSizingVertical: LayoutSizing | null;
   strokes: ColorStyle;
-  strokeAlign: Style;
+  /** Where the stroke sits relative to the element's boundary. Structural property — not token-bindable. @since 0.40.0 */
+  strokeAlign: StrokeAlign | null;
   /** Stroke weight. Scalar when uniform; `Sides` object when per-side values differ. @since 1.0.0 */
   strokeWeight: Style | Sides;
   /** Dash pattern for a stroke. Present (non-null) when the stroke is dashed; null or absent when solid. Structural property — not token-bindable. @since 0.27.0 */
   strokeDashPattern: StrokeDashPattern | null;
   typography: TokenReference | Typography;
   /** Horizontal text alignment using logical inline-axis directions (`START`/`END`). `JUSTIFY` maps from Figma's `JUSTIFIED`. Structural property — not token-bindable. Present on TEXT element type only. @since 0.29.0 */
-  textAlignHorizontal: TextAlignHorizontal | null;
-  textAlignVertical: Style;
+  textAlignHorizontal: TextAlignHorizontal;
+  /** Where text sits within the height available to it. Structural property — not token-bindable. @since 0.40.0 */
+  textAlignVertical: TextAlignVertical;
   /** How overflowing text is handled — `CLIP` (cut off) or `ELLIPSIS` (trailing ellipsis). Structural property — not token-bindable. Present on TEXT element type only. @since 0.28.0 */
-  textOverflow: TextOverflow | null;
+  textOverflow: TextOverflow;
   /** Maximum number of lines before `ELLIPSIS` text overflow applies; `null` or absent means no limit. Present on TEXT element type only. @since 0.28.0 */
   maxLines: Style;
   textColor: ColorStyle;
   /** Alignment along the main axis (depends on `layoutMode`). Structural property — not token-bindable. @since 0.18.0 */
   mainAxisAlignment: MainAxisAlignment | null;
-  primaryAxisSizingMode: Style;
+  /** Whether the stacking axis sizes to its contents or to a fixed value. Structural property — not token-bindable. @since 0.40.0 */
+  primaryAxisSizingMode: PrimaryAxisSizingMode;
   /** Alignment along the cross axis (perpendicular to `layoutMode`). Structural property — not token-bindable. @since 0.18.0 */
   crossAxisAlignment: CrossAxisAlignment | null;
   /** Auto-layout direction. Structural property — not token-bindable. @since 0.18.0 */
-  layoutMode: LayoutMode | null;
+  layoutMode: LayoutMode;
   /** Whether auto-layout wrapping is enabled (default: false). @since 0.18.0 */
-  wrap: Style;
+  wrap: boolean;
   /** Space distribution between wrapped lines. Only meaningful when `wrap` is true. Structural property — not token-bindable. @since 0.18.0 */
-  wrapAlignment: WrapAlignment | null;
-  itemReverseZIndex: Style;
+  wrapAlignment: WrapAlignment;
+  itemReverseZIndex: boolean;
   /** Item spacing. Scalar when uniform; `ItemSpacing` object when horizontal and vertical gaps differ. @since 0.18.0 */
   itemSpacing: Style | ItemSpacing;
   /** Padding. Scalar when uniform; `Sides` object when per-side values differ. @since 1.0.0 */
   padding: Style | Sides;
   cornerSmoothing: Style;
   aspectRatio: AspectRatioStyle;
+}>;
+
+/**
+ * The formatting a **text** primitive takes on when it fills a slot (ADR-102).
+ *
+ * Deliberately narrower than {@link Styles}: only properties that format text appear, so
+ * a container's layout or surface styling cannot enter the content record. Each member is
+ * typed identically to its `Styles` counterpart, so a value valid in `styles` is valid
+ * here — token references, prop bindings and conditionals included, wherever the
+ * underlying type is `Style`.
+ *
+ * `typography` is listed once, as the composite: its own members (`fontSize`,
+ * `fontFamily`, `lineHeight`, `letterSpacing`, `textCase`, `textDecoration` and the rest)
+ * travel inside {@link Typography} rather than being enumerated again here.
+ * @since 0.39.0
+ */
+export type TextContentStyles = Partial<{
+  /** Text color of the content. */
+  textColor: ColorStyle;
+  /** Typography of the content, as a composite or a type-token reference. */
+  typography: TokenReference | Typography;
+  /** Horizontal text alignment, using logical inline-axis directions (`START`/`END`). */
+  textAlignHorizontal: TextAlignHorizontal;
+  /** Vertical text alignment. */
+  textAlignVertical: TextAlignVertical;
+  /** How overflowing content is handled — `CLIP` or `ELLIPSIS`. */
+  textOverflow: TextOverflow;
+  /** Maximum number of lines before `ELLIPSIS` overflow applies; `null` means no limit. */
+  maxLines: Style;
+}>;
+
+/**
+ * The formatting a **glyph** primitive takes on when it fills a slot (ADR-102).
+ *
+ * `fillColor` plus the two dimensions. A glyph is sized rather than laid out: its box is
+ * the icon's own, set on the layer and not derived from the slot's layout the way a text
+ * run's measure is. So a glyph fill that does not carry its dimensions loses them, and a
+ * render has nothing to restore — which is why `width` and `height` belong to the fill
+ * here even though no text member does.
+ * @since 0.39.0
+ */
+export type GlyphContentStyles = Partial<{
+  /** Fill color of the glyph. */
+  fillColor: ColorStyle;
+  /** Width of the glyph box, in pixels. */
+  width: Style;
+  /** Height of the glyph box, in pixels. */
+  height: Style;
+}>;
+
+/**
+ * The styles applied to primitive content filling an element, as distinct from the
+ * element's own {@link Styles} (ADR-102).
+ *
+ * Keyed by primitive, using the same reserved markers `SlotProp.anyOf` carries, because a
+ * slot's default content may hold more than one kind — a glyph and a label — and each
+ * kind is formatted by a disjoint property set. A flat block could not attribute which
+ * styles belonged to which primitive.
+ *
+ * On a slot element each entry is the formatting that kind of fill takes on, captured from
+ * the first top-level primitive of that kind in the slot's default content, per variant. It
+ * is overridden per variant through `variants[].elements` exactly as `styles` is.
+ *
+ * A component fill is formatted by the component it instantiates, so a consumer rendering
+ * one applies `styles` and discards `contentStyles`.
+ *
+ * Meaningful only on a slot element, and its keys should agree with that slot's `anyOf`
+ * markers — both authoring/generator contracts, neither schema-enforced.
+ * @since 0.39.0
+ */
+export type ContentStyles = Partial<{
+  /** Formatting for a text primitive filling this slot. */
+  $text: TextContentStyles;
+  /** Formatting for a glyph primitive filling this slot. */
+  $glyph: GlyphContentStyles;
 }>;
 
 /**
@@ -169,14 +249,14 @@ export interface Typography {
   fontFamily?: string | 'mixed' | TokenReference;
   /** Style name (e.g., "Bold"); 'mixed' when varied; TokenReference for variable-bound fonts */
   fontStyle?: string | 'mixed' | TokenReference;
-  /** Line height: "150%", "auto", or pixel value (lineHeight primitive) */
+  /** Line height: "150%", "AUTO", or pixel value (lineHeight primitive). Uppercase only — "auto" is not a value this contract carries. */
   lineHeight?: string | number | TokenReference;
   /** Letter spacing in pixels; 'mixed' allowed (mixableNumber primitive) */
   letterSpacing?: number | 'mixed' | TokenReference;
-  /** Text case: "UPPER", "LOWER", "TITLE", "ORIGINAL", or 'mixed' (mixableString primitive) */
-  textCase?: string | 'mixed' | TokenReference;
-  /** Text decoration: "UNDERLINE", "STRIKETHROUGH", "NONE", or 'mixed' (mixableString primitive) */
-  textDecoration?: string | 'mixed' | TokenReference;
+  /** How the text's letter casing is transformed when it renders. */
+  textCase?: 'ORIGINAL' | 'UPPER' | 'LOWER' | 'TITLE' | 'mixed';
+  /** A line drawn through or under the text. */
+  textDecoration?: 'NONE' | 'UNDERLINE' | 'STRIKETHROUGH' | 'mixed';
   /** Paragraph indent in pixels (pureNumber primitive) */
   paragraphIndent?: number | TokenReference;
   /** Spacing between paragraphs in pixels (pureNumber primitive) */
@@ -233,6 +313,34 @@ export interface Sides {
  * @since 0.19.0
  */
 export type Position = 'AUTO' | 'ABSOLUTE';
+
+/**
+ * Where a stroke sits relative to the element's boundary. Structural property
+ * that cannot be token-bound.
+ * @since 0.40.0
+ */
+export type StrokeAlign = 'INSIDE' | 'OUTSIDE' | 'CENTER';
+
+/**
+ * What determines an element's size on one axis. Structural property that
+ * cannot be token-bound.
+ * @since 0.40.0
+ */
+export type LayoutSizing = 'FIXED' | 'HUG' | 'FILL';
+
+/**
+ * Where text sits within the height available to it. Structural property that
+ * cannot be token-bound.
+ * @since 0.40.0
+ */
+export type TextAlignVertical = 'TOP' | 'CENTER' | 'BOTTOM';
+
+/**
+ * Whether the stacking axis sizes to its contents or to a fixed value.
+ * Structural property that cannot be token-bound.
+ * @since 0.40.0
+ */
+export type PrimaryAxisSizingMode = 'AUTO' | 'FIXED';
 
 /**
  * Positional offset value. Pixel number, percentage string (SCALE constraint, e.g. "25%"), or null.

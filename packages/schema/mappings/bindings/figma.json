@@ -1,0 +1,1731 @@
+{
+  "platform": "figma",
+  "role": "Transforms specs to and from Figma assets",
+  "realises": "The design surface — reads components into specs, and renders specs back onto the canvas. The one binding that runs in both directions.",
+  "seededFrom": "/Users/nathanacurtis/Github Desktop/specs-transforms",
+  "note": "disposition: bound (confirmed against the implementation) | approximated (maps with stated loss) | unsupported (declared, with stated behaviour) | unverified (coverage detected, mapping not yet confirmed by a human). Only bound rows are claims; unverified rows are work.",
+  "concepts": {
+    "styles": {
+      "rotation": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": "node.rotation",
+        "notes": "Degrees, written directly.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "visible": {
+        "disposition": "bound",
+        "target": "node.visible",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "notes": "Sets `node.visible` from a boolean. A `$binding` value is skipped by an earlier guard, and the conditional form is deferred to the paired-visibility feature — both are declared at the value-form level.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "opacity": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": "node.opacity",
+        "notes": "A TokenReference binds the variable; otherwise the raw number is written.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "locked": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": "node.locked",
+        "notes": "Canvas interaction only — the Plugin API can still mutate a locked node, so it applies wherever it is reached, children included.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "backgroundColor": {
+        "disposition": "bound",
+        "target": "node.fills",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "rectangle"
+        ],
+        "notes": "Reads Figma's `fills`; the name diverges because a spec names the role the colour plays, not the Figma property it came from (ADR-009). Resolves in four steps — gradient, resolved style, bound variable, cached raw value — and writes a single solid paint. A token with neither a resolvable variable nor a cached raw value is skipped with a warning, which is the degradation DSPEC-43 permits. Loss: `colorSpace` is never read, so components are taken as sRGB regardless; a `none` component becomes 0; components beyond the third are dropped. Never applied to a text node.",
+        "onAbsent": "unverified",
+        "basis": "implementation",
+        "needsDecision": "colorSpace"
+      },
+      "backgroundImage": {
+        "disposition": "approximated",
+        "target": "node.fills",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "notes": "Appends an image paint rather than replacing existing fills. Loss: `objectFit` is binary — `CONTAIN` becomes Figma's FIT and everything else, including absent, becomes FILL. An image whose hash does not resolve is dropped with no warning. Container types only.",
+        "onAbsent": "unverified",
+        "basis": "implementation",
+        "needsDecision": "partialOnUnresolved"
+      },
+      "fillColor": {
+        "disposition": "bound",
+        "target": "node.fills",
+        "elements": [
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "line",
+          "glyph"
+        ],
+        "notes": "Reads Figma's `fills`; the name diverges because a spec names the role the colour plays (ADR-013). A gradient takes its own path; otherwise the same four-step paint resolution. On an instance the target is the first fillable descendant, found by walking the subtree. Loss: the colour-space issue above, and an instance with no fillable descendant drops the value silently.",
+        "onAbsent": "unverified",
+        "basis": "implementation",
+        "needsDecision": "colorSpace"
+      },
+      "textColor": {
+        "disposition": "bound",
+        "target": "node.fills",
+        "elements": [
+          "text"
+        ],
+        "notes": "Reads Figma's `fills`; the name diverges because a spec names the role the colour plays (ADR-009). Text nodes only, using the same four-step paint resolution. Loss: the colour-space issue above.",
+        "onAbsent": "unverified",
+        "basis": "implementation",
+        "needsDecision": "colorSpace"
+      },
+      "effects": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "target": "Effects.apply",
+        "notes": "Accepts Effects, TokenReference, or null.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "clipsContent": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": "node.clipsContent",
+        "notes": "Container types only; the key never reaches another type because no other key list admits it.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "cornerRadius": {
+        "disposition": "bound",
+        "target": "node.cornerRadius",
+        "elements": [
+          "component",
+          "frame",
+          "rectangle",
+          "slot"
+        ],
+        "notes": "A uniform value sets the node radius; a token also binds the variable to all four corner fields; a per-corner object expands to Figma's physical corner properties. Not applied to a text node.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "width": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "notes": null,
+        "rule": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "height": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "glyph"
+        ],
+        "notes": null,
+        "rule": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "minWidth": {
+        "disposition": "bound",
+        "target": "node.minWidth",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "notes": "Loss: a value of 0 is written as `null`, because the Plugin API rejects zero for a minimum. An explicit zero minimum and an absent one are therefore indistinguishable on the canvas. Skipped on text nodes.",
+        "onAbsent": "unverified",
+        "basis": "implementation",
+        "needsDecision": "explicitZero"
+      },
+      "minHeight": {
+        "disposition": "bound",
+        "target": "node.minHeight",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "notes": "Same zero-to-null remap as `minWidth`, for the same API reason.",
+        "onAbsent": "unverified",
+        "basis": "implementation",
+        "needsDecision": "explicitZero"
+      },
+      "maxWidth": {
+        "disposition": "bound",
+        "target": "node.maxWidth",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "notes": "Written as resolved. Zero is preserved, because a maximum of zero is a real if unusual constraint and the API accepts it. Skipped on text nodes.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "maxHeight": {
+        "disposition": "bound",
+        "target": "node.maxHeight",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "notes": "Written as resolved, preserving zero, as `maxWidth`.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "position": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "notes": null,
+        "rule": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "top": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "notes": null,
+        "rule": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "bottom": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "notes": null,
+        "rule": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "start": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "notes": null,
+        "rule": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "end": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "notes": null,
+        "rule": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "centerHorizontalOffset": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "notes": null,
+        "rule": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "centerVerticalOffset": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "notes": null,
+        "rule": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "layoutSizingHorizontal": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "notes": null,
+        "rule": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "layoutSizingVertical": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "instance",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line",
+          "glyph"
+        ],
+        "notes": null,
+        "rule": "autoVsAbsoluteLayout",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "strokes": {
+        "disposition": "bound",
+        "target": "node.strokes",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line"
+        ],
+        "notes": "The same four-step paint resolution, written to the node's strokes. Loss: the colour-space issue above. Never applied to a text node, and absent from an instance's key list.",
+        "onAbsent": "unverified",
+        "basis": "implementation",
+        "needsDecision": "colorSpace"
+      },
+      "strokeAlign": {
+        "disposition": "bound",
+        "target": "node.strokeAlign",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line"
+        ],
+        "notes": "Passed through unchanged. The schema types this as an open string rather than an enum, so there is no mapping to lose. A `null` is skipped rather than resetting the node's current alignment.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "strokeWeight": {
+        "disposition": "bound",
+        "target": "node.strokeWeight",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line"
+        ],
+        "notes": "A number sets the weight; a token also binds the variable to all four per-side fields; a per-side object expands to Figma's physical stroke-weight properties.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "strokeDashPattern": {
+        "disposition": "bound",
+        "target": "node.dashPattern",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "line"
+        ],
+        "notes": "The schema's `{ dash, gap }` becomes Figma's two-element dash array, which is exactly what the property takes. The schema permits no longer pattern — both members are required and no others are allowed — so nothing is truncated.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "typography": {
+        "disposition": "bound",
+        "elements": [
+          "text"
+        ],
+        "target": "Typography.apply",
+        "notes": "Accepts Typography or TokenReference. A font that fails to load degrades to Inter Regular with a warning, never aborts.",
+        "rule": "namedStyleVersusInline",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "textAlignHorizontal": {
+        "disposition": "bound",
+        "target": "node.textAlignHorizontal",
+        "elements": [
+          "text"
+        ],
+        "notes": "Inverts the capture mapping: the schema's logical `START`, `CENTER`, `END` and `JUSTIFY` become Figma's physical `LEFT`, `CENTER`, `RIGHT` and `JUSTIFIED`. All four schema values are covered, so the fallback is unreachable for valid input. Requires the node's font to be loaded first.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "textAlignVertical": {
+        "disposition": "bound",
+        "target": "node.textAlignVertical",
+        "elements": [
+          "text"
+        ],
+        "notes": "Passed through unchanged. The schema types this as an open string, and Figma's own values match, so the identity mapping loses nothing. Text nodes only.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "textOverflow": {
+        "disposition": "bound",
+        "target": "node.textTruncation",
+        "elements": [
+          "text"
+        ],
+        "notes": "Remaps the schema's two values to Figma's truncation vocabulary: `ELLIPSIS` becomes ENDING and `CLIP` becomes DISABLED. Both schema values are covered. Ordering matters — `maxLines` is honoured only while truncation is ENDING, so it is deliberately applied after this key.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "maxLines": {
+        "disposition": "bound",
+        "elements": [
+          "text"
+        ],
+        "target": "node.maxLines",
+        "notes": "Deferred to last — honoured only while textTruncation is ENDING, so textOverflow must land first.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "mainAxisAlignment": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "rule": "wrapping",
+        "notes": "Remaps all four schema values to Figma's primary-axis vocabulary. Gated on the node actually having the property, which effectively means an auto-layout container.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "primaryAxisSizingMode": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": "node.primaryAxisSizingMode",
+        "notes": "Deferred after layoutSizingHorizontal/Vertical, which themselves write it — the shorthand would otherwise clobber the explicit primitive.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "crossAxisAlignment": {
+        "disposition": "approximated",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "rule": "wrapping",
+        "notes": "Remaps `START`, `END`, `CENTER` and `BASELINE`. Loss: `STRETCH` is a schema value Figma's counter-axis property cannot express, and it is skipped with a warning — a declared degradation that applies nothing and says so, which is exactly what DSPEC-43 asks for.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "layoutMode": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "notes": null,
+        "rule": "wrapping",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "wrap": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "notes": null,
+        "rule": "wrapping",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "wrapAlignment": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "notes": null,
+        "rule": "wrapping",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "itemReverseZIndex": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "target": "node.itemReverseZIndex",
+        "notes": "Auto-layout only — a frame with no layoutMode has nothing to reverse. layoutMode is structural and applied first.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "itemSpacing": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "notes": null,
+        "rule": "wrapping",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "padding": {
+        "disposition": "bound",
+        "target": "node.paddingTop / paddingRight / paddingBottom / paddingLeft",
+        "elements": [
+          "component",
+          "frame",
+          "slot"
+        ],
+        "notes": "A uniform value or token sets all four sides; a per-side object expands to Figma's physical padding properties. Loss: `start` always becomes the left padding and `end` the right, with no writing-direction branch, so a right-to-left context renders mirrored. A side omitted from the object is left at its current value rather than reset.",
+        "onAbsent": "unverified",
+        "basis": "implementation",
+        "needsDecision": "logicalToPhysical"
+      },
+      "cornerSmoothing": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle"
+        ],
+        "target": "CornerStyle.applySmoothing",
+        "notes": "Skipped on TEXT nodes.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      },
+      "aspectRatio": {
+        "disposition": "bound",
+        "elements": [
+          "component",
+          "frame",
+          "slot",
+          "text",
+          "vector",
+          "ellipse",
+          "star",
+          "polygon",
+          "rectangle",
+          "glyph"
+        ],
+        "target": "node.targetAspectRatio",
+        "notes": "Deferred to last — the lock reads the node final dimensions, so an earlier resize would be clobbered by later sizing keys.",
+        "onAbsent": "unverified",
+        "basis": "implementation"
+      }
+    },
+    "styleRules": {
+      "autoVsAbsoluteLayout": {
+        "disposition": "bound",
+        "keys": [
+          "position",
+          "top",
+          "bottom",
+          "start",
+          "end",
+          "centerHorizontalOffset",
+          "centerVerticalOffset",
+          "layoutSizingHorizontal",
+          "layoutSizingVertical",
+          "width",
+          "height"
+        ],
+        "outputs": [
+          "node.layoutPositioning",
+          "node.x",
+          "node.y",
+          "node.constraints",
+          "node.layoutSizingHorizontal",
+          "node.layoutSizingVertical"
+        ],
+        "stage": "postEvaluate",
+        "notes": "Per axis. These keys are computed from constraints and geometry, never read from a single Figma property — a binding presenting them as direct reads misleads anyone implementing a second time. ADR-041 governs the constraint mapping.",
+        "direction": "figma-to-spec",
+        "form": "cases",
+        "inputs": [
+          {
+            "ref": "node.constraints.horizontal",
+            "from": "Figma node"
+          },
+          {
+            "ref": "node.constraints.vertical",
+            "from": "Figma node"
+          },
+          {
+            "ref": "node.position",
+            "from": "Figma node geometry"
+          },
+          {
+            "ref": "node.dimension",
+            "from": "Figma node geometry"
+          },
+          {
+            "ref": "parent.dimension",
+            "from": "Figma parent geometry"
+          },
+          {
+            "ref": "parent.layoutMode",
+            "from": "Figma parent"
+          },
+          {
+            "ref": "self.layoutSizing",
+            "from": "the axis-matching sizing key"
+          },
+          {
+            "ref": "context.isRoot",
+            "from": "capture context"
+          }
+        ],
+        "cases": [
+          {
+            "when": {
+              "operation": "isNotNull",
+              "args": {
+                "value": "context.isRoot"
+              }
+            },
+            "emit": [
+              "`position` null",
+              "all six offsets null"
+            ],
+            "why": "a root has no parent bounds to be positioned within, and where a designer dragged it on the canvas is not part of its spec"
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "notEquals",
+                  "args": {
+                    "value": "parent.layoutMode",
+                    "compareTo": "NONE"
+                  }
+                },
+                {
+                  "operation": "notEquals",
+                  "args": {
+                    "value": "node.layoutPositioning",
+                    "compareTo": "ABSOLUTE"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "`position` AUTO",
+              "all six offsets null"
+            ],
+            "why": "a flow-placed child's position comes from the parent's stack, so recording offsets would assert a placement it does not have"
+          },
+          {
+            "when": {
+              "operation": "any",
+              "args": [
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "parent.layoutMode",
+                    "compareTo": "NONE"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "node.layoutPositioning",
+                    "compareTo": "ABSOLUTE"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "`layoutSizingHorizontal` and `layoutSizingVertical` null",
+              "offsets per the per-axis table below",
+              "`position` ABSOLUTE when `node.layoutPositioning` is ABSOLUTE or any offset was set, otherwise null"
+            ],
+            "why": "an element placed by coordinates rather than a parent's stack is absolutely positioned whatever Figma reports, because a regular frame has no stack to opt out of"
+          }
+        ],
+        "axisCases": [
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "node.constraints.axis",
+                "compareTo": "MIN"
+              }
+            },
+            "emit": [
+              "the leading edge offset — `start` or `top` — set to the node position"
+            ]
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "node.constraints.axis",
+                "compareTo": "MAX"
+              }
+            },
+            "emit": [
+              "the trailing edge offset — `end` or `bottom` — set to parent dimension less node position less node dimension"
+            ]
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "node.constraints.axis",
+                "compareTo": "CENTER"
+              }
+            },
+            "emit": [
+              "the matching centre offset, set to node position plus half the node dimension less half the parent dimension"
+            ]
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "node.constraints.axis",
+                "compareTo": "STRETCH"
+              }
+            },
+            "emit": [
+              "both edge offsets on the axis",
+              "the axis dimension suppressed"
+            ],
+            "why": "a stretched node is defined by its edges, not its size"
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "node.constraints.axis",
+                "compareTo": "SCALE"
+              }
+            },
+            "emit": [
+              "both edge offsets on the axis, as percentage strings"
+            ]
+          }
+        ],
+        "relationCases": [
+          {
+            "when": {
+              "operation": "any",
+              "args": [
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "self.layoutSizing",
+                    "compareTo": "HUG"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "self.layoutSizing",
+                    "compareTo": "FILL"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "the matching `width` or `height` nulled"
+            ],
+            "why": "a hugged or filled axis has no fixed dimension to record"
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "self.layoutSizing",
+                "compareTo": "FIXED"
+              }
+            },
+            "emit": [
+              "the matching `width` or `height` present"
+            ]
+          },
+          {
+            "when": {
+              "operation": "equals",
+              "args": {
+                "value": "self.position",
+                "compareTo": "ABSOLUTE"
+              }
+            },
+            "emit": [
+              "`layoutSizingHorizontal` and `layoutSizingVertical` nulled"
+            ],
+            "why": "an absolutely positioned child is not sized by the parent axis"
+          }
+        ],
+        "otherwise": {
+          "emit": [],
+          "why": "a flow-placed child in auto-layout records no positioning offsets"
+        },
+        "basis": "implementation"
+      },
+      "wrapping": {
+        "disposition": "bound",
+        "keys": [
+          "wrap",
+          "wrapAlignment",
+          "itemSpacing",
+          "layoutMode",
+          "mainAxisAlignment",
+          "crossAxisAlignment"
+        ],
+        "outputs": [
+          "node.layoutWrap",
+          "node.counterAxisAlignContent",
+          "node.itemSpacing",
+          "node.counterAxisSpacing"
+        ],
+        "stage": "postEvaluate",
+        "notes": "A property that cannot apply is removed rather than recorded as null, so a reader never sees a dead key.",
+        "direction": "figma-to-spec",
+        "form": "cases",
+        "inputs": [
+          {
+            "ref": "node.layoutMode",
+            "from": "Figma node"
+          },
+          {
+            "ref": "node.layoutWrap",
+            "from": "Figma node"
+          },
+          {
+            "ref": "node.itemSpacing",
+            "from": "Figma node"
+          },
+          {
+            "ref": "node.counterAxisSpacing",
+            "from": "Figma node"
+          }
+        ],
+        "cases": [
+          {
+            "when": {
+              "operation": "any",
+              "args": [
+                {
+                  "operation": "isNull",
+                  "args": {
+                    "value": "node.layoutMode"
+                  }
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "node.layoutMode",
+                    "compareTo": "NONE"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "`wrap` false",
+              "`mainAxisAlignment` null",
+              "`crossAxisAlignment` null",
+              "`wrapAlignment` removed entirely"
+            ],
+            "why": "none of them mean anything without auto-layout. `wrapAlignment` is removed rather than nulled: the removal below also holds here, because a node with no auto-layout has no wrap either, and a first-match table that said null would describe a state no document reaches"
+          },
+          {
+            "when": {
+              "operation": "notEquals",
+              "args": {
+                "value": "node.layoutWrap",
+                "compareTo": "WRAP"
+              }
+            },
+            "emit": [
+              "`wrapAlignment` removed entirely"
+            ],
+            "why": "a dead property otherwise — removed, not nulled"
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "any",
+                  "args": [
+                    {
+                      "operation": "equals",
+                      "args": {
+                        "value": "node.layoutMode",
+                        "compareTo": "HORIZONTAL"
+                      }
+                    },
+                    {
+                      "operation": "equals",
+                      "args": {
+                        "value": "node.layoutMode",
+                        "compareTo": "VERTICAL"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "operation": "equals",
+                  "args": {
+                    "value": "node.layoutWrap",
+                    "compareTo": "WRAP"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "`itemSpacing` as a biaxial composite, mapping the Figma primary and counter axes onto absolute horizontal and vertical"
+            ]
+          },
+          {
+            "when": {
+              "operation": "isNotNull",
+              "args": {
+                "value": "node.itemSpacing"
+              }
+            },
+            "emit": [
+              "`itemSpacing` as a scalar"
+            ]
+          }
+        ],
+        "otherwise": {
+          "emit": []
+        },
+        "basis": "implementation"
+      },
+      "namedStyleVersusInline": {
+        "disposition": "bound",
+        "keys": [
+          "typography"
+        ],
+        "outputs": [
+          "node.textStyleId",
+          "~13 inline text properties"
+        ],
+        "stage": "postProcess",
+        "notes": "A named text style and inline typography are mutually exclusive in a document: one is a reference, the other is the resolved values. Typography sub-fields are additionally compared against their own defaults, a second and distinct default source from the style keys.",
+        "direction": "figma-to-spec",
+        "form": "cases",
+        "inputs": [
+          {
+            "ref": "self.textStyleEntry",
+            "from": "whether a text-style entry was captured at all, which is not the same as its value"
+          },
+          {
+            "ref": "node.textStyleId",
+            "from": "Figma node — an empty string counts as no style, the same as null"
+          },
+          {
+            "ref": "baseline.typography",
+            "from": "the unvaried baseline for this element"
+          }
+        ],
+        "cases": [
+          {
+            "when": {
+              "operation": "isNull",
+              "args": {
+                "value": "self.textStyleEntry"
+              }
+            },
+            "emit": [],
+            "why": "no text-style entry was captured for this node at all, so the pass has nothing to choose between and leaves `typography` as it found it. Distinct from an entry captured with an empty value, below"
+          },
+          {
+            "when": {
+              "operation": "isNotNull",
+              "args": {
+                "value": "node.textStyleId"
+              }
+            },
+            "emit": [
+              "a style reference",
+              "`typography` removed"
+            ],
+            "why": "the named style is the source; resolved values beside it would be a second copy"
+          },
+          {
+            "when": {
+              "operation": "all",
+              "args": [
+                {
+                  "operation": "isNull",
+                  "args": {
+                    "value": "node.textStyleId"
+                  }
+                },
+                {
+                  "operation": "isNull",
+                  "args": {
+                    "value": "self.typography"
+                  }
+                },
+                {
+                  "operation": "isNotNull",
+                  "args": {
+                    "value": "baseline.typography"
+                  }
+                }
+              ]
+            },
+            "emit": [
+              "`typography` re-injected from the baseline"
+            ],
+            "why": "a variant diff dropped it, but with no named style the values are the only record"
+          },
+          {
+            "when": {
+              "operation": "isNull",
+              "args": {
+                "value": "node.textStyleId"
+              }
+            },
+            "emit": [
+              "`typography` as resolved values"
+            ]
+          }
+        ],
+        "otherwise": {
+          "emit": []
+        },
+        "basis": "implementation"
+      }
+    },
+    "props": {
+      "boolean": {
+        "disposition": "bound",
+        "target": "ComponentPropertyDefinitions (BOOLEAN, or a two-option VARIANT)",
+        "direction": "both",
+        "basis": "implementation",
+        "rule": "variantAxes",
+        "notes": "A native BOOLEAN property reads directly. A VARIANT whose options are exactly true/false (case-insensitive) also reads as a boolean, recording `$extensions['com.figma'].type: VARIANT` so the render direction rebuilds the variant axis rather than a BOOLEAN property. Render creates a BOOLEAN property where the prop is bound to an element's `visible`."
+      },
+      "string": {
+        "disposition": "bound",
+        "target": "ComponentPropertyDefinitions (TEXT or INSTANCE_SWAP)",
+        "direction": "both",
+        "basis": "implementation",
+        "rule": "numberInference",
+        "notes": "TEXT and INSTANCE_SWAP both collapse to `string`; the Figma property type survives in `$extensions['com.figma'].type`. An INSTANCE_SWAP default resolves the component id to a name, reduced to the glyph name where the glyphs convention identifies one (ADR-103). The read default lands in `examples`, never `default` (ADR-014). Render re-derives the property type from where the prop is bound: `content` → TEXT, `instanceOf` → INSTANCE_SWAP."
+      },
+      "enum": {
+        "disposition": "bound",
+        "target": "VARIANT property options / ComponentSet variant axes",
+        "direction": "both",
+        "basis": "implementation",
+        "rule": "variantAxes",
+        "notes": "The option list is the variant axis, authored order preserved — the render direction rebuilds the component set from it positionally. `nullable: false` is recorded: the enum lists every accepted value."
+      },
+      "number": {
+        "disposition": "bound",
+        "target": "TEXT default or all-numeric VARIANT options, under `platforms.figma.inferNumberProps`",
+        "direction": "both",
+        "basis": "implementation",
+        "rule": "variantAxes",
+        "notes": "Opt-in inference (ADR-029). A TEXT property whose default passes the numeric guard becomes a NumberProp; a VARIANT whose every option is numeric becomes a NumberProp carrying the options as `enum` (ADR-072). With the convention off, both stay strings."
+      },
+      "slot": {
+        "disposition": "bound",
+        "target": "ComponentPropertyDefinitions (SLOT), plus slotSettings and preferredValues",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Native SLOT properties read as `type: slot`. Under `platforms.figma.slotConstraints`, `slotSettings` and resolved `preferredValues` populate `minChildren`/`maxChildren`/`anyOf` (ADR-056). A primitive marker joins `anyOf` when a variant's default content held a top-level `$text`/`$glyph` primitive and the platform reads slot primitives (ADR-102) — only ever joining an `anyOf` that already names a component. `defaultSlot` resolves once at generation from `specs.slots.default.match`, is refused when the prop is bound to anything but a container or slot element, and marks at most one prop (ADR-099). Render skips slot props — slot structure is rebuilt from the elements, not minted as a property."
+      },
+      "image": {
+        "disposition": "bound",
+        "target": "code-only container layer named in `figma.images.sourceProps`",
+        "direction": "both",
+        "basis": "implementation",
+        "rule": "codeOnlyProps",
+        "notes": "An image prop has no native Figma property type; it is read from a code-only layer (ADR-063) and carries authoring-default images in `examples` (ADR-088). Render mints the hidden layer back."
+      },
+      "object": {
+        "disposition": "bound",
+        "target": "separator-delimited flat property names, under `platforms.figma.objectProps`",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Figma cannot author an object natively. Flat names fold into one ObjectProp before key formatting (ADR-111); each member's `$extensions['com.figma'].name` records the flat source name, so unfolding on render is reversal, not re-derivation. A name colliding with the fold outcome stays flat. Render emits one flat property per member — BOOLEAN for boolean members, TEXT otherwise; enum members are variant axes and belong to the component set."
+      }
+    },
+    "propRules": {
+      "variantAxes": {
+        "disposition": "bound",
+        "direction": "figma-to-spec",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["boolean", "enum", "number"],
+        "inputs": [
+          { "ref": "property.type", "from": "Figma ComponentPropertyDefinitions" },
+          { "ref": "property.variantOptions", "from": "Figma ComponentPropertyDefinitions" },
+          { "ref": "conventions.platforms.figma.inferNumberProps", "from": "declared conventions" }
+        ],
+        "derived": {
+          "booleanPair": {
+            "expression": { "operation": "equals", "args": { "value": "property.variantOptions", "compareTo": "exactly the pair true/false, case-insensitive" } },
+            "source": "capture-side VARIANT classification"
+          },
+          "allNumeric": {
+            "expression": { "operation": "equals", "args": { "value": "property.variantOptions", "compareTo": "every option numeric" } },
+            "source": "capture-side numeric option guard (ADR-072)"
+          }
+        },
+        "cases": [
+          {
+            "when": { "operation": "all", "args": [
+              { "operation": "equals", "args": { "value": "property.type", "compareTo": "VARIANT" } },
+              { "operation": "equals", "args": { "value": "derived.booleanPair", "compareTo": true } }
+            ] },
+            "emit": ["BooleanProp with `$extensions['com.figma'].type: VARIANT`"],
+            "why": "A two-state axis is a boolean wearing variant clothes; the extension records the source so render rebuilds the axis"
+          },
+          {
+            "when": { "operation": "all", "args": [
+              { "operation": "equals", "args": { "value": "property.type", "compareTo": "VARIANT" } },
+              { "operation": "equals", "args": { "value": "conventions.platforms.figma.inferNumberProps", "compareTo": true } },
+              { "operation": "equals", "args": { "value": "derived.allNumeric", "compareTo": true } }
+            ] },
+            "emit": ["NumberProp with the options as `enum`, authored order, `nullable: false`"],
+            "why": "ADR-072 — the enum is the variant axis; render rebuilds the component set from it positionally"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "property.type", "compareTo": "VARIANT" } },
+            "emit": ["EnumProp with the options as `enum`, `nullable: false`"],
+            "why": "The default case: a closed option list"
+          }
+        ],
+        "otherwise": { "emit": [], "why": "Non-VARIANT property types resolve per kind, outside this rule" },
+        "notes": "One Figma VARIANT property resolves to one of three prop kinds, and no kind alone states the rule."
+      },
+      "numberInference": {
+        "disposition": "bound",
+        "direction": "figma-to-spec",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["string", "number"],
+        "inputs": [
+          { "ref": "property.type", "from": "Figma ComponentPropertyDefinitions" },
+          { "ref": "property.defaultValue", "from": "Figma ComponentPropertyDefinitions" },
+          { "ref": "conventions.platforms.figma.inferNumberProps", "from": "declared conventions" }
+        ],
+        "cases": [
+          {
+            "when": { "operation": "all", "args": [
+              { "operation": "equals", "args": { "value": "property.type", "compareTo": "TEXT" } },
+              { "operation": "equals", "args": { "value": "conventions.platforms.figma.inferNumberProps", "compareTo": true } },
+              { "operation": "equals", "args": { "value": "property.defaultValue", "compareTo": "passes the numeric guard" } }
+            ] },
+            "emit": ["NumberProp with `default` and `examples` carrying the number"],
+            "why": "ADR-029 — opt-in, so a library whose TEXT props are genuinely text never loses them to digits"
+          }
+        ],
+        "otherwise": { "emit": ["StringProp with the read default in `examples`"], "why": "The read default is demo content, never a contract default (ADR-014)" },
+        "notes": "A TEXT property is a string or a number, and only the convention plus the value decide which."
+      },
+      "codeOnlyProps": {
+        "disposition": "bound",
+        "direction": "both",
+        "basis": "implementation",
+        "form": "prose",
+        "keys": ["image"],
+        "outputs": ["props with `$extensions['com.figma'].source` provenance"],
+        "resolution": "A hidden code-only container layer's sub-layers mint props the component's native property surface cannot carry — accessibility labels, heading levels, ARIA concerns, image sources (ADR-027). Each prop records `source.kind: 'codeOnlyProp'` and its `layer`; an enum minted from a nested instance records `instanceOf`. Props named in `figma.images.sourceProps` mint ImageProps (ADR-063). Native extraction skips these names so a prop is minted exactly once. Render mints the hidden layers back from the provenance.",
+        "partial": "A code-only layer with no recognisable sub-layer shape mints nothing; native props are unaffected.",
+        "notes": "Code-only extraction spans the boolean, string, number, enum and image kinds; it is keyed under `image` because that kind exists only through it — the other kinds also read natively."
+      },
+      "booleanContentPairing": {
+        "disposition": "bound",
+        "direction": "figma-to-spec",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["boolean"],
+        "inputs": [
+          { "ref": "element.visibleBinding", "from": "element bindings, per variant" },
+          { "ref": "element.contentBinding", "from": "element bindings, per variant" },
+          { "ref": "booleanProp.default", "from": "Figma ComponentPropertyDefinitions" }
+        ],
+        "derived": {
+          "pairValidates": {
+            "expression": { "operation": "equals", "args": { "value": "the visible- and content-bindings", "compareTo": "co-occur on one element, consistently across every variant" } },
+            "source": "capture-side cross-variant pair validation"
+          }
+        },
+        "cases": [
+          {
+            "when": { "operation": "all", "args": [
+              { "operation": "equals", "args": { "value": "derived.pairValidates", "compareTo": true } },
+              { "operation": "equals", "args": { "value": "booleanProp.default", "compareTo": false } }
+            ] },
+            "emit": ["the boolean prop, consumed", "the content prop: `nullable: true`, `default: null`, and the consumed boolean named in `$extensions['com.figma'].visibilityProp`"],
+            "why": "A toggle that defaults off means the content's resting state is absent — `null` is the default, not just a possibility"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "derived.pairValidates", "compareTo": true } },
+            "emit": ["the boolean prop, consumed", "the content prop: `nullable: true` and the consumed boolean named in `$extensions['com.figma'].visibilityProp`"],
+            "why": "A BOOLEAN that only ever toggles the element a content prop fills is not a second fact — it is the content prop's nullability"
+          }
+        ],
+        "otherwise": { "emit": ["both props, standing as read"], "why": "A candidate pair that fails cross-variant validation consolidates nothing" },
+        "notes": "The consolidation rule: two Figma properties become one spec prop. The render direction re-creates the boolean from the nullable content prop's visible-binding."
+      }
+    },
+    "anatomy": {
+      "text": {
+        "disposition": "bound",
+        "target": "TEXT node",
+        "direction": "both",
+        "basis": "implementation",
+        "rule": "typeDetection",
+        "notes": "Reads from a TEXT node; render creates one. The only type that carries typography, and the only one whose `content` is a string or a content binding."
+      },
+      "glyph": {
+        "disposition": "bound",
+        "target": "INSTANCE or VECTOR reclassified by the library's glyphs convention",
+        "direction": "both",
+        "basis": "implementation",
+        "rule": "typeDetection",
+        "notes": "No Figma node type is a glyph. Membership comes from the declared glyphs convention — name pattern or structural form (ADR-103) — and `content` carries the glyph name. Render swaps in the glyph component's instance by name."
+      },
+      "vector": {
+        "disposition": "approximated",
+        "target": "VECTOR node",
+        "direction": "both",
+        "basis": "implementation",
+        "rule": "typeDetection",
+        "notes": "Capture records the type, position and styles — never the path geometry, which the schema does not carry. Render therefore creates an empty vector node of the right size and styling: the shape's actual paths are lost on any round trip. The declared seam, not an accident."
+      },
+      "container": {
+        "disposition": "bound",
+        "target": "FRAME or COMPONENT node",
+        "direction": "both",
+        "basis": "implementation",
+        "rule": "typeDetection",
+        "notes": "The default classification: any node type without a mapping of its own. The transforms' internal key tables speak `frame` and `component` where the contract says `container` — the component ROOT is the component, not an anatomy element, and a nested frame folds to `container`. That vocabulary mapping is declared here and nowhere else."
+      },
+      "slot": {
+        "disposition": "bound",
+        "target": "SLOT node",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Native slot nodes. The prop side of the same fact — constraints, markers, the default slot — is the props surface's `slot` kind; the element side carries `contentStyles` keyed by the primitive markers its prop's `anyOf` names (ADR-102)."
+      },
+      "instance": {
+        "disposition": "bound",
+        "target": "INSTANCE node",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "`instanceOf` resolves to the main component's name — the component set's where the main component sits inside one. A primitive layer in composed content may be PROMOTED to an instance by the primitives convention (ADR-074), recorded in `$extensions['com.figma']`."
+      },
+      "line": {
+        "disposition": "bound",
+        "target": "LINE node",
+        "direction": "both",
+        "basis": "implementation",
+        "rule": "typeDetection",
+        "notes": "Direct node-type mapping both ways; stroke styling carries the appearance."
+      },
+      "ellipse": {
+        "disposition": "bound",
+        "target": "ELLIPSE node",
+        "direction": "both",
+        "basis": "implementation",
+        "rule": "typeDetection",
+        "notes": "Direct node-type mapping both ways. Arc data (sweep, ratio) is not carried by the spec; a plain ellipse round-trips cleanly."
+      },
+      "rectangle": {
+        "disposition": "bound",
+        "target": "RECTANGLE node",
+        "direction": "both",
+        "basis": "implementation",
+        "rule": "typeDetection",
+        "notes": "Direct node-type mapping both ways; size, fills and corner radii carry the appearance."
+      },
+      "polygon": {
+        "disposition": "approximated",
+        "target": "POLYGON node",
+        "direction": "both",
+        "basis": "implementation",
+        "rule": "typeDetection",
+        "notes": "The node type maps directly, but the point count is not carried by the spec — render creates the default polygon."
+      },
+      "star": {
+        "disposition": "approximated",
+        "target": "STAR node",
+        "direction": "both",
+        "basis": "implementation",
+        "rule": "typeDetection",
+        "notes": "The node type maps directly, but the point count and inner-radius ratio are not carried by the spec — render creates the default star."
+      }
+    },
+    "anatomyRules": {
+      "typeDetection": {
+        "disposition": "bound",
+        "direction": "figma-to-spec",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["text", "glyph", "vector", "container", "line", "ellipse", "rectangle", "polygon", "star"],
+        "inputs": [
+          { "ref": "node.type", "from": "Figma node" },
+          { "ref": "conventions.platforms.figma.glyphs", "from": "declared conventions" }
+        ],
+        "derived": {
+          "isGlyph": {
+            "expression": { "operation": "equals", "args": { "value": "node", "compareTo": "matches the glyphs convention — by name pattern, or by structural form after membership is established from the node (ADR-103)" } },
+            "source": "capture-side glyph convention matcher"
+          }
+        },
+        "cases": [
+          { "when": { "operation": "equals", "args": { "value": "derived.isGlyph", "compareTo": true } },
+            "emit": ["`glyph` — whatever the node type, with the glyph name as `content`"],
+            "why": "A glyph is a convention fact, not a node-type fact; an INSTANCE and a VECTOR can both be one" },
+          { "when": { "operation": "equals", "args": { "value": "node.type", "compareTo": "SLOT" } },
+            "emit": ["`slot`"], "why": "Checked before the main table" },
+          { "when": { "operation": "equals", "args": { "value": "node.type", "compareTo": "one of TEXT, VECTOR, LINE, STAR, POLYGON, RECTANGLE, ELLIPSE, INSTANCE" } },
+            "emit": ["the same-named element type, lowercased"],
+            "why": "Direct table" }
+        ],
+        "otherwise": { "emit": ["`container`"], "why": "FRAME, COMPONENT, and any node type without a mapping of its own — the default is structural, so a new Figma node type degrades to a container rather than failing" },
+        "notes": "One node resolves to one of eleven types, and the glyph arm means no single node type determines the answer."
+      },
+      "wrapperCollapse": {
+        "disposition": "bound",
+        "direction": "figma-to-spec",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["container", "text", "glyph"],
+        "inputs": [
+          { "ref": "settings.spec.collapsePrimitiveWrapper", "from": "declared settings" },
+          { "ref": "root.children", "from": "the root container's anatomy-visible children, per variant" },
+          { "ref": "root.styles", "from": "the root's non-default style keys, after default removal" }
+        ],
+        "derived": {
+          "semanticFrame": {
+            "expression": { "operation": "equals", "args": { "value": "root.styles", "compareTo": "carries any disqualifying key — clipsContent, cornerRadius, strokes, strokeAlign, strokeWeight, itemSpacing, padding, effects, backgroundColor, cornerSmoothing" } },
+            "source": "capture-side collapse eligibility — a non-default value on one of these means the container is a semantic frame, not a Figma wrapper"
+          }
+        },
+        "cases": [
+          {
+            "when": { "operation": "all", "args": [
+              { "operation": "equals", "args": { "value": "settings.spec.collapsePrimitiveWrapper", "compareTo": true } },
+              { "operation": "equals", "args": { "value": "root.children", "compareTo": "exactly one, in every variant" } },
+              { "operation": "equals", "args": { "value": "derived.semanticFrame", "compareTo": false } }
+            ] },
+            "emit": ["one anatomy element where Figma has two layers — keyed by the wrapper, typed by the leaf", "positioning and base keys conveyed from the wrapper always; size keys conveyed only where the leaf lacks its own", "the pre-collapse layer name in `$extensions['com.figma'].name`; a role the collapsed child carried in `childRole`"],
+            "why": "ADR-058: the wrapper existed for Figma's sake, so the spec records the one element the design means — provenance keeps the round trip honest (ADR-083's collapse family)"
+          }
+        ],
+        "otherwise": { "emit": ["no collapse — both layers stay elements"], "why": "All-or-nothing across variants: one ineligible variant means no variant collapses, or the same element would exist in some variants and not others" },
+        "notes": "A cross-concern rule: it rewrites anatomy, element styles and binding refs together."
+      },
+      "primitivePromotion": {
+        "disposition": "bound",
+        "direction": "figma-to-spec",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["text", "glyph", "instance"],
+        "inputs": [
+          { "ref": "layer", "from": "a primitive layer inside composed example content" },
+          { "ref": "conventions.primitives", "from": "declared conventions — each entry names a design system component and the primitive shape it claims" }
+        ],
+        "derived": {
+          "matchCount": {
+            "expression": { "operation": "equals", "args": { "value": "conventions.primitives", "compareTo": "the number of entries that resolve against this layer" } },
+            "source": "capture-side primitive resolution (ADR-074)"
+          }
+        },
+        "cases": [
+          {
+            "when": { "operation": "equals", "args": { "value": "derived.matchCount", "compareTo": 1 } },
+            "emit": ["an `instance` element of the matching component, with `promotedPrimitive: true` and the consumed content — the text layer's string or the glyph's name — in `$extensions['com.figma']`"],
+            "why": "The promotion records itself and what it consumed, so reversal and auditing stay possible"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "derived.matchCount", "compareTo": "more than 1" } },
+            "emit": ["the same promotion to the highest-scoring entry's component, plus `multipleMatches: true`"],
+            "why": "Two components claiming one layer may describe the design system or a drifted conventions file — either way the ambiguity is a property of this element, durable rather than a warning that scrolls past"
+          }
+        ],
+        "otherwise": { "emit": ["the layer stays a primitive element"], "why": "A primitive matching no entry is just a primitive" },
+        "notes": "Applies in composed/example content, not to the component's own anatomy."
+      }
+    },
+    "references": {
+      "token": {
+        "disposition": "bound",
+        "target": "Figma Variables",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Capture records the bound variable as a `$token`; render resolves the token path back to a variable and binds it. Where the variable cannot be resolved, the value falls back to the cached raw value the document carries — a degradation using only data the document holds (DSPEC-43)."
+      },
+      "binding": {
+        "disposition": "bound",
+        "target": "component property bindings",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Capture writes a `$binding` wherever a Figma property drives an element member — `content`, `visible`, `instanceOf`. Render re-creates the property and re-attaches the binding by the id map the property pass returns; on a style value, the dedicated binding path wires the node field to the component property, not yet confirmed per key."
+      },
+      "literal": {
+        "disposition": "bound",
+        "target": "node properties, directly",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "The ordinary case for every style value."
+      },
+      "mixed": {
+        "disposition": "unsupported",
+        "target": "—",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Nothing is applied. A mixed value records that the source layer had no single value, so there is nothing to render and a rendered guess would be invented data. The sentinel is a defect signal about the Figma file, not a value a binding realises."
+      },
+      "conditional": {
+        "disposition": "bound",
+        "target": "render-path conditional evaluation",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "The ADR-018 conditional form is implemented on the render path: the condition's binding target is resolved dynamically and the then/else branch applied. The one platform that honours it; not yet confirmed per key."
+      },
+      "slotContent": {
+        "disposition": "bound",
+        "target": "nested instances and override subtrees",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Capture deduplicates structured fills into the registries by structural equality and writes `$slotContent` pointers at the fill sites; render composes nested instances through the instance manifests."
+      },
+      "subcomponent": {
+        "disposition": "bound",
+        "target": "sibling components in one component set or file",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "A `$ref` into `#/subcomponents/` captures from and renders back to the sibling component the pattern match identified."
+      },
+      "elementType": {
+        "disposition": "unsupported",
+        "target": "—",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Never produced: capture writes plain `ElementType` strings. An authored `ElementTypeRef` passes through opaque — resolution is a consumer concern by design (ADR-012)."
+      },
+      "image": {
+        "disposition": "bound",
+        "target": "image fills and the images registry",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Capture deduplicates image bytes into the registry and writes `$image` pointers (ADR-063); render restores fills and source layers from the registry."
+      },
+      "nested": {
+        "disposition": "approximated",
+        "target": "nested instance overrides",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "Capture writes `$nested` paths for configuration deeper than one instance boundary (ADR-052). Render declares them unimplemented and skips them, reporting the skip — a stated loss, not a silent one."
+      }
+    },
+    "referenceRules": {}
+  },
+  "directions": {
+    "figma-to-spec": "Capture. A Figma file becomes a document.",
+    "spec-to-figma": "Render. A document becomes nodes on the canvas."
+  },
+  "onAbsentVocabulary": {
+    "declaredDefault": "Applies the value the schema declares for an absent key.",
+    "platformInitial": "Applies the platform's own initial value, which may differ from the schema's declared default.",
+    "warns": "Warns and applies nothing.",
+    "nothing": "Applies nothing, silently.",
+    "unverified": "Nobody has established what this platform does when the key is absent."
+  },
+  "onAbsentNote": "What this platform does when a style key is absent from a document. The schema declares the meaning of absence once (§4.1a); this records whether the platform honours it. A row whose onAbsent is not declaredDefault is a disagreement with the contract, and each one is a decision rather than an accident.",
+  "basisVocabulary": {
+    "implementation": "Verified against a citable implementation. The drift guard checks it, and a change to that implementation fails the build.",
+    "intent": "Asserted from the authoritative source for what the data means, which is not publicly citable. Nothing mechanical checks it; a reviewer must."
+  },
+  "basisNote": "Whether a claim is checked or asserted. Figma is bidirectional: a render claim is verified against a citable implementation, while a capture claim rests on the authoritative capture engine, which is private — so nothing mechanical can check it and a reader should know that.",
+  "decisionThemes": {
+    "colorSpace": {
+      "title": "A non-sRGB ColorObject renders as if it were sRGB",
+      "note": "The schema admits 14 colour spaces and the render path never reads `colorSpace` — components 0 through 2 are taken as red, green and blue regardless, so an `oklch` value is misread rather than approximated. A `none` component becomes 0, and components beyond the third are dropped.",
+      "decided": "Convert to sRGB at render time (#813). The schema keeps all 14 spaces; the render path gains a conversion with gamut mapping for values outside sRGB. Until that lands, a non-sRGB ColorObject renders wrong rather than degraded."
+    },
+    "explicitZero": {
+      "title": "Zero is not distinguishable from unset",
+      "note": "Both platforms currently treat a dimension of 0 as \"no constraint\" rather than \"a constraint of zero\".",
+      "decided": "Open. Deferred — see #814, and #812 on what an absent `width`/`height` means. The two interact and should be settled together."
+    },
+    "logicalToPhysical": {
+      "title": "Logical sides become physical without a direction",
+      "note": "The schema uses `start` and `end` so a document is direction-agnostic. The Figma render maps `start` to the left padding with no writing-direction branch.",
+      "decided": "Accepted as a platform limit. Figma cannot express a writing direction, so the mapping is left-to-right only and the loss is declared rather than fixed — which is what `approximated` means. CSS stays direction-safe by emitting `padding-block` and `padding-inline`."
+    },
+    "partialOnUnresolved": {
+      "title": "A value is dropped rather than degraded",
+      "note": "A gradient whose stops do not yield two resolvable colours is dropped whole. A `padding` side that is present but unresolvable is omitted while its siblings emit, whereas `cornerRadius` substitutes `0` for the same failure. DSPEC-43 says a degradation applies the spec's own recorded fallback, or applies nothing and warns — dropping part of a value silently is neither.",
+      "decided": "Open. See #816 on the disagreement between the composite types, and #815 on the gradient path."
+    }
+  }
+}

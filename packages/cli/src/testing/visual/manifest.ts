@@ -205,7 +205,7 @@ function coerceValue(raw: string, apiProp: any, contractOptions?: string[]): unk
   return raw;
 }
 
-function buildPropMap(
+export function buildPropMap(
   figmaPropNames: Set<string>,
   apiProps: Record<string, any>,
   contract: Contract | null,
@@ -214,10 +214,26 @@ function buildPropMap(
   const unmapped: string[] = [];
   for (const figmaName of figmaPropNames) {
     let propKey: string | null = null;
+    // A folded member (ADR-111) records its flat Figma name on the member; the
+    // mapping answers the member's dotted arg key — the spelling the emitted
+    // stories carry their member args under — typed and defaulted by the member.
+    let memberDef: Record<string, any> | null = null; // eslint-disable-line @typescript-eslint/no-explicit-any
+    let contractKey: string | null = null;
     for (const [key, def] of Object.entries(apiProps)) {
       if (def?.$extensions?.['com.figma']?.name === figmaName) {
         propKey = key;
         break;
+      }
+      if (def?.type === 'object' && def.members && typeof def.members === 'object') {
+        for (const [memberKey, member] of Object.entries<any>(def.members)) { // eslint-disable-line @typescript-eslint/no-explicit-any
+          if (member?.$extensions?.['com.figma']?.name === figmaName) {
+            propKey = `${key}.${memberKey}`;
+            memberDef = member;
+            contractKey = key;
+            break;
+          }
+        }
+        if (propKey) break;
       }
     }
     if (!propKey) {
@@ -228,15 +244,16 @@ function buildPropMap(
       unmapped.push(figmaName);
       continue;
     }
-    const inContract = contract?.props?.has(propKey) ?? false;
+    const inContract = contract?.props?.has(contractKey ?? propKey) ?? false;
+    const def = memberDef ?? apiProps[propKey];
     propMap[figmaName] = {
       prop: propKey,
-      type: apiProps[propKey]?.type ?? null,
+      type: def?.type ?? null,
       kind: inContract ? 'arg' : 'interaction',
       default:
-        contract?.defaults?.[propKey] !== undefined
+        !memberDef && contract?.defaults?.[propKey] !== undefined
           ? contract.defaults[propKey]
-          : apiProps[propKey]?.default ?? null,
+          : def?.default ?? null,
     };
   }
   return { propMap, unmapped };
@@ -407,16 +424,27 @@ function buildEntry(ctx: {
     Object.values(propMap).filter((m) => m.kind === 'arg').map((m) => m.prop),
   );
   const resets: Record<string, unknown> = {};
-  for (const [pk, def] of Object.entries<any>(spec.props)) {
-    if (argPropKeys.has(pk)) continue;
-    const d = def ?? {};
-    if (d.type === 'slot') {
-      if (d.default === null) resets[pk] = null;
-      continue;
-    }
-    if (!['string', 'number', 'boolean'].includes(d.type)) continue;
+  const resetScalar = (pk: string, d: Record<string, any>): void => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    if (argPropKeys.has(pk)) return;
+    if (!['string', 'number', 'boolean'].includes(d.type)) return;
     if ('default' in d && d.default !== undefined) resets[pk] = d.default;
     else if (Array.isArray(d.examples) && d.examples.length > 0) resets[pk] = d.examples[0];
+  };
+  for (const [pk, def] of Object.entries<any>(spec.props)) {
+    const d = def ?? {};
+    if (d.type === 'slot') {
+      if (!argPropKeys.has(pk) && d.default === null) resets[pk] = null;
+      continue;
+    }
+    // An object prop (ADR-111) resets per member, under the dotted arg keys the
+    // emitted stories carry.
+    if (d.type === 'object' && d.members && typeof d.members === 'object') {
+      for (const [memberKey, member] of Object.entries<any>(d.members)) { // eslint-disable-line @typescript-eslint/no-explicit-any
+        resetScalar(`${pk}.${memberKey}`, member ?? {});
+      }
+      continue;
+    }
+    resetScalar(pk, d);
   }
 
   for (const variant of variants) {

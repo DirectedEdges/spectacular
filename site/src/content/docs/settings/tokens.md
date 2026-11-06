@@ -1,5 +1,5 @@
 ---
-title: "Tokens"
+title: "tokens"
 description: "Control how design token references are serialized in the spec output"
 ---
 
@@ -7,54 +7,29 @@ description: "Control how design token references are serialized in the spec out
 
 Style properties in a spec frequently reference design tokens — the colors, spacing, and typography defined as Figma variables or published styles. The `tokens` option controls **how those references are serialized**, ranging from a minimal name string to a rich object carrying full Figma provenance.
 
-Different consumers need different levels of detail: a documentation site just needs the token name, a code generator needs a structured reference with a type hint, a Figma-native tool needs raw variable IDs, and a team with a bespoke token system needs to inject its own mapping entirely. One format can't satisfy all of these — so `tokens` selects a single **profile** applied uniformly to every token reference in the output, both variables and published named styles. A run choice in `config/settings.yaml`: every profile serializes the same references correctly, just at different levels of detail.
+Different consumers need different levels of detail: a documentation site just needs the token name, a code generator needs a structured reference with a type hint, a Figma-native tool needs raw variable IDs, and a team with a bespoke token system needs to inject its own mapping entirely. One format can't satisfy all of these — so `tokens` selects a single **profile** applied uniformly to every token reference in the output, both variables and published named styles. Every profile serializes the same references correctly, just at different levels of detail.
 
-## Configuration
+| | |
+|---|---|
+| **File** | `config/settings.yaml` |
+| **Path** | `spec.tokens` |
+| **Type** | enum |
+| **Default** | `TOKEN` |
 
-```yaml
-spec:
-  tokens: TOKEN  # Default — DTCG-aligned objects
-```
-
-**Default:** `TOKEN`.
-
-## Result
-
-Under the default `TOKEN` profile, the `DS Alert` root's `backgroundColor` is emitted as a structured, typed reference:
-
-```json
-{
-  "default": {
-    "elements": {
-      "root": {
-        "styles": {
-          "backgroundColor": {
-            "$token": "DS Color/Alert/Info/Background",
-            "$type": "color"
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-Switching the profile reshapes that one reference — from the full object above down to a bare `"DS Color/Alert/Info/Background"` string under `TOKEN_NAME`, or up to an object with embedded Figma IDs under `TOKEN_FIGMA_EXTENSIONS`.
-
-## Profiles
+## Options
 
 The same `backgroundColor` reference, serialized under each profile:
 
-| Profile | What it emits | Example output |
-|---------|---------------|----------------|
-| `TOKEN` *(default)* | A DTCG-aligned object: the token path plus its `$type`. No tool-specific metadata. | `{ "$token": "DS Color/Alert/Info/Background", "$type": "color" }` |
-| `TOKEN_NAME` | The token path only, as a plain string with no wrapper object. The most compact format. | `"DS Color/Alert/Info/Background"` |
-| `TOKEN_FIGMA_EXTENSIONS` | Same as `TOKEN`, plus a `$extensions["com.figma"]` block with raw Figma identifiers. | `{ "$token": "…", "$type": "color", "$extensions": { "com.figma": { … } } }` |
-| `FIGMA_NAME` | The raw Figma-native name as a plain string, exactly as it appears in the file. | `"DS Color/Alert/Info/Background"` |
-| `CUSTOM` | Your own token object injected via `applyCustomTokens`, used verbatim. References without a `$custom` object fall back to `TOKEN_FIGMA_EXTENSIONS`. | `{ "name": "color-alert-info-bg", "value": "{color.alert.info.bg}" }` |
-| `FIGMA_SYNTAX_WEB` | The Web code-syntax name a designer set in Figma. Falls back to `TOKEN` when none is defined. | `"--ds-color-alert-info-bg"` |
-| `FIGMA_SYNTAX_IOS` | The iOS code-syntax name. Falls back to `TOKEN` when none is defined. | `"DSColor.alertInfoBg"` |
-| `FIGMA_SYNTAX_ANDROID` | The Android code-syntax name. Falls back to `TOKEN` when none is defined. | `"R.color.ds_alert_info_bg"` |
+| Value | Description |
+|---|---|
+| `TOKEN` *(default)* | A DTCG-aligned object: the token path plus its `$type`, with no tool-specific metadata, like `{ "$token": "DS Color/Alert/Info/Background", "$type": "color" }`. Good for code generators, documentation tools, and cross-platform design systems |
+| `TOKEN_NAME` | The token path only, as a plain string with no wrapper object — the most compact format, like `"DS Color/Alert/Info/Background"`. Ideal for token-resolution pipelines that already have a registry |
+| `TOKEN_FIGMA_EXTENSIONS` | Same as `TOKEN`, plus a `$extensions["com.figma"]` block with raw Figma identifiers, like `{ "$token": "…", "$type": "color", "$extensions": { "com.figma": { … } } }`. Useful for debugging, plugin integrations, or migration tooling |
+| `FIGMA_NAME` | The raw Figma-native name as a plain string, exactly as it appears in the file, like `"DS Color/Alert/Info/Background"`. For teams whose token systems mirror the Figma variable structure directly |
+| `CUSTOM` | Your own token object injected via `applyCustomTokens`, used verbatim, like `{ "name": "color-alert-info-bg", "value": "{color.alert.info.bg}" }` — for bespoke token formats (Style Dictionary references, custom JSON shapes). References without a `$custom` object fall back to `TOKEN_FIGMA_EXTENSIONS` |
+| `FIGMA_SYNTAX_WEB` | The Web code-syntax name a designer set in Figma, like `"--ds-color-alert-info-bg"`. Falls back to `TOKEN` when none is defined |
+| `FIGMA_SYNTAX_IOS` | The iOS code-syntax name, like `"DSColor.alertInfoBg"`. Falls back to `TOKEN` when none is defined |
+| `FIGMA_SYNTAX_ANDROID` | The Android code-syntax name, like `"R.color.ds_alert_info_bg"`. Falls back to `TOKEN` when none is defined |
 
 For variables the path includes the collection (`DS Color/…`); for named styles it is the style name as-is (e.g. `Body/Medium`).
 
@@ -116,21 +91,38 @@ backgroundColor: R.color.ds_alert_info_bg     # FIGMA_SYNTAX_ANDROID
 
 When a token has no code syntax defined for the chosen platform, the profile **falls back to the `TOKEN` output** for that reference, so these profiles are always safe to select.
 
-## When to use each profile
+## Example
 
-- **`TOKEN`** — Default. Platform-neutral consumers that need structured, typed references without Figma-specific metadata. Good for code generators, documentation tools, and cross-platform design systems.
-- **`TOKEN_NAME`** — Consumers that only need a lookup key. The most compact format, ideal for token-resolution pipelines that already have a registry.
-- **`TOKEN_FIGMA_EXTENSIONS`** — Consumers that need to trace tokens back to their Figma source — variable IDs, raw resolved values, collection names. Useful for debugging, plugin integrations, or migration tooling.
-- **`FIGMA_NAME`** — Teams whose token systems mirror the Figma variable structure directly and expect Figma-native naming.
-- **`CUSTOM`** — Teams with a bespoke token format (Style Dictionary references, custom JSON shapes). Requires running `specs applyCustomTokens` first.
-- **`FIGMA_SYNTAX_WEB` / `FIGMA_SYNTAX_IOS` / `FIGMA_SYNTAX_ANDROID`** — Consumers that want the platform-specific token name designers set in Figma's code syntax. Tokens lacking code syntax for the chosen platform fall back to `TOKEN` output.
+```yaml
+spec:
+  tokens: TOKEN  # Default — DTCG-aligned objects
+```
 
-## Path
+## Result
 
-`spec.tokens` in `config/settings.yaml`
+Under the default `TOKEN` profile, the `DS Alert` root's `backgroundColor` is emitted as a structured, typed reference:
 
-## See Also
+```json
+{
+  "default": {
+    "elements": {
+      "root": {
+        "styles": {
+          "backgroundColor": {
+            "$token": "DS Color/Alert/Info/Background",
+            "$type": "color"
+          }
+        }
+      }
+    }
+  }
+}
+```
 
-- [Promote Primitives](/settings/promote-primitives/#tokens) — a promotion table's `values` keys are matched against whatever this profile emits, so changing it stops them matching
-- [`applyCustomTokens` command](/cli/commands/apply-custom-tokens/) — mapping file format and pipeline for the `CUSTOM` profile
-- [ADR 007 — Token Reference Config](https://github.com/DirectedEdges/specs/blob/main/adr/007-token-reference-config.md) — the decision consolidating token formatting into a single enum
+Switching the profile reshapes that one reference — from the full object above down to a bare `"DS Color/Alert/Info/Background"` string under `TOKEN_NAME`, or up to an object with embedded Figma IDs under `TOKEN_FIGMA_EXTENSIONS`.
+
+## Further reading
+
+- [Promote Primitives](/settings/promote-primitives/#tokens) — a promotion table's `values` keys are matched against whatever this profile emits, so changing it stops them matching.
+- [`applyCustomTokens` command](/cli/commands/apply-custom-tokens/) for the mapping file format and pipeline for the `CUSTOM` profile.
+- [ADR 007 — Token Reference Config](https://github.com/DirectedEdges/specs/blob/main/adr/007-token-reference-config.md) for the decision consolidating token formatting into a single enum.

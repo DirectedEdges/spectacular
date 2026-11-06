@@ -1,18 +1,61 @@
 ---
-title: "States"
+title: "states"
 description: "Classify Figma variant props as browser-driven or consumer-controlled states for deterministic CSS and contract output"
 ---
 
-The `states` convention classifies your library's variant props as semantic states. A fact about the spec's own props, declared in `config/conventions/specs.yaml` (it names props that exist in `api.yaml`, so a transform reading only the spec can apply it): which prop expresses which state concept is an agreement no rule can recover — a wrong entry lands a concept on the wrong prop, and an unclassified prop emits as a `data-*` attribute. Declaring it enables two downstream behaviors:
+The `states` convention classifies your library's variant props as semantic states. A fact about the spec's own props (it names props that exist in `api.yaml`, so a transform reading only the spec can apply it): which prop expresses which state concept is an agreement no rule can recover — a wrong entry lands a concept on the wrong prop, and an unclassified prop emits as a `data-*` attribute.
+
+| | |
+|---|---|
+| **File** | `config/conventions/specs.yaml` |
+| **Path** | `states` |
+| **Type** | map of concept → `{ prop, value?, contract? }` |
+| **Default** | absent (all variant props emit as `data-*` selectors) |
+
+## Properties
+
+Each entry maps a concept key to the prop that expresses it:
+
+| Property | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `prop` | `string` | Yes | — | Figma variant prop name (e.g. `state`, `disabled`, `readOnly`) |
+| `value` | `string` | No | `"true"` | Figma enum value that activates this concept. Omit for boolean props. |
+| `contract` | `"omit"` \| `"keep"` | No | concept default | Override the concept's default contract behavior. Rarely needed. |
+
+## Example
+
+```yaml
+states:
+  # Concept key → { prop, value?, contract? }
+  # value: the Figma variant value that activates this concept (defaults to "true" for booleans)
+  # contract: rarely needed — derived from the concept
+  hover:
+    prop: state
+    value: hover
+  active:
+    prop: state
+    value: pressed       # Figma uses cross-platform name "pressed"; concept maps to :active
+  focus-within:
+    prop: focused        # boolean prop; value defaults to "true"
+  disabled:
+    prop: isDisabled     # library uses "is" prefix convention
+  readonly:
+    prop: readOnly
+  invalid:
+    prop: validation
+    value: invalid       # only one enum value maps to this concept
+  expanded:
+    prop: expanded
+```
+
+Run [`specs react`](/cli/commands/react/) to regenerate stylesheets after updating this declaration. Absence of `states` is safe — all variant props continue to emit as `data-*` selectors.
+
+## Behavior
+
+Declaring the convention enables two downstream behaviors:
 
 - [`specs react`](/cli/commands/react/) and [`specs webcomponents`](/cli/commands/webcomponents/) emit real CSS pseudo-classes and ARIA attribute selectors instead of `data-*` attributes for classified props.
 - The generated contract omits browser-driven props from its Props interface.
-
-Declare the classification once and both transforms apply it consistently.
-
-## How it works
-
-The same config drives both CSS and contract output — classify a prop once, and both transforms apply it consistently.
 
 ### Props from Figma
 
@@ -65,19 +108,6 @@ Each concept resolves to a canonical CSS selector and determines whether the pro
 
 ### Mapping Props to Concepts
 
-Declare mappings under `states` in [`config/conventions/specs.yaml`](/settings/). Use `prop` to name the variant prop and `value` for the specific enum value that activates the concept.
-
-```yaml title="Partial config/conventions/specs.yaml"
-states:
-  active:
-    prop: state
-    # Figma value "pressed" → active concept → :active on web
-    value: pressed
-  disabled:
-    # "is" prefix convention → disabled concept → :disabled / aria-disabled
-    prop: isDisabled
-```
-
 Figma naming conventions don't need to match the concept name. Many design systems name their pointer-down state `pressed` rather than `active` because `pressed` is platform-neutral — it maps to `:active` on web, `UIControlState.highlighted` on iOS, and press `Indication` in Compose. Naming it `active` in Figma would embed a web-specific term into a shared design language. Similarly, a library using `isDisabled` as its boolean prop convention is still expressing the `disabled` concept.
 
 :::tip Setting up for the first time?
@@ -126,49 +156,7 @@ interface TextInputProps {
 }
 ```
 
-## Configuration
+## Further reading
 
-```yaml
-states:
-  # Concept key → { prop, value?, contract? }
-  # value: the Figma variant value that activates this concept (defaults to "true" for booleans)
-  # contract: rarely needed — derived from the concept
-  hover:
-    prop: state
-    value: hover
-  active:
-    prop: state
-    value: pressed       # Figma uses cross-platform name "pressed"; concept maps to :active
-  focus-within:
-    prop: focused        # boolean prop; value defaults to "true"
-  disabled:
-    prop: isDisabled     # library uses "is" prefix convention
-  readonly:
-    prop: readOnly
-  invalid:
-    prop: validation
-    value: invalid       # only one enum value maps to this concept
-  expanded:
-    prop: expanded
-```
-
-## Properties
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `prop` | `string` | Yes | — | Figma variant prop name (e.g. `state`, `disabled`, `readOnly`) |
-| `value` | `string` | No | `"true"` | Figma enum value that activates this concept. Omit for boolean props. |
-| `contract` | `"omit"` \| `"keep"` | No | concept default | Override the concept's default contract behavior. Rarely needed. |
-
-
-Run [`specs react`](/cli/commands/react/) to regenerate stylesheets after updating this declaration. Absence of `states` is safe — all variant props continue to emit as `data-*` selectors.
-
-## Path
-
-`states` in `config/conventions/specs.yaml`
-
-## See Also
-
-- [`specs react`](/cli/commands/react/) and [`specs webcomponents`](/cli/commands/webcomponents/) — CSS output affected by this classification
-- generated contract — Props interface affected by `contract: omit`
-- [`subcomponents`](/settings/subcomponents/) — another presence-driven convention
+- [`specs react`](/cli/commands/react/) and [`specs webcomponents`](/cli/commands/webcomponents/) — CSS output affected by this classification.
+- [`subcomponents`](/settings/subcomponents/) — another presence-driven convention.

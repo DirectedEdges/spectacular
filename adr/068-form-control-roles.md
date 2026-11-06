@@ -5,6 +5,7 @@
 **Status**: ACCEPTED
 **Deciders**: Nathan Curtis (author)
 **Summary**: Role concepts for form controls and the parts that plumb a field — `textbox`, `checkbox`, `switch`, `label`, `errormessage` and their siblings — so a control and the elements describing it resolve to one another.
+**Decides**: none
 **Supersedes**: *(none; extends ADR 067; companion to ADR 055)*
 
 ---

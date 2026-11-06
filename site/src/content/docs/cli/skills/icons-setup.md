@@ -3,8 +3,6 @@ title: "icons.setup"
 description: "Work out how your library marks a component as an icon glyph, then prove the glyph names resolve"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge experimental-badge">Experimental</span>')</script>
-
 A skill that establishes the [`glyphs`](/settings/glyphs/) convention for your library: how a component is recognised as an icon glyph, so a placed icon resolves to a **name** rather than an anonymous vector.
 
 Installed by [`specs skills install`](/cli/commands/skills/) as `.claude/skills/specs-cli.icons.setup/`, then invoked in Claude Code.

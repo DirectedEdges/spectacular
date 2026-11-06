@@ -1,11 +1,28 @@
 ---
-title: "Subcomponents"
+title: "subcomponents"
 description: "Configure subcomponent discovery, matching patterns, and exclusions"
 ---
 
-Subcomponent organization and naming. A library fact, declared in `config/conventions/figma.yaml`: where a library keeps its subcomponents and how it names them are properties of the library, and a wrong declaration leaves subcomponents undiscovered. When present, the block enables subcomponent detection. When absent, the library declares no subcomponent convention and none are detected.
+Subcomponent organization and naming. A library fact: where a library keeps its subcomponents and how it names them are properties of the library, and a wrong declaration leaves subcomponents undiscovered — when present, the block enables subcomponent detection; when absent, the library declares no subcomponent convention and none are detected.
 
-## Configuration
+| | |
+|---|---|
+| **File** | `config/conventions/figma.yaml` |
+| **Path** | `subcomponents` |
+| **Type** | block (`scope`, `match`, `exclude`) |
+| **Default** | absent (no subcomponent convention) |
+
+## Properties
+
+| Property | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `scope` | `"NESTED"` \| `"PAGE"` | No | `NESTED` | Where the library keeps subcomponents. `NESTED` = component anatomy only; `PAGE` = also search the Figma page |
+| `match` | `string[]` | Yes | — | Template patterns using `{C}` (component name) and `{S}` (subcomponent name) placeholders |
+| `exclude` | `string[]` | No | — | Template patterns to exclude from matches. Same `{C}/{S}` syntax |
+
+An asset must match at least one `match` pattern to be considered a subcomponent. If it also matches an `exclude` pattern, the exclusion wins regardless of discovery source.
+
+## Example
 
 ```yaml
 subcomponents:
@@ -41,17 +58,7 @@ Matched assets are harvested into a `subcomponents` registry on the component. B
 
 Without `subcomponents`, the registry is absent and these nested components are not detected.
 
-## Properties
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `scope` | `"NESTED"` \| `"PAGE"` | No | `NESTED` | Where the library keeps subcomponents. `NESTED` = component anatomy only; `PAGE` = also search the Figma page |
-| `match` | `string[]` | Yes | — | Template patterns using `{C}` (component name) and `{S}` (subcomponent name) placeholders |
-| `exclude` | `string[]` | No | — | Template patterns to exclude from matches. Same `{C}/{S}` syntax |
-
-An asset must match at least one `match` pattern to be considered a subcomponent. If it also matches an `exclude` pattern, the exclusion wins regardless of discovery source.
-
-## How a pattern matches a name
+## Pattern matching rules
 
 Five rules, and they hold everywhere a pattern is read.
 
@@ -85,11 +92,7 @@ Case is the one thing not significant.
 
 With `match` ordered `{C} / {S}` then `{C} / _ / {S}`, `DS Card / _ / Header` gives a part named `_ / Header`. Reversing the order gives `Header`. List your most specific patterns first.
 
-## Path
+## Further reading
 
-`subcomponents` in `config/conventions/figma.yaml`
-
-## See Also
-
-- [Subcomponents guide](/guides/subcomponent-scoping/) - Detailed patterns and strategies
-- [Schema: Subcomponents](/schema/subcomponents/) - Subcomponent schema reference
+- [Subcomponents guide](/guides/subcomponent-scoping/) for detailed patterns and strategies.
+- [Schema: Subcomponents](/schema/subcomponents/) for the subcomponent schema reference.

@@ -13,3 +13,13 @@ export interface SlotContent {
   elements: Elements;
   layout: Layout;
 }
+
+/**
+ * Named `SlotContent` entries, keyed by a name of letters, digits, underscore
+ * or hyphen.
+ *
+ * The one shape behind `Component.slotContentExamples`,
+ * `Composition.slotContent` and their concern-document counterparts.
+ * @since 0.39.0
+ */
+export type SlotContentMap = Record<string, SlotContent>;

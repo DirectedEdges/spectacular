@@ -5,11 +5,97 @@ All notable changes to the Specs schema will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.39.0] - Unreleased
+## [0.40.0] - Unreleased
+
+### Added
+
+- `mappings/bindings/` is published. The binding data states which platform realises each style key and how, which is a fact about the contract and belongs with it. A consumer can now read it from the package rather than the repo (#837)
+- Every option of all 31 closed value sets — a description of what choosing it does (ADR-114)
+- `Styles` — `examples` on all 46 properties, each valid against its own property
+- `ColorObject.colorSpace`, `Settings.spec.tokens`, `Settings.spec.color` — per-option descriptions, previously only a value list
+- `Settings.spec.variantDepth` — `9999` titled "Unlimited", naming a sentinel the value could not
+- `DSPEC-48`, `DSPEC-49`, `DSPEC-50` — closed value sets declare `oneOf` of `const`, describe every option, and keep branches disjoint
+- `Sides.top`, `Sides.end`, `Sides.bottom`, `Sides.start` — `default: 0`, agreeing with `padding` and `strokeWeight` (ADR-116)
+- `Corners.topStart`, `Corners.topEnd`, `Corners.bottomEnd`, `Corners.bottomStart` — `default: 0`, agreeing with `cornerRadius`
+- `ItemSpacing.horizontal`, `ItemSpacing.vertical` — `default: 0`, agreeing with `itemSpacing`
+- `ColorObject.alpha` — `default: 1`, fully opaque per DTCG Color §4.1
+- `ImageValue.objectFit` — `default: "COVER"`
+- `Shadow.inset` — `default: false`, a drop shadow rather than an inner one
+- `Typography.letterSpacing`, `Typography.paragraphIndent`, `Typography.paragraphSpacing`, `Typography.listSpacing` — `default: 0`
+- `Typography.textCase` — `default: "ORIGINAL"`; `Typography.textDecoration` and `Typography.leadingTrim` — `default: "NONE"`
+- `Typography.hangingPunctuation`, `Typography.hangingList` — `default: false`
+- `DSPEC-52`, `DSPEC-53` — an optional composite member declares a default; a required one declares none
 
 ### Changed
 
 - **The JSON Schema now accepts exactly what the types declare for prop unions** — `EnumProp` requires `type`/`default`/`enum` and `SlotProp` requires `type` (restoring the discrimination `AnyProp`'s `oneOf` depends on, which wrongly failed every plain string prop), and `PropConfigurationValue` is `anyOf` because `ImageBinding` extends `PropBinding`, so a bare `$binding` pass-through legally matches both (ADR-105)
+- Closed value sets — declared as `oneOf` branches of `const` rather than a bare `enum`; admits the same values (ADR-114)
+- `Styles.position`, `Styles.layoutMode`, `Styles.textOverflow`, `Styles.textAlignHorizontal` — descriptions no longer restate their own option meanings
+- `TokenReference.$token` — described as the slash-separated path the corpus uses, not a dot-separated one
+
+### Removed
+
+
+## [0.39.0] - 2026-10-29
+
+### Breaking
+
+- `Settings.spec.format` — defaults to `YAML`, previously `JSON` (ADR-112)
+- `Settings.spec.keys` — defaults to `CAMEL`, previously `SAFE` (ADR-112)
+- `Settings.spec.color` — defaults to `HEXA`, previously `HEX` (ADR-112)
+- `Settings.curation.preserveManualSelections` — defaults to `true`, previously `false` (ADR-112)
+- `Settings.spec.collapsePrimitiveWrapper` — defaults to `true`, previously `false` (ADR-112)
+
+### Added
+
+- `Conventions.storybook` — typed as `StorybookConventions`, an open concern-keyed map of feature settings loaded from `conventions/storybook.yaml`; also on `ResolvedConventions`
+- `Settings.curation` — which components of a library a run specs, defaulting to today's behaviour
+- `Settings.curation.defaultSelection` — `READY_FOR_DEV` or `ALL`; defaults to `READY_FOR_DEV`
+- `Settings.curation.preserveManualSelections` — hand edits outrank a changed Figma status; defaults to false
+- `Settings.curation.includeDependencies` — select what a component is built from; defaults to true
+- `SpecsConventions.slots.default.match` — naming patterns identifying a component's designated default slot, authored in `conventions/specs.yaml`. A spec convention, not a platform one: what it names is a `SlotProp` the spec declares, so every platform reads the same answer (ADR-099)
+- `MetadataConventions.specs` — the spec conventions a run was performed under, recorded beside the one platform entry. Required by a reader that cannot re-derive one from the spec it holds: a render resolving a nested instance's default slot does not hold that instance's own component spec (ADR-099)
+- `SlotProp.defaultSlot` — durable marker set at generation time when a slot prop matched `specs.slots.default.match`, read by consumers with no dependency on `Conventions` (ADR-099)
+- `PrimitiveEntry.match` — layer-name prefixes selecting a promotion entry, ahead of style scoring; longest prefix wins (ADR-100)
+- `PrimitiveSlotContent` — reserved `anyOf` values naming a primitive a slot accepts: `$text` and `$glyph` (ADR-102)
+- `SlotProp.anyOf` — carries `PrimitiveSlotContent` markers alongside component names, and only where the slot already names a component. Type and absence semantics unchanged (ADR-102)
+- `Element.contentStyles` — typed as `ContentStyles`; how primitive content filling an element is formatted, recorded and layered per variant exactly as `styles` is (ADR-102)
+- `ContentStyles`, `TextContentStyles`, `GlyphContentStyles` — a `$text`/`$glyph` map over two closed property sets: text takes colour, typography, alignment, overflow and line clamp; a glyph takes fill colour, width and height (ADR-102)
+- `PlatformConventions.slotPrimitives` — the library's slots carry the primitives they accept in their default content; defaults to `true`, and required on `ResolvedPlatformConventions` (ADR-102)
+- `ObjectProp` — a prop whose value is an object of named scalar members (ADR-111)
+- `PropConfigurationValue` — accepts a member-keyed `ObjectPropValue` under an object-prop key (ADR-111)
+- `InstanceExample.propConfigurations` — accepts `ObjectPropValue` for object props (ADR-111)
+- `platforms.<platform>.objectProps` — opt-in folding of separator-named flat props into object props (ADR-111)
+- `Scalar` — a string, number or boolean value. Excludes `null`, which means *unset* (ADR-080) wherever it appears beside a scalar
+- `ComponentName` — the name of a component or component set, as written in this spec's `format.keys`
+- `LayoutBranch` — a parent layout node, element name as key and ordered child `LayoutNode`s as value. `LayoutNode` is now written as `string | LayoutBranch`, the same structural type it already was
+- `SlotContentMap` — named `SlotContent` entries, keyed by a name of letters, digits, underscore or hyphen
+- `ElementRole` — a semantic behavior role concept, or a non-empty list of them
+- `InstanceExampleConfigurationValue` — the value of one prop in an `InstanceExample`; a deliberate subset of `PropConfigurationValue` with no `PropBinding` and no `ImageBinding`
+- `AnatomyElementExtensions` and `FigmaAnatomyElementExtension` are now exported from the package root. Both already existed as types; only the export is new
+
+These six types name shapes TypeScript carried only inline. Every one of them is new. No existing type was renamed, and no existing declaration changed its structural type.
+
+Their JSON Schema counterparts are named definitions arriving separately; until that lands, these six are the type side of a pairing whose schema side is still inline. Parity closes when both are in (`CONSTITUTION.md` §I, `SPECIFICATION.md` DSPEC-22).
+
+### Changed
+
+- `$extensions['com.figma'].name` — documented rule corrected on props, anatomy elements and `platforms.<platform>.naming`. The field was described as absent under `naming: NONE`; NONE declares no source convention, which means nothing can be re-derived from a key, not that no name is kept. The field is recorded wherever formatting changed the name (ADR-066). Description only — no type or validation change
+- **The component schema names its previously inline shapes as definitions**, so docs and tools link to `Layout`, `Scalar` and `ComponentName` instead of showing anonymous objects. Validation is unchanged, and no TypeScript type changed.
+- The condition definitions — `Conditional`, `ConditionExpression`, `ConditionArgs` — are now declared only in `styles.schema.json`; the unused duplicates in `component.schema.json` were removed. `PropBinding` moves the other way: declared only in `component.schema.json`, referenced from `styles.schema.json`.
+
+### Migration
+
+- `Settings.spec.format`, `Settings.spec.keys`, `Settings.spec.color`, `Settings.curation.preserveManualSelections`, `Settings.spec.collapsePrimitiveWrapper`: a workspace that sets the member explicitly is unaffected. One that left it unset now resolves to the new value — set it explicitly to keep the former output.
+- `Settings.spec.keys` carries the largest cost: a spec regenerated with `CAMEL` renames every anatomy key, prop key and reference to one, and every name derived from a key. Treat it as a migration, or set `keys: SAFE`.
+
+### ADRs
+
+#### Accepted
+
+- [ADR-111](../../adr/111-object-props.md) — Object-Typed Props
+- [ADR-112](../../adr/112-scaffolded-defaults.md) — Settings defaults adopt their scaffolded values
+
 
 
 ## [0.38.0] - 2026-10-21

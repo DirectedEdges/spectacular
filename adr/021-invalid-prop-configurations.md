@@ -3,6 +3,7 @@
 **Branch**: `021-invalid-prop-configurations`
 **Created**: 2026-03-11
 **Status**: DRAFT
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

@@ -1,4 +1,22 @@
+import { Scalar } from "./Scalar.js";
 import { SlotContentRef } from "./SlotContentRef.js";
+import { ObjectPropValue } from "./PropConfigurations.js";
+
+/**
+ * The value of one prop in an `InstanceExample`: a scalar, `null` when the prop
+ * is unset (ADR-080), a `SlotContentRef` for a slot prop, or an
+ * `ObjectPropValue` for an object prop (ADR-111).
+ *
+ * A deliberate subset of `PropConfigurationValue` — no `PropBinding` and no
+ * `ImageBinding` — because an instance example is a documented configuration
+ * for human readers and tooling, not a live data flow.
+ * @since 0.39.0
+ */
+export type InstanceExampleConfigurationValue =
+  | Scalar
+  | null
+  | SlotContentRef
+  | ObjectPropValue;
 
 /**
  * A pre-configured usage of a whole component (ADR-048).
@@ -18,10 +36,14 @@ export type InstanceExample = {
   /**
    * Prop values for this example. Scalar types for scalar props;
    * `SlotContentRef` (into `Component.slotContentExamples`) for slot props;
+   * `ObjectPropValue` for object props (ADR-111);
    * `null` when the prop is unset in this example (ADR-080).
-   * `PropBinding` is not permitted here.
+   * `PropBinding` is not permitted here. Since ADR-111 this union cannot enforce
+   * that on its own — `ObjectPropValue` is a scalar-valued record, which a
+   * `{ $binding }` object satisfies structurally — so the rule is carried by the
+   * JSON Schema, where a member name may not begin with `$`.
    */
-  propConfigurations?: Record<string, string | number | boolean | null | SlotContentRef>;
+  propConfigurations?: Record<string, InstanceExampleConfigurationValue>;
 };
 
 /**

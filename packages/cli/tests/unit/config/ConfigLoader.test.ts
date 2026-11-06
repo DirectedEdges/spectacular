@@ -96,6 +96,35 @@ spec:
       expect(config.settings.spec.format).toBe(DEFAULT_SETTINGS.spec.format);
     });
 
+    it('resolves slotPrimitives false when the platform declares false', () => {
+      writeSplitFile('conventions/figma.yaml', `
+naming: SENTENCE
+slotPrimitives: false
+`);
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.slotPrimitives).toBe(false);
+    });
+
+    it('defaults slotPrimitives to true when the platform declares no such convention', () => {
+      writeSplitFile('conventions/figma.yaml', `
+naming: SENTENCE
+`);
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.slotPrimitives).toBe(true);
+    });
+
+    it('resolves slotPrimitives true when the platform declares true', () => {
+      writeSplitFile('conventions/figma.yaml', `
+naming: SENTENCE
+slotPrimitives: true
+`);
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.slotPrimitives).toBe(true);
+    });
+
     it('accepts .json split files', () => {
       writeSplitFile('conventions/figma.json', JSON.stringify({ naming: 'TITLE' }));
 
@@ -251,28 +280,28 @@ spec:
       writeSplitFile('settings.yaml', 'spec:\n  keys: INVALID');
 
       const config = configLoader.load();
-      expect(config.settings.spec.keys).toBe('SAFE'); // Default
+      expect(config.settings.spec.keys).toBe(DEFAULT_SETTINGS.spec.keys);
     });
 
     it('should validate spec.format and use default for invalid values', () => {
       writeSplitFile('settings.yaml', 'spec:\n  format: XML');
 
       const config = configLoader.load();
-      expect(config.settings.spec.format).toBe('JSON'); // Default
+      expect(config.settings.spec.format).toBe(DEFAULT_SETTINGS.spec.format);
     });
 
     it('should validate spec.layout and use default for invalid values', () => {
       writeSplitFile('settings.yaml', 'spec:\n  layout: INVALID');
 
       const config = configLoader.load();
-      expect(config.settings.spec.layout).toBe('LAYOUT'); // Default
+      expect(config.settings.spec.layout).toBe(DEFAULT_SETTINGS.spec.layout);
     });
 
     it('should validate spec.tokens and use default for invalid values', () => {
       writeSplitFile('settings.yaml', 'spec:\n  tokens: INVALID');
 
       const config = configLoader.load();
-      expect(config.settings.spec.tokens).toBe('TOKEN'); // Default
+      expect(config.settings.spec.tokens).toBe(DEFAULT_SETTINGS.spec.tokens);
     });
 
     it('should accept all valid spec.tokens values', () => {
@@ -302,7 +331,7 @@ spec:
       writeSplitFile('settings.yaml', 'spec:\n  color: INVALID');
 
       const config = configLoader.load();
-      expect(config.settings.spec.color).toBe('HEX'); // Default
+      expect(config.settings.spec.color).toBe(DEFAULT_SETTINGS.spec.color);
     });
 
     it('should accept all valid spec.color values', () => {
@@ -321,7 +350,7 @@ spec:
 
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const config = configLoader.load();
-      expect(config.settings.spec.color).toBe('HEX');
+      expect(config.settings.spec.color).toBe(DEFAULT_SETTINGS.spec.color);
       expect(warn.mock.calls.some(c => String(c[0]).includes('oklch'))).toBe(true);
       warn.mockRestore();
     });
@@ -500,6 +529,49 @@ subcomponents:
 
       const config = configLoader.load();
       expect(config.conventions.platforms!.figma.subcomponents).toEqual({ scope: 'NESTED', match: ['{C} / {S}'] });
+    });
+
+    it('resolves an empty objectProps block to the default separator (ADR-111)', () => {
+      writeSplitFile('conventions/figma.yaml', 'objectProps: {}');
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.objectProps).toEqual({ separator: '.' });
+    });
+
+    it('keeps an explicit objectProps.separator', () => {
+      writeSplitFile('conventions/figma.yaml', 'objectProps:\n  separator: "_"');
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.objectProps).toEqual({ separator: '_' });
+    });
+
+    it('warns and defaults an invalid objectProps.separator', () => {
+      const warn = vi.mocked(console.warn);
+      writeSplitFile('conventions/figma.yaml', 'objectProps:\n  separator: ""');
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.objectProps).toEqual({ separator: '.' });
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid conventions/figma.yaml objectProps.separator')
+      );
+    });
+
+    it('warns and defaults a non-object objectProps value', () => {
+      const warn = vi.mocked(console.warn);
+      writeSplitFile('conventions/figma.yaml', 'objectProps: true');
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.objectProps).toEqual({ separator: '.' });
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid conventions/figma.yaml objectProps')
+      );
+    });
+
+    it('leaves objectProps undefined when the block is absent', () => {
+      writeSplitFile('conventions/figma.yaml', 'naming: SENTENCE');
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.objectProps).toBeUndefined();
     });
 
     it('should remove subcomponents (and warn) when match is empty', () => {

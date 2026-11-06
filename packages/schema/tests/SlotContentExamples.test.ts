@@ -111,11 +111,10 @@ describe('InstanceExample structural conformance', () => {
   });
 
   it('propConfigurations accepts scalars OR a SlotContentRef (oneOf)', () => {
-    const oneOf = def.properties.propConfigurations.additionalProperties.oneOf as any[];
+    expect(def.properties.propConfigurations.additionalProperties.$ref).toBe('#/definitions/InstanceExampleConfigurationValue');
+    const oneOf = schema.definitions.InstanceExampleConfigurationValue.oneOf as any[];
     const kinds = oneOf.map((s) => s.type ?? s.$ref);
-    expect(kinds).toContain('string');
-    expect(kinds).toContain('number');
-    expect(kinds).toContain('boolean');
+    expect(kinds).toContain('#/definitions/Scalar');
     expect(kinds).toContain('#/definitions/SlotContentRef');
   });
 
@@ -163,8 +162,10 @@ describe('PropConfigurations.$nested structural conformance (ADR-052)', () => {
     // anyOf, not oneOf: ImageBinding extends PropBinding, so the branches overlap (ADR-105).
     const kinds = (schema.definitions.PropConfigurationValue.anyOf as any[]).map((s) => s.type ?? s.$ref);
     expect(kinds).toEqual(
-      expect.arrayContaining(['string', 'number', 'boolean', '#/definitions/PropBinding', '#/definitions/SlotContentRef'])
+      expect.arrayContaining(['#/definitions/Scalar', '#/definitions/PropBinding', '#/definitions/SlotContentRef'])
     );
+    const scalarKinds = (schema.definitions.Scalar.oneOf as any[]).map((s) => s.type);
+    expect(scalarKinds).toEqual(['string', 'number', 'boolean']);
   });
 
   it('PropConfigurationValue admits null — the prop is unset in this configuration (ADR-080)', () => {
@@ -173,7 +174,7 @@ describe('PropConfigurations.$nested structural conformance (ADR-052)', () => {
   });
 
   it('InstanceExample.propConfigurations admits null, and still refuses PropBinding (ADR-080)', () => {
-    const value = schema.definitions.InstanceExample.properties.propConfigurations.additionalProperties;
+    const value = schema.definitions.InstanceExampleConfigurationValue;
     const kinds = (value.oneOf as any[]).map((s) => s.type ?? s.$ref);
     expect(kinds).toContain('null');
     expect(kinds).not.toContain('#/definitions/PropBinding');

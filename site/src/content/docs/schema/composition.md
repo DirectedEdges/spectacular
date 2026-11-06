@@ -3,9 +3,6 @@ title: "Composition"
 description: "A named, authored unit of composed content"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge pro-badge">Pro</span>')</script>
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge experimental-badge">Experimental</span>')</script>
-
 A `Composition` is a named, authored unit of composed content. The top-level [`anatomy`](/schema/anatomy/) + [`elements`](/schema/elements/) + [`layout`](/schema/layout/) triplet **is** the primary content — there is no wrapper and no reserved `main` key. An optional `slotContent` map bundles named slot fills alongside that primary content for authoring convenience.
 
 ```ts
@@ -48,7 +45,7 @@ These are not a loosened form of [`ComponentApiDocument`](/schema/documents/comp
 
 ## Nested instance hierarchies
 
-A composition is usually a hierarchy of layout components nested in one another, each filling the next one's slot. When those slots are marked [`defaultSlot: true`](/schema/props/#slotprop), the hierarchy lives in the composition's **own** triplet as nested [children](/schema/children/) — the instances are anatomy elements of the composition, and the layout is the tree:
+A composition is usually a hierarchy of layout components nested in one another, each filling the next one's slot. When those slots are marked [`defaultSlot: true`](/schema/props/slot/default-slot/), the hierarchy lives in the composition's **own** triplet as nested [children](/schema/children/) — the instances are anatomy elements of the composition, and the layout is the tree:
 
 ```yaml
 title: Search results / Small

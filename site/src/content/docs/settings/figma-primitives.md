@@ -3,20 +3,31 @@ title: "Promotion table"
 description: "Which design system component a raw layer stands for, and how its styles become that component's props"
 ---
 
-`config/conventions/figma.primitives.yaml` is the promotion table: it decides which
-design system component a raw `text`, `glyph` or `container` layer in composed example
-content stands for.
+`config/conventions/figma.primitives.yaml` is the promotion table: it decides which design system component a raw `text`, `glyph` or `container` layer in composed example content stands for. `specs init` does not seed this file — a workspace adds it when it turns [`promotePrimitives`](/settings/promote-primitives/) on; until then the table is inert.
 
-A component's props are the same whichever platform renders it, so the table is stated
-once rather than per platform. It carries the `figma.` qualifier because what it *reads*
-is Figma — its `source` keys name Figma style properties and its `values` keys name
-Figma tokens (ADR-073 Decision 5). A file named `primitives.yaml` is refused with the
-rename that fixes it.
+| | |
+|---|---|
+| **File** | `config/conventions/figma.primitives.yaml` |
+| **Path** | the file root — one entry per promotable component |
+| **Type** | map of entry → `{ elementType, match?, map }` |
+| **Default** | absent (file not seeded; nothing promotes) |
 
-`specs init` does not seed this file. A workspace adds it when it turns
-[`promotePrimitives`](/settings/promote-primitives/) on; until then the table is inert.
+## Properties
 
-## Shape
+Each entry names the `elementType` it promotes *from* — one of `text`, `glyph` or
+`container` — a `map` of rules, in precedence order, and optionally `match`, the layer
+names that select it.
+
+A rule names one `source` and then either:
+
+- **`prop`** — the source's value is written to that prop as-is
+- **`values`** — a literal lookup from what the source carries to the props it produces,
+  so one source may write several props at once, and may reach a prop whose meaning
+  differs from its own
+
+A key in `values` is a full token path or a raw scalar. It is never matched partially.
+
+## Example
 
 ```yaml
 text:
@@ -32,9 +43,7 @@ text:
       prop: text
 ```
 
-Each entry names the `elementType` it promotes *from* — one of `text`, `glyph` or
-`container` — a `map` of rules, in precedence order, and optionally the layer names that
-select it:
+An entry selected by layer name:
 
 ```yaml
 Section:
@@ -45,16 +54,15 @@ Section:
       values: { VERTICAL: { direction: column } }
 ```
 
-A rule names one `source` and then either:
+## File scope and naming
 
-- **`prop`** — the source's value is written to that prop as-is
-- **`values`** — a literal lookup from what the source carries to the props it produces,
-  so one source may write several props at once, and may reach a prop whose meaning
-  differs from its own
+A component's props are the same whichever platform renders it, so the table is stated
+once rather than per platform. It carries the `figma.` qualifier because what it *reads*
+is Figma — its `source` keys name Figma style properties and its `values` keys name
+Figma tokens (ADR-073 Decision 5). A file named `primitives.yaml` is refused with the
+rename that fixes it.
 
-A key in `values` is a full token path or a raw scalar. It is never matched partially.
-
-## What a source can be
+## Accepted sources
 
 The honoured set is closed per kind:
 
@@ -108,8 +116,8 @@ apart; the layer name can.
 The target need not itself be a primitive: `elementType` describes the layer shape a
 promotion starts from, not the component it lands on.
 
-## See Also
+## Further reading
 
-- [Promote Primitives](/settings/promote-primitives/) — the setting that turns this on
-- [React](/settings/react/) and [Web Components](/settings/web-components/) — what each platform calls the components named here
-- [Conventions schema reference](/schema/conventions/) — the full shape
+- [Promote Primitives](/settings/promote-primitives/) — the setting that turns this on.
+- [React](/settings/react/) and [Web Components](/settings/web-components/) — what each platform calls the components named here.
+- [Conventions schema reference](/schema/conventions/) for the full shape.

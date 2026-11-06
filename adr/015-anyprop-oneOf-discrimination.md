@@ -4,6 +4,7 @@
 **Created**: 2026-03-09
 **Status**: ACCEPTED
 **Summary**: A single `StringProp` merges `TextProp` and `IconProp`, restoring valid `oneOf` discrimination in `AnyProp`.
+**Decides**: props.boolean, props.string, props.enum, props.number, props.slot, props.image, props.object
 **Deciders**: Nathan Curtis (author), *(collaborators TBD)*
 **Supersedes**: ADR 017 (`017-icon-or-glyph-element-name`) — prop rename portion only. ADR 017 renamed `IconProp` → `GlyphProp`; this ADR merges both `TextProp` and `IconProp` into `StringProp`, making the intermediate `GlyphProp` rename moot. The element type rename (`icon` → `glyph`) and other non-prop changes from ADR 017 remain in effect.
 

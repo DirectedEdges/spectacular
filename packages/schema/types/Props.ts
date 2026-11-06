@@ -8,7 +8,7 @@ export type Props = Record<string, AnyProp>;
 /**
  * Union of all supported property types
  */
-export type AnyProp = BooleanProp | StringProp | EnumProp | SlotProp | NumberProp | ImageProp;
+export type AnyProp = BooleanProp | StringProp | EnumProp | SlotProp | NumberProp | ImageProp | ObjectProp;
 
 /**
  * Provenance metadata for props extracted from a Figma code-only container layer.
@@ -40,9 +40,10 @@ export interface FigmaPropExtension {
    * the safe key grammar, or when it was already written in the destination format and
    * passed through unformatted — in which case reversal is identity, not re-derivation.
    *
-   * Both triggers require `format.figmaKeys` to be other than NONE. Under NONE no
-   * source convention is declared, so divergence is not evaluated and this field is
-   * absent however the key was derived.
+   * Under NONE no source convention is declared, so nothing can be re-derived from a
+   * key — reversal hands the key back as the name. The key therefore reconstructs the
+   * name only where the two are already identical, and this field is recorded wherever
+   * formatting changed the name at all.
    * @since 0.30.0
    */
   name?: string;
@@ -140,6 +141,76 @@ export interface NumberProp {
 }
 
 /**
+ * A primitive kind a slot may accept, written as a reserved value inside
+ * {@link SlotProp.anyOf} (ADR-102).
+ *
+ * - `'$text'` admits a text primitive — a plain string fill.
+ * - `'$glyph'` admits a glyph primitive — an icon fill.
+ *
+ * The names are `ElementType`'s, so one word covers the primitive wherever it appears —
+ * `type: text` on an anatomy item and `$text` in `anyOf` are the same thing. The `$`
+ * prefix marks the value as reserved by the contract rather than supplied by the library,
+ * matching how `$token`, `$binding` and `$slotContent` mark reserved *keys*. A component
+ * key can never shadow a marker: the safe key grammar (ADR-066) admits no leading `$`.
+ *
+ * A marker is recorded when the slot's default content held a top-level primitive of that
+ * kind in at least one variant, and the platform's `slotPrimitives` reading is on. The
+ * formatting applied to such a fill lives under the matching key of the slot element's
+ * `contentStyles`.
+ *
+ * **A marker joins an `anyOf` that already names at least one component; it never
+ * constitutes one.** `anyOf` is a constraint, so a slot whose detected content is
+ * primitives alone carries no `anyOf` at all — `[$text]` would say that *only* a text
+ * primitive may fill the slot, which is narrower than anything the design stated. Absence
+ * keeps its meaning: unconstrained. The slot element's `contentStyles` is recorded either
+ * way, so the keys there are what tell a reader which primitives a slot carries when no
+ * `anyOf` is present (ADR-102).
+ *
+ * Orthogonal to `defaultSlot`: a slot may accept a primitive without being the default
+ * slot — an Alert's `description` — or be the default slot and take components only.
+ * @since 0.39.0
+ */
+export type PrimitiveSlotContent = '$text' | '$glyph';
+
+/**
+ * A member of an {@link ObjectProp} — a scalar prop definition (ADR-111).
+ *
+ * Members are one level deep by design: no `SlotProp`, `ImageProp`, or nested
+ * `ObjectProp`. Member typing, `default`, `enum`, `nullable`, and `examples`
+ * semantics are those of the member's own prop shape.
+ * @since 0.39.0
+ */
+export type ObjectPropMember = BooleanProp | StringProp | EnumProp | NumberProp;
+
+/**
+ * Object property definition (ADR-111) — a prop whose value is an object of named,
+ * individually typed scalar members (e.g. a responsive `margin` with `compact` and
+ * `expanded` members drawing from one enumerated set).
+ *
+ * Member names are opaque to the schema: breakpoint vocabularies are the library's
+ * choice, and the contract attaches no semantics to them. Member names must not begin
+ * with `$` (schema-enforced) and must not contain the platform's declared
+ * `objectProps.separator` (a generator invariant).
+ *
+ * No top-level `default` or `nullable`: defaults live per member, and an object prop's
+ * value always exists as the composition of its members' states.
+ *
+ * On platforms that cannot author an object natively (Figma), members fold from
+ * separator-delimited flat property names under the opt-in
+ * `platforms.<platform>.objectProps` convention; each member's
+ * `$extensions['com.figma'].name` records the flat source name so unfolding is
+ * reversal, not re-derivation.
+ * @since 0.39.0
+ */
+export interface ObjectProp {
+  type: 'object';
+  /** Named members, each an existing scalar prop definition. At least one member. */
+  members: Record<string, ObjectPropMember>;
+  /** DTCG §5.2.3 platform-specific extensions. @since 0.39.0 */
+  $extensions?: PropExtensions;
+}
+
+/**
  * Slot/nested content property definition
  */
 export interface SlotProp {
@@ -156,7 +227,25 @@ export interface SlotProp {
   minChildren?: number;
   /** Maximum number of children this slot accepts. @since 0.25.0 */
   maxChildren?: number;
-  /** Component type names permitted in this slot. @since 0.14.0 */
+  /**
+   * What this slot permits — the one list of its accepted content.
+   *
+   * Entries are either a component type name from the library's own namespace, or a
+   * reserved {@link PrimitiveSlotContent} marker naming a primitive kind (`'$text'`,
+   * `'$glyph'`). The two populations cannot collide: the safe key grammar (ADR-066)
+   * admits no leading `$` in a component key. Absent means any component and no
+   * primitive — the behaviour of every slot without markers.
+   *
+   * ```yaml
+   * anyOf: [$glyph, $text, badge]   # a glyph, a label, or a composed Badge
+   * anyOf: [$text]                  # text only — no component permitted
+   * anyOf: [badge]                  # a Badge only — no primitive permitted
+   * ```
+   *
+   * The type stays `string[]` rather than narrowing to a union, because the array holds
+   * arbitrary component names alongside the reserved markers (ADR-102).
+   * @since 0.14.0
+   */
   anyOf?: string[];
   /**
    * Whether this is the component's designated default slot, resolved from
@@ -165,7 +254,7 @@ export interface SlotProp {
    * explicit `SlotContentRef`/`SlotBinding`. Absent means false: this is not the default
    * slot, or the library declared no default-slot convention. At most one `SlotProp` per
    * component may be true — an authoring/generator invariant, not schema-enforced.
-   * @since 0.35.0
+   * @since 0.39.0
    */
   defaultSlot?: boolean;
   /** DTCG §5.2.3 platform-specific extensions. @since 0.14.0 */

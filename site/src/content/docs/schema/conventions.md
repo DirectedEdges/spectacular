@@ -74,6 +74,8 @@ The shape is deliberately permissive: nothing stops a code platform declaring `i
 | [`images`](/guides/images/) | `object` | — | How the library expresses images. Absent = no image convention |
 | [`slotConstraints`](/guides/slot-constraints/) | `boolean` | `false` | The library authors slot constraints as code-only props |
 | [`inferNumberProps`](/guides/number-inference/) | `boolean` | `false` | The library authors numeric props as Figma `TEXT` props with numeric defaults |
+| [`slotPrimitives`](/settings/slot-primitives/) | `boolean` | `true` | The library's slots carry the primitives they accept in their default content |
+| [`objectProps`](#objectprops) | `object` | — | The library authors object-prop members as separator-named flat props. Absent = no folding |
 | [`stylesProp`](#stylesprop) | `string` | — | *Vocabulary.* Prop receiving styling no promotion mapped. Absent = unmapped styling is dropped |
 | [`defaultFillWidth`](#defaultfillwidth) | `number` | — | Container width for a fill-width root. Absent = the rendering tool uses its own fallback |
 
@@ -117,6 +119,14 @@ At least one of the two forms is declared; a component matching either is a glyp
 | `match` | `string` | — | *Vocabulary.* Figma name of the designated image component (e.g. `DS Image`). Requires a non-empty `sourceProps` |
 | `component` | `string` | — | *Vocabulary.* The same component's name on this platform (e.g. `DsImage`) — the translation target for a `match` declared by whichever platform produced the spec |
 | `sourceProps` | `string[]` | — | Code-only prop names carrying image sources; the first is the designated component's own source prop |
+
+### `objectProps`
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `separator` | `string` | `'.'` | The member-name separator in flat property names |
+
+The library authors [object-prop](/schema/props/object/) members as separator-delimited flat property names — `margin.compact` and `margin.expanded` fold into one `margin` object prop (since 0.39.0, ADR-111; declared via the [objectProps setting](/settings/object-props/)). Absent means no folding: a property name containing the separator stays a flat prop. Each folded member records its flat source name in `$extensions['com.figma'].name`, so writing back to Figma reverses the fold without re-deriving names.
 
 ### `stylesProp`
 
@@ -175,7 +185,7 @@ Which slot prop a component treats as its **default slot** — the one slot a la
 
 `match` is an array because one library may name this slot differently across component families — `children` on a page row, `items` on a list. Any pattern matches.
 
-The convention is read **once, at generation time**, against a component's actual prop names, and the slot prop it matches carries [`defaultSlot: true`](/schema/props/#slotprop) in the generated spec. What the marker then permits is a second shape for filling that slot. An instance filling a default slot may be nested as a plain child — an ordinary entry in its parent's [`children`](/schema/children/) array — instead of through a [`SlotContentRef`](/schema/slot-content-ref/). A **non**-default slot is unchanged: an explicit reference is the only shape that can say *which* of several slots a fill belongs to, and both shapes coexist in one spec. See [`slots.default`](/settings/default-slot/) for the worked before and after.
+The convention is read **once, at generation time**, against a component's actual prop names, and the slot prop it matches carries [`defaultSlot: true`](/schema/props/slot/default-slot/) in the generated spec. What the marker then permits is a second shape for filling that slot. An instance filling a default slot may be nested as a plain child — an ordinary entry in its parent's [`children`](/schema/children/) array — instead of through a [`SlotContentRef`](/schema/slot-content-ref/). A **non**-default slot is unchanged: an explicit reference is the only shape that can say *which* of several slots a fill belongs to, and both shapes coexist in one spec. See [`slots.default`](/settings/default-slot/) for the worked before and after.
 
 ### `states`
 
@@ -363,11 +373,11 @@ took the screenshot runner with it, since that read the same script.
 
 ## Resolution
 
-`ResolvedConventions` applies defaults **inside** any declared platform entry: `naming`, `slotConstraints` and `inferNumberProps` are guaranteed once an entry exists, and within a declared block so are `scope`, `backgroundImage`, `sourceProps`, and each binding's concept prop names. A platform's `stylesProp` is folded into each declared primitive, so a consumer reads one level rather than two.
+`ResolvedConventions` applies defaults **inside** any declared platform entry: `naming`, `slotConstraints`, `inferNumberProps` and `slotPrimitives` are guaranteed once an entry exists, and within a declared block so are `scope`, `backgroundImage`, `sourceProps`, and each binding's concept prop names. A platform's `stylesProp` is folded into each declared primitive, so a consumer reads one level rather than two.
 
 A resolver produces a complete entry for any platform it is asked about, **declared or not** — so a consumer reading `figma` gets `naming: NONE` whether or not a `figma.yaml` exists.
 
-What no default can supply is a convention *block*: `glyphs`, `subcomponents`, `images`, `specs.slots`. Their absence is a statement about the library, and inventing one would fabricate a fact nobody declared. `DEFAULT_CONVENTIONS` is an empty object for the same reason a map has no fixed key to populate — not because the defaults went away.
+What no default can supply is a convention *block*: `glyphs`, `subcomponents`, `images`, `specs.slots`. A defaulted block would assert something about a library nobody has read — declare `glyphs` with a pattern the library doesn't use and no component matches it, so every icon arrives as an ordinary element. That is wrong output which still validates, and nothing in the run can tell it apart from a library that genuinely has no glyphs. `DEFAULT_CONVENTIONS` is an empty object for the same reason a map has no fixed key to populate — not because the defaults went away.
 
 `specs` needs no resolution step: no member of it takes a default, so the authored shape is already the resolved one.
 

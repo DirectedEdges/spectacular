@@ -226,6 +226,19 @@ describe('DependenciesAnalyzer', () => {
       expect(slotEdge.to).toBe('dsIcon');
     });
 
+    it('ignores reserved composable-slot markers ($text, $glyph) in anyOf', async () => {
+      const withMarker = {
+        anatomy: { root: { type: 'container' } },
+        props: { items: { type: 'slot', anyOf: ['$text', 'badge'] } },
+        default: { elements: {} },
+      };
+      const { graph } = await runAll({ dsCard: withMarker });
+      const slotEdges = graph.edges.filter((e: { kind: string; from: string }) => e.kind === 'slot' && e.from === 'dsCard');
+      expect(slotEdges.length).toBe(1);
+      expect(slotEdges[0].to).toBe('badge');
+      expect(graph.nodes['$text']).toBeUndefined();
+    });
+
     it('excludes external nodes from roots and leaves', async () => {
       const withExternal = {
         anatomy: { logo: { type: 'instance', instanceOf: 'Third Party Logo' } },
@@ -426,6 +439,28 @@ describe('DependenciesAnalyzer', () => {
   });
 
   describe('prop usage', () => {
+    it('records one usage site per object-prop member (ADR-111)', async () => {
+      const icon = structuredClone(ICON) as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+      icon.props.margin = {
+        type: 'object',
+        members: {
+          compact: { type: 'string', default: 'None', enum: ['None', 'Tight'], nullable: false },
+          expanded: { type: 'string', default: 'Loose', enum: ['None', 'Loose'], nullable: false },
+        },
+      };
+      const button = structuredClone(BUTTON) as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+      button.default.elements.startIcon.propConfigurations = {
+        ...button.default.elements.startIcon.propConfigurations,
+        // A null member leaves that member untouched and records nothing.
+        margin: { compact: 'Tight', expanded: null },
+      };
+      const { byComponent } = await runAll({ dsIcon: icon, dsButton: button });
+      expect(byComponent.dsIcon.propUsage['margin.compact'].values).toEqual({ Tight: ['dsButton'] });
+      expect(byComponent.dsIcon.propUsage['margin.expanded']).toBeUndefined();
+      // The member object itself never lands as a bare, unreadable row.
+      expect(byComponent.dsIcon.propUsage.margin?.values ?? {}).toEqual({});
+    });
+
     it('aggregates configured values with their consumers', async () => {
       const { byComponent } = await runAll({ dsIcon: ICON, dsButton: BUTTON, dsCard: CARD });
       expect(byComponent.dsIcon.propUsage.size.values).toEqual({ Small: ['dsButton'] });

@@ -8,6 +8,7 @@
 // default block and the variant loop be separate functions at all.
 import { impliesAbsolute } from '../style/styleToCSS.js';
 import { isGradient, isGradientToken } from '../values/gradients.js';
+import { slotContentStylesOf, type SlotContentStyles } from './contentStylesRead.js';
 import { NO_SLOT_DIRECTION, type SlotDirection, type SlotDirectionResolver } from './slotDirection.js';
 import { parseLayout } from '../style/layoutTree.js';
 import { collectLayoutKeys, collectParents, collectStackingFixes } from './layoutQueries.js';
@@ -42,6 +43,12 @@ export interface SpecAnalysis {
   collapseControl: string | undefined;
   /** Elements a collapsing role consumes into the emitted control's attributes. */
   consumedByCollapse: Map<string, 'value' | 'placeholder'>;
+  /**
+   * The element's `contentStyles` read whole — the default block's entry plus
+   * every variant overlay (ADR-102). Both emission passes ask for the same few
+   * slot elements, so the read is cached per element.
+   */
+  contentStylesOf(elemKey: string): SlotContentStyles;
 }
 
 export function analyzeSpec(
@@ -159,6 +166,15 @@ export function analyzeSpec(
     .filter(([, role]) => COLLAPSING_ROLES.has(role))
     .map(([key]) => key);
   const collapseControl = collapsingKeys.length === 1 ? collapsingKeys[0]! : undefined;
+  const contentStylesCache = new Map<string, SlotContentStyles>();
+  const contentStylesOf = (elemKey: string): SlotContentStyles => {
+    let read = contentStylesCache.get(elemKey);
+    if (!read) {
+      read = slotContentStylesOf(variantsYaml, elemKey);
+      contentStylesCache.set(elemKey, read);
+    }
+    return read;
+  };
   const consumedByCollapse = new Map<string, 'value' | 'placeholder'>();
   if (collapseControl) {
     for (const [elemKey, role] of Object.entries(elemRoles)) {
@@ -180,5 +196,6 @@ export function analyzeSpec(
     styleOptions,
     collapseControl,
     consumedByCollapse,
+    contentStylesOf,
   };
 }

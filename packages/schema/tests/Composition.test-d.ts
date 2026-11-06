@@ -137,10 +137,15 @@ const examplesMap: InstanceExamples = {
   withIcon: slotExample,
 };
 
-// PropBinding NOT permitted in InstanceExample.propConfigurations
+// PropBinding is still not permitted in InstanceExample.propConfigurations, but
+// since ADR-111 the type cannot be the thing that says so: `ObjectPropValue` is
+// `Record<string, scalar>`, which a `{ $binding }` object satisfies structurally.
+// The ADR records this trade-off and moves enforcement to the JSON Schema, where
+// `ObjectPropValue` sets `propertyNames: { pattern: "^[^$]" }` — a member name may
+// not begin with `$`, which is what keeps the two forms apart. This assignment
+// therefore type-checks, and is rejected on validation.
 const _exampleBinding: InstanceExample = {
   propConfigurations: {
-    // @ts-expect-error: PropBinding not permitted in InstanceExample.propConfigurations
     label: { $binding: '#/props/label' },
   },
 };

@@ -1,29 +1,27 @@
 ---
-title: "Invalid Combinations"
+title: "invalidCombinations"
 description: "Calculate and include invalid property combinations"
 ---
 
 <script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge pro-badge">Pro</span>')</script>
 
-:::tip[Guide]
-See [Invalid Variant Combinations](/guides/invalid-variant-combinations/) for what invalid combinations are, why they matter, and worked examples.
-:::
+Calculate and include invalid property combinations. When `true`, [`generate`](/cli/generate/) computes which prop combinations are invalid and records them in the spec's `invalidPropCombinations` block in [`api.yaml`](/schema/documents/component-api).
 
-Calculate and include invalid property combinations. A run choice in `config/settings.yaml`.
+| | |
+|---|---|
+| **File** | `config/settings.yaml` |
+| **Path** | `spec.invalidCombinations` |
+| **Type** | boolean |
+| **Default** | `true` |
 
-## Options
-
-- **Type**: boolean
-- **Default**: `true`
-- **Effect**: When `true`, computes which prop combinations are invalid
-
-## Path
-
-`spec.invalidCombinations` in `config/settings.yaml`
-
-### Example
+## Example
 
 ```yaml
 spec:
   invalidCombinations: true  # Show invalid combinations (default)
 ```
+
+## Further reading
+
+- [Invalid Variant Combinations guide](/guides/invalid-variant-combinations/) for what invalid combinations are, why they matter, and worked examples.
+- [invalidVariants](/settings/invalid-variants/) — the related setting that includes invalid variant data in output.

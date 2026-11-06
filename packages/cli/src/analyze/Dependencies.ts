@@ -531,6 +531,11 @@ function instanceTarget(value: unknown): string | null {
   return typeof value === 'string' && value !== UNRESOLVED_INSTANCE ? value : null;
 }
 
+/** `$`-prefixed anyOf values are reserved composable-slot markers (ADR-102), not component targets. */
+function isReservedSlotMarker(value: string): boolean {
+  return value.startsWith('$');
+}
+
 function bindingTarget(value: unknown): string | null {
   if (!value || typeof value !== 'object') return null;
   const binding = (value as Record<string, unknown>).$binding;
@@ -547,7 +552,7 @@ function collectSlotTargets(props: Record<string, unknown>, record: SpecRecord):
     const prop = raw as Record<string, unknown>;
     if (prop.type !== 'slot' || !Array.isArray(prop.anyOf)) continue;
     for (const target of prop.anyOf) {
-      if (typeof target === 'string' && target !== UNRESOLVED_INSTANCE) {
+      if (typeof target === 'string' && target !== UNRESOLVED_INSTANCE && !isReservedSlotMarker(target)) {
         addToSetMap(record.slotTargets, target, propName);
       }
     }
@@ -634,8 +639,9 @@ function collectPropConfigurations(
         const nestedProps: Array<{ prop: string; value: string }> = [];
         for (const [nestedProp, nestedValue] of Object.entries(entry)) {
           if (nestedProp === 'path') continue;
-          const serialized = serializeConfigValue(nestedValue);
-          if (serialized !== null) nestedProps.push({ prop: nestedProp, value: serialized });
+          for (const { prop: sited, value } of configValueSites(nestedProp, nestedValue)) {
+            nestedProps.push({ prop: sited, value });
+          }
         }
         record.nestedSites.push({ anchorTarget: target, path: pathSegments as string[], props: nestedProps, origin });
       }
@@ -643,9 +649,41 @@ function collectPropConfigurations(
     }
 
     if (!target) continue;
-    const serialized = serializeConfigValue(rawValue);
-    if (serialized !== null) record.usageSites.push({ target, prop, value: serialized, origin });
+    for (const { prop: sited, value } of configValueSites(prop, rawValue)) {
+      record.usageSites.push({ target, prop: sited, value, origin });
+    }
   }
+}
+
+/**
+ * The usage sites one configuration entry contributes: a scalar or reference is
+ * one site under its own prop, and a member-keyed object (ADR-111) is one site
+ * per member under `prop.member` — a null member leaves that member untouched
+ * and records nothing.
+ */
+function configValueSites(prop: string, rawValue: unknown): Array<{ prop: string; value: string }> {
+  if (isMemberObject(rawValue)) {
+    const sites: Array<{ prop: string; value: string }> = [];
+    for (const [memberKey, memberValue] of Object.entries(rawValue as Record<string, unknown>)) {
+      if (memberValue === null) continue;
+      const serialized = serializeConfigValue(memberValue);
+      if (serialized !== null) sites.push({ prop: `${prop}.${memberKey}`, value: serialized });
+    }
+    return sites;
+  }
+  const serialized = serializeConfigValue(rawValue);
+  return serialized !== null ? [{ prop, value: serialized }] : [];
+}
+
+/**
+ * A member-keyed object value (ADR-111) — a plain object none of whose keys
+ * begin with `$`, which is what keeps it distinguishable from `$binding`,
+ * `$slotContent`, and image bindings.
+ */
+function isMemberObject(value: unknown): value is Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const keys = Object.keys(value);
+  return keys.length > 0 && keys.every(key => !key.startsWith('$'));
 }
 
 function serializeConfigValue(value: unknown): string | null {

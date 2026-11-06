@@ -8,7 +8,7 @@ A flat map of prop names to the values they must hold for a condition to apply, 
 ```ts
 type PropConfigurations = Record<
   string,
-  string | number | boolean | null | PropBinding | CompositionRef | ImageBinding
+  string | number | boolean | null | PropBinding | CompositionRef | ImageBinding | ObjectPropValue
 >;
 ```
 
@@ -19,15 +19,25 @@ type PropConfigurations = Record<
 | `PropBinding` (`{ $binding }`) | `Element.propConfigurations` only | Pass-through binding to a parent prop |
 | `CompositionRef` (`{ $composition }`) | `Element.propConfigurations` only, under a slot-prop key | JSON Pointer to a named `Composition` (in `Component.slotContent` or in an external composition file) used to fill a nested instance's slot |
 | `ImageBinding` (`{ $binding, examples? }`) | `Element.propConfigurations` only, under an image-prop key | Forwards a parent image prop into a nested image instance's source prop, carrying authoring-default example images (since 0.28.0) |
+| `ObjectPropValue` (member-keyed object) | Anywhere `PropConfigurations` is used, under an object-prop key | Member names to scalar values, or `null` to unset a member; layering is evaluated per member (since 0.39.0, ADR-111) |
 
-`InstanceExample.propConfigurations` accepts scalars, `null`, and slot-content references — `PropBinding` is not permitted there.
+`InstanceExample.propConfigurations` accepts scalars, `null`, slot-content references, and `ObjectPropValue` — `PropBinding` is not permitted there.
+
+An `ObjectPropValue` sets the members of an [`ObjectProp`](/schema/props/object/). Member names must not begin with `$`, which is what keeps the form distinguishable from `PropBinding` and the other `$`-keyed references:
+
+```yaml
+# A variant configuring two members; an omitted member keeps its resolved value
+margin:
+  compact: none
+  expanded: large
+```
 
 ## Unset props
 
 `null` means the prop is **unset** in this configuration. It is a value, not an absence, and the distinction matters because configurations layer:
 
-- an **absent** key inherits whatever the layer beneath it set
-- a **`null`** key overrides an inherited value with "no value"
+- an **absent** key keeps whatever value the preceding configurations resolved to
+- a **`null`** key replaces that resolved value with "no value"
 
 A nullable prop is therefore fully described by its own key. Nothing beside it — a paired visibility flag, a producer extension — needs to be read to know whether the prop is set:
 
@@ -44,7 +54,7 @@ header: null
 
 PropConfigurations appear in four places:
 
-- **Variant `configuration`** — declares which prop combination activates a [variant](/schema/variants.md/#variant). When all listed props match their specified values, the variant's overrides are applied.
+- **Variant `configuration`** — declares which prop combination activates a [variant](/schema/variants/#variant). When all listed props match their specified values, the variant's overrides are applied.
 - **`invalidPropCombinations`** — an array on the [Component](/schema/component/) root (carried by the api concern) that declares prop combinations which should never occur together.
 - **`Element.propConfigurations`** — sets prop values on a nested instance element; accepts the full union (scalars, `PropBinding`, `CompositionRef`).
 - **`InstanceExample.propConfigurations`** — documents a complete configuration; scalars, `null`, and slot-content references.

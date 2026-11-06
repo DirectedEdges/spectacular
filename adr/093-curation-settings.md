@@ -4,6 +4,7 @@
 **Created**: 2026-09-28
 **Status**: ACCEPTED
 **Summary**: A `curation` concern with `defaultSelection`, `preserveManualSelections` and `includeDependencies` states which components a run specs.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

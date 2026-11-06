@@ -59,6 +59,22 @@ const CATEGORY_ORDER: StylingCategory[] = ['VARIABLES', 'COLOR_STYLES', 'TEXT_ST
 
 const CATEGORY_KEYS: Array<keyof StylingJson> = ['variables', 'colorStyles', 'textStyles', 'effectStyles'];
 
+const CATEGORY_FOR_KEY: Record<keyof StylingJson, StylingCategory> = {
+  variables: 'VARIABLES',
+  colorStyles: 'COLOR_STYLES',
+  textStyles: 'TEXT_STYLES',
+  effectStyles: 'EFFECT_STYLES',
+};
+
+/**
+ * `spec.tokens` profiles that serialize a reference to its name alone.
+ *
+ * Under these a style value is an ordinary string, indistinguishable by shape
+ * from a literal like `CENTER` — so a name is only read as a reference when the
+ * fetched token universe contains it.
+ */
+const NAME_SHAPED_PROFILES = new Set(['TOKEN_NAME', 'FIGMA_NAME']);
+
 const CATEGORY_KEY: Record<StylingCategory, keyof StylingJson> = {
   VARIABLES: 'variables',
   COLOR_STYLES: 'colorStyles',
@@ -76,10 +92,19 @@ export class StylingAnalyzer implements Transformer {
   // Flat map: "componentKey" and "componentKey.subName" entries stored together.
   private readonly _componentData = new Map<string, StylingJson>();
   private _outputFormat: 'JSON' | 'YAML' = 'JSON';
+  /** Token name → category, for the name-shaped profiles. Built once per run. */
+  private _nameIndex: Map<string, StylingCategory> | null = null;
 
   async run(apiYaml: Record<string, unknown>, context: TransformerContext): Promise<void> {
-    const { outputDir, componentKey, outputFormat } = context;
+    const { outputDir, componentKey, outputFormat, tokensFormat, foundations } = context;
     this._outputFormat = outputFormat;
+
+    // Only built for the profiles that need it, and only once per run — the
+    // universe is the same for every spec this analyzer visits.
+    if (NAME_SHAPED_PROFILES.has(tokensFormat) && foundations && !this._nameIndex) {
+      this._nameIndex = buildNameIndex(foundations);
+    }
+    const nameIndex = NAME_SHAPED_PROFILES.has(tokensFormat) ? this._nameIndex : null;
 
     const anatomy = (apiYaml.anatomy ?? {}) as Record<string, unknown>;
     const elementTypes = extractElementTypes(anatomy);
@@ -93,7 +118,7 @@ export class StylingAnalyzer implements Transformer {
     const scopes = new Map<string, StylingJson>();
 
     const topRows = new Map<string, StylingRow>();
-    collectDefaultAndVariants(source, elementTypes, topRows);
+    collectDefaultAndVariants(source, elementTypes, topRows, nameIndex);
     scopes.set(componentKey, buildStylingJson(topRows));
 
     const apiSubcomponents = (apiYaml.subcomponents ?? {}) as Record<string, unknown>;
@@ -103,7 +128,7 @@ export class StylingAnalyzer implements Transformer {
       const subAnatomy = (subApiEntry?.anatomy ?? {}) as Record<string, unknown>;
       const subElementTypes = extractElementTypes(subAnatomy);
       const subRows = new Map<string, StylingRow>();
-      collectDefaultAndVariants(subSource as Record<string, unknown>, subElementTypes, subRows);
+      collectDefaultAndVariants(subSource as Record<string, unknown>, subElementTypes, subRows, nameIndex);
       scopes.set(`${componentKey}.${subName}`, buildStylingJson(subRows));
     }
 
@@ -148,19 +173,34 @@ export class StylingAnalyzer implements Transformer {
   }
 
   private async _writeByToken(dictDir: string): Promise<void> {
+    const collected: Record<keyof StylingJson, Map<string, ByTokenEntry[]>> = {
+      variables: new Map(),
+      colorStyles: new Map(),
+      textStyles: new Map(),
+      effectStyles: new Map(),
+    };
+
+    for (const [scopeKey, data] of Array.from(this._componentData.entries()).sort((a, b) => a[0].localeCompare(b[0]))) {
+      for (const groupKey of CATEGORY_KEYS) {
+        for (const row of data[groupKey]) {
+          const entries = collected[groupKey].get(row.name) ?? [];
+          entries.push({ component: scopeKey, appliedAs: row.appliedAs, appliedTo: row.appliedTo });
+          collected[groupKey].set(row.name, entries);
+        }
+      }
+    }
+
+    // Token names are the reader's index into this report, so each set is keyed
+    // in ascending name order rather than in the order the walk met them.
     const out: Record<keyof StylingJson, Record<string, ByTokenEntry[]>> = {
       variables: {},
       colorStyles: {},
       textStyles: {},
       effectStyles: {},
     };
-
-    for (const [scopeKey, data] of Array.from(this._componentData.entries()).sort((a, b) => a[0].localeCompare(b[0]))) {
-      for (const groupKey of CATEGORY_KEYS) {
-        for (const row of data[groupKey]) {
-          const entries = out[groupKey][row.name] ?? (out[groupKey][row.name] = []);
-          entries.push({ component: scopeKey, appliedAs: row.appliedAs, appliedTo: row.appliedTo });
-        }
+    for (const groupKey of CATEGORY_KEYS) {
+      for (const name of Array.from(collected[groupKey].keys()).sort((a, b) => a.localeCompare(b))) {
+        out[groupKey][name] = collected[groupKey].get(name)!;
       }
     }
 
@@ -181,26 +221,7 @@ export class StylingAnalyzer implements Transformer {
       }
     }
 
-    // Full token universe from the fetched foundations data, named exactly as
-    // the transformer names $token references: collection-prefixed variables,
-    // raw names for styles. Sets dedupe the dual-indexed styles map.
-    const universe: Record<keyof StylingJson, Set<string>> = {
-      variables: new Set(),
-      colorStyles: new Set(),
-      textStyles: new Set(),
-      effectStyles: new Set(),
-    };
-
-    for (const variable of foundations.variables.values()) {
-      const collectionName = foundations.collections.get(variable.variableCollectionId)?.name;
-      const prefix = collectionName ?? '[collection-name-unresolved]';
-      universe.variables.add(`${prefix}/${variable.name}`);
-    }
-
-    for (const style of foundations.styles.values()) {
-      const category = STYLE_TYPE_CATEGORY[style.type];
-      if (category) universe[category].add(style.name);
-    }
+    const universe = tokenUniverse(foundations);
 
     const out: UnusedJson = {
       summary: {
@@ -278,16 +299,17 @@ function extractElementTypes(anatomy: Record<string, unknown>): Map<string, stri
 function collectDefaultAndVariants(
   source: Record<string, unknown>,
   elementTypes: Map<string, string>,
-  rows: Map<string, StylingRow>
+  rows: Map<string, StylingRow>,
+  nameIndex: Map<string, StylingCategory> | null
 ): void {
   const defaultSection = source.default as Record<string, unknown> | undefined;
   if (defaultSection?.elements) {
-    collectElements(defaultSection.elements as Record<string, unknown>, elementTypes, rows);
+    collectElements(defaultSection.elements as Record<string, unknown>, elementTypes, rows, nameIndex);
   }
   const variants = (source.variants ?? []) as Array<Record<string, unknown>>;
   for (const variant of variants) {
     if (variant.elements) {
-      collectElements(variant.elements as Record<string, unknown>, elementTypes, rows);
+      collectElements(variant.elements as Record<string, unknown>, elementTypes, rows, nameIndex);
     }
   }
 }
@@ -295,7 +317,8 @@ function collectDefaultAndVariants(
 function collectElements(
   elements: Record<string, unknown>,
   elementTypes: Map<string, string>,
-  rows: Map<string, StylingRow>
+  rows: Map<string, StylingRow>,
+  nameIndex: Map<string, StylingCategory> | null
 ): void {
   for (const [elementName, raw] of Object.entries(elements)) {
     const element = raw as Record<string, unknown>;
@@ -305,7 +328,7 @@ function collectElements(
     const elementType = elementTypes.get(elementName) ?? 'container';
 
     for (const [styleKey, styleValue] of Object.entries(styles)) {
-      collectTokens(elementName, [styleKey], styleValue, elementType, rows);
+      collectTokens(elementName, [styleKey], styleValue, elementType, rows, nameIndex);
     }
   }
 }
@@ -315,14 +338,13 @@ function collectTokens(
   keyPath: string[],
   value: unknown,
   elementType: string,
-  rows: Map<string, StylingRow>
+  rows: Map<string, StylingRow>,
+  nameIndex: Map<string, StylingCategory> | null
 ): void {
   if (value === null || value === undefined) return;
 
-  const tokenRef = asTokenReference(value);
-  if (tokenRef) {
+  const addRow = (category: StylingCategory, name: string, rawValue?: RawValue): void => {
     const appliedAs = keyPath.join('.');
-    const { name, rawValue, category } = resolveToken(tokenRef, keyPath, elementType);
     const rowKey = `${category}\x00${name}\x00${appliedAs}`;
     const existing = rows.get(rowKey);
     if (existing) {
@@ -330,22 +352,80 @@ function collectTokens(
     } else {
       rows.set(rowKey, { category, name, appliedAs, rawValue, appliedTo: new Map([[elementName, 1]]) });
     }
+  };
+
+  const tokenRef = asTokenReference(value);
+  if (tokenRef) {
+    const { name, rawValue, category } = resolveToken(tokenRef, keyPath, elementType);
+    addRow(category, name, rawValue);
+    return;
+  }
+
+  // Under a name-shaped profile the reference is the name itself. Only a string
+  // the fetched universe knows is a reference; everything else is a literal.
+  if (nameIndex && typeof value === 'string') {
+    const category = nameIndex.get(value);
+    if (category) addRow(category, value);
     return;
   }
 
   if (Array.isArray(value)) {
     // Don't push array index into keyPath — sibling items share the same appliedAs.
     for (const item of value) {
-      collectTokens(elementName, keyPath, item, elementType, rows);
+      collectTokens(elementName, keyPath, item, elementType, rows, nameIndex);
     }
     return;
   }
 
   if (typeof value === 'object') {
     for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
-      collectTokens(elementName, [...keyPath, key], child, elementType, rows);
+      collectTokens(elementName, [...keyPath, key], child, elementType, rows, nameIndex);
     }
   }
+}
+
+/**
+ * Token name → category, over the whole fetched universe.
+ *
+ * Names are built the same way `tokenUniverse` builds them, so a spec value and
+ * an index key are the same string. A name carried by both a variable and a
+ * style resolves to the variable, matching the precedence `CATEGORY_ORDER` sets
+ * everywhere else in this report.
+ */
+function buildNameIndex(foundations: AnalyzerFoundations): Map<string, StylingCategory> {
+  const universe = tokenUniverse(foundations);
+  const index = new Map<string, StylingCategory>();
+  for (const groupKey of [...CATEGORY_KEYS].reverse()) {
+    for (const name of universe[groupKey]) index.set(name, CATEGORY_FOR_KEY[groupKey]);
+  }
+  return index;
+}
+
+/**
+ * Every token name the fetched data defines, grouped by category and named
+ * exactly as the transformer names `$token` references: collection-prefixed
+ * variables, raw names for styles. Sets dedupe the dual-indexed styles map.
+ */
+function tokenUniverse(foundations: AnalyzerFoundations): Record<keyof StylingJson, Set<string>> {
+  const universe: Record<keyof StylingJson, Set<string>> = {
+    variables: new Set(),
+    colorStyles: new Set(),
+    textStyles: new Set(),
+    effectStyles: new Set(),
+  };
+
+  for (const variable of foundations.variables.values()) {
+    const collectionName = foundations.collections.get(variable.variableCollectionId)?.name;
+    const prefix = collectionName ?? '[collection-name-unresolved]';
+    universe.variables.add(`${prefix}/${variable.name}`);
+  }
+
+  for (const style of foundations.styles.values()) {
+    const category = STYLE_TYPE_CATEGORY[style.type];
+    if (category) universe[category].add(style.name);
+  }
+
+  return universe;
 }
 
 interface TokenRef {

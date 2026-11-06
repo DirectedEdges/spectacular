@@ -9,6 +9,7 @@ import { childOrder, collectLayoutKeys } from '../analysis/layoutQueries.js';
 import { composedSelector, elemSelector, rootSelector } from './selectors.js';
 import { expandVariantSelectors } from './variantSelectors.js';
 import { backgroundImageDecls, gradientRingRule, inlineBlockIfBoxed, overlapRule } from './elementRules.js';
+import { slotAdmitsComponents, variantContentStylesLines } from './contentRules.js';
 import { attrNameFor } from './hostAttributes.js';
 import type { ImagesCssContext, RootForm } from '../types.js';
 import type { SpecAnalysis } from '../analysis/analyzeSpec.js';
@@ -23,6 +24,29 @@ import type { TransformerContext } from '../../../transforms/transformer.js';
  * where order is what decides which wins). Labelling each one is what makes the
  * separation readable instead of merely repetitive.
  */
+/**
+ * Member-keyed object values (ADR-111) flattened to dotted keys
+ * (`margin.compact`), nulls dropped — the spelling the emitted trees hook their
+ * member data attributes under. A `$`-keyed object (`$binding`, `$slotContent`)
+ * is a reference, not a member value, and passes through.
+ */
+export function flattenMemberValues(configuration: Record<string, unknown>): Record<string, unknown> {
+  const flat: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(configuration)) {
+    if (
+      !key.startsWith('$') && value !== null && typeof value === 'object' && !Array.isArray(value)
+      && Object.keys(value).length > 0 && Object.keys(value).every(k => !k.startsWith('$'))
+    ) {
+      for (const [memberKey, memberValue] of Object.entries(value)) {
+        if (memberValue !== null) flat[`${key}.${memberKey}`] = memberValue;
+      }
+      continue;
+    }
+    flat[key] = value;
+  }
+  return flat;
+}
+
 function variantLabel(configuration: Record<string, unknown>): string {
   const pairs = Object.entries(configuration)
     .map(([k, v]) => (v === true ? k : v === false ? `not ${k}` : `${k}=${String(v)}`))
@@ -38,6 +62,8 @@ export interface VariantBlockInput {
   images: ImagesCssContext | undefined;
   context: TransformerContext;
   facts: SpecAnalysis;
+  /** api.yaml's props — a slot's `anyOf` decides where its content rules may land. */
+  apiProps: Record<string, Record<string, unknown>>;
   displayedInDefault: ReadonlySet<string>;
   /** Props the states convention routes through real CSS selectors. */
   classifiedProps: ReadonlySet<string>;
@@ -60,7 +86,7 @@ function isReversal(variantOrder: string[], defaultOrder: string[]): boolean {
 
 export function variantBlockLines(input: VariantBlockInput): string[] {
   const {
-    componentClass, rootAs, tokensFormat, elemTypes, images, context, facts,
+    componentClass, rootAs, tokensFormat, elemTypes, images, context, facts, apiProps,
     displayedInDefault, classifiedProps, stateLookup, nestedClaimedPairs, selectorFor, warnUnnamedValue,
   } = input;
   const rootSel = rootSelector(componentClass, rootAs);
@@ -68,8 +94,11 @@ export function variantBlockLines(input: VariantBlockInput): string[] {
 
   const lines: string[] = [];
 
-  for (const variant of variantList) {
-    const configuration = (variant.configuration ?? {}) as Record<string, unknown>;
+  for (const [variantIndex, variant] of variantList.entries()) {
+    // Member-keyed values (ADR-111) flatten to dotted keys so the expansion sees
+    // scalars — and the data attribute each member hooks as matches the emitted
+    // scaffolds' spelling (`data-margin-compact`).
+    const configuration = flattenMemberValues((variant.configuration ?? {}) as Record<string, unknown>);
     if (Object.keys(configuration).length === 0) continue;
 
     // What this variant's rule is written against. A pure function, so the
@@ -82,7 +111,7 @@ export function variantBlockLines(input: VariantBlockInput): string[] {
       stateLookup,
       nestedClaimedPairs,
       selectorFor,
-      attrNameFor: prop => attrNameFor(prop, rootAs),
+      attrNameFor: prop => attrNameFor(prop.replace('.', '-'), rootAs),
       guardsDisabled: Boolean(context.processingStates?.['disabled']),
     });
     for (const { prop, value } of unnamed) warnUnnamedValue(prop, value);
@@ -188,6 +217,33 @@ export function variantBlockLines(input: VariantBlockInput): string[] {
         tokensFormat,
         ((defaultElements[elemKey]?.styles ?? {}) as Record<string, unknown>).strokeWeight,
       ));
+
+      // The variant's contentStyles overlay — formatting for the slot's
+      // primitive content (ADR-102), riding the same selectors the element's
+      // own delta uses. Matched by position in variantsYaml.variants — the
+      // same array this loop's own `variantList` reads — rather than by the
+      // configuration object's identity, which a future re-parse could break
+      // silently (emitting zero content rules with no error).
+      const contentRead = facts.contentStylesOf(elemKey);
+      const contentDelta = contentRead.variants.find(
+        v => v.index === variantIndex,
+      )?.contentStyles;
+      if (contentDelta && Object.keys(contentDelta).length > 0) {
+        lines.push(...variantContentStylesLines({
+          slotSelectors: rootSelectors.map(s => `${s}${elemSuffix}`),
+          delta: contentDelta,
+          tokensFormat,
+          // The default element carries the binding; the whole read carries what
+          // the slot holds, across every block that states it (contentRules.ts).
+          admitsComponents: slotAdmitsComponents(
+            (defaultElements[elemKey] ?? {}) as Record<string, unknown>,
+            apiProps,
+            contentRead,
+          ),
+          rootAs,
+          label: `${variantLabel(configuration)} — ${elemKey} slot content`,
+        }));
+      }
     }
   }
 

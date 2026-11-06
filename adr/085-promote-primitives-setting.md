@@ -4,6 +4,7 @@
 **Created**: 2026-09-02
 **Status**: ACCEPTED
 **Summary**: A `promotePrimitives` spec setting joins `collapsePrimitiveWrapper` as an opt-in capture-time restructuring of composed content.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

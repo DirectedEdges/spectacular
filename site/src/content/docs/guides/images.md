@@ -95,6 +95,8 @@ The Figma plugin cannot embed raw image bytes on the component asset (Figma caps
 
 1. **Detect** — emit `$image` references and the registry, entries carrying only the Figma identity.
 2. **Resolve** (CLI's `generate` command only) — `specs generate --get-images` fetches the bytes, writes each distinct image once to `assets/images/<imageHash>.<ext>` at the workspace root, and ADDS `src` (the file's path relative to the referencing spec file); the identity survives for reverse-direction tooling.
+
+The REST runtime resolves entries via a second call (Get Image Fills, whose S3 URLs expire ~14 days), downloading the bytes into emitted files — never persisting the URL or embedding base64. `$image` pointers always resolve to a registry entry, so they never dangle.
 :::
 
 ## Further Reading

@@ -5,36 +5,30 @@ description: "Configure input and output directories for fetched data and genera
 
 Each concern in `config/settings.yaml` — `data`, `spec`, and `assets` — carries its own `directory`. All are run choices: a different team could point them anywhere and still be correct.
 
-## `data.directory`
+| | |
+|---|---|
+| **File** | `config/settings.yaml` |
+| **Path** | `data.directory`, `spec.directory`, `assets.directory` |
+| **Type** | string (each) |
+| **Default** | `./data`, `./specs`, `./assets` |
 
-Directory where `fetch` writes downloaded payloads, and where `generate` loads them from.
+## Options
 
-- **Default**: `./data`
-- **CLI override**: `--data-dir` flag on `fetch`, `scan`, and `generate` commands
+| Path | Description |
+|---|---|
+| `data.directory` | Where `fetch` writes downloaded payloads, and where `generate` loads them from. Override per run with `--data-dir` on `fetch`, `scan`, and `generate` |
+| `spec.directory` | Where `generate` commands write their output files. Override per run with `-o` on individual commands |
+| `assets.directory` | Shared resources every code output points at, whatever the platform — icons, images, generated CSS, fonts |
+
+The `generate` command's `--format` flag still controls output format (YAML vs JSON); these control directories only.
+
+## Example
 
 ```yaml
 data:
   directory: ./data
-```
-
-## `spec.directory`
-
-Default directory where `generate` commands write their output files.
-
-- **Default**: `./specs`
-- **Override**: `-o` flag on individual commands
-- **Note**: The `generate` command's `--format` flag still controls output format (YAML vs JSON); this controls the directory only.
-
-```yaml
 spec:
   directory: ./specs
-```
-
-## `assets.directory`
-
-Directory holding shared resources every code output points at, whatever the platform — icons, images, generated CSS, fonts.
-
-```yaml
 assets:
   directory: ./assets
 ```

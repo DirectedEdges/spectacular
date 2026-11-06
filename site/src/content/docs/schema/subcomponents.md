@@ -3,8 +3,6 @@ title: "Subcomponents"
 description: "Embedded child component definitions and $ref linking"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge pro-badge">Pro</span>')</script>
-
 Subcomponents are smaller components embedded within a parent component's spec. They follow the same structure as a top-level `Component` but without `metadata` or nested subcomponents. An optional `source` field carries the Figma node identity needed for reverse-direction tooling.
 
 ```ts
@@ -23,7 +21,7 @@ A `Subcomponent` contains:
 | `title` | `string` | Yes | Subcomponent name |
 | `anatomy` | [`Anatomy`](/schema/anatomy/) | Yes | Element map |
 | `props` | [`Props`](/schema/props/) | No | Prop definitions |
-| `default` | [`Variant`](/schema/variants.md/#variant) | Yes | Default variant |
+| `default` | [`Variant`](/schema/variants/#variant) | Yes | Default variant |
 | `variants` | [`Variant[]`](variants.md) | No | Variant overrides |
 | `invalidPropCombinations` | [`PropConfigurations[]`](prop-configurations.md) | No | Invalid prop combinations |
 | `source` | `SubcomponentSource` | No | Figma source identity for this subcomponent's node |

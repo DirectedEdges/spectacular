@@ -3,8 +3,6 @@ title: "dependencies"
 description: "Emit a component dependency graph showing blast radius and prop utilization across nested instances"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge experimental-badge">Experimental</span>')</script>
-
 The dependencies analyzer builds a directed graph of how components compose one another, read from `instanceOf` references across every spec. It answers two questions no single spec can:
 
 - **What is the blast radius of changing this component?** If Icon changes, Button (which places an Icon) is impacted directly — and Card (which places a Button) is impacted transitively.

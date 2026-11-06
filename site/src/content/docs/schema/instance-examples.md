@@ -3,15 +3,12 @@ title: "Instance Examples"
 description: "Pre-configured whole-component usages for documentation"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge pro-badge">Pro</span>')</script>
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge experimental-badge">Experimental</span>')</script>
-
 An `InstanceExample` is a pre-configured usage of a *whole* component — a documented configuration for human readers and tooling, not a live data flow. Scalar props are set directly; slot props are filled with a [`SlotContentRef`](/schema/slot-content-ref/). They live on [`Component.instanceExamples`](/schema/component/) and are emitted only with a Pro license.
 
 ```ts
 type InstanceExample = {
   title?: string;
-  propConfigurations?: Record<string, string | number | boolean | null | SlotContentRef>;
+  propConfigurations?: Record<string, string | number | boolean | null | SlotContentRef | ObjectPropValue>;
 };
 
 type InstanceExamples = Record<string, InstanceExample>;
@@ -22,7 +19,7 @@ type InstanceExamples = Record<string, InstanceExample>;
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | `title` | `string` | No | Human-readable label for this example |
-| `propConfigurations` | `Record<string, string \| number \| boolean \| null \| `[`SlotContentRef`](/schema/slot-content-ref/)`>` | No | Prop values — scalars for scalar props, a `SlotContentRef` for slot props, `null` for a prop this example leaves unset |
+| `propConfigurations` | `Record<string, string \| number \| boolean \| null \| `[`SlotContentRef`](/schema/slot-content-ref/)` \| ObjectPropValue>` | No | Prop values — scalars for scalar props, a `SlotContentRef` for slot props, a member-keyed [`ObjectPropValue`](/schema/prop-configurations/) for object props (since 0.39.0), `null` for a prop this example leaves unset |
 
 A [`PropBinding`](/schema/prop-binding/) is **not** permitted in `propConfigurations` — an instance example is a static configuration, not a binding.
 
@@ -45,7 +42,7 @@ Slot fills encountered inside an example instance are contributed to the shared 
 
 ### The example's own slots, and everything below them
 
-That last point is why a [default slot](/schema/props/#slotprop) behaves differently here than anywhere else, and the asymmetry is worth stating because it cannot be inferred.
+That last point is why a [default slot](/schema/props/slot/) behaves differently here than anywhere else, and the asymmetry is worth stating because it cannot be inferred.
 
 An `InstanceExample` carries `propConfigurations` and nothing else — no anatomy, no elements, no layout. So **the example's own default slot still resolves to a `SlotContentRef`**: there is nowhere in this shape to nest a child, and a reference is the only thing a `propConfigurations` value can be.
 

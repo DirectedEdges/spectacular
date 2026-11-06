@@ -2,9 +2,9 @@
  * Color value output format.
  *
  * Controls how `ColorObject` objects are serialized in the spec output.
- * `HEX` (default) emits a 6-digit hex string. `OBJECT` emits the full
- * `ColorObject` object. All other values emit a formatted color string
- * in the named notation.
+ * `HEXA` (default) emits an 8-digit hex string carrying alpha. `HEX` emits a
+ * 6-digit hex string. `OBJECT` emits the full `ColorObject` object. All other
+ * values emit a formatted color string in the named notation.
  *
  * Tier 1 — Figma UI formats: `HEX`, `HEXA`, `RGB`, `RGBA`, `HSLA`, `HSB`
  * Tier 2 — Modern CSS (Level 4): `OKLCH`, `OKLAB`
@@ -68,7 +68,7 @@ export interface Settings {
      * underneath that record. When false, a component whose signal changed takes the
      * new signal, overriding an edit. When true, the edit stands. A component whose
      * signal did not change keeps its recorded selection either way. Optional;
-     * defaults to false.
+     * defaults to true.
      */
     preserveManualSelections?: boolean;
     /**
@@ -97,13 +97,13 @@ export interface Settings {
   spec?: {
     /** Directory the generated spec is written to. */
     directory?: string;
-    /** Serialization format. Optional; defaults to JSON. */
+    /** Serialization format. Optional; defaults to YAML. */
     format?: 'JSON' | 'YAML';
     /**
      * Key naming convention applied to anatomy keys, prop keys, and every reference
      * to them. Every value other than SAFE is a lossy projection of the Figma name;
      * names outside the safe key grammar are preserved in `$extensions['com.figma'].name`.
-     * Optional; defaults to SAFE.
+     * Optional; defaults to CAMEL.
      */
     keys?: 'SAFE' | 'CAMEL' | 'SNAKE' | 'KEBAB' | 'PASCAL' | 'TRAIN';
     /** Layout representation format. Optional; defaults to LAYOUT. */
@@ -136,7 +136,7 @@ export interface Settings {
      * profile's output when no code syntax is defined for the platform. @since 0.21.0
      */
     tokens?: 'TOKEN' | 'TOKEN_NAME' | 'TOKEN_FIGMA_EXTENSIONS' | 'FIGMA_NAME' | 'CUSTOM' | 'FIGMA_SYNTAX_WEB' | 'FIGMA_SYNTAX_IOS' | 'FIGMA_SYNTAX_ANDROID';
-    /** Color value output format. Optional; defaults to HEX. @since 0.20.0 */
+    /** Color value output format. Optional; defaults to HEXA. @since 0.20.0 */
     color?: ColorFormat;
     /** Depth of variant expansion: 1-3 or 9999 for unlimited. Optional; defaults to 9999. */
     variantDepth?: 1 | 2 | 3 | 9999;
@@ -157,7 +157,7 @@ export interface Settings {
      *   onto the root.
      *
      * All-or-nothing across variants: if any variant fails eligibility, no collapse
-     * occurs. Defaults to false.
+     * occurs. Defaults to true.
      *
      * @since 0.26.0
      */
@@ -277,14 +277,16 @@ export interface ResolvedSettings {
  * Used by both CLI and Plugin to ensure identical behavior with same settings.
  *
  * Rationale for defaults:
- * - spec.format: JSON matches historical behaviour
- * - spec.keys: SAFE prevents corruption of special characters while maintaining readability
+ * - spec.format: YAML is the format a spec is read and hand-edited in (ADR-112)
+ * - spec.keys: CAMEL is the casing every code consumer of a spec already uses (ADR-112)
  * - spec.layout: LAYOUT provides tree structure with layout properties
  * - spec.tokens: TOKEN provides platform-neutral token references with $token path and $type
- * - spec.color: HEX matches historical v1 behaviour and maximises human readability
+ * - spec.color: HEXA carries alpha, so a translucent color survives the round trip (ADR-112)
  * - spec.variantDepth: 9999 (no limit) allows full variant combination exploration
  * - spec.details: LAYERED reduces output size by only showing differences from default
- * - spec.collapsePrimitiveWrapper: false — opt-in feature, off by default
+ * - spec.collapsePrimitiveWrapper: true — a wrapper around one child is noise in every
+ *   consumer, and eligibility already withholds the collapse where it would lose a style
+ *   (ADR-112)
  * - spec.promotePrimitives: false — opt-in; promotion restructures composed content
  * - spec.invalidVariants: false excludes variants that can't be instantiated
  * - spec.invalidCombinations: true helps designers identify property conflicts
@@ -292,8 +294,8 @@ export interface ResolvedSettings {
  * - spec.defaultSlotContent: false — opt-in (ADR-050); off by default so unannotated components are unchanged
  * - curation.defaultSelection: READY_FOR_DEV — a library that marks readiness is stating what it
  *   wants consumed; one that marks nothing falls back to every set and standalone component
- * - curation.preserveManualSelections: false — the library is the moving record, so a signal that
- *   changes is news, not noise
+ * - curation.preserveManualSelections: true — a selection is recorded so a human can correct it,
+ *   and a correction the next pass discards was not worth recording (ADR-112)
  * - curation.includeDependencies: true — a selection that omits what it is built from produces
  *   specs referencing specs that were never written
  *
@@ -303,18 +305,18 @@ export interface ResolvedSettings {
 export const DEFAULT_SETTINGS: ResolvedSettings = {
   curation: {
     defaultSelection: 'READY_FOR_DEV',
-    preserveManualSelections: false,
+    preserveManualSelections: true,
     includeDependencies: true,
   },
   spec: {
-    format: 'JSON',
-    keys: 'SAFE',
+    format: 'YAML',
+    keys: 'CAMEL',
     layout: 'LAYOUT',
     tokens: 'TOKEN',
-    color: 'HEX',
+    color: 'HEXA',
     variantDepth: 9999,
     details: 'LAYERED',
-    collapsePrimitiveWrapper: false,
+    collapsePrimitiveWrapper: true,
     promotePrimitives: false,
     roles: false,
     roleValidation: 'warn',

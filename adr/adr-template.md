@@ -141,9 +141,9 @@ newField:
   What do they need to do after this ADR is accepted and published?
 -->
 
-| Consumer | Impact | Action required |
-|----------|--------|-----------------|
-| `specs-cli` | [None / Recompile / Update usage] | [e.g., pass new config field] |
+| Consumer | Impact | Highlights |
+|----------|--------|------------|
+| `specs-cli` | [None / Recompile / Update usage] | [e.g., the new config field reaches the engine] |
 
 ---
 

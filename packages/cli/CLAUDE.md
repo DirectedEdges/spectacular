@@ -24,3 +24,20 @@ The structural map — commands, key nodes, data flows, gotchas — is
   `webcomponents-from-specs`) and `specs-schema` resolve from `node_modules`,
   which in dev are symlinks into sibling checkouts — never `npm install` a
   local path; the workspace links handle resolution.
+
+## License validation is rate-limited — design loops around when it fires
+
+The validate endpoint allows roughly **3 requests per 32 seconds**. What matters is
+not what the license proxy does when the limit trips, but which CLI invocations fire
+a check in the first place:
+
+- A loop of back-to-back runs bursts past the limit. The symptom is silent FREE
+  output partway through a round, which reads as a licensing bug in the product
+  rather than as throttling.
+- Pace scripted runs at **13 seconds or more** apart, or re-run after 30 seconds.
+- `specs run` and `specs build` hold the whole chain to **one check per run**
+  (ADR-101), because steps call each command's `runX()` in-process rather than as a
+  subprocess. Driving the same work as separate `specs` invocations fires a check
+  each time — which is the usual cause of an unexpected burst.
+- `SPECS_DEV_TIER=PRO` skips the call entirely, and covers `transform` only — not
+  `generate`. Reach for it before pacing a development loop by hand.

@@ -3,20 +3,9 @@ title: "Slot Content"
 description: "The anatomy + elements + layout triplet used as a named slot fill"
 ---
 
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge pro-badge">Pro</span>')</script>
-<script>document.querySelector('#_top').insertAdjacentHTML('beforeend',' <span class="sl-badge experimental-badge">Experimental</span>')</script>
-
 A `SlotContent` is the anonymous structural triplet — [`anatomy`](/schema/anatomy/), [`elements`](/schema/elements/), and [`layout`](/schema/layout/) — used as a named fill for a slot. It carries no metadata of its own; its identity lives at the key under which it is stored.
 
-```ts
-interface SlotContent {
-  anatomy: Anatomy;
-  elements: Elements;
-  layout: Layout;
-}
-```
-
-## Properties
+## Members
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
@@ -35,7 +24,7 @@ specs-from-figma de-duplicates entries by structural equality across variants an
 
 ## When no entry exists
 
-A registry entry is how a **non**-default slot is filled. A fill into a slot marked [`defaultSlot: true`](/schema/props/#slotprop) produces no entry at all: the filling instance is nested as a plain [child](/schema/children/) of the element it fills, in whatever anatomy, elements and layout that element already lives in.
+A registry entry is how a **non**-default slot is filled. A fill into a slot marked [`defaultSlot: true`](/schema/props/slot/default-slot/) produces no entry at all: the filling instance is nested as a plain [child](/schema/children/) of the element it fills, in whatever anatomy, elements and layout that element already lives in.
 
 So the registry holds what the structure cannot say on its own, and nothing more. A screen built from four nested layout components used to contribute an entry per level, each pointed at once from the level above; it now contributes none, and the entries that remain are its genuinely multi-slot fills.
 

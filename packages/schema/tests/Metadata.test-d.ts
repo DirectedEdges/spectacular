@@ -13,6 +13,7 @@ const baseConventions: RunMetadata['conventions'] = {
       subcomponents: { scope: 'NESTED', match: ['{C} / _ / {S}'] },
       slotConstraints: false,
       inferNumberProps: false,
+      slotPrimitives: true,
     },
   },
 };

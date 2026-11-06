@@ -28,7 +28,7 @@ The `keys` option applies a naming transformation to every key in the spec outpu
 
 Given a component with props `"Has Icon"`, `"Label Text"`, and `"Button Size"`:
 
-**SAFE** (default):
+**SAFE**:
 ```yaml
 props:
   Has Icon:
@@ -39,7 +39,7 @@ props:
     type: enum
 ```
 
-**CAMEL**:
+**CAMEL** (default):
 ```yaml
 props:
   hasIcon:
@@ -65,8 +65,8 @@ The transformation applies to keys throughout the entire spec — not just props
 
 ## When to Use Each Format
 
-- **`SAFE`** — Default. Use when you want to preserve the original Figma names exactly as authored, including spaces and mixed case. Good for documentation, design-to-dev handoff where Figma names are the source of truth, or when downstream tools handle their own key transformation.
-- **`CAMEL`** — Use when your consuming codebase is JavaScript or TypeScript. Props map directly to React component props or JS object keys without additional transformation.
+- **`CAMEL`** — Default. Use when your consuming codebase is JavaScript or TypeScript. Props map directly to React component props or JS object keys without additional transformation.
+- **`SAFE`** — Use when you want to preserve the original Figma names exactly as authored, including spaces and mixed case. Good for documentation, design-to-dev handoff where Figma names are the source of truth, or when downstream tools handle their own key transformation.
 - **`SNAKE`** — Use when your consuming codebase is Python, Ruby, or another language that uses snake_case conventions. Also useful for database schemas.
 - **`KEBAB`** — Use when keys feed into CSS custom properties (`--button-size`), HTML attributes, or URL-friendly identifiers.
 - **`PASCAL`** — Use when keys map to class names, C# properties, or other PascalCase conventions.
@@ -79,10 +79,10 @@ Set `keys` under `spec` in `config/settings.yaml`:
 ```yaml
 # config/settings.yaml
 spec:
-  keys: CAMEL    # Transform all keys to camelCase
+  keys: SAFE    # Preserve Figma names without modification
 ```
 
-**Default**: `SAFE` — preserves Figma names without modification.
+**Default**: `CAMEL` — transforms all keys to camelCase.
 
 ## Practical Guidance
 

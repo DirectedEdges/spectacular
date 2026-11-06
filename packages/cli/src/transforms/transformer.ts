@@ -40,6 +40,14 @@ export interface TransformerContext {
   tokensFormat: string;
   /** Output format from config.format.output. Drives file extension and serialization for analyzers. */
   outputFormat: 'JSON' | 'YAML';
+  /**
+   * The full token universe from the fetched variables/styles data, when those
+   * files exist. The same maps `finalize` receives — handed to `run` as well
+   * because under a name-shaped `tokensFormat` a style value carries only the
+   * token's name, and the universe is the only thing that distinguishes such a
+   * reference from a literal like `CENTER`.
+   */
+  foundations?: AnalyzerFoundations;
   /** Semantic state concept map from `conventions.specs.states`. */
   processingStates?: ProcessingStates;
   /**

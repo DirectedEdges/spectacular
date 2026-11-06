@@ -1,23 +1,24 @@
 ---
-title: "Invalid Variants"
+title: "invalidVariants"
 description: "Include invalid variant data in output"
 ---
 
-Include invalid variant data in output. A run choice in `config/settings.yaml`.
+Include invalid variant data in output. When `true`, variants that don't match all property combinations are included.
 
-## Options
+| | |
+|---|---|
+| **File** | `config/settings.yaml` |
+| **Path** | `spec.invalidVariants` |
+| **Type** | boolean |
+| **Default** | `false` |
 
-- **Type**: boolean
-- **Default**: `false`
-- **Effect**: When `true`, includes variants that don't match all property combinations
-
-## Path
-
-`spec.invalidVariants` in `config/settings.yaml`
-
-### Example
+## Example
 
 ```yaml
 spec:
   invalidVariants: false  # Exclude invalid variants
 ```
+
+## Further reading
+
+- [invalidCombinations](/settings/invalid-combinations/) — the related setting that computes which prop combinations are invalid; this one controls whether invalid variant data appears in output.

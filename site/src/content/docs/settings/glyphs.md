@@ -3,7 +3,16 @@ title: "glyphs"
 description: "Conventions used to detect glyph content assets"
 ---
 
-Conventions used to detect glyph content assets (e.g. icon glyphs). A library fact, declared in `config/conventions/figma.yaml`: every consumer reading the same library must declare the same conventions — a wrong or missing declaration leaves icon assets undetected. Absence means the library has no glyph convention, and no glyph detection is performed.
+Conventions used to detect glyph content assets (e.g. icon glyphs). A library fact: every consumer reading the same library must declare the same conventions — a wrong or missing declaration leaves icon assets undetected, and absence means the library has no glyph convention and no detection is performed.
+
+| | |
+|---|---|
+| **File** | `config/conventions/figma.yaml` |
+| **Path** | `glyphs.match` and `glyphs.structure` |
+| **Type** | block with `match` (string) and/or `structure` (object) — at least one |
+| **Default** | absent (no glyph convention) |
+
+## Options
 
 A declared block carries at least one of two forms; a component matching either is a glyph:
 
@@ -12,11 +21,7 @@ A declared block carries at least one of two forms; a component matching either 
 | `match` | component name matches the pattern | the `{i}` capture |
 | `structure` | component's children match the declared structure | the component name (through `structure.name`) |
 
-:::tip[Guide]
-See [Icon Glyphs](/guides/glyph-name-pattern/) for naming strategies and worked examples.
-:::
-
-## Configuration
+## Example
 
 ```yaml
 # Name form — the library names its glyph components by a pattern
@@ -61,17 +66,11 @@ When the pattern matches, the layer is typed as a `glyph` in the anatomy and its
 
 Without a `glyphs` block, the layer is treated as an ordinary element and no `content` glyph name is extracted.
 
-## Options
-
-- **Type**: block with `match` (string) and/or `structure` (object) — at least one
-- **Default**: absent (no glyph convention)
-- **Effect**: When declared, components matching either form are detected as glyph assets. When absent, glyph detection is skipped entirely.
-
-### `match`
+## `match`
 
 The pattern must include the `{i}` placeholder, which marks where the glyph name appears in the component name. Internally `{i}` becomes a `(.+)` capture group and the matched text is used as the glyph's `content` value. See [Icon Glyphs](/guides/glyph-name-pattern/) for the full pattern syntax.
 
-### `structure`
+## `structure`
 
 Declares the child structure a glyph component has in this library, for libraries whose glyph components are plainly named (`Cross`, `Chevron down`) and carry no name pattern.
 
@@ -96,8 +95,10 @@ glyphs:
             name: 'Glyph - *'
 ```
 
-## Path
+## Legacy name
 
-`glyphs.match` and `glyphs.structure` in `config/conventions/figma.yaml`
+In the pre-split `specs.config.yaml`, this option was the scalar `config.processing.glyphNamePattern`. That file is no longer read — [`specs migrate config`](/cli/commands/migrate/) converts it, moving that member to `figma.glyphs.match`.
 
-**Legacy name**: in the pre-split `specs.config.yaml`, this option was the scalar `config.processing.glyphNamePattern`. That file is no longer read — [`specs migrate config`](/cli/commands/migrate/) converts it, moving that member to `figma.glyphs.match`.
+## Further reading
+
+- [Icon Glyphs guide](/guides/glyph-name-pattern/) for naming strategies and worked examples.
