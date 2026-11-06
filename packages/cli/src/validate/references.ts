@@ -106,6 +106,39 @@ export function checkReferences(
     for (const k of Object.keys(objAt(doc, 'subcomponents'))) subcomponentNames.add(k);
   }
 
+  // ---- image pointers resolve in this spec's images registry ----------------
+  // The registry is the component's own `images` map (examples concern,
+  // ADR-063), and the schema's one pointer form is same-document `#/images/<key>`.
+  // Checked exactly as $slotContent pointers are: a dangling pointer, or a
+  // file-qualified/malformed spelling, ships a grey image with ✓ 0 errors.
+  {
+    const registry = new Set([
+      ...Object.keys(objAt(spec.examples, 'images')),
+      ...Object.keys(objAt(spec.api, 'images')),
+    ]);
+    const IMAGE_RE = /^#\/images\/([a-zA-Z0-9_-]+)$/;
+    const walk = (node: unknown, file: 'api' | 'variants' | 'examples', pathSoFar: string): void => {
+      if (Array.isArray(node)) { node.forEach((item, i) => walk(item, file, `${pathSoFar}/${i}`)); return; }
+      if (!node || typeof node !== 'object') return;
+      for (const [key, value] of Object.entries(node as Obj)) {
+        const path = `${pathSoFar}/${key}`;
+        if (typeof value === 'string' && value.includes('#/images/')) {
+          const match = IMAGE_RE.exec(value);
+          if (!match) {
+            findings.push({ file, path, message: `image pointer "${value}" is not the schema's form — '#/images/<key>' within this spec` });
+          } else if (!registry.has(match[1])) {
+            findings.push({ file, path, message: `images registry declares no "${match[1]}"` });
+          }
+          continue;
+        }
+        walk(value, file, path);
+      }
+    };
+    for (const [file, doc] of [['api', spec.api], ['variants', spec.variants], ['examples', spec.examples]] as const) {
+      walk(doc, file, '');
+    }
+  }
+
   const mainScope: Scope = {
     props: objAt(spec.api, 'props'),
     anatomy: new Set(Object.keys(objAt(spec.api, 'anatomy'))),

@@ -184,6 +184,29 @@ describe('specs validate', () => {
     expect(result.counts.component).toBe(1);
   });
 
+  describe('image pointers', () => {
+    it('resolves #/images/<key> against the registry and flags dangling or malformed pointers', () => {
+      const spec = validSpec();
+      (spec.api as Record<string, unknown>).props = {
+        ...(spec.api as { props: Record<string, unknown> }).props,
+        source: { type: 'image', default: '#/images/hero' },
+        portrait: { type: 'image', default: '#/images/missing' },
+        banner: { type: 'image', default: 'image.examples#/images/hero' },
+      };
+      writeSpec('components', 'badge', {
+        ...spec,
+        examples: {
+          metadata: metadata('examples'),
+          images: { hero: { src: './images/hero.png' } },
+        },
+      });
+      const errors = errorsOf(runValidate({ specsPath: specsDir }).findings);
+      expect(errors.some(f => f.message.includes('declares no "missing"'))).toBe(true);
+      expect(errors.some(f => f.message.includes('not the schema\'s form'))).toBe(true);
+      expect(errors.some(f => f.message.includes('"hero"'))).toBe(false);
+    });
+  });
+
   describe('resolved dimension tokens', () => {
     it('reports what a used dimension token resolves to, deduped', () => {
       const spec = validSpec();
