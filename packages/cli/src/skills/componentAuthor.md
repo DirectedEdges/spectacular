@@ -12,7 +12,7 @@ description: Author a new component spec from a request — requirements split, 
 
 **Prerequisites:** `specs-cli.primer`, then `specs-cli.authoring.primer`. Load its `references/styles.md` before authoring `variants.yaml`, and its `references/slots-layout.md` before authoring any layout tree or slot.
 
-Templates ship beside this skill in `templates/` — `api.yaml`, `variants.yaml`, `examples.yaml`, `supplementalRequirements.md`. Copy them; never author a file from a blank page or from another spec's structure.
+Templates ship beside this skill in `templates/` — `api.yaml`, `variants.yaml`, `examples.yaml`, `supplemental.yaml`. Copy them; never author a file from a blank page or from another spec's structure.
 
 ## 1. Split the requirements
 
@@ -72,10 +72,10 @@ If the posture is not running, start it; do not fall back to one-shot `specs rea
 For every requirement the table in step 1 marked supplemental:
 
 - Implement it in hand-authored files **beside** the emitted output (e.g. `component.tsx`, a hook, a stylesheet) in the platform tree. Never edit emitted files — a re-emit overwrites them. Files you add are safe: emit overwrites only its own filenames, and prune removes only whole directories whose spec is gone.
-- Copy `templates/supplementalRequirements.md` to the spec folder as `supplementalRequirements.md` and fill it: tight, testable intent statements, each citing the schema gap, the implementing file, and the regeneration risk. No rationale prose.
+- Copy `templates/supplemental.yaml` to the spec folder as `supplemental.yaml` and fill it, section by section (`anatomy`, `props`, `styles`, `slotComposition`, `events`, `accessibility`, `behavior`, `motion`, `layout`, `guidelines`): each entry a testable `intent`, the `schemaGap` that cannot carry it, the implementing file per platform under `platforms`, and its `regenerationRisk`. No rationale prose. `specs validate` checks the file's shape — run it after writing, like any concern file.
 - **Rename procedure:** renaming the component orphans its old emitted directory — prune removes it, custom files included. Move custom files first.
 
-After every later re-emit, diff the fresh scaffold against your custom files and update each entry's regeneration-risk line.
+After every later re-emit, diff the fresh scaffold against your custom files and update each entry's `regenerationRisk`.
 
 ## 9. Report
 

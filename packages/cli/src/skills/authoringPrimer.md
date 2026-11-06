@@ -55,7 +55,7 @@ In `variants.yaml`, `default.elements` describes **every** anatomy element: `sty
 2. **Correlate.** Read `analysis/props.yaml` (the system's prop vocabulary), `analysis/styling.byToken.yaml` (which tokens are used where), `analysis/dependencies.*` (what nests what), and the component folder list. Decide what to nest, what to emulate, and which tokens to use. An authored spec must look native to its catalogue.
 3. **api → validate → variants → validate → examples → validate.** One file at a time, `specs validate <key> --authored` after each, zero errors before the next file. A validation error is fixed before anything else happens.
 4. **Compile and observe.** The dev posture is live: `specs run` re-emits on save, `specs render --watch` re-renders on save. Save, then check Storybook and the canvas.
-5. **Supplemental last.** What the schema cannot carry goes in hand-authored platform files plus `supplementalRequirements.md` — see the triage rule below.
+5. **Supplemental last.** What the schema cannot carry goes in hand-authored platform files plus the `supplemental.yaml` sidecar (ten fixed sections; shape-checked by `specs validate`) — see the triage rule below.
 
 ## Rules
 

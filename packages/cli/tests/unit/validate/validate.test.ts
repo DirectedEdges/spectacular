@@ -182,4 +182,33 @@ describe('specs validate', () => {
     expect(result.missing).toEqual(['ghost']);
     expect(result.counts.component).toBe(1);
   });
+
+  describe('supplemental sidecar', () => {
+    const entry = {
+      intent: 'Tooltip positions against its trigger',
+      schemaGap: 'component-concern.schema.json — no positioning-engine concept',
+      platforms: { react: 'useTooltipPosition.ts' },
+      regenerationRisk: 'low — hook beside the scaffold',
+    };
+
+    it('passes a well-formed supplemental.yaml', () => {
+      writeSpec('components', 'badge', { ...validSpec(), supplemental: { behavior: [entry] } });
+      expect(runValidate({ specsPath: specsDir }).findings).toEqual([]);
+    });
+
+    it('rejects an unknown top-level section', () => {
+      writeSpec('components', 'badge', { ...validSpec(), supplemental: { theming: [entry] } });
+      const errors = errorsOf(runValidate({ specsPath: specsDir }).findings);
+      expect(errors.some(f => f.file === 'supplemental.yaml' && f.path.includes('theming'))).toBe(true);
+    });
+
+    it('rejects an entry missing its schemaGap', () => {
+      writeSpec('components', 'badge', {
+        ...validSpec(),
+        supplemental: { events: [{ intent: 'fires onPress' }] },
+      });
+      const errors = errorsOf(runValidate({ specsPath: specsDir }).findings);
+      expect(errors.some(f => f.file === 'supplemental.yaml' && f.path.includes('schemaGap'))).toBe(true);
+    });
+  });
 });

@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Specs Supplemental Sidecar",
+  "description": "What a component needs beyond what the spec can carry, registered beside the spec as components/<component>/supplemental.yaml. Overlay-only: every entry names the schema path that cannot carry it; anything the schema can carry belongs in the spec. EXPERIMENTAL — this contract is CLI-defined while authoring rounds prove the shape; it is expected to move into @directededges/specs-schema once stable.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "anatomy": { "$ref": "#/definitions/Section" },
+    "props": { "$ref": "#/definitions/Section" },
+    "styles": { "$ref": "#/definitions/Section" },
+    "slotComposition": { "$ref": "#/definitions/Section" },
+    "events": { "$ref": "#/definitions/Section" },
+    "accessibility": { "$ref": "#/definitions/Section" },
+    "behavior": { "$ref": "#/definitions/Section" },
+    "motion": { "$ref": "#/definitions/Section" },
+    "layout": { "$ref": "#/definitions/Section" },
+    "guidelines": { "$ref": "#/definitions/Section" }
+  },
+  "definitions": {
+    "Section": {
+      "type": "array",
+      "description": "Entries for one concern the spec cannot fully carry.",
+      "items": { "$ref": "#/definitions/Entry" }
+    },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["intent", "schemaGap"],
+      "properties": {
+        "intent": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A testable statement of what the component must do — written to transfer directly to a test-case criterion. No rationale prose."
+        },
+        "schemaGap": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The schema path or definition that would carry this requirement, and why it cannot. Named, not asserted — an entry that cannot name its gap belongs in the spec."
+        },
+        "platforms": {
+          "type": "object",
+          "description": "Where the overlay is implemented, per platform — a file path relative to the component's folder in that platform's tree. Absent while the entry is pending implementation.",
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        },
+        "regenerationRisk": {
+          "type": "string",
+          "description": "What a re-emit could break and how to re-check it. Updated after every regeneration — this field is the ledger of manual work that must be re-verified."
+        }
+      }
+    }
+  }
+}

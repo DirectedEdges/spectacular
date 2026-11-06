@@ -49,7 +49,7 @@ import GUIDELINES_PROPOSE from './guidelinesPropose.md';
 import TEMPLATE_API from './templates/api.yaml';
 import TEMPLATE_VARIANTS from './templates/variants.yaml';
 import TEMPLATE_EXAMPLES from './templates/examples.yaml';
-import TEMPLATE_SUPPLEMENTAL from './templates/supplementalRequirements.md';
+import TEMPLATE_SUPPLEMENTAL from './templates/supplemental.yaml';
 import TEMPLATE_GUIDELINES_RULES from './templates/guidelinesRules.yaml';
 import RULES_ANATOMY from './rules/anatomy.yaml';
 import RULES_STYLES from './rules/styles.yaml';
@@ -107,7 +107,7 @@ export const SKILL_ASSETS: SkillAsset[] = [
       { path: 'templates/api.yaml', content: TEMPLATE_API },
       { path: 'templates/variants.yaml', content: TEMPLATE_VARIANTS },
       { path: 'templates/examples.yaml', content: TEMPLATE_EXAMPLES },
-      { path: 'templates/supplementalRequirements.md', content: TEMPLATE_SUPPLEMENTAL },
+      { path: 'templates/supplemental.yaml', content: TEMPLATE_SUPPLEMENTAL },
     ],
   },
 ];

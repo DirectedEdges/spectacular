@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
 import { concernValidators, describeAjvError, isMissingSourceError, type ConcernName } from './schemas.js';
+import { supplementalValidator } from './supplemental.js';
 import { checkReferences, type ParsedSpec, type WorkspaceIndex } from './references.js';
 import { loadTokenIndex, type TokenIndex } from './tokens.js';
 import { resolveSpecsLayout, SPEC_KINDS, type SpecKind } from '../utilities/specsLayout.js';
@@ -146,6 +147,31 @@ export function runValidate(options: ValidateOptions): ValidateResult {
               level: downgraded ? 'warning' : 'error',
             });
           }
+        }
+      }
+
+      // The supplemental sidecar, when present — shape only (experimental contract).
+      const suppEntry = fs.readdirSync(dir).sort().find(f => /^supplemental\.ya?ml$/.test(f));
+      if (suppEntry) {
+        try {
+          const doc = yaml.parse(fs.readFileSync(path.join(dir, suppEntry), 'utf8'));
+          const validate = supplementalValidator();
+          if (!validate(doc) && validate.errors) {
+            const seen = new Set<string>();
+            for (const err of validate.errors) {
+              const { path: errPath, message } = describeAjvError(err);
+              const line = `${errPath}|${message}`;
+              if (seen.has(line)) continue;
+              seen.add(line);
+              findings.push({ kind, spec: name, file: suppEntry, path: errPath, message, level: 'error' });
+            }
+          }
+        } catch (e) {
+          findings.push({
+            kind, spec: name, file: suppEntry, path: '/',
+            message: `not parseable as YAML: ${(e as Error).message.split('\n')[0]}`,
+            level: 'error',
+          });
         }
       }
 

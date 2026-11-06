@@ -1,0 +1,25 @@
+# supplemental.yaml — what this component needs beyond what the spec can carry
+# (experimental contract: packages/cli validate/supplemental.schema.json)
+#
+# Overlay-only. Every entry names the schema path that cannot carry it; if the
+# schema CAN carry it, it belongs in the spec, and validation of this file does
+# not excuse that misplacement. Entries are testable intent statements — each
+# transfers directly to a test-case criterion. No rationale prose.
+#
+# Sections (all optional, nothing else allowed): anatomy, props, styles,
+# slotComposition, events, accessibility, behavior, motion, layout, guidelines.
+#
+# Entry fields:
+#   intent            required — one testable sentence of what must be true
+#   schemaGap         required — the path that would carry it and why it cannot
+#   platforms         optional — platform → implementing file, relative to the
+#                     component's folder in that platform tree; absent while pending
+#   regenerationRisk  optional — what a re-emit could break and how to re-check;
+#                     update after every regeneration
+
+behavior:
+  - intent: <one testable sentence, e.g. "Tooltip positions against its trigger and flips at viewport edges">
+    schemaGap: <e.g. "component-concern.schema.json#/definitions/ComponentVariantsDocument — no positioning-engine concept">
+    platforms:
+      react: <e.g. useTooltipPosition.ts>
+    regenerationRisk: <e.g. "low — custom hook beside the scaffold; re-check the scaffold import after re-emit">
