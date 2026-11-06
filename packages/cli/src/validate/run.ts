@@ -161,10 +161,13 @@ export function runValidate(options: ValidateOptions): ValidateResult {
             const line = `${errPath}|${message}`;
             if (seen.has(line)) continue;
             seen.add(line);
-            const downgraded = options.authored && isMissingSourceError(err);
+            // The one omission `--authored` exists to forgive is not reported at
+            // all: three guaranteed warnings per spec on every run trained real
+            // sessions to grep warnings away, which is how a real one gets lost.
+            if (options.authored && isMissingSourceError(err)) continue;
             findings.push({
               kind, spec: name, file: files[concern]!, path: errPath, message,
-              level: downgraded ? 'warning' : 'error',
+              level: 'error',
             });
           }
         }

@@ -618,7 +618,7 @@
     },
     "SlotProp": {
       "type": "object",
-      "description": "Slot property definition for a prop a consumer fills with content rather than a scalar. What it accepts is declared in its own `anyOf` member, and how many children it admits in `minChildren` and `maxChildren`.",
+      "description": "Slot property definition — the component's composable region: a prop a consumer fills with content rather than a scalar. A request for a component to be \"composable\", or for content \"consumers supply\", describes one of these. What it accepts is declared in its own `anyOf` member, and how many children it admits in `minChildren` and `maxChildren`.",
       "examples": [{ "type": "slot", "defaultSlot": true, "minChildren": 1, "maxChildren": 1, "anyOf": ["$glyph", "$text", "badge"] }],
       "properties": {
         "type": {
@@ -988,7 +988,7 @@
         },
         "contentStyles": {
           "$ref": "#/definitions/ContentStyles",
-          "description": "Styles applied to primitive content filling this element, as distinct from `styles`, which are the element's own. Keyed by primitive ($text, $glyph) using the same reserved markers this slot's anyOf carries, because default content may hold more than one kind — a glyph and a label — and each kind is formatted by a disjoint property set. Each entry is captured from the first top-level primitive of that kind in the slot's default content, per variant, and is overridden per variant through variants[].elements exactly as styles is. A component fill is formatted by the component it instantiates, so a consumer rendering one applies styles and discards contentStyles. Meaningful only on a slot element, and its keys should agree with that slot's anyOf markers — both authoring/generator contracts, neither schema-enforced. (ADR-102)"
+          "description": "Styles applied to primitive content filling this element, as distinct from `styles`, which are the element's own. Keyed by primitive ($text, $glyph) using the same reserved markers this slot's anyOf carries, because default content may hold more than one kind — a glyph and a label — and each kind is formatted by a disjoint property set. Each entry is captured from the first top-level primitive of that kind in the slot's default content, per variant, and is overridden per variant through variants[].elements exactly as styles is. A component fill is formatted by the component it instantiates, so a consumer rendering one applies styles and discards contentStyles. Meaningful only on a slot element. Independent of the slot's anyOf: the constraint says what may fill the slot, contentStyles formats whatever primitive content does — neither implies, requires, or mirrors the other. (ADR-102)"
         },
         "propConfigurations": {
           "$ref": "#/definitions/PropConfigurations"
@@ -1032,7 +1032,7 @@
         },
         "examples": {
           "type": "array",
-          "description": "Authored example fills for this slot. Emitters currently write at most one entry — Figma's authoring default at index 0.",
+          "description": "Authored example fills for this slot. Emitters currently write at most one entry — Figma's authoring default at index 0. The default fill carries the slot's default state: content present-but-hidden by default is an element with `visible: false` inside the fill, never a visibility prop on the host.",
           "items": {
             "$ref": "#/definitions/SlotContentRef"
           }

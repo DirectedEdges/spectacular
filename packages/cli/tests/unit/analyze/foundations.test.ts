@@ -31,7 +31,7 @@ function fabricatedFoundations(): AnalyzerFoundations {
     valuesByMode: { 'm1': 24 },
   });
   const collections = new Map();
-  collections.set('C1', { name: 'Brand Color', defaultModeId: 'm1' });
+  collections.set('C1', { name: 'Brand Color', defaultModeId: 'm1', modes: [{ name: 'Light' }, { name: 'Dark' }] });
   collections.set('C2', { name: 'Brand Palette', defaultModeId: 'm1' });
   collections.set('C3', { name: 'Brand Sizing', defaultModeId: 'm1' });
   const styles = new Map();
@@ -81,6 +81,7 @@ describe('foundations analyzer', () => {
       platformNames: ['web'],
     });
     expect(doc!.tokens.dimension[0].defaultValue).toBe(24);
+    expect(doc!.collections).toContainEqual({ collection: 'Brand Color', modes: ['Light', 'Dark'] });
     // Names only — no resolved value anywhere on the entry.
     expect(JSON.stringify(primary)).not.toMatch(/"r"|"#"|valuesByMode/);
 

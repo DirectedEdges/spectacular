@@ -96,7 +96,7 @@ export interface AnalyzerFoundations {
     /** Platform code names keyed by platform (WEB/ANDROID/iOS), when declared. */
     codeSyntax?: Record<string, string>;
   }>;
-  collections: Map<string, { name: string; defaultModeId?: string }>;
+  collections: Map<string, { name: string; defaultModeId?: string; modes?: Array<{ name: string }> }>;
   styles: Map<string, { id: string; name: string; type: string; description?: string }>;
 }
 

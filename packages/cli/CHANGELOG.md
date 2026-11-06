@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `--authored` no longer reports the missing `metadata.source` it exists to forgive — three guaranteed warnings per spec on every clean run trained sessions to filter warnings, which is how a real one gets lost. The durable fix is authored provenance (ADR-106, #873); this removes the noise until it lands
+- `analysis/foundations.yaml` lists each variable collection's modes — the library's theming axes, previously discoverable only by accident in emitted CSS
 - `specs validate` reports what each used dimension token resolves to in the default mode (`strokeWeight: …/2x → 16`) — a multiplier name read as pixels shipped a 16px outline with 0 errors. Orientation only: values are themed, and nothing passes or fails on them
 - `specs validate` warns when an authored platform file sits beside the scaffold that no supplemental entry mentions — the emitters load an authored `component.*` only when `platforms.<tree>` names it, so an unmentioned file is dead while everything reports clean
 - `specs validate` checks `instanceExamples` configurations against the contract — declared props, boolean types, enum membership — exactly as it already checked a variant's `configuration`. Unchecked, a stale example (`size: Large` after the enum dropped it) validated clean and reached Storybook as a silently wrong story

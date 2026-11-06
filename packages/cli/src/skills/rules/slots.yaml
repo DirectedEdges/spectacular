@@ -13,6 +13,14 @@ constraints:
     - should: "constrain a slot with `minChildren`/`maxChildren` (non-negative integers) and list permitted component type names in `anyOf`"
       never: "use the retired `minItems`/`maxItems`"
       adr: [28, 56]
+requestLanguage:
+  guidelines:
+    - must: "read a request's composability language as a slot before modelling it as toggleable anatomy — \"composable\", \"consumers supply\", \"X visible by default and Y hidden\" describe a slot and its default fill, never boolean visibility props (a hidden-by-default glyph is `visible: false` on the glyph in the default `slotContentExamples` fill, not a `showGlyph` prop)"
+      adr: 99
+defaultFill:
+  guidelines:
+    - must: "author the slot's default state into its default fill (`children.examples[0]`'s triplet) — presence, hiddenness, and content of the out-of-the-box children all live there"
+      adr: 99
 authoringOrder:
   guidelines:
     - warn: "expect `variants.yaml` to fail validation once on a slot-bearing component — its `children.examples[0]` `$slotContent` pointer cannot resolve until `examples.yaml` exists; author examples next rather than reworking the binding"

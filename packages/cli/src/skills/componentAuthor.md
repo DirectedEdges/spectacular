@@ -40,7 +40,7 @@ Read, in order:
 3. `analysis/styling.byToken.yaml` and `analysis/styling.byComponent.yaml` — which tokens the system uses for which properties. Your token choices come from here.
 4. `analysis/dependencies.byComponent.yaml` — how components nest, for choosing `instanceOf` targets.
 
-If `analysis/` is missing or stale, run `specs analyze` first. Decide and write down: components to nest, the closest sibling to emulate (idiom only — structure always comes from the schema), and the token set.
+If `analysis/` is missing or stale, run `specs analyze` first. A report that is empty at this catalogue size is skipped, not studied. When emulating the closest sibling, read **all three** of its concern files — the pattern a task hinges on has sat in the one file a session skipped. Decide and write down: components to nest, the closest sibling to emulate (idiom only — structure always comes from the schema), and the token set.
 
 ## 3. Scaffold
 

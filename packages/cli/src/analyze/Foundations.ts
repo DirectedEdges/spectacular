@@ -51,6 +51,12 @@ interface FoundationsReport {
     tokens: Record<string, number>;
     icons: number;
   };
+  /**
+   * The theming axes: each variable collection and its mode names. Both authoring
+   * sessions to date discovered these by accident in emitted CSS; they are the
+   * library's own declarations and belong in its manifest.
+   */
+  collections: Array<{ collection: string; modes: string[] }>;
   tokens: Record<string, TokenEntry[]>;
   icons: IconEntry[];
 }
@@ -130,6 +136,10 @@ export class FoundationsAnalyzer implements Transformer {
 
     if (tokens.size === 0 && icons.length === 0) return; // nothing fetched — nothing to report
 
+    const collections = [...(foundations?.collections.values() ?? [])]
+      .map(c => ({ collection: c.name, modes: (c.modes ?? []).map(m => m.name) }))
+      .sort((a, b) => a.collection.localeCompare(b.collection));
+
     const report: FoundationsReport = {
       summary: {
         tokens: Object.fromEntries(
@@ -137,6 +147,7 @@ export class FoundationsAnalyzer implements Transformer {
         ),
         icons: icons.length,
       },
+      collections,
       tokens: Object.fromEntries(
         TYPE_ORDER.filter(t => tokens.has(t))
           .map(t => [t, dedupe(tokens.get(t)!).sort((a, b) => a.$token.localeCompare(b.$token))]),

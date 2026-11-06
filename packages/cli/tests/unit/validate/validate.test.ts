@@ -135,7 +135,7 @@ describe('specs validate', () => {
     expect(errors.some(f => f.message.includes('not an allowed value of "appearance"'))).toBe(true);
   });
 
-  it('downgrades a missing metadata.source to a warning under --authored', () => {
+  it('does not report a missing metadata.source at all under --authored', () => {
     const spec = validSpec();
     (spec.api as { metadata: unknown }).metadata = { concern: 'api' };
     (spec.variants as { metadata: unknown }).metadata = { concern: 'variants' };
@@ -144,9 +144,10 @@ describe('specs validate', () => {
     const strict = runValidate({ specsPath: specsDir });
     expect(errorsOf(strict.findings).length).toBeGreaterThan(0);
 
+    // The omission the flag exists to forgive is silent — guaranteed warnings on
+    // every clean run train readers to filter warnings, which loses real ones.
     const authored = runValidate({ specsPath: specsDir, authored: true });
-    expect(errorsOf(authored.findings)).toEqual([]);
-    expect(authored.findings.filter(f => f.level === 'warning').length).toBeGreaterThan(0);
+    expect(authored.findings).toEqual([]);
   });
 
   it('checks $token names against the caches, skipping classes with no cache', () => {

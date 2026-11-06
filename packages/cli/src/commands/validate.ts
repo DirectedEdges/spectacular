@@ -39,7 +39,7 @@ export const Validate = new Command('validate')
   .argument('[components...]', 'Spec folder names to validate (default: the whole catalogue)')
   .option('--config <path>', 'Path to a config/ directory')
   .option('-o, --output <dir>', 'Specs directory (default: spec.directory from settings)')
-  .option('--authored', 'Authored spec: a missing metadata.source is a warning, not an error')
+  .option('--authored', 'Authored spec: a missing metadata.source is expected and not reported')
   .option('--format <format>', 'Output format: text or json', 'text')
   .action(async (components: string[], options: { config?: string; output?: string; authored?: boolean; format: string }) => {
     try {

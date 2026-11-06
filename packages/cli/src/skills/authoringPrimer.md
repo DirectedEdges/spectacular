@@ -12,7 +12,7 @@ description: The structural contract for authoring specs by hand — the two kin
 
 **Prerequisite:** read `specs-cli.primer` first — what Specs is and the rules for reading its data. This primer adds what *writing* a spec requires. Read both once per session.
 
-An authored spec is identical in shape to a generated one: the schema is the single source of structural truth, and `specs validate` is the referee. You never infer a shape from an existing spec file — existing specs are exemplars of idiom (naming, token choices, prop vocabulary), never of structure. When you need a structure fact, it comes from the schema; when you need a consistency fact, it comes from `analysis/` reports.
+An authored spec is identical in shape to a generated one: the schema is the single source of structural truth, and `specs validate` is the referee. You never infer a shape from an existing spec file — existing specs are exemplars of idiom (naming, token choices, prop vocabulary), never of structure **and never an authority**: when the question is what the schema permits or how a mechanism works, the schema answers it even when an exemplar seems to answer faster, and an exemplar that appears to settle a schema question is a prompt to go read the schema, not a substitute for it. When you need a structure fact, it comes from the schema; when you need a consistency fact, it comes from `analysis/` reports.
 
 ## The two kinds
 

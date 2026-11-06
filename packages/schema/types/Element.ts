@@ -31,8 +31,9 @@ export type Element = {
    * rendering one applies `styles` and discards `contentStyles` rather than cascading it
    * onto the instance.
    *
-   * Meaningful only on a slot element, and its keys should agree with that slot's `anyOf`
-   * markers — both authoring/generator contracts, neither schema-enforced (ADR-102).
+   * Meaningful only on a slot element. Independent of the slot's `anyOf`: the constraint
+   * says what may fill the slot, `contentStyles` formats whatever primitive content does —
+   * neither implies, requires, or mirrors the other (ADR-102).
    * @since 0.39.0
    */
   contentStyles?: ContentStyles;
