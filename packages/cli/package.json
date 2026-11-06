@@ -22,8 +22,8 @@
   "dependencies": {
     "@directededges/react-from-specs": "^0.6.0",
     "@directededges/webcomponents-from-specs": "^0.6.0",
-    "@directededges/specs-schema": "^0.39.0",
-    "@directededges/specs-from-figma": "^0.38.0",
+    "@directededges/specs-schema": "file:../../../spectacular/packages/schema",
+    "@directededges/specs-from-figma": "file:../../../specs-transforms/packages/specs-from-figma",
     "ajv": "^8.20.0",
     "commander": "^11.1.0",
     "fs-extra": "^11.2.0",

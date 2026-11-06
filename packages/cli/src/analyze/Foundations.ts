@@ -29,6 +29,11 @@ interface TokenEntry {
   source: 'variable' | 'style';
   /** The variable this one aliases in its default mode, by token path. */
   aliasOf?: string;
+  /**
+   * The default-mode value, alias chains resolved, colors as hex — carried so a
+   * reader can understand what a token is, never to be authored into a spec.
+   */
+  defaultValue?: string | number | boolean;
   description?: string;
   /** Platforms declaring a code-syntax name for this token — presence, not the names. */
   platformNames?: string[];
@@ -101,6 +106,8 @@ export class FoundationsAnalyzer implements Transformer {
         };
         const aliasOf = this.aliasTarget(variable, foundations);
         if (aliasOf) entry.aliasOf = aliasOf;
+        const defaultValue = this.terminalValue(variable, foundations);
+        if (defaultValue !== undefined) entry.defaultValue = defaultValue;
         if (variable.description) entry.description = variable.description;
         const platforms = Object.keys(variable.codeSyntax ?? {});
         if (platforms.length > 0) entry.platformNames = platforms.map(p => p.toLowerCase()).sort();
@@ -153,6 +160,36 @@ export class FoundationsAnalyzer implements Transformer {
   ): string {
     const collection = foundations.collections.get(variable.variableCollectionId)?.name;
     return collection ? `${collection}/${variable.name}` : variable.name;
+  }
+
+  /** A variable's default-mode value: the default mode's entry, else the first. */
+  private static defaultModeValue(
+    variable: { variableCollectionId: string; valuesByMode?: Record<string, unknown> },
+    foundations: AnalyzerFoundations,
+  ): unknown {
+    const modes = variable.valuesByMode ?? {};
+    const defaultModeId = foundations.collections.get(variable.variableCollectionId)?.defaultModeId;
+    return (defaultModeId && defaultModeId in modes) ? modes[defaultModeId] : Object.values(modes)[0];
+  }
+
+  /**
+   * The default-mode value with alias chains resolved to their terminal value,
+   * formatted for a reader: scalars as themselves, colors as hex. Undefined for
+   * anything else (an unresolvable alias, an exotic shape).
+   */
+  private terminalValue(
+    variable: { variableCollectionId: string; valuesByMode?: Record<string, unknown> },
+    foundations: AnalyzerFoundations,
+  ): string | number | boolean | undefined {
+    let value = FoundationsAnalyzer.defaultModeValue(variable, foundations);
+    for (let hop = 0; hop < 10 && isAlias(value); hop++) {
+      const target = foundations.variables.get((value as { id: string }).id);
+      if (!target) return undefined;
+      value = FoundationsAnalyzer.defaultModeValue(target, foundations);
+    }
+    if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'string') return value;
+    if (isColor(value)) return toHex(value);
+    return undefined;
   }
 
   /** The default-mode alias target's token path, when the value is an alias. */
@@ -208,6 +245,24 @@ export class FoundationsAnalyzer implements Transformer {
       return {};
     }
   }
+}
+
+function isAlias(value: unknown): value is { type: string; id: string } {
+  return Boolean(value) && typeof value === 'object'
+    && (value as { type?: unknown }).type === 'VARIABLE_ALIAS'
+    && typeof (value as { id?: unknown }).id === 'string';
+}
+
+function isColor(value: unknown): value is { r: number; g: number; b: number; a?: number } {
+  if (!value || typeof value !== 'object') return false;
+  const c = value as Record<string, unknown>;
+  return typeof c.r === 'number' && typeof c.g === 'number' && typeof c.b === 'number';
+}
+
+function toHex(color: { r: number; g: number; b: number; a?: number }): string {
+  const channel = (v: number): string => Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16).padStart(2, '0').toUpperCase();
+  const base = `#${channel(color.r)}${channel(color.g)}${channel(color.b)}`;
+  return color.a !== undefined && color.a < 1 ? `${base}${channel(color.a)}` : base;
 }
 
 /** Two sources can carry one name (a published style also in the cache) — last write loses. */

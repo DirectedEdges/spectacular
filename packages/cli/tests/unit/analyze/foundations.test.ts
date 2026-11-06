@@ -76,9 +76,11 @@ describe('foundations analyzer', () => {
       $type: 'color',
       source: 'variable',
       aliasOf: 'Brand Palette/Neutral/900',
+      defaultValue: '#000000', // alias chain resolved to the target's color, as hex
       description: 'Default icon color',
       platformNames: ['web'],
     });
+    expect(doc!.tokens.dimension[0].defaultValue).toBe(24);
     // Names only — no resolved value anywhere on the entry.
     expect(JSON.stringify(primary)).not.toMatch(/"r"|"#"|valuesByMode/);
 

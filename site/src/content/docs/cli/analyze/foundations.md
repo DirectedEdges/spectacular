@@ -5,7 +5,7 @@ description: "Emit the workspace's token language — variables, named styles, a
 
 Reads the fetched library data — never the specs — and produces `analysis/foundations.yaml`: the workspace's variables and named styles consolidated as tokens, plus its icon glyphs. It is the one analyzer that works on an empty catalogue, because a fresh authoring workspace has zero specs and a complete token language.
 
-Every token entry leads with the exact object a spec author writes — `{$token, $type}` — and carries names only: an alias target by name, a description where the library wrote one, and the *presence* of platform code names, never a resolved value. The report is as safe to publish as a spec is.
+Every token entry leads with the exact object a spec author writes — `{$token, $type}` — plus orientation: an alias target by name, the default-mode `defaultValue` (alias chains resolved, colors as hex) for understanding what a token is, a description where the library wrote one, and the *presence* of platform code names. Per-mode value dumps never appear, and `defaultValue` is never authored into a spec.
 
 ## Use When
 
@@ -34,6 +34,7 @@ tokens:
       $type: color
       source: variable
       aliasOf: Brand Palette/Neutral/900
+      defaultValue: '#1A1A1A'
       description: Default icon color
       platformNames: [web]
     - $token: Images / Hero
@@ -57,6 +58,7 @@ icons:
 | `$token`, `$type` | The reference exactly as a spec's styles write it |
 | `source` | `variable` or `style` — where the name lives in the library |
 | `aliasOf` | The variable this one aliases in its default mode, by token path. Only on aliases |
+| `defaultValue` | The default-mode value, alias chains resolved, colors as hex — to *understand* a token, never to author into a spec |
 | `description` | The library's own description. Only where one exists |
 | `platformNames` | Platforms declaring a code-syntax name for this token — presence, not the names |
 | `icons[].key` | The formatted key spelling under the workspace's `spec.keys` — the spelling specs use |

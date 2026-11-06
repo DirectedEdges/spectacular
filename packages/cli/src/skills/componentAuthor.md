@@ -18,7 +18,7 @@ Templates ship beside this skill in `templates/` — `api.yaml`, `variants.yaml`
 
 This procedure compiles live — saving a spec must re-emit into Storybook and onto the canvas. If the posture is down (the Storybook port does not answer), run `specs-cli.posture` first; it is idempotent, so checking by running it is fine.
 
-**Preparation is bounded.** Before the first file, read exactly: the two primers, the rules files for the concepts this request touches, the correlation reports (step 2), and the token spellings the request needs. Then write `api.yaml`. Every remaining question is resolved *during* the file that raises it — one lookup per question, local schema first — never by reading ahead "to be safe." If you notice yourself reading a source the current file does not need, stop and write.
+**Preparation is bounded.** Before the first file, read exactly: the two primers, the rules files for the concepts this request touches, the correlation reports (step 2), and the token spellings the request needs. **Load the fixed set in one batched read** — the primers, rules files, references, and templates are known names, and a dozen serial reads is startup cost carrying no judgment. Then write `api.yaml`. Every remaining question is resolved *during* the file that raises it — one lookup per question, local schema first — never by reading ahead "to be safe." If you notice yourself reading a source the current file does not need, stop and write.
 
 ## 1. Split the requirements
 
