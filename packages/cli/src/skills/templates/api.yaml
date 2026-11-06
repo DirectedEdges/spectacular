@@ -1,4 +1,4 @@
-# api.yaml — the contract (schema: concern.schema.json#/definitions/SpecApiDocument)
+# api.yaml — the contract (schema: component-concern.schema.json#/definitions/ComponentApiDocument)
 # Replace <Name> and every placeholder; delete the props and elements you don't need.
 # Authored spec: metadata omits `source` — validate with `specs validate <key> --authored`.
 metadata:

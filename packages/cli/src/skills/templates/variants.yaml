@@ -1,4 +1,4 @@
-# variants.yaml — the appearance (schema: concern.schema.json#/definitions/SpecVariantsDocument)
+# variants.yaml — the appearance (schema: component-concern.schema.json#/definitions/ComponentVariantsDocument)
 # default is the COMPLETE baseline: layout tree + an entry for EVERY anatomy element.
 # Each variants[] entry is a DELTA: a configuration plus only what changes.
 metadata:

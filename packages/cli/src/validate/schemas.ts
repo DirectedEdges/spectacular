@@ -34,21 +34,21 @@ export function concernValidators(): ConcernValidators {
   const Ajv = AjvExport.default ?? AjvExport;
   const ajv = new Ajv({ allErrors: true, strict: false, allowUnionTypes: true });
 
-  const schemaDir = path.dirname(req.resolve('@directededges/specs-schema/schema/concern'));
+  const schemaDir = path.dirname(req.resolve('@directededges/specs-schema/schema/component-concern'));
   for (const file of fs.readdirSync(schemaDir).filter(f => f.endsWith('.schema.json'))) {
     ajv.addSchema(JSON.parse(fs.readFileSync(path.join(schemaDir, file), 'utf8')), file);
   }
 
   const compiled = (pointer: string): ValidateFunction => {
-    const fn = ajv.getSchema(`concern.schema.json${pointer}`);
-    if (!fn) throw new Error(`schema definition not found: concern.schema.json${pointer}`);
+    const fn = ajv.getSchema(`component-concern.schema.json${pointer}`);
+    if (!fn) throw new Error(`schema definition not found: component-concern.schema.json${pointer}`);
     return fn;
   };
 
   cached = {
-    api: compiled('#/definitions/SpecApiDocument'),
-    variants: compiled('#/definitions/SpecVariantsDocument'),
-    examples: compiled('#/definitions/SpecExamplesDocument'),
+    api: compiled('#/definitions/ComponentApiDocument'),
+    variants: compiled('#/definitions/ComponentVariantsDocument'),
+    examples: compiled('#/definitions/ComponentExamplesDocument'),
   };
   return cached;
 }

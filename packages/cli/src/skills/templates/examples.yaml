@@ -1,4 +1,4 @@
-# examples.yaml — documented usages (schema: concern.schema.json#/definitions/SpecExamplesDocument)
+# examples.yaml — documented usages (schema: component-concern.schema.json#/definitions/ComponentExamplesDocument)
 # Optional file. instanceExamples configure the whole component; slotContentExamples
 # are named fills other specs (or this one) point at via $slotContent.
 metadata:
