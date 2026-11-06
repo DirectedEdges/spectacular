@@ -20,7 +20,7 @@ Per-system rules are the second rules layer. The shipped `rules/*.yaml` beside t
 
 ## File format
 
-Copy `templates/guidelinesRules.yaml` beside this skill. Every file opens with a structured `meta` header (concern, status, author, updated, sources), then up to three node kinds:
+Copy `templates/rules.yaml` beside this skill. Every file opens with a structured `meta` header (concern, status, author, updated, sources), then up to three node kinds:
 
 - **`useWhen`** — positive usage mappings: the thing, and when to use it, grouped by referent kind (`tokens` as `{$token, $description}` entries, `name`/`type` as `{$prop, $description}` entries, or another kind the concern calls for). `dontUseWhen` is the same shape for explicit negative cases.
 - **`guidelines`** — a list of modality-keyed items:
