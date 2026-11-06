@@ -133,20 +133,16 @@ export type GlyphContentStyles = Partial<{
  * The styles applied to primitive content filling an element, as distinct from the
  * element's own {@link Styles} (ADR-102).
  *
- * Keyed by primitive, using the same reserved markers `SlotProp.anyOf` carries, because a
- * slot's default content may hold more than one kind — a glyph and a label — and each
- * kind is formatted by a disjoint property set. A flat block could not attribute which
- * styles belonged to which primitive.
+ * Formatting for a slot's primitive content, keyed by kind (`$text`, `$glyph`) because
+ * one fill may hold both and each kind takes a disjoint property set — a flat block
+ * could not attribute which styles belong to which primitive.
  *
- * On a slot element each entry is the formatting that kind of fill takes on, captured from
- * the first top-level primitive of that kind in the slot's default content, per variant. It
- * is overridden per variant through `variants[].elements` exactly as `styles` is.
+ * Captured per variant from the first top-level primitive of each kind in the default
+ * fill, and overridden per variant through `variants[].elements` exactly as `styles` is.
  *
- * A component fill is formatted by the component it instantiates, so a consumer rendering
- * one applies `styles` and discards `contentStyles`.
- *
- * Meaningful only on a slot element, and its keys should agree with that slot's `anyOf`
- * markers — both authoring/generator contracts, neither schema-enforced.
+ * Applies to primitive content only: a component fill is formatted by the component it
+ * instantiates, so a consumer applies its `styles` and discards `contentStyles`.
+ * Independent of the slot's `anyOf`.
  * @since 0.39.0
  */
 export type ContentStyles = Partial<{

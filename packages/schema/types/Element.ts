@@ -18,22 +18,9 @@ export type Element = {
   parent?: string | null;
   styles?: Styles;
   /**
-   * Styles applied to primitive content filling this element, as distinct from `styles`,
-   * which are the element's own.
-   *
-   * Keyed by primitive (`$text`, `$glyph`) using the same reserved markers this slot's
-   * `anyOf` carries, because default content may hold more than one kind. Each entry is
-   * captured from the first top-level primitive of that kind in the slot's default
-   * content, per variant, and is overridden per variant through `variants[].elements`
-   * exactly as `styles` is.
-   *
-   * A component fill is formatted by the component it instantiates, so a consumer
-   * rendering one applies `styles` and discards `contentStyles` rather than cascading it
-   * onto the instance.
-   *
-   * Meaningful only on a slot element. Independent of the slot's `anyOf`: the constraint
-   * says what may fill the slot, `contentStyles` formats whatever primitive content does —
-   * neither implies, requires, or mirrors the other (ADR-102).
+   * How primitive content filling this element is formatted — distinct from `styles`,
+   * the element's own. Meaningful only on a slot element; the mechanics live on
+   * {@link ContentStyles} (ADR-102).
    * @since 0.39.0
    */
   contentStyles?: ContentStyles;
