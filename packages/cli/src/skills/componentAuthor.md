@@ -85,4 +85,14 @@ After every later re-emit, diff the fresh scaffold against your custom files and
 
 ## 9. Report
 
-End with the numbers: validate attempts per file, requirements carried by the spec vs supplemental, and anything the schema could not express that this skill did not predict.
+End every pass with this summary, in this order. Keep unstructured narrative to a sentence or two above it — the sections carry the content.
+
+- **Files updated:** a linked list — `[api.yaml](specs/components/<key>/api.yaml), [variants.yaml](…), …`
+- **Props updated:** `prop`, `prop`, `prop`
+- **Tokens applied:** one per line, by name only — no narrative about how or why each was chosen
+- **Decisions to confirm:** a numbered list (1., 2., …) so a reply can reference them by number; each item a **bolded term** followed by two or three sentences. A formatted list, never a table
+- **Gaps:** same numbered format — requirements the schema could not carry, what went supplemental, and anything the skills did not predict
+- **Suggestions:** same numbered format — opportunities you noticed but were **not asked to build**: events, accessibility, interactions, refinements. Never build these on your own; surface them here and wait. One that would land as a supplemental entry is listed literally, grouped under its sidecar section name (`events:`, `accessibility:`, …), so the user can approve some, all, or none
+- One stats line: validate attempts per file; requirements spec-carried vs supplemental
+
+The Suggestions section is also a scope rule: an unprompted improvement is proposed there, never implemented in the same pass.
