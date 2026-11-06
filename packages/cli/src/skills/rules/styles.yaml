@@ -39,10 +39,14 @@ gradients:
       adr: 3
 structural:
   guidelines:
-    - never: "put a `$token` or `$binding` on structural enum properties (`layoutMode`, alignments, `position`, `textOverflow`, `strokeDashPattern`, `wrap`) — literal enum value or null only"
-      adr: [4, 38, 39, 40, 59, 62]
+    - never: "put a `$token` or `$binding` on any property whose definition says \"Structural property — not token-bindable\" — literal value from its declared set, or null; the schema's described `oneOf` is the authority on which properties and options"
+      adr: [4, 38, 39, 40, 59, 62, 115]
     - should: "express a solid stroke by omitting `strokeDashPattern`"
       adr: 4
+defaults:
+  guidelines:
+    - should: "omit an optional composite member sitting at its schema-declared default (`Sides`/`Corners` members 0, `alpha` 1, `inset` false, `objectFit` COVER, the `Typography` transform members) — writing it out restates the schema"
+      adr: [113, 116]
 fillColor:
   guidelines:
     - must: "color a glyph with `fillColor` — not `backgroundColor` (containers) or `textColor` (text)"

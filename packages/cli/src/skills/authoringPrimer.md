@@ -47,7 +47,7 @@ In `variants.yaml`, `default.elements` describes **every** anatomy element: `sty
 | `instanceOf: {$ref}` | same | `"#/subcomponents/<name>"` | `subcomponents.<name>` in this spec |
 | `$binding` | element `content`, `children`, `styles.visible`, configuration values | `"#/props/<prop>"` | the owning scope's `props` — a subcomponent's binding resolves against the subcomponent's own props |
 | `$slotContent` | slot-prop configuration values, `children.examples` | `"#/components/<key>/slotContentExamples/<name>"` (optionally `/subcomponents/<sub>/` in the middle) | that spec's examples file |
-| `$token` | style values | `{$token: "<dtcg.path>", $type: "<type>"}` | a token in the source library |
+| `$token` | style values | `{$token: "<slash/separated/path>", $type: "<type>"}` | a token in the source library |
 
 ## The authoring order
 
@@ -71,6 +71,7 @@ In `variants.yaml`, `default.elements` describes **every** anatomy element: `sty
 | Style properties, token placement, Figma style relationships | `references/styles.md` beside this skill |
 | Layout trees, auto vs absolute positioning, slots across the three files | `references/slots-layout.md` beside this skill |
 | The new-component procedure and templates | `specs-cli.component.author` |
+| What a property, option, or definition *means* — descriptions, defaults, validated examples | the schema files themselves (`@directededges/specs-schema`), mirrored as generated reference pages on the docs site under `/schema/` (per-property style pages under `/schema/styles/`); the site's origin is workspace-configured |
 
 **Rules come in two layers, split by provenance.** The shipped `rules/*.yaml` beside this skill argue from the contract — the schema and its ADRs, identical everywhere. The workspace's `guidelines/<area>/<topic>/rules.yaml` (e.g. `guidelines/foundations/color/`, `guidelines/components/props/`) argue from this library's own catalog: a structured `meta` header (topic, status, author, updated, sources), then `useWhen` usage mappings (`{$token, $description}` / `{$prop, $description}` entries) and a `guidelines` list of modality-keyed items — `must`/`never` hard, `should`/`avoid` strong convention, `could`/`warn` judgment — with a `report.md` of synthesis notes beside each, proposed until the system owner ratifies. A `must`/`should` may pair with its counter-balancing `avoid`/`never` in one rule. `specs-cli.guidelines.propose` synthesizes or revises a topic from the analysis reports, reporting revisions as add/change/remove diffs. When styling or configuring, resolve in this order: the primitives promotion map for composed content (`config/conventions/<platform>.primitives.yaml` — compositions, instanceExamples, slot content; atomic components' own anatomy stays primitive) → workspace guidelines → `analysis/styling.byComponent.yaml` precedent → a literal plus a noted gap.
 
