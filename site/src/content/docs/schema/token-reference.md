@@ -5,21 +5,7 @@ description: "Design token reference following the DTCG format"
 
 A reference to a design token, following the [Design Tokens Community Group](https://design-tokens.github.io/community-group/format/) (DTCG) format. Token references appear wherever a style value can be a token instead of a literal.
 
-```ts
-interface TokenReference {
-  $token: string;
-  $type: string;
-  $extensions?: object;
-}
-```
-
-## Properties
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `$token` | `string` | Yes | Dot-separated token path |
-| `$type` | `string` | Yes | Token type |
-| `$extensions` | `object` | No | Vendor extensions |
+## Members
 
 ### `$token`
 

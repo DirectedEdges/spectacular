@@ -4,6 +4,7 @@
 **Created**: 2026-10-22
 **Status**: ACCEPTED
 **Summary**: An `ObjectProp` with named scalar `members` joins the prop union, folded from separator-named Figma properties via `objectProps`.
+**Decides**: props.object, props.object.members
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

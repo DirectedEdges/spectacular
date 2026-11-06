@@ -1,0 +1,399 @@
+{
+  "platform": "react",
+  "role": "Emits React components and stories; styling delegated to CSS",
+  "dependsOn": [
+    "css"
+  ],
+  "realises": "Emits React components and stories. Styling is delegated wholly to the CSS binding.",
+  "note": "Declares only what this platform adds to or changes from the CSS binding. A style key absent here is bound exactly as css.json states; this file never restates one. Props are NOT inherited: how a prop becomes a parameter is this platform's own surface, declared in full below.",
+  "concepts": {
+    "styles": {},
+    "styleRules": {},
+    "props": {
+      "boolean": {
+        "disposition": "bound",
+        "realises": "a `boolean` member of the component's Props interface",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "rule": "statesToContract",
+        "notes": "Declared in the generated types file with its `default` in the Defaults export. In JSX a true value spells as the bare attribute, false as `{false}`. A boolean classified as a browser-managed state concept never reaches the contract."
+      },
+      "string": {
+        "disposition": "bound",
+        "realises": "a `string` member of the Props interface, nullable-widened with `null`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Widened to admit `null` by the nullability rule: absent `nullable` means nullable for an open-valued kind (ADR-065). `examples` feed stories and composed instances; they never become a contract default."
+      },
+      "enum": {
+        "disposition": "bound",
+        "realises": "a named union type, one member per `enum` value",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "rule": "statesToContract",
+        "notes": "The union is named for the component and prop; values are lowercased by the enumCase contract, and the declared `default` is normalized with them. The scaffold writes the current value as a `data-<prop>` attribute on the component's root, which is the selector surface the CSS binding's propsToSelectors rule states."
+      },
+      "number": {
+        "disposition": "bound",
+        "realises": "a `number` member of the Props interface",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Emitted as a numeric expression — `count={1430}` — wherever a configuration carries it, keyed to the declared type rather than to how the text looks: the same digits against a string prop are content. A closed `enum` of numbers selects like an enum does."
+      },
+      "slot": {
+        "disposition": "bound",
+        "realises": "`children`, or a named prop of `React.ReactNode`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "rule": "slotsToChildren",
+        "notes": "A slot prop never reaches the platform-neutral contract — its type is the one part of a contract that cannot be platform-neutral, so each target spells its own. React spells the designated default slot as `children` and every other slot as a named `React.ReactNode` prop."
+      },
+      "image": {
+        "disposition": "bound",
+        "realises": "a nullable `string` URL member of the Props interface",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "An image registry pointer resolves to a served asset URL at emit. A bound prop carrying an authoring-default example (ADR-088) emits the example as the fallback — `p.src ?? \"<url>\"` — because composed content is static and without it the child falls back to its own default artwork."
+      },
+      "object": {
+        "disposition": "bound",
+        "realises": "a named member interface; values as object literals",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "The contract spells the object shape as its own interface (ADR-111). Stories and controls work on the flat view — each member under a dotted arg key (`margin.compact`) — and reassemble the object at the call site. A member binding pointer (`#/props/margin/members/compact`) reads through member access on the host."
+      }
+    },
+    "propRules": {
+      "slotsToChildren": {
+        "disposition": "bound",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["slot"],
+        "inputs": [
+          { "ref": "prop.defaultSlot", "from": "spec document (ADR-099)" },
+          { "ref": "configuration.value", "from": "the filling configuration" }
+        ],
+        "cases": [
+          {
+            "when": { "operation": "all", "args": [
+              { "operation": "equals", "args": { "value": "prop.defaultSlot", "compareTo": true } },
+              { "operation": "isNotNull", "args": { "value": "configuration.value" } }
+            ] },
+            "emit": ["the fill as this instance's JSX children — the scaffold reads its designated default slot from `props.children`"],
+            "why": "Whatever kind the fill is: a `$slotContent` reference composes, a literal string becomes JSX text"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "configuration.value", "compareTo": "a $slotContent reference on a non-default slot" } },
+            "emit": ["`<prop>={<>…composed JSX…</>}` as a named attribute"],
+            "why": "An explicit binding is the only shape that can say which of several slots a fill belongs to"
+          }
+        ],
+        "otherwise": { "emit": [], "why": "A prop's spelling never nominates a default slot — with no declared `defaultSlot`, every fill is a named prop and a literal string against an undeclared slot is refused" },
+        "notes": "The declared `defaultSlot` is the TARGET component's, read from its contract — never inferred from the key's spelling."
+      },
+      "statesToContract": {
+        "disposition": "bound",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["boolean", "enum"],
+        "inputs": [
+          { "ref": "conventions.specs.states", "from": "declared conventions" },
+          { "ref": "concept.contract", "from": "the shared state-concept table (from-specs states.ts)" }
+        ],
+        "cases": [
+          {
+            "when": { "operation": "equals", "args": { "value": "concept.contract", "compareTo": "omit" } },
+            "emit": ["nothing — the prop leaves the contract; the CSS binding selects on the browser pseudo-class"],
+            "why": "Hover, focus, active are the browser's to drive; a consumer cannot meaningfully set them"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "concept.contract", "compareTo": "keep" } },
+            "emit": ["the prop stays a parameter; the scaffold writes the concept's aria attribute when it is set"],
+            "why": "Disabled, selected, invalid are consumer-set facts the DOM should also state"
+          }
+        ],
+        "otherwise": { "emit": ["the prop is an ordinary parameter"], "why": "A prop no state entry names is not a state" },
+        "notes": "A prop is omitted only when EVERY concept entry naming it says omit. The concept table — selector and contract disposition per concept — is shared between both emitters and the CSS transform, so the three cannot disagree."
+      }
+    },
+    "anatomy": {
+      "text": {
+        "disposition": "bound",
+        "realises": "a `span` carrying the element's content",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "rule": "semanticsAndTags",
+        "notes": "`span` by default — or the tag a role decides. `content` emits as the text child; a content binding reads the bound prop instead."
+      },
+      "glyph": {
+        "disposition": "approximated",
+        "realises": "an `aria-hidden` span painted by CSS mask",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "React has no glyph component to instantiate, so the exported asset paints as a mask over `currentColor` — visually faithful, but a decorative box rather than an SVG the consumer can reach into."
+      },
+      "vector": {
+        "disposition": "approximated",
+        "realises": "a styled `div` occupying the vector's box",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Path geometry is not in the spec, so nothing can draw it. The declared seam, shared with the Figma binding's render direction."
+      },
+      "container": {
+        "disposition": "bound",
+        "realises": "a `div` — or the tag its role decides",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "rule": "semanticsAndTags",
+        "notes": "Carries its element class for the stylesheet and the root carries the variant data attributes. In a phrasing context the default drops to `span` so the emitted HTML stays valid."
+      },
+      "slot": {
+        "disposition": "bound",
+        "realises": "the fill render site — `children` for the default slot, the named prop otherwise",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "The element side of the props surface's slot kind: the element's place in the tree is where the fill renders, and its `contentStyles` style a primitive fill."
+      },
+      "instance": {
+        "disposition": "bound",
+        "realises": "the composed component, imported and configured",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "rule": "semanticsAndTags",
+        "notes": "`instanceOf` becomes an import; `propConfigurations` become its props. A roled instance routes the role's contract props to the instanced component's matching parts (ADR-067 rule 5)."
+      },
+      "line": {
+        "disposition": "approximated",
+        "realises": "a styled `div`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Stroke styling on a box."
+      },
+      "ellipse": {
+        "disposition": "approximated",
+        "realises": "a fully-rounded `div`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Box plus full corner rounding; arc data is not in the spec."
+      },
+      "rectangle": {
+        "disposition": "bound",
+        "realises": "a styled `div`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "The one shape the platform speaks natively."
+      },
+      "polygon": {
+        "disposition": "unsupported",
+        "realises": "a styled `div` — box only, no shape",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Point data is not in the spec; the element's box emits so layout holds, and the shape is declared lost."
+      },
+      "star": {
+        "disposition": "unsupported",
+        "realises": "a styled `div` — box only, no shape",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Same as polygon."
+      }
+    },
+    "anatomyRules": {
+      "layoutWalk": {
+        "disposition": "bound",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["container", "text", "glyph", "instance", "slot"],
+        "inputs": [
+          { "ref": "layout", "from": "spec document — ordered LayoutNodes: a leaf is an element name, a branch is one name over ordered children" },
+          { "ref": "variants[].layout", "from": "spec document — a variant's layout is a WHOLE structure layered over the default" },
+          { "ref": "element.instanceOf", "from": "spec document" },
+          { "ref": "element.type", "from": "spec document" }
+        ],
+        "derived": {
+          "conditions": {
+            "expression": { "operation": "equals", "args": { "value": "node.conditions", "compareTo": "the variant configurations that place this element here, state-classified props stripped; entries OR'd, each entry a conjunction" } },
+            "source": "shared layout-tree analysis"
+          }
+        },
+        "cases": [
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "node.excludeConditions" } },
+            "emit": ["the element, guarded to NOT render here under the configurations where a variant re-parents it"],
+            "why": "A re-parented element renders in the variant's position when it matches and in its default position otherwise — never both"
+          },
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "derived.conditions" } },
+            "emit": ["the element wrapped in its render condition"],
+            "why": "An element only some variants place exists in the emitted tree exactly when a placing configuration matches"
+          },
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "node.key" } },
+            "emit": ["the element at its tree position, children recursed in authored order — instances and glyphs claimed by their emitters, everything else a container whose tag the semanticsAndTags rule decides"],
+            "why": "The walk is the structure; order is the spec's"
+          }
+        ],
+        "otherwise": { "emit": [], "why": "An element absent from every layout renders nowhere" },
+        "notes": "The tree operations are one shared module, so the two emitters cannot walk differently. CSS has no tree: structure reaches the stylesheet only as root-scoped element selectors."
+      },
+      "semanticsAndTags": {
+        "disposition": "bound",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["text", "container", "instance"],
+        "inputs": [
+          { "ref": "element.type", "from": "spec document" },
+          { "ref": "element.role", "from": "spec anatomy (ADR-067) — what the element IS, at most one" },
+          { "ref": "element.actions", "from": "spec anatomy (ADR-087) — what activating it DOES, any number" },
+          { "ref": "conventions.specs.states", "from": "declared conventions, through the shared concept table — which prop carries a concept" },
+          { "ref": "context.phrasing", "from": "the emitting tree — whether an ancestor role constrains this element to phrasing content" }
+        ],
+        "tagCases": [
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "element.role" } },
+            "emit": ["the role's tag — a `button`, an `a`, an `input` — void tags self-closing"],
+            "why": "A role names a control the platform has a native element for"
+          },
+          {
+            "when": { "operation": "any", "args": [
+              { "operation": "equals", "args": { "value": "element.type", "compareTo": "text" } },
+              { "operation": "equals", "args": { "value": "context.phrasing", "compareTo": true } }
+            ] },
+            "emit": ["`span`"],
+            "why": "Text is phrasing content, and inside a phrasing ancestor a `div` would be invalid HTML"
+          },
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "element.type" } },
+            "emit": ["`div`"],
+            "why": "The structural default"
+          }
+        ],
+        "ariaCases": [
+          {
+            "when": { "operation": "equals", "args": { "value": "concept", "compareTo": "claimed by this element's role" } },
+            "emit": ["nothing from the generic path — the role emits the platform-native mechanism: a real `disabled`, a real `checked`"],
+            "why": "Role over states for the mechanism; the states entry still names the driving prop, and the stylesheet still writes the concept's selector"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "concept.prop", "compareTo": "shared with a concept the role claimed" } },
+            "emit": ["nothing"],
+            "why": "One prop cannot announce two ways at once — a button carrying both `aria-pressed` and `aria-selected` disagrees with itself, and the second is not even valid on that role"
+          },
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "concept" } },
+            "emit": ["the concept's aria attribute, written when the driving prop is set"],
+            "why": "The generic path, from the shared concept table"
+          }
+        ],
+        "handlerCases": [
+          {
+            "when": { "operation": "any", "args": [
+              { "operation": "isNotNull", "args": { "value": "element.role's own wiring logic" } },
+              { "operation": "isNotNull", "args": { "value": "element.actions" } }
+            ] },
+            "emit": ["one composed closure per event: the role's logic, then the role's contract prop, then each action body in annotation order"],
+            "why": "A consumer listening on the prop hears the event before an action can unmount the component"
+          },
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "element.role's contract prop, alone" } },
+            "emit": ["the plain pass-through — `onClick={p.onClick}`"],
+            "why": "Composing costs nothing when nothing composes"
+          }
+        ],
+        "routingCases": [
+          {
+            "when": { "operation": "all", "args": [
+              { "operation": "equals", "args": { "value": "element.type", "compareTo": "instance" } },
+              { "operation": "isNotNull", "args": { "value": "element.role" } }
+            ] },
+            "emit": ["no control of this component's own — the role's contract props route to the instanced component's matching parts (ADR-067 rule 5)"],
+            "why": "A role on an instance is a routing signal; the composed component keeps its own control and renders it itself"
+          }
+        ],
+        "otherwise": { "emit": ["the default tag, no ARIA, no handlers"], "why": "An element with no role, no state entry and no action keeps the pre-roles behavior" },
+        "notes": "The precedence module is shared with the Web Components emitter, so the two platforms resolve collisions identically. Cross-concern by nature: it reads anatomy roles, props classifications and actions to emit one element."
+      }
+    },
+    "references": {
+      "token": {
+        "disposition": "bound",
+        "realises": "nothing directly — styling is the CSS binding's",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "The emitter never reads a `$token`; tokens reach React only through the stylesheet the CSS binding declares."
+      },
+      "binding": {
+        "disposition": "bound",
+        "realises": "prop access on the component — `p.<key>`, member pointers through member access",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "A `$binding` at a content, instanceOf or configuration site reads the bound prop at render; a member pointer (`#/props/x/members/y`, ADR-111) reads through the object prop. An image-bearing binding emits its authoring-default example as the fallback (ADR-063/088)."
+      },
+      "slotContent": {
+        "disposition": "bound",
+        "realises": "recursive JSX composition from the registries",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "A `$slotContent` pointer resolves its registry entry and composes it — imports collected, nested fills recursed, provenance commented. Which render site it lands in is the slotsToChildren rule under Props."
+      },
+      "subcomponent": {
+        "disposition": "bound",
+        "realises": "an import of the sibling subcomponent's emitted component",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "`#/subcomponents/<key>` resolves to the emitted sibling and renders as an ordinary composed instance."
+      },
+      "elementType": {
+        "disposition": "unsupported",
+        "realises": "—",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "External type references are a consumer concern (ADR-012); the emitter types elements by `ElementType` string only."
+      },
+      "image": {
+        "disposition": "bound",
+        "realises": "a served asset URL",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "An `$image` pointer resolves to the registry entry's served URL at emit — in props, configurations, and composed content alike."
+      },
+      "nested": {
+        "disposition": "unsupported",
+        "realises": "—",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "The emitter never reads `$nested`: deep configuration reaches emitted examples through the slot-content graph instead — each registry entry carries its own configurations, and composition recurses (DSPEC-05's division of labour)."
+      },
+      "literal": {
+        "disposition": "bound",
+        "realises": "through the CSS binding's stylesheet",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Style values are the CSS binding's; the emitter never reads them."
+      },
+      "mixed": {
+        "disposition": "unsupported",
+        "realises": "—",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "As the CSS binding declares: nothing is emitted for the sentinel."
+      },
+      "conditional": {
+        "disposition": "unsupported",
+        "realises": "—",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "As the CSS binding declares: the condition is discarded on the way to a stylesheet."
+      }
+    },
+    "referenceRules": {}
+  },
+  "surfaces": {
+    "note": "The platform-shaped questions this binding owes, none of which are CSS. propsToParameters, slotsToChildren and variantsToSelection graduated into concepts.props and concepts.propRules above; variant selection itself is the CSS binding's propsToSelectors rule.",
+    "styleAttachment": "unverified"
+  }
+}

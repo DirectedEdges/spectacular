@@ -4,6 +4,7 @@
 **Created**: 2026-10-15
 **Status**: ACCEPTED
 **Summary**: A `childRole` extension joins `name` on a collapsed element, naming which of its two Figma layers carried a role.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none — extends ADR-058 and ADR-083)*
 

@@ -42,7 +42,7 @@ Slot fills encountered inside an example instance are contributed to the shared 
 
 ### The example's own slots, and everything below them
 
-That last point is why a [default slot](/schema/props/#slotprop) behaves differently here than anywhere else, and the asymmetry is worth stating because it cannot be inferred.
+That last point is why a [default slot](/schema/props/slot/) behaves differently here than anywhere else, and the asymmetry is worth stating because it cannot be inferred.
 
 An `InstanceExample` carries `propConfigurations` and nothing else — no anatomy, no elements, no layout. So **the example's own default slot still resolves to a `SlotContentRef`**: there is nowhere in this shape to nest a child, and a reference is the only thing a `propConfigurations` value can be.
 

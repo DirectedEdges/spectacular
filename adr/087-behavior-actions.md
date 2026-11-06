@@ -4,6 +4,7 @@
 **Created**: 2026-09-04
 **Status**: ACCEPTED
 **Summary**: An `action` field on an anatomy element records what activating it *does*, separate from the `role` that says what it *is*, so behavior and semantics compose rather than multiplying the vocabulary.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none; extends ADR 067)*
 

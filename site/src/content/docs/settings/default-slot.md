@@ -86,5 +86,5 @@ Composed content is a Pro feature, so flattened nesting follows the same gates a
 
 - [`defaultSlotContent`](/settings/default-slot-content/) — the run choice that decides whether composed slot content is recorded at all; the two names are close and mean different things.
 - [Schema: Conventions](/schema/conventions/#slots) for the `slots` member's shape.
-- [Schema: Props](/schema/props/#slotprop) for the `defaultSlot` marker this convention produces.
+- [Schema: SlotProp](/schema/props/slot/) for the `defaultSlot` marker this convention produces.
 - [Schema: Children](/schema/children/) for the nested shape it permits.

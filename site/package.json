@@ -3,11 +3,12 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "build:content": "node scripts/build-releases.mjs && node scripts/build-adrs.mjs && node scripts/build-specification.mjs",
+    "build:content": "node scripts/build-releases.mjs && node scripts/build-adrs.mjs && node scripts/build-specification.mjs && node scripts/build-mappings.mjs && node scripts/build-style-pages.mjs && node scripts/build-prop-pages.mjs && node scripts/build-anatomy-pages.mjs",
     "prebuild": "npm run build:content",
     "predev": "npm run build:content",
-    "dev": "astro dev",
-    "start": "astro dev",
+    "dev": "node scripts/watch-content.mjs",
+    "dev:no-watch": "astro dev",
+    "start": "node scripts/watch-content.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"

@@ -9,7 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `mappings/bindings/` is published. The binding data states which platform realises each style key and how, which is a fact about the contract and belongs with it. A consumer can now read it from the package rather than the repo (#837)
+- Every option of all 31 closed value sets — a description of what choosing it does (ADR-114)
+- `Styles` — `examples` on all 46 properties, each valid against its own property
+- `ColorObject.colorSpace`, `Settings.spec.tokens`, `Settings.spec.color` — per-option descriptions, previously only a value list
+- `Settings.spec.variantDepth` — `9999` titled "Unlimited", naming a sentinel the value could not
+- `DSPEC-48`, `DSPEC-49`, `DSPEC-50` — closed value sets declare `oneOf` of `const`, describe every option, and keep branches disjoint
+- `Sides.top`, `Sides.end`, `Sides.bottom`, `Sides.start` — `default: 0`, agreeing with `padding` and `strokeWeight` (ADR-116)
+- `Corners.topStart`, `Corners.topEnd`, `Corners.bottomEnd`, `Corners.bottomStart` — `default: 0`, agreeing with `cornerRadius`
+- `ItemSpacing.horizontal`, `ItemSpacing.vertical` — `default: 0`, agreeing with `itemSpacing`
+- `ColorObject.alpha` — `default: 1`, fully opaque per DTCG Color §4.1
+- `ImageValue.objectFit` — `default: "COVER"`
+- `Shadow.inset` — `default: false`, a drop shadow rather than an inner one
+- `Typography.letterSpacing`, `Typography.paragraphIndent`, `Typography.paragraphSpacing`, `Typography.listSpacing` — `default: 0`
+- `Typography.textCase` — `default: "ORIGINAL"`; `Typography.textDecoration` and `Typography.leadingTrim` — `default: "NONE"`
+- `Typography.hangingPunctuation`, `Typography.hangingList` — `default: false`
+- `DSPEC-52`, `DSPEC-53` — an optional composite member declares a default; a required one declares none
+
 ### Changed
+
+- Closed value sets — declared as `oneOf` branches of `const` rather than a bare `enum`; admits the same values (ADR-114)
+- `Styles.position`, `Styles.layoutMode`, `Styles.textOverflow`, `Styles.textAlignHorizontal` — descriptions no longer restate their own option meanings
+- `TokenReference.$token` — described as the slash-separated path the corpus uses, not a dot-separated one
 
 ### Removed
 
@@ -59,6 +80,8 @@ Their JSON Schema counterparts are named definitions arriving separately; until 
 ### Changed
 
 - `$extensions['com.figma'].name` — documented rule corrected on props, anatomy elements and `platforms.<platform>.naming`. The field was described as absent under `naming: NONE`; NONE declares no source convention, which means nothing can be re-derived from a key, not that no name is kept. The field is recorded wherever formatting changed the name (ADR-066). Description only — no type or validation change
+- **The component schema names its previously inline shapes as definitions**, so docs and tools link to `Layout`, `Scalar` and `ComponentName` instead of showing anonymous objects. Validation is unchanged, and no TypeScript type changed.
+- The condition definitions — `Conditional`, `ConditionExpression`, `ConditionArgs` — are now declared only in `styles.schema.json`; the unused duplicates in `component.schema.json` were removed. `PropBinding` moves the other way: declared only in `component.schema.json`, referenced from `styles.schema.json`.
 
 ### Migration
 

@@ -165,6 +165,28 @@ An `ObjectProp` member name MUST NOT begin with `$` (schema: `component.schema.j
 
 A scalar is a string, number or boolean — the `Scalar` definition. It deliberately excludes `null`, whose meaning is defined per site (§4.2).
 
+### 4.1a An absent style key resolves to its declared default
+
+Every property of `Styles` declares a `default` in `styles.schema.json`. A style key absent from an element resolves to that default, and a consumer MUST use it rather than substituting a platform convention of its own (DSPEC-44).
+
+The declaration is by **key presence**, not truthiness: 19 of the 46 properties declare `default: null`, meaning *apply nothing*. That is a decision, and it is distinct from a property carrying no `default` keyword at all, which would mean nobody has decided.
+
+A declared default is always a literal — never a `TokenReference`, `PropBinding` or `Conditional`, even where the property's value union admits them (DSPEC-45). A default is what a reader assumes in the absence of any authored value, so it cannot itself require resolution.
+
+**A default answers only one of three reasons a key can be absent.** A key may also be absent because a variant inherits it under layering (§4.4), or because its element type cannot carry it. Nothing in a document marks which applies, and the three are not distinguishable by a consumer reading one document. This specification does not yet resolve that; see `mappings/DEFAULTS.md`.
+
+### 4.1b An absent composite member resolves to its declared default
+
+Eight style properties resolve to a composite object — `Sides`, `Corners`, `ItemSpacing`, `Effects`, `Shadow`, `Typography`, `ColorObject`, `ImageValue`. A member of one of those objects absent from a document resolves to that member's declared `default`, read the same way §4.1a reads a property's, and a consumer MUST use it rather than substituting a platform convention of its own (DSPEC-52).
+
+A member default is conditional on its containing object being present. `Typography.textCase` → `"ORIGINAL"` states what an inline `typography` object with no `textCase` means; what an absent `typography` means is `styles.typography`'s own default (§4.1a).
+
+An **optional** member declares a `default` where its own schema can express the value an absent member carries. Eight do not, and an absent `default` keeps its §4.1a meaning of *undeclared*: four because the member means "nothing of this kind applies" and its schema admits no `null` to say so, three because no literal follows from the member's own meaning, and one because automatic leading is spelled two ways in the contract (`schema: styles.schema.json`; DSPEC-52).
+
+A **required** member declares no `default` (DSPEC-53). It cannot be absent, so a default there answers a question no document can ask.
+
+Where a style property's value may be written either as a scalar or as the composite that expands it — `padding`, `strokeWeight`, `cornerRadius`, `itemSpacing` — the property's own default and its composite's member defaults MUST agree (DSPEC-52). `Sides` serves both `padding` and `strokeWeight`, so its member defaults are declared once and are true by both paths.
+
 ### 4.2 `null` means unset
 
 In a prop configuration, `null` under a prop key means the prop is **unset** in that configuration. It is a value, not an absence: an absent key inherits from the layer beneath; a `null` key overrides an inherited value with "no value" (ADR-080; schema: `component.schema.json`).
@@ -182,6 +204,26 @@ An `InstanceExample` configuration value is the deliberate subset without `PropB
 ### 4.4 Variant layering
 
 `default` is the base variant; each entry in `variants` layers over it. A variant's `elements` override the default's per element and per style key; absent means inherited (schema: `component.schema.json`). The `null`-unset rule (§4.2) is what makes an explicit removal expressible under layering.
+
+### 4.5 Closed value sets
+
+A value whose admitted values are a fixed, known list is a **closed value set**.
+
+A closed value set MUST be declared as `oneOf` branches of `const`, one branch per admitted value, and MUST NOT be declared as a bare `enum` array (DSPEC-48). Every branch MUST carry a `description`, or a `title` where the value itself is the whole meaning, stating what choosing that value does (DSPEC-49).
+
+JSON Schema provides no keyword for annotating an individual member of an `enum`, in any draft. The branch form is the pattern the specification project endorsed in place of one, and it is what makes an option's meaning readable by a consumer of the schema rather than only by a reader of the reference pages (ADR-114).
+
+No value may satisfy two branches of the same `oneOf` (DSPEC-50). `oneOf` requires exactly one branch to match, so a `const` branch placed beside an open branch admitting that value's own type rejects the value it was added to describe: the admitted values fail validation and unadmitted ones pass. Where a closed set must coexist with other forms — a token reference, a null, a sentinel — the branches MUST remain disjoint, which they are whenever they differ by JSON type.
+
+A `title` is optional. It names the option where the value does not already name itself, as a numeric sentinel or an external identifier does not. It MUST NOT restate the value.
+
+### 4.6 The `mixed` sentinel
+
+A text layer whose characters differ has no single value for a type property. A producer that encounters one MUST record the string `mixed`, referencing `MixedValue` in `styles.schema.json`, rather than choosing one of the varying values (`producer`).
+
+The sentinel is not a value. **A consumer MUST apply nothing for it, and MUST NOT substitute one of the varying values or a platform default (DSPEC-51).** Every binding declares it `unsupported` for this reason, which is the one disposition that states a deliberate non-realisation rather than a gap (§11.1).
+
+Its purpose is to be visible. A `mixed` value reports that the source design mixes values within one layer, which is a thing to fix in the design rather than a thing to render. A producer SHOULD warn when it records one (`producer`, `unenforced`).
 
 ---
 
@@ -362,6 +404,19 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-38 | `metadata.schema.url` resolves to the exact schema version named by `metadata.schema.version` | producer | §8.2, ADR-023 |
 | DSPEC-39 | When `settings.spec.color` is not `OBJECT`, every color-bearing value in the document is a string in that notation | validator | §2.6, ADR-043 |
 | DSPEC-40 | The length and order of a `ColorObject`'s `components` correspond to the channels of its `colorSpace` | validator | styles reference, ADR-009 |
+| DSPEC-41 | A platform binding declares a disposition for every property of `Styles` | binding | §11.1 |
+| DSPEC-42 | A platform binding declares its handling of each of the four style value forms | binding | §11.1 |
+| DSPEC-43 | A degradation applies the spec's own recorded fallback or applies nothing and warns; it never invents data the document does not carry | binding | §11.2 |
+| DSPEC-44 | Every property of `Styles` declares a `default`, and its value validates against that property's own schema | package | §4.1a |
+| DSPEC-45 | A declared `default` is a literal, never a `TokenReference`, `PropBinding` or `Conditional` | package | §4.1a |
+| DSPEC-46 | A platform binding does not redeclare a style default; it cites the schema's | binding | §11.1 |
+| DSPEC-47 | Jointly resolved keys are stated as an ordered case table over a declared operand set, not as prose | binding | §11.1 |
+| DSPEC-48 | A closed value set is declared as `oneOf` branches of `const`, never as a bare `enum` array | package | §4.5, ADR-114 |
+| DSPEC-49 | Every branch of a closed value set carries a `description` or a `title` stating what choosing that option does | package | §4.5, ADR-114 |
+| DSPEC-50 | No value satisfies two branches of the same `oneOf`; in particular a `const` branch never sits beside an open branch admitting that value's own type | package | §4.5, ADR-114 |
+| DSPEC-51 | A consumer applies nothing for a `mixed` value, and never substitutes one of the varying values or a platform default | consumer | §4.6 |
+| DSPEC-52 | An optional member of a `Styles` composite type declares a `default` where its own schema can express the value an absent member carries, and any declared `default` validates against that member's schema | package | §4.1b, ADR-116 |
+| DSPEC-53 | A required member of a `Styles` composite type declares no `default` | package | §4.1b, ADR-116 |
 
 Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.
 
@@ -377,3 +432,48 @@ Rules DSPEC-23 through 40 were harvested from ADRs 001–045 in a systematic sec
 - A test validating every `examples` value in the schema files against its enclosing definition (137 of 138 definitions currently carry no `examples` — issue 785 Step 2).
 
 Consumer requirements stated above (DSPEC-19, DSPEC-21, §1.5, §4.2, §6.3, §6.4, §6.5) bind any tool reading Specs documents, whether or not a validator exists.
+
+## 11. Platform bindings
+
+§§2–8 say what a Specs document *is*. They do not say what any platform must do with one. A **platform binding** closes that gap: one document per platform, stating how that platform realises the schema.
+
+Bindings live in `mappings/` beside this document — `mappings/FIGMA.md`, `mappings/REACT.md` — and are generated from the declarations in `mappings/bindings/<platform>.json`.
+
+### 11.1 What a binding declares
+
+A binding MUST declare, for every property of `Styles`, one of four dispositions (DSPEC-41):
+
+| Disposition | Meaning |
+|---|---|
+| `bound` | Realised, and confirmed against an implementation |
+| `approximated` | Realised with loss, and the loss is stated |
+| `unsupported` | Declared as not realised, with the resulting behaviour stated |
+| `unverified` | Coverage detected, mapping not confirmed by a human |
+
+A reader MAY rely on `bound`, `approximated` and `unsupported`. An `unverified` row asserts nothing — it records outstanding work, and a binding that is wholly `unverified` is a stub, not a specification.
+
+Where several keys resolve **jointly** — no one key determining any one output — a binding MUST state the mapping as an ordered case table over a declared, finite operand set, not as prose. A sentence describing a decision procedure cannot be checked, and reads as determinism without being it. Each case carries a predicate and the exact outputs it emits; an empty output list is a claim, a missing one is an omission (DSPEC-47).
+
+The predicate grammar reuses this specification's `ConditionExpression` vocabulary — an `operation` with `args` — because `operation` is a deliberately open string (DSPEC-28). The operand space differs and the difference is declared, not glossed: a spec `Conditional` tests a `PropBinding` into `#/props/*`, while a binding case tests a style fact on `self`, `parent`, a named derived predicate, or the emitting context.
+
+A binding MUST NOT redeclare a style default. What an absent key means is a property of the document, declared once in the schema (§4.1a), and a binding that restates it creates a second source free to disagree. A binding states what a platform does with a *value*; the value an absent key carries is not the platform's choice (DSPEC-46).
+
+A binding MUST also declare what it does with each of the four value forms a style may take — a literal, a `TokenReference`, a `PropBinding`, a `Conditional` (DSPEC-42). A disposition for `padding` means nothing without saying whether a `Conditional` padding is realised, approximated, or dropped.
+
+A binding SHOULD declare dispositions for props, anatomy and elements, and layout. Where it does not, it MUST name the concept as undeclared so the absence is visible rather than implied.
+
+### 11.2 Degradation
+
+An `approximated` or `unsupported` disposition MUST state the resulting behaviour. "Not supported" alone is not a binding: a consumer needs to know whether the value is dropped silently, warned about, or substituted.
+
+A binding MUST NOT describe a degradation that invents data the document does not carry. Where a platform cannot realise a value, the permitted behaviours are to apply the spec's own recorded fallback, or to apply nothing and warn (DSPEC-43).
+
+### 11.3 Direction
+
+A binding MUST declare its direction. Figma is bidirectional — a document renders onto the canvas and is generated back from it — so its binding carries fidelity obligations both ways. The code platforms are emit-only, and a binding that does not say so implies a round trip that does not exist.
+
+### 11.4 Bindings are not the implementation
+
+A binding is a specification, not a description of one codebase. It is seeded from an implementation and continuously checked against it, but the declaration is authoritative: where they disagree, one of them is a defect, and the binding says which behaviour was intended.
+
+This separation is what lets the binding be published from this repository while an implementation lives elsewhere, and what lets a second implementation of the same platform be judged conforming or not.

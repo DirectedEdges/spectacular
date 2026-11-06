@@ -4,6 +4,7 @@
 **Created**: 2026-09-29
 **Status**: ACCEPTED
 **Summary**: A composition emits exactly one `Default` story under its own `Compositions` nav group in both targets, with the sticker sheet suppressed by kind and the whole kind skipped on free tier rather than degraded.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

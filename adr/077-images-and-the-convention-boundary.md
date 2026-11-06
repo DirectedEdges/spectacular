@@ -4,6 +4,7 @@
 **Created**: 2026-08-30
 **Status**: ACCEPTED
 **Summary**: `images.component` names the image component on a code platform, beside the `match` naming that same component in Figma.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

@@ -6,6 +6,7 @@
   "$ref": "#/definitions/RunMetadata",
   "definitions": {
     "RunMetadata": {
+      "examples": [{ "author": "Design Systems", "lastUpdated": "2026-09-26T15:14:14.469Z", "generator": { "name": "specs", "version": "0.40.0", "url": "https://spectacular.systems" }, "schema": { "version": "0.40.0", "url": "https://spectacular.systems/schema/0.40.0/component.schema.json" }, "conventions": { "platforms": { "figma": { "naming": "TITLE" } } }, "settings": {} }],
       "type": "object",
       "description": "Facts about the generation run that produced a set of component specs.",
       "properties": {
@@ -13,15 +14,18 @@
           "type": "string"
         },
         "lastUpdated": {
-          "type": "string"
+          "type": "string",
+          "format": "date-time"
         },
         "generator": {
           "type": "object",
           "properties": {
             "url": {
-              "type": "string"
+              "type": "string",
+              "format": "uri"
             },
             "version": {
+              "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$",
               "type": "string"
             },
             "name": {
@@ -59,13 +63,16 @@
           "properties": {
             "url": {
               "type": "string",
+              "format": "uri",
               "description": "Versioned schema URL pinned to a git tag (e.g. https://raw.githubusercontent.com/.../v0.13.0/schema/component.schema.json)"
             },
             "version": {
+              "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$",
               "type": "string"
             },
             "latest": {
               "type": "string",
+              "format": "uri",
               "description": "Stable URL pointing to the latest schema on the main branch for discovery"
             }
           },

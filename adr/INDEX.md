@@ -27,6 +27,10 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
+| 116 | Nested style members declare their own defaults | 23 of 30 optional composite members declare a `default`; required members declare none; `lineHeight` settles on `'AUTO'` |
+| 115 | Closed Style Value Sets | Five keys that inherited an open string wrapper become named closed sets, each dropping three value forms nothing writes |
+| 114 | Describe Enum Options Where They Are Declared | A closed value set declares `oneOf` branches of `const` with a description, so every option documents itself |
+| 113 | Style defaults belong to the schema | Every `Styles` property declares a `default`, making what an absent style key means a fact of the contract rather than of one transform |
 | 112 | Settings Defaults Adopt Their Scaffolded Values | `format`, `keys`, `color`, `preserveManualSelections` and `collapsePrimitiveWrapper` default to the values every scaffolded workspace writes |
 | 111 | Object-Typed Props | A prop whose value is an object of named scalar members; an opt-in convention folds separator-named Figma properties into one |
 | 110 | Rename `Spec*Document` to `Component*Document` | `Spec*Document` renamed to `Component*Document`, matching `CompositionApiDocument`'s naming now that a second spec kind exists |

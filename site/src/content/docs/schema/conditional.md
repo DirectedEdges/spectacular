@@ -5,17 +5,7 @@ description: "Conditional style values driven by prop state"
 
 A conditional expression that selects between two values based on a prop's state. Introduced in schema 0.13.0.
 
-```ts
-interface Conditional {
-  if: {
-    condition: ConditionExpression;
-    then: string | boolean | number | null;
-    else: string | boolean | number | null;
-  };
-}
-```
-
-## Properties
+## Members
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|

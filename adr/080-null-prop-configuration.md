@@ -4,6 +4,7 @@
 **Created**: 2026-08-31
 **Status**: ACCEPTED
 **Summary**: A `null` prop configuration value joins the scalars, `PropBinding`, `SlotContentRef` and `ImageBinding` a configuration already carries.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

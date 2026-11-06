@@ -4,6 +4,7 @@
 **Created**: 2026-03-11
 **Status**: ACCEPTED
 **Summary**: `StringProp.default` accepts `null`, expressing props whose absent value is meaningful.
+**Decides**: props.string.nullable, props.enum.nullable, props.number.nullable, props.slot.nullable, props.image.nullable
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

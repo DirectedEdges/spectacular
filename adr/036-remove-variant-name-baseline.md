@@ -4,6 +4,7 @@
 **Created**: 2026-04-13
 **Status**: ACCEPTED
 **Summary**: `Variant.name` and `Variant.baseline` are removed, leaving a variant identified by its prop configuration alone.
+**Decides**: none
 **Deciders**: nathanacurtis (author)
 **Supersedes**: *(none)*
 

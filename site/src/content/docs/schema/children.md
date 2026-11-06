@@ -25,7 +25,7 @@ children:
   - label
 ```
 
-Nothing ties membership of that list to being the *same* component's anatomy. An entry may name an element whose [`instanceOf`](/schema/elements/) is a different component, placed as an ordinary child — which is how an instance is composed through a [default slot](/schema/props/#slotprop):
+Nothing ties membership of that list to being the *same* component's anatomy. An entry may name an element whose [`instanceOf`](/schema/elements/) is a different component, placed as an ordinary child — which is how an instance is composed through a [default slot](/schema/props/slot/):
 
 ```yaml
 anatomy:

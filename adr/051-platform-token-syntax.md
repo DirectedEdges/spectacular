@@ -4,6 +4,7 @@
 **Created**: 2026-05-20
 **Status**: ACCEPTED
 **Summary**: Three `FIGMA_SYNTAX_WEB`, `FIGMA_SYNTAX_IOS` and `FIGMA_SYNTAX_ANDROID` token profiles emit platform code syntax alongside the default `TOKEN`.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

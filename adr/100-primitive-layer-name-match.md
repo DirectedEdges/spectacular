@@ -4,6 +4,7 @@
 **Created**: 2026-10-05
 **Status**: ACCEPTED
 **Summary**: A `match` member names the layer-name prefixes selecting a promotion entry, taking precedence over `elementType` scoring.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none — amends ADR-075's selection rule)*
 

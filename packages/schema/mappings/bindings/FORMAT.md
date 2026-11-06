@@ -1,0 +1,129 @@
+# Binding declaration format
+
+How a `mappings/bindings/<platform>.json` file is shaped, and why.
+
+The generated page is `mappings/<PLATFORM>.md`. Edit the JSON, never the page.
+
+## The problem a flat table cannot solve
+
+A one-row-per-key table assumes each spec style key maps to its own output independently. That holds for most keys and fails for the ones that matter most.
+
+Three relationship shapes have to be expressible:
+
+| Shape | Example |
+|---|---|
+| One key → one output | `opacity` → `opacity` |
+| One key → several outputs | `padding` → four CSS longhands, or one shorthand |
+| **A group of keys → a group of outputs, jointly** | `layoutMode` + `mainAxisAlignment` + `crossAxisAlignment` + `wrap` + `wrapAlignment` + `itemSpacing` → `display` + `flex-direction` + `justify-content` + `align-items` + `flex-wrap` + `gap` |
+
+The third is the hard one. No single key in that group determines any single declaration: `mainAxisAlignment: CENTER` becomes `justify-content: center` under a row layout and `align-items: center` under a column one, and means nothing at all with no `layoutMode`. Absolute positioning is the same story with a different rule — `position` plus the four inset keys plus the two centre offsets.
+
+So the format carries **two** sections, and a key appears in exactly one of them.
+
+## `concepts.styles` — independent keys
+
+```json
+"opacity": {
+  "disposition": "bound",
+  "target": "node.opacity",
+  "elements": ["component", "frame", "..."],
+  "notes": "A TokenReference binds the variable; otherwise the raw number is written."
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `disposition` | `bound` \| `approximated` \| `unsupported` \| `unverified` (§11.1) |
+| | **The boundary**: `bound` means exact over the values the engine produces; a declared edge loss — a schema corner the engine never emits, like a non-sRGB ColorObject — rides as a `needsDecision` loss entry on a bound row, surfacing in the Losses section. `approximated` is reserved for keys whose ORDINARY values lose fidelity (`backgroundImage`'s binary `objectFit`). A deterministic mapping with a stated edge loss is bound, not approximated — the badge measures what a reader will experience, the loss entry preserves the caveat |
+| `target` / `module` | What realises it. Figma declares a node property; React declares the emitting module |
+| `elements` | Which element types carry it. Figma only — transcribed from the writer's declared key table |
+| `notes` | Degradation, ordering constraints, and anything a consumer needs. Required when the disposition is `approximated` or `unsupported` |
+| `rule` | Present instead of `target` when the key belongs to a rule. Names it |
+
+## `concepts.styleRules` — keys that resolve jointly
+
+```json
+"autoLayoutSizing": {
+  "disposition": "bound",
+  "form": "cases",
+  "keys": ["layoutSizingHorizontal", "layoutSizingVertical"],
+  "inputs": [
+    { "ref": "self.layoutSizingHorizontal", "from": "document" },
+    { "ref": "parent.layoutMode", "from": "document (ancestor)" },
+    { "ref": "context.isInstance", "from": "emitter context" }
+  ],
+  "derived": {
+    "crossStretches": {
+      "expression": { "operation": "all", "args": [ /* … */ ] },
+      "source": "layoutToCSS.ts:130-131"
+    }
+  },
+  "cases": [
+    { "when": { "operation": "equals", "args": { "value": "self.layoutSizingHorizontal", "compareTo": "FILL" } },
+      "emit": ["width: 100%"] }
+  ],
+  "otherwise": { "emit": [], "why": "FIXED or absent contributes nothing" }
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `form` | `cases` or `prose`. A `prose` rule is unconverted debt and renders with a warning |
+| `keys` | Every spec key participating. Each must also appear in `concepts.styles` with `rule` naming this one |
+| `inputs` | Every fact the rule may read, and where it comes from. Finite and visible by declaration |
+| `derived` | Named sub-predicates, each with the source line it came from. Keeps a case readable without hiding it |
+| `cases` | Ordered; first match wins. Each carries `when` and `emit` |
+| `otherwise` | What happens when no case matches |
+
+Predicates reuse this contract's `ConditionExpression` vocabulary — `operation` with `args` — because `operation` is a deliberately open string (DSPEC-28). `all`, `any` and `not` join the built-in `equals`, `notEquals`, `isNull` and `isNotNull`.
+
+The operand space differs from a spec `Conditional`'s, and the difference is declared rather than glossed: a `Conditional` tests a `PropBinding` into `#/props/*`; a binding case tests a style fact on `self`, `parent`, `derived`, or the emitting `context`.
+
+Cross-referencing both ways is what keeps the format honest: a key cannot quietly drop out of the table by being "handled elsewhere", and a rule cannot claim a key the table does not agree it owns. `build-mappings.mjs` enforces both directions.
+
+## Why not model every output per key
+
+Because it would be false. Writing `mainAxisAlignment → justify-content` is wrong half the time — under a column layout it is `align-items`. A table that states it anyway is worse than one that admits the key is rule-resolved, because a reader implementing from it ships the bug.
+
+The rule section costs more to author and is the only form that can be true.
+
+## Defaults are not here
+
+A binding declares what a platform does with a **value**. What an absent key means is not a platform's choice, so a binding never declares it (DSPEC-46).
+
+Every property of `Styles` carries a `default` in `styles.schema.json`, and that is the single source. `_defaults.json` is a generated summary of those declarations, published as `DEFAULTS.md` — it cites the schema and decides nothing.
+
+A default answers only one of the three reasons a key can be absent. The other two — a variant inheriting under layering, and an element type that cannot carry the key — remain unmarked in a document. `DEFAULTS.md` states that gap rather than papering over it.
+
+## Why cases, not prose
+
+An earlier draft of this format gave each rule a `resolution` sentence. That was inference wearing determinism's clothes: "emits nothing when the parent cross-stretches" cannot be checked, and a reader implementing from it is guessing at the boundaries.
+
+A case table has boundaries. Each case names its predicate and the exact outputs it emits; the order is the precedence; `emit: []` is a claim that nothing is emitted, which is different from having said nothing. The operand set is declared up front, so the facts a rule may consult are finite and visible — a case referencing something outside that set is a defect the reader can see.
+
+It is also testable, which prose never was: synthesize a document matching a case's predicate, run the platform's transform, and compare against `emit`. That test does not exist yet; the format is what makes it possible.
+
+## Evaluation versus post-processing
+
+A mapping is not always a direct read of one Figma property. Some spec keys are produced by a later pass — collapsed, diffed against a parent, or removed — and a binding that presents them as direct reads misleads anyone implementing a second time.
+
+Where a key is post-processed rather than read, `notes` says so and names the stage.
+
+## `concepts.props` and `concepts.propRules` — the prop surface
+
+Props reuse the two-section shape with one change of unit: the keys are the **prop kinds** — `boolean`, `string`, `enum`, `number`, `slot`, `image`, `object` — read off `AnyProp`'s own union, not individual prop names, which are open. Completeness is enforced the same way: every kind must appear in every binding file's `concepts.props`, so an eighth kind added to the schema fails every binding that has not answered for it.
+
+`concepts.anatomy` and `concepts.anatomyRules` follow the identical contract with **element types** as the unit, read off `ElementType`'s own union — the same open-names/closed-shapes move. Everything below about props holds for anatomy unchanged, including non-inheritance by dependent bindings.
+
+`concepts.references` and `concepts.referenceRules` follow it with **value and reference forms** as the unit: the scalar forms (`literal`, the `mixed` sentinel) and SPECIFICATION §5.1's pointer grammar (`$token`, `$binding`, `$conditional`'s host form, `$slotContent`, `$ref`×2, `$image`) plus the `$nested` paths. No single schema union declares the set, so §5.1's table is the declaration and the generator mirrors it; the set stays closed because the safe key grammar admits no authored `$`-prefixed key. The former top-level `valueForms` section merged into this surface (ruled 2026-11-04) — DSPEC-42's per-style-value obligations are rows here now, and a form has exactly one home per file. One note particular to this surface: its table keeps a Notes column, because the forms' reference pages are hand-written and have no generated section for a note to move to.
+
+Two rules differ from styles, both because a kind is a *population* of props rather than a single key:
+
+- **A kind may carry its own row and belong to a rule.** `boolean` reads natively on its own AND participates in `variantAxes` — different populations of the kind resolve differently. The styles rule (a key governed by a rule has no mapping of its own) does not transfer.
+- **Props are never inherited by a dependent binding.** How a prop becomes a parameter, an attribute, or a selector is each platform's own fact, so `react.json` and `webcomponents.json` declare all seven kinds in full even though their style surface defers to CSS.
+
+Prop rules carry the joint rules: which kind a Figma VARIANT property even becomes (`variantAxes`, `numberInference`), consolidation (`booleanContentPairing`), provenance minting (`codeOnlyProps`), platform shape (`slotsToChildren`, `statesToContract`, `propsToSelectors`). The `form: cases` / `form: prose` contract, the declared operand set, and the leak guard all apply unchanged.
+
+There is no `onAbsent` for props and no prop `_defaults.json`: what an absent or null prop value means is the schema's own per-kind nullability contract (ADR-065), declared once in `component.schema.json` and published on the generated kind pages.
+
+`scripts/verify-bindings.mjs` mechanically checks the **styles** surface only. The props, anatomy and references surfaces are not checkable yet because no transform declares comparable implementation-side data (styles have `style-bindings.json` to diff against); their rows carry `basis: implementation` — human-verified at authoring — until one does.
