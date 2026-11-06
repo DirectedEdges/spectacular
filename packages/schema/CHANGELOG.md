@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Closed value sets — declared as `oneOf` branches of `const` rather than a bare `enum`; admits the same values (ADR-114)
 - `Styles.position`, `Styles.layoutMode`, `Styles.textOverflow`, `Styles.textAlignHorizontal` — descriptions no longer restate their own option meanings
 - `TokenReference.$token` — described as the slash-separated path the corpus uses, not a dot-separated one
-- `SlotProp.anyOf` — an empty list is now valid and means what absence means (any component, no primitive); `minItems: 1` forced authors to enumerate content kinds a slot never meant to require
+- `SlotProp.anyOf` — the description now states that no entry kind is ever required and that a slot with nothing to list omits the member; `minItems: 1` stays, so an empty list is invalid rather than a second spelling of absence
 - `PositionOffset` — its description now states how offsets combine per axis: one edge pins at the element's own size, opposite edges stretch it between them (`top: 0` + `bottom: 0` spans the parent's height), a centre offset centres its axis. Stated once on the shared definition every edge references, per the constitution's documentation rules; the combination semantics previously existed only in the render bindings, so an author asking "can I pin four edges" found no answer where the value is declared. Description and examples only — no validation change
 
 ### Removed
