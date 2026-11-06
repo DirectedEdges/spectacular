@@ -252,6 +252,39 @@ export function checkReferences(
     checkVariantsDoc(objAt(spec.variants, 'subcomponents', sub), `/subcomponents/${sub}`, subScope(sub));
   }
 
+  // ---- instanceExamples configure declared props with legal values ----------
+  // Same contract as a variant's `configuration`. Unchecked, a stale example
+  // (`size: Large` after the enum dropped Large) validates clean and reaches
+  // Storybook as a silently wrong story.
+
+  const checkInstanceExamples = (doc: unknown, pathPrefix: string, scope: Scope): void => {
+    const examples = objAt(doc, 'instanceExamples');
+    for (const [exampleName, example] of Object.entries(examples)) {
+      const configs = objAt(example, 'propConfigurations');
+      for (const [prop, value] of Object.entries(configs)) {
+        if (prop === '$nested') continue;
+        const path = `${pathPrefix}/instanceExamples/${exampleName}/propConfigurations/${prop}`;
+        const decl = scope.props[prop];
+        if (!isObj(decl)) {
+          findings.push({ file: 'examples', path, message: `prop "${prop}" is not declared in props` });
+          continue;
+        }
+        if (value === null || isObj(value)) continue; // unset, or a $slotContent fill
+        if (decl.type === 'boolean' && typeof value !== 'boolean') {
+          findings.push({ file: 'examples', path, message: `prop "${prop}" is boolean; got ${JSON.stringify(value)}` });
+        }
+        if (Array.isArray(decl.enum) && !(decl.enum as unknown[]).includes(value)) {
+          findings.push({ file: 'examples', path, message: `"${String(value)}" is not an allowed value of "${prop}": ${(decl.enum as unknown[]).join(', ')}` });
+        }
+      }
+    }
+  };
+
+  checkInstanceExamples(spec.examples, '', mainScope);
+  for (const sub of Object.keys(objAt(spec.examples, 'subcomponents'))) {
+    checkInstanceExamples(objAt(spec.examples, 'subcomponents', sub), `/subcomponents/${sub}`, subScope(sub));
+  }
+
   // ---- slot content triplets carry their own anatomy ------------------------
 
   const checkTriplets = (holder: Obj, pathPrefix: string): void => {

@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `specs validate` checks `instanceExamples` configurations against the contract — declared props, boolean types, enum membership — exactly as it already checked a variant's `configuration`. Unchecked, a stale example (`size: Large` after the enum dropped it) validated clean and reached Storybook as a silently wrong story
 - `specs render --watch` over a directory re-renders **only the specs whose files changed** — it previously re-rendered the whole catalogue on every event, onto whatever page the plugin had open. The start-up pass now renders nothing (a watch means re-render *on change*), and only concern-file events trigger at all, so `specs analyze` writing its reports no longer causes renders (#884)
 
 ### Changed

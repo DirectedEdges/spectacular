@@ -183,6 +183,37 @@ describe('specs validate', () => {
     expect(result.counts.component).toBe(1);
   });
 
+  describe('instanceExamples configurations', () => {
+    it('rejects a stale enum value and an undeclared prop', () => {
+      writeSpec('components', 'badge', {
+        ...validSpec(),
+        examples: {
+          metadata: metadata('examples'),
+          instanceExamples: {
+            stale: { title: 'Stale', propConfigurations: { appearance: 'danger' } },
+            ghost: { title: 'Ghost', propConfigurations: { tone: 'quiet' } },
+          },
+        },
+      });
+      const errors = errorsOf(runValidate({ specsPath: specsDir }).findings);
+      expect(errors.some(f => f.file === 'examples.yaml' && f.message.includes('"danger" is not an allowed value'))).toBe(true);
+      expect(errors.some(f => f.file === 'examples.yaml' && f.message.includes('"tone" is not declared'))).toBe(true);
+    });
+
+    it('passes legal values', () => {
+      writeSpec('components', 'badge', {
+        ...validSpec(),
+        examples: {
+          metadata: metadata('examples'),
+          instanceExamples: {
+            ok: { title: 'OK', propConfigurations: { appearance: 'success', disabled: false } },
+          },
+        },
+      });
+      expect(errorsOf(runValidate({ specsPath: specsDir }).findings)).toEqual([]);
+    });
+  });
+
   describe('supplemental sidecar', () => {
     const entry = {
       intent: 'Tooltip positions against its trigger',
