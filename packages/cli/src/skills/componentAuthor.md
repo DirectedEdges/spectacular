@@ -54,7 +54,7 @@ Anatomy first (every element, typed), then props (reusing the catalogue's vocabu
 specs validate <key> --authored
 ```
 
-Zero errors before touching the next file. Fix the file the error names, re-run, repeat. Never proceed past a validation error.
+Zero errors before touching the next file. Fix the file the error names, re-run, repeat. Never proceed past a validation error — with one expected exception: **a slot-bearing component's `variants.yaml` fails once by design**, because its `children.examples[0]` `$slotContent` pointer targets an `examples.yaml` that does not exist yet. That dangling-pointer error means "author examples next," never "rework the binding."
 
 ## 5. Author variants.yaml, then validate
 
@@ -66,7 +66,7 @@ At least one `instanceExamples` entry showing a realistic configuration. `slotCo
 
 ## 7. Compile and observe
 
-The dev posture is live — `specs run` re-emits the platform trees on save and `specs render specs/components/<key> --watch` re-renders onto the canvas (render takes a spec *path*, not a key). Save, then check. **Observe means the running surfaces — Storybook and the canvas — never the emitted source.** When a surface disagrees with what the spec declares, consult the platform's binding dispositions (`mappings/bindings/` in the schema package), and a disagreement the bindings call `bound` is a platform defect for your report — not a reason to rework the spec or to read the emitter. Check:
+The dev posture is live — `specs run` re-emits the platform trees on save and `specs render specs/components/<key> --watch` re-renders onto the canvas (render takes a spec *path*, not a key). Save, then check. **Observe means the running surfaces — Storybook and the canvas — never the emitted source.** An agent that cannot see those surfaces (no browser, no canvas access) reports the render log's result and node id with an explicit "not visually verified" — that substitute is sanctioned; scraping the Storybook server, curling story HTML, or driving a browser to compensate is not. Visual verification belongs to the human. When a surface disagrees with what the spec declares, consult the platform's binding dispositions (`mappings/bindings/` in the schema package), and a disagreement the bindings call `bound` is a platform defect for your report — not a reason to rework the spec or to read the emitter. Check:
 
 1. The emitted component in Storybook — renders, variants switch.
 2. The rendered component on the Figma canvas — structure matches the authored anatomy.
@@ -79,6 +79,7 @@ For every requirement the table in step 1 marked supplemental:
 
 - Implement it in hand-authored files **beside** the emitted output (e.g. `component.tsx`, a hook, a stylesheet) in the platform tree. Never edit emitted files — a re-emit overwrites them. Files you add are safe: emit overwrites only its own filenames, and prune removes only whole directories whose spec is gone.
 - Copy `templates/supplemental.yaml` to the spec folder as `supplemental.yaml` and fill it, section by section (`anatomy`, `props`, `styles`, `slotComposition`, `events`, `accessibility`, `behavior`, `motion`, `layout`, `guidelines`): each entry a testable `intent`, the `schemaGap` that cannot carry it, the implementing file per platform under `platforms`, and its `regenerationRisk`. No rationale prose. `specs validate` checks the file's shape — run it after writing, like any concern file.
+- **The `platforms:` declaration is load-bearing, not bookkeeping.** The emitters redirect their generated stories from `./scaffold` to an authored `component.*` **only when a supplemental entry names that file under `platforms.<platform>`** — an authored file nothing declares sits beside the scaffold and never runs, while validation reports all clear. Name the file each platform *loads*; files it merely imports (a stylesheet) are noted in `regenerationRisk`.
 - **Rename procedure:** renaming the component orphans its old emitted directory — prune removes it, custom files included. Move custom files first.
 
 After every later re-emit, diff the fresh scaffold against your custom files and update each entry's `regenerationRisk`.

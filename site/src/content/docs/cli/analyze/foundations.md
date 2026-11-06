@@ -58,7 +58,7 @@ icons:
 | `$token`, `$type` | The reference exactly as a spec's styles write it |
 | `source` | `variable` or `style` — where the name lives in the library |
 | `aliasOf` | The variable this one aliases in its default mode, by token path. Only on aliases |
-| `defaultValue` | The default-mode value, alias chains resolved, colors as hex — to *understand* a token, never to author into a spec |
+| `defaultValue` | The default-mode value, alias chains resolved, colors as hex — to *understand* a token, never to author into a spec and never to validate a choice against: values are **themed**, and other modes resolve differently |
 | `description` | The library's own description. Only where one exists |
 | `platformNames` | Platforms declaring a code-syntax name for this token — presence, not the names |
 | `icons[].key` | The formatted key spelling under the workspace's `spec.keys` — the spelling specs use |

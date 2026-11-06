@@ -12,8 +12,11 @@
 # Entry fields:
 #   intent            required — one testable sentence of what must be true
 #   schemaGap         required — the path that would carry it and why it cannot
-#   platforms         optional — platform → implementing file, relative to the
-#                     component's folder in that platform tree; absent while pending
+#   platforms         optional — platform → the file that platform LOADS, relative to
+#                     the component's folder in that platform tree; absent while pending.
+#                     LOAD-BEARING: the emitter redirects its stories to an authored
+#                     component.* only when an entry names it here — an undeclared
+#                     authored file sits beside the scaffold and never runs
 #   regenerationRisk  optional — what a re-emit could break and how to re-check;
 #                     update after every regeneration
 

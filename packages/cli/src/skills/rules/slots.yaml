@@ -13,6 +13,12 @@ constraints:
     - should: "constrain a slot with `minChildren`/`maxChildren` (non-negative integers) and list permitted component type names in `anyOf`"
       never: "use the retired `minItems`/`maxItems`"
       adr: [28, 56]
+authoringOrder:
+  guidelines:
+    - warn: "expect `variants.yaml` to fail validation once on a slot-bearing component — its `children.examples[0]` `$slotContent` pointer cannot resolve until `examples.yaml` exists; author examples next rather than reworking the binding"
+layout:
+  guidelines:
+    - could: "a slot element may own its auto-layout — `layoutMode` and `itemSpacing` on the slot govern the gap between its fills, and emit as flex + gap (ruled by the system owner)"
 pointers:
   guidelines:
     - must: "point every `$slotContent` at `#/components/<spec folder key>/slotContentExamples/<name>` (optionally `/subcomponents/<sub>/` in the middle) — the `components` segment names the whole spec-key space, compositions' own fills included"
