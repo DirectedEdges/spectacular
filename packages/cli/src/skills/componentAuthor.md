@@ -66,7 +66,7 @@ At least one `instanceExamples` entry showing a realistic configuration. `slotCo
 
 ## 7. Compile and observe
 
-The dev posture is live — `specs run` re-emits the platform trees on save and `specs render specs/components/<key> --watch` re-renders onto the canvas (render takes a spec *path*, not a key). Save, then check:
+The dev posture is live — `specs run` re-emits the platform trees on save and `specs render specs/components/<key> --watch` re-renders onto the canvas (render takes a spec *path*, not a key). Save, then check. **Observe means the running surfaces — Storybook and the canvas — never the emitted source.** When a surface disagrees with what the spec declares, consult the platform's binding dispositions (`mappings/bindings/` in the schema package), and a disagreement the bindings call `bound` is a platform defect for your report — not a reason to rework the spec or to read the emitter. Check:
 
 1. The emitted component in Storybook — renders, variants switch.
 2. The rendered component on the Figma canvas — structure matches the authored anatomy.

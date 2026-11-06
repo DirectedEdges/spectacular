@@ -57,9 +57,22 @@ In `variants.yaml`, `default.elements` describes **every** anatomy element: `sty
 4. **Compile and observe.** The dev posture is live: `specs run` re-emits on save, `specs render --watch` re-renders on save. Save, then check Storybook and the canvas.
 5. **Supplemental last.** What the schema cannot carry goes in hand-authored platform files plus the `supplemental.yaml` sidecar (ten fixed sections; shape-checked by `specs validate`) — see the triage rule below.
 
+## The authority order
+
+Every question resolves at the nearest of these, never lower:
+
+| # | Question | Authority |
+|---|---|---|
+| 1 | Is this legal, and what does it mean? | The schema package's `types/` and `schema/*.json` — and only them. If the schema answers, stop |
+| 2 | Does platform X realise this key, and how faithfully? | `mappings/bindings/<platform>.json` in the same package — each key's declared `disposition` (`bound` / `approximated` / `unsupported` / `unverified`). A declared field, never an inference |
+| 3 | When should I use what the schema permits? | The rules files and workspace guidelines — judgment *about* the contract, not the contract |
+| 4 | Readable walkthrough of 1–2 | The docs site |
+
+**Never read emitted output or transform source to learn what a spec means.** A platform is a surface, not an authority: when a surface disagrees with the schema, the surface has a defect — report it in your closing report; do not bend the spec toward it. Letting an emitter confirm meaning makes the contract whatever the newest emitter happens to do, which is the non-determinism this whole model exists to prevent. The one legitimate reason to open an emitted file is wiring your supplemental files to it — imports, exported names — never to settle a schema question.
+
 ## Rules
 
-- **Cite the schema path for every shape you write.** If you cannot name the type or definition a node instantiates, you are inferring — go read the schema.
+- **Cite the schema path for every shape you write.** If you cannot name the type or definition a node instantiates, you are inferring — go read the schema. "The schema" includes its shipped platform surface: `mappings/bindings/`, `mappings/DEFAULTS.md`.
 - **Deterministic and complete.** The `default` variant fully describes every element. Variants are deltas layered onto it in order.
 - **A requirement goes supplemental only after naming the schema path that cannot carry it.** "The schema can't do X" requires showing where X would live and why it does not fit. The reverse failure is worse: forcing into the spec what the schema cannot express.
 - **Consistency is graded.** Prop names, enum values, token choices, and element naming follow what `analysis/` shows the system already does.
