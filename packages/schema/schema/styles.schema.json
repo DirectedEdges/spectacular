@@ -136,7 +136,7 @@
         },
         "position": {
           "$ref": "#/definitions/PositionStyleValue",
-          "description": "Whether the element is placed by its parent's layout or by its own offsets. Present whenever any positioning offset is.",
+          "description": "Whether the element is placed by its parent's layout or by its own offsets — `top`, `start`, `end`, `bottom`, and the centre offsets, which `ABSOLUTE` makes meaningful. Present whenever any positioning offset is.",
           "default": "AUTO",
           "examples": ["ABSOLUTE"]
         },
@@ -144,7 +144,7 @@
           "$ref": "#/definitions/PositionOffset",
           "description": "Distance from the parent's top edge, when the element is positioned against it.",
           "default": null,
-          "examples": ["10%"]
+          "examples": ["10%", 0]
         },
         "bottom": {
           "$ref": "#/definitions/PositionOffset",
@@ -156,7 +156,7 @@
           "$ref": "#/definitions/PositionOffset",
           "description": "Distance from the parent's start edge, when the element is positioned against it (ADR-041).",
           "default": null,
-          "examples": ["5%"]
+          "examples": ["5%", 0]
         },
         "end": {
           "$ref": "#/definitions/PositionOffset",
@@ -1275,8 +1275,8 @@
       "examples": ["mixed"]
     },
     "PositionOffset": {
-      "description": "Positional offset value. Pixel number, percentage string (SCALE constraint), or null. Not token-bindable.",
-      "examples": ["10%"],
+      "description": "Positional offset value. Pixel number, percentage string (SCALE constraint), or null. Not token-bindable. Offsets combine per axis: one edge set pins the element to that edge at its own size; opposite edges both set stretch it between them, its dimension an outcome (`top: 0` + `bottom: 0` spans the parent's height); a centre offset centres its axis instead, displaced by the value.",
+      "examples": ["10%", 0],
       "oneOf": [
         {
           "type": "number"
