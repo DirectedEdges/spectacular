@@ -19,6 +19,9 @@ default:
   guidelines:
     - should: "put demo content in `examples` and reserve `default` for a genuine contractual fallback (a Figma-authored `Label` value is an example, not a default)"
       adr: [14, 88]
+codeOnly:
+  guidelines:
+    - must: "declare a prop that exists only in code — never as a Figma variant axis — with `$extensions: {com.figma: {type: TEXT, source: {kind: codeOnlyProp, layer: <layer>}, name: <layer>}}`; the renderer's code-only handling reads exactly this declaration, and an undeclared string prop's disposition in the component set is guesswork (an accessibility label is the canonical case)"
 invalidPropCombinations:
   guidelines:
     - must: "declare illegal prop combinations as `invalidPropCombinations` in api.yaml — api vocabulary (prop names and values), never in variants"

@@ -19,6 +19,10 @@ type:
     - should: "inside a smaller atomic component, favor primitive `text` and `container` elements for its own anatomy — the promotion map governs composed content, not a component's internals (a badge's label is `text`, not `acmeText`)"
     - must: "model a styled block as a `container` (`notch: container; 12x12; rotation 45; position ABSOLUTE; bottom -6; parent clipsContent: false`)"
       never: "use a shape primitive for anything carrying style — background, radius, padding, offsets (`rectangle` as a notch)"
+extensions:
+  guidelines:
+    - must: "give a collapsed primitive its Figma layer identity — when the primitive IS the component root (a glyph or text with no wrapper, per ADR-058), author `$extensions: {com.figma: {name: <layer name>}}` on that anatomy element; without it the renderer names and binds the layer from the raw spec key"
+      adr: 58
 instanceOf:
   guidelines:
     - must: "reference a subcomponent as `{$ref: \"#/subcomponents/<key>\"}` — the pointer is internal, always within the same document"
