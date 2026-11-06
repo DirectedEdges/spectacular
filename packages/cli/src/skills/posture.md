@@ -12,13 +12,18 @@ description: Bring the workspace's live authoring posture up — specs run (emit
 
 Authoring runs against a live chain: saving a spec re-emits it to every platform, refreshes Storybook, and re-renders it onto the Figma canvas. This skill turns that chain on. It is idempotent — safe to run when unsure whether the posture is up.
 
-## 1. Check
+## 1. Check — two commands, then done
 
-The Storybook port is pinned by `storybook/package.json`'s `storybook` script (`-p <port>`). If `curl -sf http://localhost:<port>/` answers, the posture is already up — stop here.
+```bash
+curl -sf -o /dev/null http://localhost:<port>/ && echo "storybook up"
+kill -0 "$(cat .posture/render-watch.pid 2>/dev/null)" 2>/dev/null && echo "render watch up"
+```
 
-## 2. Start, detached
+The port comes from `storybook/package.json`'s `storybook` script (`-p <port>`). Both up → the posture is on; **stop here and author**. No pid archaeology, no log reading, no process listing — those are failure diagnostics, not checks.
 
-From the workspace root, each process detached with its log and pidfile under `.posture/`:
+## 2. Start what is missing, detached
+
+Start only the process whose check failed. **Never kill a running posture process** — a live process passing its check is the posture working; a stale pidfile whose process is dead is simply overwritten by starting.
 
 ```bash
 mkdir -p .posture
