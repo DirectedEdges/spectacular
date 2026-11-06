@@ -6,9 +6,9 @@ reports:
     - should: "read `analysis/styling.byComponent.yaml` for how siblings style a property before authoring it — a raw literal is a last resort after the promotion map and the token set both come up empty"
 tokens:
   guidelines:
-    - must: "copy token paths exactly as the library spells them, from `analysis/styling.byToken.yaml` (`Color/On surface`, not a reformatted variant)"
+    - must: "copy token paths exactly as the library spells them, from `analysis/styling.byToken.yaml` — never a re-cased, re-segmented, or otherwise reformatted variant"
     - should: "use a token wherever the library has one for the property — a literal there is a consistency defect"
-    - never: "invent a token name (`Constants/Spacing/0x half` when no such variable exists)"
+    - never: "invent a token name — a path that looks plausible for this system but appears in no report or cache"
       should: "use a literal and note the gap when no suitable token exists"
 visible:
   guidelines:

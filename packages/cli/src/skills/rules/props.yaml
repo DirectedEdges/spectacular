@@ -3,7 +3,7 @@ naming:
   guidelines:
     - should: "reuse an existing prop name and value set when the concept matches (`analysis/props.yaml`)"
       never: "coin a synonym for a prop the system already has (`text` where the catalogue says `label`)"
-    - should: "follow the catalogue's enum value casing (Capitalized words; sizes `XS`/`S`/`M`/`L`/`XL`)"
+    - should: "follow the enum value casing and vocabulary the catalogue itself uses (`analysis/props.yaml`) — never import another system's casing or size scale"
 nullable:
   guidelines:
     - should: "omit `nullable` on open-valued props — absence already means nullable for string, number, slot, and image props"
