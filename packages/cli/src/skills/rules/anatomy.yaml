@@ -16,7 +16,7 @@ type:
       never: "author a styled primitive in composed content where a promoted component exists (a `text` card title where a heading component is mapped)"
       note: "no promotion map in the workspace → primitives govern composed content too; this rule is inert, not implied"
       adr: [74, 75]
-    - should: "inside a smaller atomic component, favor primitive `text` and `container` elements for its own anatomy — the promotion map governs composed content, not a component's internals (a badge's label is `text`, not `egdsText`)"
+    - should: "inside a smaller atomic component, favor primitive `text` and `container` elements for its own anatomy — the promotion map governs composed content, not a component's internals (a badge's label is `text`, not `acmeText`)"
     - must: "model a styled block as a `container` (`notch: container; 12x12; rotation 45; position ABSOLUTE; bottom -6; parent clipsContent: false`)"
       never: "use a shape primitive for anything carrying style — background, radius, padding, offsets (`rectangle` as a notch)"
 instanceOf:
