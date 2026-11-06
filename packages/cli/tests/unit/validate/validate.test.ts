@@ -183,6 +183,58 @@ describe('specs validate', () => {
     expect(result.counts.component).toBe(1);
   });
 
+  describe('resolved dimension tokens', () => {
+    it('reports what a used dimension token resolves to, deduped', () => {
+      const spec = validSpec();
+      const variants = spec.variants as { default: { elements: Record<string, any> } };
+      variants.default.elements.root = { styles: { strokeWeight: { $token: 'Shape/border weight/2x', $type: 'dimension' } } };
+      writeSpec('components', 'badge', spec);
+      const result = runValidate({
+        specsPath: specsDir,
+        tokenValues: new Map([['Shape/border weight/2x', 16]]),
+      });
+      expect(result.resolved).toEqual([
+        { spec: 'badge', prop: 'strokeWeight', token: 'Shape/border weight/2x', value: 16 },
+      ]);
+    });
+  });
+
+  describe('undeclared authored platform files', () => {
+    it('warns on an authored file the sidecar never mentions, and accepts mentioned ones', () => {
+      const ws = fs.mkdtempSync(path.join(os.tmpdir(), 'specs-ws-'));
+      const wsSpecs = path.join(ws, 'specs');
+      const tree = path.join(ws, 'react', 'src', 'components', 'Badge');
+      fs.mkdirSync(tree, { recursive: true });
+      for (const f of ['contract.ts', 'scaffold.tsx', 'stories.tsx', 'styles.css']) fs.writeFileSync(path.join(tree, f), '');
+      fs.writeFileSync(path.join(tree, 'component.tsx'), '');
+      fs.writeFileSync(path.join(tree, 'motion.css'), '');
+      const dir = path.join(wsSpecs, 'components', 'badge');
+      fs.mkdirSync(dir, { recursive: true });
+      const docs = {
+        ...validSpec(),
+        supplemental: {
+          behavior: [{
+            intent: 'fades in',
+            schemaGap: 'no motion in Styles',
+            platforms: { react: 'component.tsx' },
+            regenerationRisk: 'low — imports motion.css beside it',
+          }],
+        },
+      } as Record<string, unknown>;
+      for (const [concern, doc] of Object.entries(docs)) {
+        fs.writeFileSync(path.join(dir, `${concern}.yaml`), yaml.stringify(doc));
+      }
+      const findings = runValidate({ specsPath: wsSpecs, workspaceDir: ws }).findings;
+      const dead = findings.filter(f => f.message.includes('loaded by nothing'));
+      expect(dead).toHaveLength(0);
+
+      fs.writeFileSync(path.join(tree, 'orphan.ts'), '');
+      const again = runValidate({ specsPath: wsSpecs, workspaceDir: ws }).findings;
+      expect(again.some(f => f.level === 'warning' && f.message.includes('orphan.ts') && f.message.includes('loaded by nothing'))).toBe(true);
+      fs.rmSync(ws, { recursive: true, force: true });
+    });
+  });
+
   describe('instanceExamples configurations', () => {
     it('rejects a stale enum value and an undeclared prop', () => {
       writeSpec('components', 'badge', {

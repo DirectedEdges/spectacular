@@ -14,6 +14,8 @@ import path from 'path';
 import { ConfigLoader } from '../config/ConfigLoader.js';
 import { runValidate, type Finding } from '../validate/run.js';
 import { ERROR_CODES } from '../utilities/errorCodes.js';
+import { loadFoundations } from '../utilities/loadFoundations.js';
+import { tokenPath, terminalTokenValue } from '../analyze/Foundations.js';
 
 function formatText(findings: Finding[], counts: { component: number; composition: number }): void {
   for (const f of findings) {
@@ -39,7 +41,7 @@ export const Validate = new Command('validate')
   .option('-o, --output <dir>', 'Specs directory (default: spec.directory from settings)')
   .option('--authored', 'Authored spec: a missing metadata.source is a warning, not an error')
   .option('--format <format>', 'Output format: text or json', 'text')
-  .action((components: string[], options: { config?: string; output?: string; authored?: boolean; format: string }) => {
+  .action(async (components: string[], options: { config?: string; output?: string; authored?: boolean; format: string }) => {
     try {
       if (options.format !== 'text' && options.format !== 'json') {
         console.error(`Error: unknown format "${options.format}" — use text or json.`);
@@ -58,11 +60,32 @@ export const Validate = new Command('validate')
         process.exit(ERROR_CODES.FILE_ERROR);
       }
 
+      // Default-mode values per token, for the resolved-value report. Themed —
+      // one mode's resolution — so they orient the author and never gate a check.
+      let tokenValues: Map<string, number> | undefined;
+      const dataDirectory = config.settings.data?.directory;
+      if (dataDirectory) {
+        const dataDir = path.resolve(dataDirectory);
+        const variablesPaths = Object.entries(config.settings.data?.sources ?? {})
+          .filter(([, s]) => Array.isArray(s.fetch) && s.fetch.includes('variables'))
+          .map(([alias]) => path.join(dataDir, `${alias}.variables.json`))
+          .filter(p => fs.existsSync(p));
+        if (variablesPaths.length > 0) {
+          const foundations = await loadFoundations(variablesPaths, []);
+          tokenValues = new Map();
+          for (const variable of foundations.variables.values()) {
+            const value = terminalTokenValue(variable, foundations);
+            if (typeof value === 'number') tokenValues.set(tokenPath(variable, foundations), value);
+          }
+        }
+      }
+
       const result = runValidate({
         specsPath,
         components: components.length > 0 ? components : undefined,
         authored: options.authored,
         dataDir: config.settings.data?.directory,
+        tokenValues,
       });
 
       for (const name of result.missing) {
@@ -77,9 +100,14 @@ export const Validate = new Command('validate')
           specs: result.counts,
           errors: result.findings.filter(f => f.level === 'error'),
           warnings: result.findings.filter(f => f.level === 'warning'),
+          resolved: result.resolved,
         }, null, 2));
       } else {
         formatText(result.findings, result.counts);
+        if (result.resolved.length > 0) {
+          console.log('ℹ dimension tokens resolve to (default mode — themed, orientation only):');
+          for (const r of result.resolved) console.log(`    ${r.spec} ${r.prop}: ${r.token} → ${r.value}`);
+        }
       }
 
       const hasErrors = result.findings.some(f => f.level === 'error');

@@ -153,43 +153,18 @@ export class FoundationsAnalyzer implements Transformer {
     await fs.writeFile(path.join(outDir, `foundations.${ext}`), content, 'utf-8');
   }
 
-  /** Full token path: the collection's name, then the variable's own path. */
   private tokenPath(
     variable: { name: string; variableCollectionId: string },
     foundations: AnalyzerFoundations,
   ): string {
-    const collection = foundations.collections.get(variable.variableCollectionId)?.name;
-    return collection ? `${collection}/${variable.name}` : variable.name;
+    return tokenPath(variable, foundations);
   }
 
-  /** A variable's default-mode value: the default mode's entry, else the first. */
-  private static defaultModeValue(
-    variable: { variableCollectionId: string; valuesByMode?: Record<string, unknown> },
-    foundations: AnalyzerFoundations,
-  ): unknown {
-    const modes = variable.valuesByMode ?? {};
-    const defaultModeId = foundations.collections.get(variable.variableCollectionId)?.defaultModeId;
-    return (defaultModeId && defaultModeId in modes) ? modes[defaultModeId] : Object.values(modes)[0];
-  }
-
-  /**
-   * The default-mode value with alias chains resolved to their terminal value,
-   * formatted for a reader: scalars as themselves, colors as hex. Undefined for
-   * anything else (an unresolvable alias, an exotic shape).
-   */
   private terminalValue(
     variable: { variableCollectionId: string; valuesByMode?: Record<string, unknown> },
     foundations: AnalyzerFoundations,
   ): string | number | boolean | undefined {
-    let value = FoundationsAnalyzer.defaultModeValue(variable, foundations);
-    for (let hop = 0; hop < 10 && isAlias(value); hop++) {
-      const target = foundations.variables.get((value as { id: string }).id);
-      if (!target) return undefined;
-      value = FoundationsAnalyzer.defaultModeValue(target, foundations);
-    }
-    if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'string') return value;
-    if (isColor(value)) return toHex(value);
-    return undefined;
+    return terminalTokenValue(variable, foundations);
   }
 
   /** The default-mode alias target's token path, when the value is an alias. */
@@ -245,6 +220,46 @@ export class FoundationsAnalyzer implements Transformer {
       return {};
     }
   }
+}
+
+/** Full token path: the collection's name, then the variable's own path. */
+export function tokenPath(
+  variable: { name: string; variableCollectionId: string },
+  foundations: AnalyzerFoundations,
+): string {
+  const collection = foundations.collections.get(variable.variableCollectionId)?.name;
+  return collection ? `${collection}/${variable.name}` : variable.name;
+}
+
+/** A variable's default-mode value: the default mode's entry, else the first. */
+function defaultModeValue(
+  variable: { variableCollectionId: string; valuesByMode?: Record<string, unknown> },
+  foundations: AnalyzerFoundations,
+): unknown {
+  const modes = variable.valuesByMode ?? {};
+  const defaultModeId = foundations.collections.get(variable.variableCollectionId)?.defaultModeId;
+  return (defaultModeId && defaultModeId in modes) ? modes[defaultModeId] : Object.values(modes)[0];
+}
+
+/**
+ * The default-mode value with alias chains resolved to their terminal value,
+ * formatted for a reader: scalars as themselves, colors as hex. Undefined for
+ * anything else (an unresolvable alias, an exotic shape). THEMED — the default
+ * mode's resolution only; other modes differ, so this orients and never gates.
+ */
+export function terminalTokenValue(
+  variable: { variableCollectionId: string; valuesByMode?: Record<string, unknown> },
+  foundations: AnalyzerFoundations,
+): string | number | boolean | undefined {
+  let value = defaultModeValue(variable, foundations);
+  for (let hop = 0; hop < 10 && isAlias(value); hop++) {
+    const target = foundations.variables.get((value as { id: string }).id);
+    if (!target) return undefined;
+    value = defaultModeValue(target, foundations);
+  }
+  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'string') return value;
+  if (isColor(value)) return toHex(value);
+  return undefined;
 }
 
 function isAlias(value: unknown): value is { type: string; id: string } {

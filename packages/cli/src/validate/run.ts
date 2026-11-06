@@ -21,6 +21,23 @@ export interface ValidateOptions {
   authored?: boolean;
   /** Data directory holding the render caches, for the token-existence check. */
   dataDir?: string;
+  /**
+   * Token path → default-mode numeric value, for the resolved-value report.
+   * Values are themed (one mode's resolution) — printed to orient the author,
+   * never used to pass or fail anything.
+   */
+  tokenValues?: ReadonlyMap<string, number>;
+  /** Workspace root holding the platform trees; defaults to the specs root's parent. */
+  workspaceDir?: string;
+}
+
+/** One dimension token a spec uses, with what it resolves to in the default mode. */
+export interface ResolvedToken {
+  spec: string;
+  /** The style property the token sits on. */
+  prop: string;
+  token: string;
+  value: number;
 }
 
 export interface Finding {
@@ -42,6 +59,8 @@ export interface ValidateResult {
   missing: string[];
   /** What this run could not check, stated once. */
   notes: string[];
+  /** Dimension tokens used, with their default-mode values — orientation, not judgment. */
+  resolved: ResolvedToken[];
 }
 
 const CONCERNS: readonly ConcernName[] = ['api', 'variants', 'examples'];
@@ -113,6 +132,7 @@ export function runValidate(options: ValidateOptions): ValidateResult {
   };
 
   const findings: Finding[] = [];
+  const resolved: ResolvedToken[] = [];
   const counts: Record<SpecKind, number> = { component: 0, composition: 0 };
 
   for (const kind of SPEC_KINDS) {
@@ -150,11 +170,20 @@ export function runValidate(options: ValidateOptions): ValidateResult {
         }
       }
 
+      // Dimension tokens this spec uses, with default-mode values — the 16px-outline
+      // class of mistake (a multiplier name read as pixels) is invisible to existence
+      // checking and obvious the moment the number is printed.
+      if (options.tokenValues) {
+        collectResolvedTokens(parsed, name, options.tokenValues, resolved);
+      }
+
       // The supplemental sidecar, when present — shape only (experimental contract).
       const suppEntry = fs.readdirSync(dir).sort().find(f => /^supplemental\.ya?ml$/.test(f));
+      let supplementalDoc: unknown;
       if (suppEntry) {
         try {
           const doc = yaml.parse(fs.readFileSync(path.join(dir, suppEntry), 'utf8'));
+          supplementalDoc = doc;
           const validate = supplementalValidator();
           if (!validate(doc) && validate.errors) {
             const seen = new Set<string>();
@@ -172,6 +201,16 @@ export function runValidate(options: ValidateOptions): ValidateResult {
             message: `not parseable as YAML: ${(e as Error).message.split('\n')[0]}`,
             level: 'error',
           });
+        }
+      }
+
+      // An authored platform file nothing loads: the emitters pick up an authored
+      // component.* only when a supplemental entry declares it under platforms.<tree>,
+      // so an undeclared file sits dead beside the scaffold while everything reports
+      // clean. Warn per undeclared authored file.
+      if (kind === 'component') {
+        for (const w of undeclaredAuthoredFiles(name, supplementalDoc, options.workspaceDir ?? path.dirname(path.resolve(options.specsPath)))) {
+          findings.push({ kind, spec: name, file: suppEntry ?? 'supplemental.yaml', path: '/platforms', message: w, level: 'warning' });
         }
       }
 
@@ -193,5 +232,71 @@ export function runValidate(options: ValidateOptions): ValidateResult {
     || a.file.localeCompare(b.file) || a.path.localeCompare(b.path)
     || a.message.localeCompare(b.message));
 
-  return { findings, counts, missing, notes };
+  resolved.sort((a, b) => a.spec.localeCompare(b.spec) || a.prop.localeCompare(b.prop) || a.token.localeCompare(b.token));
+  return { findings, counts, missing, notes, resolved };
+}
+
+/** Walk a spec's parsed docs for `{$token}` values and record the resolvable dimension ones, deduped. */
+function collectResolvedTokens(
+  parsed: ParsedSpec,
+  spec: string,
+  values: ReadonlyMap<string, number>,
+  out: ResolvedToken[],
+): void {
+  const seen = new Set<string>();
+  const walk = (node: unknown, parentKey: string): void => {
+    if (Array.isArray(node)) { for (const item of node) walk(item, parentKey); return; }
+    if (!node || typeof node !== 'object') return;
+    const obj = node as Record<string, unknown>;
+    const token = obj.$token;
+    if (typeof token === 'string') {
+      const value = values.get(token);
+      if (value !== undefined) {
+        const id = `${spec}|${parentKey}|${token}`;
+        if (!seen.has(id)) {
+          seen.add(id);
+          out.push({ spec, prop: parentKey, token, value });
+        }
+      }
+      return;
+    }
+    for (const [key, child] of Object.entries(obj)) walk(child, key);
+  };
+  for (const doc of [parsed.api, parsed.variants, parsed.examples]) walk(doc, '');
+}
+
+/** The filenames each platform's emitter owns — anything else in a component's folder is authored. */
+const EMITTED_FILES: Record<string, ReadonlySet<string>> = {
+  react: new Set(['contract.ts', 'scaffold.tsx', 'stories.tsx', 'styles.css']),
+  webcomponents: new Set(['api.ts', 'contract.ts', 'host.css', 'light.css', 'scaffold.ts', 'stories.ts']),
+};
+
+/** Authored files in the component's platform folders that no supplemental entry declares. */
+function undeclaredAuthoredFiles(componentKey: string, supplemental: unknown, workspaceDir: string): string[] {
+  // Accounted-for means mentioned anywhere in the sidecar: `platforms.<tree>`
+  // declarations are the loaders, and files those loaders import (a stylesheet)
+  // are noted in prose like `regenerationRisk` — both count. Only a file the
+  // sidecar never mentions is plausibly dead.
+  const mentioned: string[] = [];
+  const collectStrings = (node: unknown): void => {
+    if (typeof node === 'string') { mentioned.push(node); return; }
+    if (Array.isArray(node)) { for (const item of node) collectStrings(item); return; }
+    if (node && typeof node === 'object') for (const value of Object.values(node)) collectStrings(value);
+  };
+  collectStrings(supplemental);
+  const accounted = (file: string): boolean => mentioned.some(s => s.includes(file));
+  const folder = componentKey.charAt(0).toUpperCase() + componentKey.slice(1);
+  const warnings: string[] = [];
+  for (const [tree, emitted] of Object.entries(EMITTED_FILES)) {
+    const dir = path.join(workspaceDir, tree, 'src', 'components', folder);
+    if (!fs.existsSync(dir)) continue;
+    for (const file of fs.readdirSync(dir).sort()) {
+      if (emitted.has(file)) continue;
+      if (!fs.statSync(path.join(dir, file)).isFile()) continue;
+      if (!accounted(file)) {
+        warnings.push(`authored file ${tree}/src/components/${folder}/${file} is loaded by nothing — no supplemental entry declares it under platforms.${tree}`);
+      }
+    }
+  }
+  return warnings;
 }
