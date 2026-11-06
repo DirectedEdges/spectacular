@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `specs analyze foundations` — the workspace's token language as one authoring-facing manifest (`analysis/foundations.yaml`): variables and named styles consolidated as ready-to-paste `{$token, $type}` objects carrying names only (alias targets by name, descriptions where the library wrote one, platform code-name presence — never resolved values), plus every icon glyph with its formatted key spelling beside the raw name. Reads the fetched data, not the catalogue, so it runs on a workspace with zero specs (#881)
 - `specs analyze` on an empty catalogue warns and continues instead of erroring — component reports are quietly empty; foundations still runs (#881)
 
+### Fixed
+
+- `specs render --watch` over a directory re-renders **only the specs whose files changed** — it previously re-rendered the whole catalogue on every event, onto whatever page the plugin had open. The start-up pass now renders nothing (a watch means re-render *on change*), and only concern-file events trigger at all, so `specs analyze` writing its reports no longer causes renders (#884)
+
 ### Changed
 
 ### Fixed

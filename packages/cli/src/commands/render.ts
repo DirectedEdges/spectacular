@@ -475,12 +475,44 @@ async function watchAndRender(
     filter: (filename) =>
       /^(api|variants|examples|supplemental)\.ya?ml$/.test(path.basename(filename))
       && !filename.split(path.sep).includes('analysis'),
-    run: async () => {
-      if (isBatchDir) {
-        await renderBatchDirectory(absSpecPath, watchOptions, { watch: true });
-      } else {
+    run: async (changed) => {
+      if (!isBatchDir) {
         await renderSpecPath(absSpecPath, watchOptions);
+        return;
+      }
+      // A directory watch renders exactly the specs whose files changed — never
+      // the catalogue. The start-up run arrives with nothing changed and renders
+      // nothing: a watch means "re-render on change", and sweeping every
+      // component onto the plugin's current page at posture start was the other
+      // half of the duplicate-components problem.
+      const folders = changedComponentFolders(changed, absSpecPath);
+      if (folders.length === 0) {
+        if (changed.length === 0) console.log('Watching — no render until a spec changes.');
+        return;
+      }
+      for (const folder of folders) {
+        await renderSpecPath(folder, watchOptions);
       }
     },
   });
+}
+
+/**
+ * The component folders the changed files belong to — each changed path climbs
+ * to its nearest ancestor that is a spec folder, deduplicated. A path with no
+ * spec-folder ancestor (a root-level file, a report) maps to nothing.
+ */
+export function changedComponentFolders(changed: string[], watchRoot: string): string[] {
+  const folders = new Set<string>();
+  for (const rel of changed) {
+    let dir = path.dirname(path.resolve(watchRoot, rel));
+    while (dir.startsWith(watchRoot) && dir !== watchRoot) {
+      if (isComponentFolder(dir)) {
+        folders.add(dir);
+        break;
+      }
+      dir = path.dirname(dir);
+    }
+  }
+  return [...folders].sort();
 }

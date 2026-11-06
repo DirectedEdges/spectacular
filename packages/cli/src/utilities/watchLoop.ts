@@ -23,8 +23,12 @@ export interface WatchLoopOptions {
    * What a change triggers. Reports its own failures, since only the caller
    * knows how to phrase them; anything that escapes is reported generically
    * rather than ending the session.
+   *
+   * Receives the relative filenames whose events this run coalesces — empty on
+   * the `runOnStart` run — so a caller can scope its work to what changed
+   * instead of redoing the whole target.
    */
-  run: () => Promise<void>;
+  run: (changed: string[]) => Promise<void>;
   /**
    * Run once after the watchers are attached. False for a caller that already
    * ran — `specs react` has to, since the run is what tells it what to watch.
@@ -47,6 +51,9 @@ export async function watchLoop({ targets, debounceMs, run, runOnStart, filter }
   let running = false;
   let pending = false;
   let debounceTimer: NodeJS.Timeout | undefined;
+  // Filenames whose events the next run coalesces. Drained at run start, so
+  // changes arriving mid-run accumulate for the follow-up run `pending` queues.
+  let changedFiles = new Set<string>();
 
   const runOnce = async (): Promise<void> => {
     // A change during a run is remembered rather than queued: however many
@@ -56,8 +63,10 @@ export async function watchLoop({ targets, debounceMs, run, runOnStart, filter }
       return;
     }
     running = true;
+    const changed = [...changedFiles];
+    changedFiles = new Set();
     try {
-      await run();
+      await run(changed);
     } catch (error) {
       // A watch session that dies on one bad save is worse than one that says so
       // and waits for the next.
@@ -71,7 +80,8 @@ export async function watchLoop({ targets, debounceMs, run, runOnStart, filter }
     }
   };
 
-  const schedule = () => {
+  const schedule = (filename?: string) => {
+    if (filename) changedFiles.add(filename);
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(runOnce, debounceMs);
   };
@@ -81,7 +91,7 @@ export async function watchLoop({ targets, debounceMs, run, runOnStart, filter }
   for (const target of targets) {
     fs.watch(target, { recursive: true }, (_event, filename) => {
       if (filter && filename && !filter(filename)) return;
-      schedule();
+      schedule(filename ?? undefined);
     });
   }
 
