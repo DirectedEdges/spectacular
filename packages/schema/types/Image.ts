@@ -14,15 +14,17 @@ export type ObjectFit = 'COVER' | 'CONTAIN';
 /**
  * An image fill value: a reference into an `images` registry plus optional fit.
  *
- * `$image` is a pointer into a `Component.images` registry — root-relative in a
- * single-file spec (e.g. `"#/images/hero"`) or carrying the component + concern
- * prefix in concern-split output (e.g. `"card.examples#/images/hero"`). Modelled
+ * `$image` is a pointer into a `Component.images` registry. The resolving form is
+ * `"#/components/<specKey>/images/<registryKey>"` — the same spec-key grammar
+ * `$slotContent` uses — with root-relative `"#/images/<key>"` accepted inside a
+ * single-file spec. A concern-prefixed spelling (`"card.examples#/images/hero"`)
+ * appeared in earlier docs and resolves nowhere — do not author it. Modelled
  * as an object (not a bare pointer) so `objectFit` — and future optional
  * subproperties — attach without a breaking change.
  * @since 0.28.0
  */
 export interface ImageValue {
-  /** Pointer into an `images` registry, e.g. `"#/images/hero"`. */
+  /** Pointer into an `images` registry, e.g. `"#/components/card/images/hero"`. */
   $image: string;
   /** How the image is fitted to its layer. Absent means `COVER`. */
   objectFit?: ObjectFit;
@@ -34,6 +36,11 @@ export interface ImageValue {
  * `fills[].imageRef`). Not required by platform consumers; reverse-direction
  * tooling uses it to reconstruct an `ImagePaint` (and to reuse the same Figma
  * image across round-trips) without re-uploading bytes.
+ *
+ * The hash is the SHA-1 of the image's original bytes — any transcoding
+ * (re-encoding, resizing, format conversion) silently invalidates it, and the
+ * Figma render falls back to the surface colour. Keep the stored asset
+ * byte-identical to the original.
  * @since 0.28.0
  */
 export interface FigmaImageExtension {

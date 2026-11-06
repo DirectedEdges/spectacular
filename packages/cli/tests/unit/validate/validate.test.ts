@@ -185,13 +185,15 @@ describe('specs validate', () => {
   });
 
   describe('image pointers', () => {
-    it('resolves #/images/<key> against the registry and flags dangling or malformed pointers', () => {
+    it('resolves both pointer forms, flags dangling keys and the non-resolving spelling, warns on missing imageHash', () => {
       const spec = validSpec();
       (spec.api as Record<string, unknown>).props = {
         ...(spec.api as { props: Record<string, unknown> }).props,
-        source: { type: 'image', default: '#/images/hero' },
-        portrait: { type: 'image', default: '#/images/missing' },
+        source: { type: 'image', default: '#/components/badge/images/hero' },
+        thumb: { type: 'image', default: '#/images/hero' },
+        portrait: { type: 'image', default: '#/components/badge/images/missing' },
         banner: { type: 'image', default: 'image.examples#/images/hero' },
+        remote: { type: 'image', default: '#/components/ghost/images/hero' },
       };
       writeSpec('components', 'badge', {
         ...spec,
@@ -200,10 +202,14 @@ describe('specs validate', () => {
           images: { hero: { src: './images/hero.png' } },
         },
       });
-      const errors = errorsOf(runValidate({ specsPath: specsDir }).findings);
-      expect(errors.some(f => f.message.includes('declares no "missing"'))).toBe(true);
-      expect(errors.some(f => f.message.includes('not the schema\'s form'))).toBe(true);
-      expect(errors.some(f => f.message.includes('"hero"'))).toBe(false);
+      const result = runValidate({ specsPath: specsDir });
+      const errors = errorsOf(result.findings);
+      expect(errors.some(f => f.message.includes('declares no images registry entry "missing"'))).toBe(true);
+      expect(errors.some(f => f.message.includes('resolves nowhere'))).toBe(true);
+      expect(errors.some(f => f.message.includes('names no spec "ghost"'))).toBe(true);
+      expect(errors.some(f => f.path.includes('source') || f.path.includes('thumb'))).toBe(false);
+      // src with no imageHash: React paints, Figma won't — warned, not errored.
+      expect(result.findings.some(f => f.level === 'warning' && f.message.includes('no com.figma imageHash'))).toBe(true);
     });
   });
 

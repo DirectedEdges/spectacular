@@ -1346,7 +1346,7 @@
                 "imageHash": {
           "pattern": "^[0-9a-f]{40}$",
                   "type": "string",
-                  "description": "The Figma image content hash (Plugin ImagePaint.imageHash / REST fills[].imageRef) — reverse-direction tooling reconstructs an ImagePaint from it."
+                  "description": "The Figma image content hash (Plugin ImagePaint.imageHash / REST fills[].imageRef) — reverse-direction tooling reconstructs an ImagePaint from it. SHA-1 of the image's original bytes: any transcoding invalidates it, so keep the stored asset byte-identical."
                 }
               },
               "required": [

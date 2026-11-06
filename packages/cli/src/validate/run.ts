@@ -224,7 +224,7 @@ export function runValidate(options: ValidateOptions): ValidateResult {
           file: files[ref.file as ConcernName] ?? `${ref.file}.yaml`,
           path: ref.path || '/',
           message: ref.message,
-          level: 'error',
+          level: ref.level ?? 'error',
         });
       }
     }

@@ -21,6 +21,8 @@ export interface RefFinding {
   /** JSON-pointer-ish path to the offending node. */
   path: string;
   message: string;
+  /** Absent means error. */
+  level?: 'error' | 'warning';
 }
 
 /** The three parsed concern documents of one spec, any of which may be absent. */
@@ -106,28 +108,49 @@ export function checkReferences(
     for (const k of Object.keys(objAt(doc, 'subcomponents'))) subcomponentNames.add(k);
   }
 
-  // ---- image pointers resolve in this spec's images registry ----------------
-  // The registry is the component's own `images` map (examples concern,
-  // ADR-063), and the schema's one pointer form is same-document `#/images/<key>`.
-  // Checked exactly as $slotContent pointers are: a dangling pointer, or a
-  // file-qualified/malformed spelling, ships a grey image with ✓ 0 errors.
+  // ---- image pointers resolve in an images registry --------------------------
+  // The resolving form mirrors $slotContent's spec-key grammar:
+  // `#/components/<specKey>/images/<key>`; root-relative `#/images/<key>` is the
+  // single-file spelling and resolves in this spec's own registry. A dangling
+  // pointer — or the concern-prefixed spelling older docs showed, which resolves
+  // nowhere — previously shipped a grey image with ✓ 0 errors.
   {
-    const registry = new Set([
+    const ownRegistry = new Set([
       ...Object.keys(objAt(spec.examples, 'images')),
       ...Object.keys(objAt(spec.api, 'images')),
     ]);
-    const IMAGE_RE = /^#\/images\/([a-zA-Z0-9_-]+)$/;
+    const registryOf = (specKey: string): Set<string> | undefined => {
+      const target = index.spec(specKey);
+      if (!target) return undefined;
+      return new Set([
+        ...Object.keys(objAt(target.examples, 'images')),
+        ...Object.keys(objAt(target.api, 'images')),
+      ]);
+    };
+    const IMG_FULL = /^#\/components\/([^/]+)\/images\/([a-zA-Z0-9_-]+)$/;
+    const IMG_ROOT = /^#\/images\/([a-zA-Z0-9_-]+)$/;
     const walk = (node: unknown, file: 'api' | 'variants' | 'examples', pathSoFar: string): void => {
       if (Array.isArray(node)) { node.forEach((item, i) => walk(item, file, `${pathSoFar}/${i}`)); return; }
       if (!node || typeof node !== 'object') return;
       for (const [key, value] of Object.entries(node as Obj)) {
         const path = `${pathSoFar}/${key}`;
-        if (typeof value === 'string' && value.includes('#/images/')) {
-          const match = IMAGE_RE.exec(value);
-          if (!match) {
-            findings.push({ file, path, message: `image pointer "${value}" is not the schema's form — '#/images/<key>' within this spec` });
-          } else if (!registry.has(match[1])) {
-            findings.push({ file, path, message: `images registry declares no "${match[1]}"` });
+        if (typeof value === 'string' && value.includes('#/') && value.includes('/images/')) {
+          const full = IMG_FULL.exec(value);
+          const root = IMG_ROOT.exec(value);
+          if (full) {
+            const targetKey = full[1] === name ? undefined : full[1];
+            const registry = targetKey ? registryOf(targetKey) : ownRegistry;
+            if (!registry) {
+              findings.push({ file, path, message: `image pointer names no spec "${full[1]}"` });
+            } else if (!registry.has(full[2])) {
+              findings.push({ file, path, message: `"${full[1]}" declares no images registry entry "${full[2]}"` });
+            }
+          } else if (root) {
+            if (!ownRegistry.has(root[1])) {
+              findings.push({ file, path, message: `images registry declares no "${root[1]}"` });
+            }
+          } else {
+            findings.push({ file, path, message: `image pointer "${value}" resolves nowhere — the resolving form is '#/components/<specKey>/images/<key>' ('#/images/<key>' in a single-file spec)` });
           }
           continue;
         }
@@ -136,6 +159,18 @@ export function checkReferences(
     };
     for (const [file, doc] of [['api', spec.api], ['variants', spec.variants], ['examples', spec.examples]] as const) {
       walk(doc, file, '');
+    }
+
+    // A registry entry with bytes but no Figma identity renders React fine and
+    // the canvas grey — predictable from the data, so say it before the render.
+    for (const [key, entry] of Object.entries({ ...objAt(spec.api, 'images'), ...objAt(spec.examples, 'images') })) {
+      const data = entry as { src?: unknown; $extensions?: { 'com.figma'?: { imageHash?: unknown } } };
+      if (typeof data?.src === 'string' && typeof data?.$extensions?.['com.figma']?.imageHash !== 'string') {
+        findings.push({
+          file: 'examples', path: `/images/${key}`, level: 'warning',
+          message: `registry entry "${key}" has src but no com.figma imageHash — the Figma render will show the fallback colour (the hash is SHA-1 of the original bytes; transcoding invalidates it)`,
+        });
+      }
     }
   }
 
