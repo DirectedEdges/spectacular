@@ -9,6 +9,8 @@ This section is what each report contains. How to run them — arguments, option
 
 Output lands in `specs/analysis/`, beside the `components/` and `compositions/` directories a spec run writes, or in a custom path via `--analysis`.
 
+A catalogue with no specs in it is a state, not an error. Every analyzer still writes its report, with zero counts and empty collections, so a workspace you are authoring from scratch has an analysis surface from its first run — and the reports fill in as you add specs rather than appearing partway through.
+
 Compositions are read by the analyzers that have something to say about them. `dependencies` includes them — which components a screen is built from is the clearest blast-radius data a library has — and so does `styling`, since a composition carries real styling. `props`, `keys` and `roles` stay component-only: a composition declares no props and no anatomy of its own, so rows for it would be empty by construction and would dilute every per-component figure.
 
 ## Available Analyzers

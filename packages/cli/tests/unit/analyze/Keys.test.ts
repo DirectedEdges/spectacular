@@ -64,7 +64,7 @@ describe('KeysAnalyzer', () => {
         : apiYaml;
       await a.run(spec, { specDir: compDir, outputDir: compDir, workspaceDir: compDir, specsRoot: compDir, kind: 'component' as const, componentKey, outputFormat: 'YAML', tokensFormat: 'TOKEN', ...(objectProps ? { platform: { naming: 'NONE', slotConstraints: false, inferNumberProps: false, slotPrimitives: false, objectProps } } : {}) } as never);
     }
-    await a.finalize!(outputDir, analysisDir);
+    await a.finalize!(outputDir, analysisDir, undefined, 'YAML');
     const file = path.join(analysisDir, 'keys.yaml');
     if (!await fs.pathExists(file)) return null;
     return yaml.parse(await fs.readFile(file, 'utf-8')) as KeysYaml;
@@ -92,6 +92,17 @@ describe('KeysAnalyzer', () => {
     expect(result!.byComponent.dsText.anatomy).toEqual([
       { key: 'urlField', figmaName: 'URL field', cause: 'casing' },
     ]);
+  });
+
+  it('writes an empty report when the run had no components', async () => {
+    const result = await runAnalyzer({});
+    expect(result!.summary.totalComponents).toBe(0);
+    expect(result!.summary.totalNames).toBe(0);
+    expect(result!.summary.divergentNames).toBe(0);
+    expect(result!.summary.measured).toBe(false);
+    expect(result!.byComponent).toEqual({});
+    expect(result!.byCause).toEqual([]);
+    expect(result!.byName).toEqual([]);
   });
 
   it('reports nothing when no name was recorded', async () => {

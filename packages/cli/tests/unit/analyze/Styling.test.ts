@@ -508,10 +508,14 @@ describe('StylingAnalyzer.finalize', () => {
     expect(Object.keys(byToken.effectStyles)).toEqual(['Blur/Backdrop', 'Shadow/High']);
   });
 
-  it('does nothing when no components were processed', async () => {
+  it('writes empty reports when no components were processed', async () => {
     const t = new StylingAnalyzer();
-    await t.finalize!(outputDir);
-    expect(fs.existsSync(path.join(outputDir, 'analysis'))).toBe(false);
+    await t.finalize!(outputDir, undefined, undefined, 'JSON');
+    const analysis = path.join(outputDir, 'analysis');
+    const byComponent = JSON.parse(await fs.readFile(path.join(analysis, 'styling.byComponent.json'), 'utf-8'));
+    const byToken = JSON.parse(await fs.readFile(path.join(analysis, 'styling.byToken.json'), 'utf-8'));
+    expect(byComponent).toEqual({});
+    expect(byToken).toEqual({ variables: {}, colorStyles: {}, textStyles: {}, effectStyles: {} });
   });
 });
 
