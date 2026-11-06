@@ -4,6 +4,9 @@ layering:
     - must: "author each variant as only its diff from `default` — the resolved state is every matching variant layered onto the default in order"
       should: "omit a variant whose diff is empty"
       adr: 34
+content:
+  guidelines:
+    - must: "spell a glyph name — in `content`, a bound prop's `default`, and its `examples` — in the workspace's formatted key spelling (`info`, `caretRight`), never the raw icon cache name (`Info`, `Caret Right`); the renderer matches content against cache names run through `format.keys`, and a raw spelling matches nothing"
 configuration:
   guidelines:
     - warn: "an absent prop key inherits; a `null` value overrides with unset — different statements, not interchangeable"
