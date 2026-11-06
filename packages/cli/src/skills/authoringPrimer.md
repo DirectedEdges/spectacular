@@ -63,6 +63,7 @@ In `variants.yaml`, `default.elements` describes **every** anatomy element: `sty
 - **Deterministic and complete.** The `default` variant fully describes every element. Variants are deltas layered onto it in order.
 - **A requirement goes supplemental only after naming the schema path that cannot carry it.** "The schema can't do X" requires showing where X would live and why it does not fit. The reverse failure is worse: forcing into the spec what the schema cannot express.
 - **Consistency is graded.** Prop names, enum values, token choices, and element naming follow what `analysis/` shows the system already does.
+- **Author comment-free spec files.** A generated spec carries zero comments, and an authored spec is identical in shape to a generated one — comments make it read as a different species, and a later capture rewrites the file and deletes them anyway. Citing schema paths is part of *your process*, never file content; restating what a token path or prop name already says is noise. The one exception: a deliberate departure from a rule or ADR gets a one-line note at the departure site — that fact has nowhere else to live, and without it the next reader files a bug.
 
 ## Where to go deeper
 
