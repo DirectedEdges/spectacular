@@ -467,6 +467,14 @@ async function watchAndRender(
     targets: [watchTarget],
     debounceMs: WATCH_DEBOUNCE_MS,
     runOnStart: true,
+    // Only a concern file is an authored change worth a round trip to the
+    // canvas. Analysis byproducts live inside the watched tree (`styling.yaml`
+    // beside each spec, reports under `analysis/`), and firing on them meant
+    // every `specs analyze` pass re-rendered the whole catalogue onto whatever
+    // page the plugin happened to be on.
+    filter: (filename) =>
+      /^(api|variants|examples|supplemental)\.ya?ml$/.test(path.basename(filename))
+      && !filename.split(path.sep).includes('analysis'),
     run: async () => {
       if (isBatchDir) {
         await renderBatchDirectory(absSpecPath, watchOptions, { watch: true });

@@ -30,12 +30,20 @@ export interface WatchLoopOptions {
    * ran — `specs react` has to, since the run is what tells it what to watch.
    */
   runOnStart: boolean;
+  /**
+   * Which file events schedule a run, by the event's relative filename; absent
+   * means every event does. Added because analysis byproducts land inside the
+   * watched tree — `analyze` writes `styling.yaml` into each spec folder and
+   * reports under `analysis/` — and a render watch that fires on its own
+   * pipeline's output re-renders the catalogue on every analyze pass.
+   */
+  filter?: (filename: string) => boolean;
 }
 
 /**
  * Watch, and never return — the process stays alive until Ctrl-C.
  */
-export async function watchLoop({ targets, debounceMs, run, runOnStart }: WatchLoopOptions): Promise<never> {
+export async function watchLoop({ targets, debounceMs, run, runOnStart, filter }: WatchLoopOptions): Promise<never> {
   let running = false;
   let pending = false;
   let debounceTimer: NodeJS.Timeout | undefined;
@@ -70,7 +78,12 @@ export async function watchLoop({ targets, debounceMs, run, runOnStart }: WatchL
 
   const label = targets.map(target => path.relative(process.cwd(), target) || '.').join(' and ');
   console.log(`Watching ${label} for changes...`);
-  for (const target of targets) fs.watch(target, { recursive: true }, schedule);
+  for (const target of targets) {
+    fs.watch(target, { recursive: true }, (_event, filename) => {
+      if (filter && filename && !filter(filename)) return;
+      schedule();
+    });
+  }
 
   if (runOnStart) await runOnce();
 
