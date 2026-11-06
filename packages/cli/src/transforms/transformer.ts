@@ -86,9 +86,32 @@ export interface TransformerContext {
  * without depending on @directededges/specs-from-figma types.
  */
 export interface AnalyzerFoundations {
-  variables: Map<string, { name: string; variableCollectionId: string; resolvedType?: string }>;
-  collections: Map<string, { name: string }>;
-  styles: Map<string, { id: string; name: string; type: string }>;
+  variables: Map<string, {
+    name: string;
+    variableCollectionId: string;
+    resolvedType?: string;
+    /** Per-mode values; an alias arrives as `{ type: 'VARIABLE_ALIAS', id }`. */
+    valuesByMode?: Record<string, unknown>;
+    description?: string;
+    /** Platform code names keyed by platform (WEB/ANDROID/iOS), when declared. */
+    codeSyntax?: Record<string, string>;
+  }>;
+  collections: Map<string, { name: string; defaultModeId?: string }>;
+  styles: Map<string, { id: string; name: string; type: string; description?: string }>;
+}
+
+/**
+ * Workspace facts an analyzer may need before — or without — visiting any spec.
+ * `run()` carries these per spec, but an analyzer whose input is the fetched
+ * data rather than the catalogue (foundations) must work on a workspace with
+ * zero specs, where `run()` is never called.
+ */
+export interface AnalyzerSetup {
+  /** Absolute path to the workspace data directory, when configured. */
+  dataDir?: string;
+  outputFormat: 'JSON' | 'YAML';
+  /** The workspace's `spec.keys` format — what formatted key spellings follow. */
+  keys: string;
 }
 
 export interface Transformer {
@@ -134,4 +157,6 @@ export interface Transformer {
   run(apiYaml: Record<string, unknown>, context: TransformerContext): Promise<void>;
   /** Called once after all components have been processed. Use for cross-component aggregate output. */
   finalize?(outputDir: string, analysisDir?: string, foundations?: AnalyzerFoundations): Promise<void>;
+  /** Receive workspace facts before any spec is visited (see {@link AnalyzerSetup}). */
+  setup?(facts: AnalyzerSetup): void;
 }

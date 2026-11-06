@@ -1,5 +1,6 @@
 import type { Transformer } from '../transforms/transformer.js';
 import { DependenciesAnalyzer } from './Dependencies.js';
+import { FoundationsAnalyzer } from './Foundations.js';
 import { KeysAnalyzer } from './Keys.js';
 import { PropsAnalyzer } from './Props.js';
 import { RolesAnalyzer } from './Roles.js';
@@ -24,6 +25,7 @@ import { StylingAnalyzer } from './Styling.js';
  * every split looked eight times as broad as it was.
  */
 const ANALYZERS: Array<new () => Transformer> = [
+  FoundationsAnalyzer,
   PropsAnalyzer,
   StylingAnalyzer,
   DependenciesAnalyzer,

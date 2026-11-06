@@ -142,11 +142,11 @@ export async function runAnalyze(
   );
   const componentDirs = specs.filter(s => s.kind === 'component').map(s => s.key);
 
+  // An empty catalogue is a state, not an error: a fresh authoring workspace
+  // has zero specs and a complete token language, and the foundations report
+  // exists precisely for it. Component-fed analyzers quietly write nothing.
   if (componentDirs.length === 0) {
-    throw new StepError(
-      `no component directories with api.yaml found in ${componentsDir}`,
-      ERROR_CODES.FILE_ERROR,
-    );
+    console.warn(`[analyze] no component specs found in ${componentsDir} — component reports will be empty; foundations still runs from fetched data`);
   }
 
   const reads = (analyzer: Transformer, kind: SpecKind): boolean =>
@@ -188,6 +188,15 @@ export async function runAnalyze(
 
   for (const warning of tokenProfileWarnings(config.settings.spec.tokens, Boolean(foundations), analyzers)) {
     console.warn(warning);
+  }
+
+  // Workspace facts for analyzers that work without visiting a spec.
+  for (const analyzer of analyzers) {
+    analyzer.setup?.({
+      dataDir,
+      outputFormat: config.settings.spec.format,
+      keys: config.settings.spec.keys,
+    });
   }
 
   let succeeded = 0;

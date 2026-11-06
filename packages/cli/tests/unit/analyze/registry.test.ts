@@ -38,7 +38,7 @@ describe('the analyzer registry', () => {
 
   it('still reports every analyzer by name', () => {
     expect(availableAnalyzerNames().sort()).toEqual(
-      ['dependencies', 'keys', 'props', 'roles', 'styling'].sort(),
+      ['dependencies', 'foundations', 'keys', 'props', 'roles', 'styling'].sort(),
     );
   });
 
