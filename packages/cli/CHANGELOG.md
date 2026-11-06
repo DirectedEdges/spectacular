@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`specs analyze` runs on a workspace with no specs in it**, writing every report with zero counts and empty collections rather than failing — so a catalogue you are authoring from scratch has an analysis surface before it has a spec, and `specs build` and `specs run` get through
+
+- **Analysis reports take the format `spec.format` declares even when the run read no specs**, where an empty catalogue in a YAML workspace previously wrote all seven as `.json`
+
 - **`specs analyze keys` now measures the Figma name behind each object-prop member** (ADR-111), under a `margin.compact` key and one segment at a time, so a declared separator is never flagged. A divergent row carries `segment`, naming the half to fix
 
 - **`specs analyze keys` reports every bad half of a folded name, not just the first.** A group name and a member name are two edits in two places, so a cleanup no longer takes one pass per bad segment. `summary.detections` counts edits where `divergentNames` counts names

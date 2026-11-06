@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import yaml from 'yaml';
-import type { Transformer, TransformerContext } from '../transforms/transformer.js';
+import type { AnalyzerFoundations, Transformer, TransformerContext } from '../transforms/transformer.js';
 import { RunMetadataReader } from '../writers/RunMetadataFile.js';
 import { FIGMA_PLATFORM, platformOf } from '../config/PlatformConventions.js';
 import { ANALYSIS_DIR } from '../utilities/specsLayout.js';
@@ -257,12 +257,19 @@ export class KeysAnalyzer implements Transformer {
     }
   }
 
-  async finalize(outputDir: string, analysisDir?: string): Promise<void> {
-    if (this._totalNames === 0) return;
+  async finalize(
+    outputDir: string,
+    analysisDir?: string,
+    _foundations?: AnalyzerFoundations,
+    outputFormat?: 'JSON' | 'YAML',
+  ): Promise<void> {
+    if (outputFormat) this._outputFormat = outputFormat;
 
     // Without a convention every name passes vacuously, and a zero report reads as a
     // clean catalogue rather than as one that was never measured. Say which it is.
-    if (!this._convention) {
+    // Silent when there were no names to measure: an empty catalogue's zero is
+    // explained by the catalogue, and naming up front is not what it is missing.
+    if (!this._convention && this._totalNames > 0) {
       console.warn('Warning: no Figma naming convention declared — `analyze keys` has nothing to measure names against, so it reports zero divergence. Set `naming` in config/conventions/figma.yaml.');
     }
 

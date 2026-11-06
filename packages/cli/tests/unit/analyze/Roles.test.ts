@@ -45,7 +45,7 @@ describe('RolesAnalyzer', () => {
       await fs.ensureDir(compDir);
       await a.run(apiYaml, { specDir: compDir, outputDir: compDir, workspaceDir: compDir, specsRoot: compDir, kind: 'component' as const, componentKey, outputFormat: 'YAML', tokensFormat: 'TOKEN' });
     }
-    await a.finalize!(outputDir, analysisDir);
+    await a.finalize!(outputDir, analysisDir, undefined, 'YAML');
     const file = path.join(analysisDir, 'roles.yaml');
     if (!await fs.pathExists(file)) return null;
     return yaml.parse(await fs.readFile(file, 'utf-8')) as RolesYaml;
@@ -237,7 +237,17 @@ describe('RolesAnalyzer', () => {
     });
   });
 
-  it('writes nothing when the run had no components', async () => {
-    expect(await runAnalyzer({})).toBeNull();
+  it('writes an empty report when the run had no components', async () => {
+    const result = await runAnalyzer({});
+    expect(result!.summary.components).toBe(0);
+    expect(result!.summary.componentsAnnotated).toBe(0);
+    expect(result!.summary.elements).toBe(0);
+    expect(result!.summary.elementsAnnotated).toBe(0);
+    expect(result!.summary.conceptsInUse).toEqual({});
+    expect(result!.summary.findings).toBe(0);
+    expect(result!.byComponent).toEqual({});
+    // Every concept is unused, which is the honest reading of a catalogue with
+    // nothing in it — and the list a from-scratch author is about to work from.
+    expect(result!.summary.conceptsUnused.length).toBeGreaterThan(0);
   });
 });

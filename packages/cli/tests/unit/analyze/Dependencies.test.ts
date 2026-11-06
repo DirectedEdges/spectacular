@@ -95,10 +95,20 @@ describe('DependenciesAnalyzer', () => {
     expect(new DependenciesAnalyzer().name).toBe('dependencies');
   });
 
-  it('does nothing when no components were processed', async () => {
-    const analyzer = new DependenciesAnalyzer();
-    await analyzer.finalize!(outputDir);
-    expect(fs.existsSync(path.join(outputDir, 'analysis'))).toBe(false);
+  it('writes empty reports when no components were processed', async () => {
+    const { graph, byComponent } = await runAll({});
+    expect(graph.summary).toEqual({
+      components: 0,
+      externals: 0,
+      edges: { instance: 0, slot: 0, example: 0 },
+      roots: [],
+      leaves: [],
+      isolated: [],
+      cycles: [],
+    });
+    expect(graph.nodes).toEqual({});
+    expect(graph.edges).toEqual([]);
+    expect(byComponent).toEqual({});
   });
 
   describe('instance edges and blast radius', () => {

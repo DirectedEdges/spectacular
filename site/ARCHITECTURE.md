@@ -40,7 +40,7 @@ content).
 |---|---|
 | `astro.config.mjs` | Nav (`sidebar` array), port 4323, component overrides, `pro`/`experimental` badge constants, accordion script |
 | `src/content/docs/` | All pages; directory = URL prefix; `index.md(x)` = section root |
-| `src/content/docs/cli/commands/` | One page per CLI command, named for the command as `packages/cli/src/commands/` now is — so a page, its command and its source file share a name. Two exceptions worth knowing: the page is kebab-case where a command is camelCase (`apply-custom-tokens` ↔ `applyCustomTokens`), and `analyze` has a command file but no page |
+| `src/content/docs/cli/commands/` | One page per CLI command, named for the command as `packages/cli/src/commands/` now is — so a page, its command and its source file share a name. The set is 1:1 in both directions; the one difference is spelling, where the page is kebab-case and the command is camelCase (`apply-custom-tokens` ↔ `applyCustomTokens`) |
 | `src/content/docs/schema/` | Type pages + deep `styles/`/`typography/`/`effects/` property trees, plus cross-cutting pages that explain the contract rather than one node of it (`platform-neutrality`) |
 | `src/content/docs/code/` | One page per emitted artifact (`contract`, `scaffold`, `styles`, `stories`, `cssvars`) — what `specs react` / `specs webcomponents` write, linked from both command pages |
 | `src/content/docs/settings/` | One page per config key |
