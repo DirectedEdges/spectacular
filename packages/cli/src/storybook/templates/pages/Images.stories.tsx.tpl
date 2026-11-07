@@ -13,6 +13,7 @@ const images = data as {
     file: string;
     hash: string;
     styleName?: string;
+    origin: Array<'style' | 'component'>;
     referencedBy: string[];
     bytes: number;
   }>;
@@ -25,8 +26,20 @@ function kb(bytes: number) {
     : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
+/** Where the image lives in Figma. An empty origin means no producer has recorded it. */
+const ORIGIN_LABEL: Record<string, string> = {
+  style: 'Fill style',
+  component: 'On a component',
+};
+
+function originText(origin: Array<'style' | 'component'>) {
+  if (origin.length === 0) return 'Unaccounted for';
+  return origin.map((o) => ORIGIN_LABEL[o] ?? o).join(' · ');
+}
+
 function ImagesPage() {
-  const named = images.present.filter((i) => i.styleName).length;
+  const fromStyles = images.present.filter((i) => i.origin.includes('style')).length;
+  const unaccounted = images.present.filter((i) => i.origin.length === 0).length;
 
   return (
     <>
@@ -63,10 +76,19 @@ function ImagesPage() {
 
       <p>
         Every image in the workspace, whichever way it arrived
-        ({images.present.length} total, {named} named by the fill style they were
-        fetched from). Reference one from a spec by its file path under{' '}
-        <code>assets/images/</code>.
+        ({images.present.length} total, {fromStyles} carried by a fill style
+        {unaccounted > 0 ? `, ${unaccounted} unaccounted for` : ''}). Reference one
+        from a spec by its file path under <code>assets/images/</code>.
       </p>
+
+      {unaccounted > 0 && (
+        <p style={{ opacity: 0.75 }}>
+          An image is unaccounted for when a file is present but neither{' '}
+          <code>specs fetch</code> nor <code>specs generate --get-images</code> has
+          recorded finding it — usually a file downloaded before either kept a record.
+          Re-run both to account for it.
+        </p>
+      )}
 
       <div
         style={{
@@ -95,7 +117,9 @@ function ImagesPage() {
               <div style={{ fontWeight: 600, wordBreak: 'break-word' }}>
                 {image.styleName ?? <span style={{ opacity: 0.6 }}>Unnamed</span>}
               </div>
-              <div style={{ opacity: 0.7 }}>{kb(image.bytes)}</div>
+              <div style={{ opacity: 0.7 }}>
+                {originText(image.origin)} · {kb(image.bytes)}
+              </div>
               <code
                 style={{ fontSize: 11, opacity: 0.6, wordBreak: 'break-all', display: 'block' }}
                 title={image.file}

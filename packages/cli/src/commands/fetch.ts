@@ -1022,9 +1022,24 @@ export const Fetch = new Command('fetch')
               : image;
           });
 
+          // An `images` array keyed on `imageHash` is the shape both producers
+          // write: `generate --get-images` records the same fields for the
+          // images it finds on components, so the cache merges the two by hash
+          // without knowing which wrote which. `styleKey` and `nodeId` are this
+          // producer's own provenance — the join back to styles.yaml, and the
+          // node the paint was read from — and the cache ignores them.
           await fs.writeFile(
             path.join(outDir, `${entry.alias}.images.json`),
-            JSON.stringify({ fileKey: entry.key, styles: resolved }, null, 2),
+            JSON.stringify({
+              fileKey: entry.key,
+              images: resolved.map(image => ({
+                imageHash: image.imageHash,
+                ...(image.src ? { src: image.src } : {}),
+                styleName: image.name,
+                styleKey: image.key,
+                nodeId: image.node_id,
+              })),
+            }, null, 2),
             'utf-8'
           );
 

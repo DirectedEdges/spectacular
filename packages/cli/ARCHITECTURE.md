@@ -132,6 +132,16 @@ hook blocks it).
   payload's size on disk), and deliberately answers in bands rather than
   figures — the measured rate spans a wide enough range that a number would
   claim precision the data does not support.
+- **A cache concern's provenance is one record per payload file, not per alias.**
+  The partition key is the alias for every concern built from a single payload per
+  source; `images.yaml` is built from two — `fetch` records the images a library
+  carries on fill styles, `generate --get-images` the ones placed on components —
+  so its keys are `<alias>:styles` and `<alias>:components`. That keeps one
+  producer's rebuild from reporting the other as stale. Images also always rebuild
+  from their payloads rather than carrying entries forward: the payloads are
+  kilobytes where a file payload is hundreds of megabytes, and an entry can be
+  co-owned by both producers, so carrying one half forward while rebuilding the
+  other would duplicate or drop it.
 - **Two fetch kinds are derived from another kind's payload and so run last**:
   `icons` needs `file`, `images` needs `styles`. Either prerequisite may have
   landed this run or a previous one, which is why the check is for the payload on

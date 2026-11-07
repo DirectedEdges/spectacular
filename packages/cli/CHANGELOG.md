@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`specs fetch` downloads the images a library carries on published fill styles**, with a new `images` kind for a source's `fetch` list and for `--only`. Files land in `assets/images/` alongside what `generate --get-images` downloads, and neither path re-fetches the other's
 
-- **`data/cache/images.yaml` lists those images by their Figma style name**, carrying the image hash and the file path an `images` registry entry needs, so you can use a library image in a spec you write by hand
+- **`data/cache/images.yaml` lists every image the workspace holds**, keyed by image hash and carrying the file path, the Figma style name where there is one, and whether the image lives on a fill style, on a component, or both — so you can use any library image in a spec you write by hand without reading the spec tree to find it
 
 - **Storybook gains a Foundations Images page** showing every image in the workspace in a grid, named by its fill style where it has one, with the components that reference each and a list of any a spec references but nothing has downloaded
 

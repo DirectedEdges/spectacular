@@ -224,10 +224,12 @@ describe('buildImagesData', () => {
     fs.writeFileSync(path.join(images, 'aaa111.png'), 'png');
     fs.writeFileSync(path.join(images, 'bbb222.jpg'), 'jpg');
 
-    // Only the style-fetched one has a name to show.
+    // Keyed by hash, with `origin` saying where each lives in Figma.
     fs.writeFileSync(path.join(data, 'cache', 'images.yaml'),
-      'sources:\n  library:\n    from: library.images.json\n    bytes: 1\n    mtime: x\n'
-      + 'entries:\n  Images / Wanaka:\n    imageHash: aaa111\n    src: assets/images/aaa111.png\n    file: library\n');
+      'sources:\n  library:styles:\n    from: library.images.json\n    bytes: 1\n    mtime: x\n'
+      + 'entries:\n'
+      + '  aaa111:\n    src: assets/images/aaa111.png\n    styleName: Images / Wanaka\n    origin:\n      - style\n    file: library\n'
+      + '  bbb222:\n    src: assets/images/bbb222.jpg\n    usedBy:\n      - hero\n    origin:\n      - component\n    file: library\n');
 
     // The component references the component-found image and one that was never downloaded.
     fs.writeFileSync(path.join(specs, 'hero', 'api.yaml'), 'anatomy:\n  media:\n    type: image\n');
@@ -250,6 +252,24 @@ describe('buildImagesData', () => {
     const result = buildImagesData(specs, images, data)!;
     expect(result.present[0].styleName).toBe('Images / Wanaka');
     expect(result.present[1].styleName).toBeUndefined();
+    fs.removeSync(tmp);
+  });
+
+  // Read from the cache, never inferred from a missing name — a style-carried
+  // image with no name would otherwise look component-found.
+  it('takes each image\'s origin from the cache', () => {
+    const { tmp, specs, images, data } = fixture();
+    const result = buildImagesData(specs, images, data)!;
+    expect(result.present.find(i => i.hash === 'aaa111')!.origin).toEqual(['style']);
+    expect(result.present.find(i => i.hash === 'bbb222')!.origin).toEqual(['component']);
+    fs.removeSync(tmp);
+  });
+
+  it('reports an empty origin for a file neither producer has accounted for', () => {
+    const { tmp, specs, images, data } = fixture();
+    fs.writeFileSync(path.join(images, 'ccc444.png'), 'png');
+    const result = buildImagesData(specs, images, data)!;
+    expect(result.present.find(i => i.hash === 'ccc444')!.origin).toEqual([]);
     fs.removeSync(tmp);
   });
 

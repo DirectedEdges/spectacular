@@ -132,74 +132,154 @@ describe('Cache', () => {
     });
   });
 
-  // specs#889. The images payload is written by `specs fetch --only <alias>,images`;
-  // nothing in the file download can produce it, because the hash comes from a
-  // node request against each fill style.
-  describe('fill style images', () => {
-    const imagesPayload = (styles: unknown[]) => JSON.stringify({ fileKey: 'f', styles });
+  // specs#889. Two commands find images independently and neither can derive
+  // the other's: `fetch` reads the fill styles a library carries, and
+  // `generate --get-images` the fills placed on components. Each writes its own
+  // payload; the cache merges them by hash.
+  describe('images', () => {
+    const payload = (images: unknown[]) => JSON.stringify({ fileKey: 'f', images });
 
-    it('keys the library\'s curated images by their Figma style name', () => {
-      writeFileSync(join(dataDir, 'library.images.json'), imagesPayload([
-        { name: 'Images / Wanaka', key: 'imgkey1', node_id: '1568:2977', imageHash: 'b60ac7bc', src: 'assets/images/b60ac7bc.png' },
-      ]));
+    /** What `fetch --only <alias>,images` writes. */
+    const stylesPayload = (images: unknown[] = [
+      { imageHash: 'b60ac7bc', src: 'assets/images/b60ac7bc.png', styleName: 'Images / Wanaka', styleKey: 'imgkey1', nodeId: '1568:2977' },
+    ]) => payload(images);
+
+    /** What `generate --get-images` writes. */
+    const componentsPayload = (images: unknown[] = [
+      { imageHash: '14dacdfc', src: 'assets/images/14dacdfc.jpg', usedBy: ['heroBanner'] },
+    ]) => payload(images);
+
+    it('keys an image by its hash and names the style carrying it', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), stylesPayload());
       const report = build();
       const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
-      expect(cache.entries['Images / Wanaka']).toEqual({
-        imageHash: 'b60ac7bc', src: 'assets/images/b60ac7bc.png', file: 'library',
+      expect(cache.entries['b60ac7bc']).toEqual({
+        src: 'assets/images/b60ac7bc.png',
+        styleName: 'Images / Wanaka',
+        origin: ['style'],
+        file: 'library',
       });
       expect(report.counts.images).toBe(1);
     });
 
-    it('records an image whose bytes never landed, with no src', () => {
-      writeFileSync(join(dataDir, 'library.images.json'), imagesPayload([
-        { name: 'Images / Gone', key: 'k', node_id: '1:1', imageHash: 'deadbeef' },
-      ]));
+    it('records a component-found image with its usage and no style name', () => {
+      writeFileSync(join(dataDir, 'library.component-images.json'), componentsPayload());
       build();
       const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
-      expect(cache.entries['Images / Gone']).toEqual({ imageHash: 'deadbeef', file: 'library' });
+      expect(cache.entries['14dacdfc']).toEqual({
+        src: 'assets/images/14dacdfc.jpg',
+        usedBy: ['heroBanner'],
+        origin: ['component'],
+        file: 'library',
+      });
+    });
+
+    // The case a hash key handles and a name key cannot.
+    it('merges an image both producers found into one entry carrying both facts', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), payload([
+        { imageHash: 'shared', src: 'assets/images/shared.png', styleName: 'Images / Helsinki' },
+      ]));
+      writeFileSync(join(dataDir, 'library.component-images.json'), payload([
+        { imageHash: 'shared', src: 'assets/images/shared.png', usedBy: ['cardMedia'] },
+      ]));
+      const report = build();
+      expect(report.counts.images).toBe(1);
+      const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
+      expect(cache.entries['shared']).toEqual({
+        src: 'assets/images/shared.png',
+        styleName: 'Images / Helsinki',
+        usedBy: ['cardMedia'],
+        origin: ['style', 'component'],
+        file: 'library',
+      });
+    });
+
+    it('unions the components reported across producers, sorted', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), payload([
+        { imageHash: 'shared', styleName: 'S', usedBy: ['zeta'] },
+      ]));
+      writeFileSync(join(dataDir, 'library.component-images.json'), payload([
+        { imageHash: 'shared', usedBy: ['alpha', 'zeta'] },
+      ]));
+      build();
+      expect(readCacheFile<ImagesEntry>(dataDir, 'images')!.entries['shared'].usedBy)
+        .toEqual(['alpha', 'zeta']);
+    });
+
+    it('records each producer under its own partition key', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), stylesPayload());
+      writeFileSync(join(dataDir, 'library.component-images.json'), componentsPayload());
+      build();
+      const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
+      expect(Object.keys(cache.sources).sort()).toEqual(['library:components', 'library:styles']);
+      expect(cache.sources['library:styles'].from).toBe('library.images.json');
+      expect(cache.sources['library:components'].from).toBe('library.component-images.json');
+    });
+
+    // The other concerns carry entries forward; images always rebuild from both
+    // payloads, which is what makes a co-owned entry impossible to lose.
+    it('keeps one producer\'s entries when only the other\'s payload changed', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), stylesPayload());
+      writeFileSync(join(dataDir, 'library.component-images.json'), componentsPayload());
+      build();
+      writeFileSync(join(dataDir, 'library.component-images.json'), componentsPayload([
+        { imageHash: '14dacdfc', src: 'assets/images/14dacdfc.jpg', usedBy: ['heroBanner', 'pagingCarousel'] },
+      ]));
+      expect(build().rebuilt).toEqual(['library']);
+      const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
+      expect(cache.entries['b60ac7bc'].styleName).toBe('Images / Wanaka');
+      expect(cache.entries['14dacdfc'].usedBy).toEqual(['heroBanner', 'pagingCarousel']);
+    });
+
+    it('records an image whose bytes never landed, with no src', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), payload([
+        { imageHash: 'deadbeef', styleName: 'Images / Gone' },
+      ]));
+      build();
+      expect(readCacheFile<ImagesEntry>(dataDir, 'images')!.entries['deadbeef'])
+        .toEqual({ styleName: 'Images / Gone', origin: ['style'], file: 'library' });
     });
 
     it('writes an empty images cache when no payload exists, so "none" differs from "never built"', () => {
       build();
       const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
       expect(cache.entries).toEqual({});
-      expect(cache.sources.library).toBeUndefined();
-    });
-
-    it('rebuilds an alias whose images payload changed, leaving the others alone', () => {
-      writeFileSync(join(dataDir, 'library.images.json'), imagesPayload([
-        { name: 'Images / Wanaka', key: 'k', node_id: '1:1', imageHash: 'first' },
-      ]));
-      build();
-      writeFileSync(join(dataDir, 'library.images.json'), imagesPayload([
-        { name: 'Images / Wanaka', key: 'k', node_id: '1:1', imageHash: 'second', src: 'assets/images/second.png' },
-      ]));
-      expect(build().rebuilt).toEqual(['library']);
-      const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
-      expect(cache.entries['Images / Wanaka'].imageHash).toBe('second');
+      expect(cache.sources['library:styles']).toBeUndefined();
     });
 
     it('builds for an alias that has images fetched but no file payload', () => {
-      writeFileSync(join(dataDir, 'brand.images.json'), imagesPayload([
-        { name: 'Images / Brand', key: 'k', node_id: '1:1', imageHash: 'brandhash' },
+      writeFileSync(join(dataDir, 'brand.images.json'), payload([
+        { imageHash: 'brandhash', styleName: 'Images / Brand' },
       ]));
       const report = build(['library', 'brand']);
       expect(report.unfetched).toEqual([]);
-      const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
-      expect(cache.entries['Images / Brand'].file).toBe('brand');
+      expect(readCacheFile<ImagesEntry>(dataDir, 'images')!.entries['brandhash'].file).toBe('brand');
     });
 
     it('reports a payload it cannot parse instead of contributing silently nothing', () => {
-      writeFileSync(join(dataDir, 'library.images.json'), '{ not json');
+      writeFileSync(join(dataDir, 'library.component-images.json'), '{ not json');
       const report = build();
-      expect(report.failures.map(f => f.file)).toEqual(['library.images.json']);
+      expect(report.failures.map(f => f.file)).toEqual(['library.component-images.json']);
     });
 
-    it('makes a missing images cache a validation problem once the payload exists', () => {
-      writeFileSync(join(dataDir, 'library.images.json'), imagesPayload([]));
+    it('makes a missing images cache a validation problem once a payload exists', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), payload([]));
       const problems = validateCache({ dataDir, aliases: ['library'], glyphs: { match: PATTERN } });
       expect(problems.filter(p => p.concern === 'images')).toEqual([
         { concern: 'images', alias: 'library', reason: 'missing' },
+      ]);
+    });
+
+    it('validates each producer separately, so one stale payload reports once', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), stylesPayload());
+      writeFileSync(join(dataDir, 'library.component-images.json'), componentsPayload());
+      build();
+      writeFileSync(join(dataDir, 'library.component-images.json'), componentsPayload([
+        { imageHash: 'different', usedBy: ['x'] },
+      ]));
+      const problems = validateCache({ dataDir, aliases: ['library'], glyphs: { match: PATTERN } });
+      expect(problems.filter(p => p.concern === 'images')).toEqual([
+        { concern: 'images', alias: 'library', reason: 'stale' },
       ]);
     });
   });

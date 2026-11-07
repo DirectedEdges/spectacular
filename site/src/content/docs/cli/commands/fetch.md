@@ -185,7 +185,7 @@ How it works:
 
 - Every published `FILL` style in the source's styles payload is read back node by node, because a fill style's paint is not in the file payload at all — the file's style map carries the name, key and type only. Styles painting a colour are skipped; styles painting an image yield a Figma image hash.
 - Bytes are downloaded through the same Get Image Fills endpoint `generate --get-images` uses, and written to `assets/images/<imageHash>.<ext>` — the same directory, named for the image's content. A curated image and the same image detected on a component are therefore one file, and an image already on disk is never downloaded twice.
-- The hash for each style is recorded in `{data.directory}/<alias>.images.json`, and from there into `{data.directory}/cache/images.yaml`, keyed by the Figma style name.
+- What it found is recorded in `{data.directory}/<alias>.images.json`, and from there into `{data.directory}/cache/images.yaml` — the roster of every image the workspace holds, keyed by image hash. See [cache](/cli/commands/cache/#what-it-writes).
 
 Because the fill styles come from the saved styles payload, `images` runs after the other kinds. If that payload is missing, fetch exits with an error telling you to fetch `styles` first.
 
@@ -201,13 +201,14 @@ The point of fetching these is to make the library's images available to whoever
 ```yaml
 # data/cache/images.yaml
 entries:
-  Images / Wanaka:
-    imageHash: b60ac7bc8ed5d5b5b7f676b27f46ab44eb2355ef
+  b60ac7bc8ed5d5b5b7f676b27f46ab44eb2355ef:
     src: assets/images/b60ac7bc8ed5d5b5b7f676b27f46ab44eb2355ef.png
+    styleName: Images / Wanaka
+    origin: [style]
     file: library
 ```
 
-Both fields belong in the component's `images` registry. `src` is what the React and Web Components transforms resolve an `$image` pointer from; `imageHash` is the Figma identity that reverse-direction tooling matches on:
+The key and the `src` are what belong in the component's `images` registry. `src` is what the React and Web Components transforms resolve an `$image` pointer from; the hash is the Figma identity that reverse-direction tooling matches on:
 
 ```yaml
 images:
@@ -229,9 +230,10 @@ The two paths download the same bytes into the same directory and never duplicat
 | Finds images in | published fill styles | the fills of the components being generated |
 | Needs | the `styles` payload | a generate run over Figma data |
 | Opt-in through | `images` in a source's `fetch` array | the `--get-images` flag and `processing.images` in `config/conventions/figma.yaml` |
-| Writes | `assets/images/`, the images payload, and `cache/images.yaml` | `assets/images/`, and `src` into the generated specs |
+| Writes | `assets/images/`, its own images payload, and `cache/images.yaml` | `assets/images/`, and `src` into the generated specs |
+| Shows up in the cache as | `origin: [style]`, with the fill style's name | `origin: [component]`, with the components that use it |
 
-A curated image no component uses needs the first. An image placed on a component needs the second. A library with both wants both.
+A curated image no component uses needs the first. An image placed on a component needs the second. A library with both wants both, and an image found both ways is one entry in the cache carrying both — its style name and its usage.
 
 ## Fetching Variables via the Bridge
 

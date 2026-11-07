@@ -17,8 +17,11 @@ export interface ImagesJson {
     /** Asset filename, hash-named with its real extension. */
     file: string;
     hash: string;
-    /** The Figma fill style this image was fetched from, when it came that way. */
+    /** The Figma fill style carrying this image, when a style carries it. */
     styleName?: string;
+    /** Where the image lives in Figma, from the cache. Empty when neither
+     *  producer has recorded it — a file on disk nothing has accounted for. */
+    origin: Array<'style' | 'component'>;
     /** Component keys whose registries point at this hash. */
     referencedBy: string[];
     bytes: number;
@@ -122,12 +125,11 @@ export function buildImagesData(
         .sort()
     : [];
 
-  // hash → fill style name, for the images that were fetched from styles.
-  const styleNames = new Map<string, string>();
-  const cache = readCacheFile<ImagesEntry>(dataDir, 'images');
-  for (const [name, entry] of Object.entries(cache?.entries ?? {})) {
-    if (entry.imageHash) styleNames.set(entry.imageHash, name);
-  }
+  // The cache is keyed by hash, so it answers directly for each file: what the
+  // library calls this image, and where it lives in Figma. `origin` is read
+  // rather than inferred — a style-carried image with no name would otherwise
+  // be indistinguishable from one found on a component.
+  const cached = readCacheFile<ImagesEntry>(dataDir, 'images')?.entries ?? {};
 
   const referenced = referencesByHash(specsDir);
 
@@ -135,10 +137,15 @@ export function buildImagesData(
 
   const present = files.map(file => {
     const hash = path.basename(file, path.extname(file));
+    const entry = cached[hash];
     return {
       file,
       hash,
-      ...(styleNames.has(hash) ? { styleName: styleNames.get(hash)! } : {}),
+      ...(entry?.styleName ? { styleName: entry.styleName } : {}),
+      origin: entry?.origin ?? [],
+      // The spec tree is walked rather than taken from the entry's `usedBy`:
+      // it covers every spec on disk, where `usedBy` covers only what a
+      // generate pass happened to visit.
       referencedBy: [...(referenced.get(hash) ?? [])].sort(),
       bytes: fs.statSync(path.join(imagesDir, file)).size,
     };
