@@ -1,6 +1,7 @@
-// The foundations concern: Color, Typography, Icons — data artifacts plus the
-// default pages that read them (specs#608/#609/#632). All reading and joining
-// happens here at publish time; the pages are dumb views of the JSON beside them.
+// The foundations concern: Color, Typography, Icons, Images — data artifacts
+// plus the default pages that read them (specs#608/#609/#632). All reading and
+// joining happens here at publish time; the pages are dumb views of the JSON
+// beside them.
 import fs from 'fs-extra';
 import path from 'path';
 import type { Concern, BuiltFile } from '../types.js';
@@ -10,6 +11,7 @@ import { readTemplate } from '../../templates.js';
 import { buildColorData, type ColorSourceInput } from './color.js';
 import { buildTypographyData, type TypographySourceInput } from './typography.js';
 import { buildIconsData } from './icons.js';
+import { buildImagesData } from './images.js';
 
 /**
  * ADR-098: the conventions contract fixes the file and concern keys; feature
@@ -120,6 +122,7 @@ export const foundations: Concern = {
       payloads.variables.length > 0 ||
       payloads.fileDirs.length > 0 ||
       fs.existsSync(path.join(ws.assetsDir, 'icons')) ||
+      fs.existsSync(path.join(ws.assetsDir, 'images')) ||
       fs.existsSync(ws.specsDir)
     );
   },
@@ -190,6 +193,13 @@ export const foundations: Concern = {
     if (icons) {
       out.push({ path: 'data/icons.json', content: JSON.stringify(icons, null, 2) + '\n' });
       out.push({ path: 'Icons.stories.tsx', content: readTemplate('pages/Icons.stories.tsx.tpl') });
+    }
+
+    // Images: the files both download paths write, against spec references.
+    const images = buildImagesData(ws.specsDir, path.join(ws.assetsDir, 'images'), ws.dataDir);
+    if (images) {
+      out.push({ path: 'data/images.json', content: JSON.stringify(images, null, 2) + '\n' });
+      out.push({ path: 'Images.stories.tsx', content: readTemplate('pages/Images.stories.tsx.tpl') });
     }
 
     return out;

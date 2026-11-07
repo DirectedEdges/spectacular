@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`data/cache/images.yaml` lists those images by their Figma style name**, carrying the image hash and the file path an `images` registry entry needs, so you can use a library image in a spec you write by hand
 
+- **Storybook gains a Foundations Images page** showing every image in the workspace in a grid, named by its fill style where it has one, with the components that reference each and a list of any a spec references but nothing has downloaded
+
 ### Changed
 
 ### Fixed
