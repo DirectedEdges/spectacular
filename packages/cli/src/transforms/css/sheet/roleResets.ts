@@ -17,7 +17,7 @@ import type { RootForm } from '../types.js';
  * suppresses the UA border, and the state that does not set one keeps it, so the
  * control changes size when it changes state.
  */
-export const UA_STYLED_ROLES = new Set(['button', 'togglebutton', 'link', 'disclosure', 'textbox']);
+export const UA_STYLED_ROLES = new Set(['button', 'togglebutton', 'link', 'disclosure', 'textbox', 'image']);
 
 /** Neutralize the emitted element's UA styling so the spec's declarations govern. */
 export function uaResetDecls(role: string): string[] {
@@ -34,6 +34,12 @@ export function uaResetDecls(role: string): string[] {
   ];
   // An anchor is not a button: it carries link decoration rather than a border.
   if (role === 'link') decls.push('text-decoration: none');
+  // An image carries none of the chrome above — what it carries is baseline
+  // alignment. An inline replaced element sits on the text baseline and leaves
+  // descender space beneath it, which reads as a few unexplained pixels of gap
+  // under every picture. It is a floor, not an override: a `display` the spec
+  // declares still wins, because these rules land first.
+  if (role === 'image') decls.push('display: block');
   return decls;
 }
 

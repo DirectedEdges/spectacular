@@ -9,6 +9,7 @@ import { childOrder, collectLayoutKeys } from '../analysis/layoutQueries.js';
 import { composedSelector, elemSelector, rootSelector } from './selectors.js';
 import { expandVariantSelectors } from './variantSelectors.js';
 import { backgroundImageDecls, gradientRingRule, inlineBlockIfBoxed, overlapRule } from './elementRules.js';
+import { imageRoleTakesFill, imageElementFitDecls } from './imageRole.js';
 import { slotAdmitsComponents, variantContentStylesLines } from './contentRules.js';
 import { attrNameFor } from './hostAttributes.js';
 import type { ImagesCssContext, RootForm } from '../types.js';
@@ -59,6 +60,8 @@ export interface VariantBlockInput {
   rootAs: RootForm;
   tokensFormat: string | undefined;
   elemTypes: Record<string, string>;
+  /** anatomy roles, keyed by element — an `image` role redirects its own fill. */
+  elemRoles: Record<string, string>;
   images: ImagesCssContext | undefined;
   context: TransformerContext;
   facts: SpecAnalysis;
@@ -86,7 +89,7 @@ function isReversal(variantOrder: string[], defaultOrder: string[]): boolean {
 
 export function variantBlockLines(input: VariantBlockInput): string[] {
   const {
-    componentClass, rootAs, tokensFormat, elemTypes, images, context, facts, apiProps,
+    componentClass, rootAs, tokensFormat, elemTypes, elemRoles, images, context, facts, apiProps,
     displayedInDefault, classifiedProps, stateLookup, nestedClaimedPairs, selectorFor, warnUnnamedValue,
   } = input;
   const rootSel = rootSelector(componentClass, rootAs);
@@ -191,7 +194,13 @@ export function variantBlockLines(input: VariantBlockInput): string[] {
         ...layoutToCSS(styles, tokensFormat, facts.parentLayoutMode(elemKey), false, facts.parentCrossAxisAlignment(elemKey), elemTypes[elemKey] === 'instance'),
         ...styleToCSS(styles, tokensFormat, elemTypes[elemKey], facts.styleOptions(elemKey)),
       ];
-      if ('backgroundImage' in styles) decls.push(...backgroundImageDecls(styles.backgroundImage, images));
+      if ('backgroundImage' in styles) {
+        decls.push(
+          ...(imageRoleTakesFill(elemKey, elemRoles, elemTypes, styles, facts.parentOf)
+            ? imageElementFitDecls(styles.backgroundImage)
+            : backgroundImageDecls(styles.backgroundImage, images)),
+        );
+      }
       // The inline-block floor belongs to the element's default rule. Re-asserting
       // it here attaches a `display` to a rule whose only job is a size change,
       // and that rule outranks the single-attribute rule that hid the element —

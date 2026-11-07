@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **A picture declared as `role: image` leaves the stylesheet and becomes a real image element.** The `image` and `decoration` concepts land in the role vocabulary `specs analyze roles` reads, so a library annotating them gets coverage reporting rather than two unrecognised words. Both are **specified** — the emitters own what is drawn.
+
+  The stylesheet half is this package's. Where an `image` role takes an element's fill onto a `src` attribute, `background-image` is no longer emitted for it and the fit is stated against the content box — `object-fit` and `object-position` in place of `background-size`, `background-position` and `background-repeat`. Emitting both painted the picture twice and gave the fit two different boxes to apply to. Only that path changes: a drawing has no fill to move, and an image painted behind content keeps its tag and its background exactly as before.
+
+  The element also joins the swapped-element reset, with one declaration of its own: `display: block`. An inline replaced element sits on the text baseline and leaves descender space beneath it, which reads as a few unexplained pixels of gap under every picture. It is a floor rather than an override — a `display` the spec declares still wins, because the reset rules land first.
+
 ### Changed
 
 ### Fixed

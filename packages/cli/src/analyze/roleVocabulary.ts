@@ -66,6 +66,7 @@ export const ROLE_VOCABULARY: Record<string, RoleConcept> = {
   alert: { kind: 'control', status: 'implemented' },
   status: { kind: 'control', status: 'implemented' },
   progressbar: { kind: 'control', status: 'implemented' },
+  image: { kind: 'control', status: 'specified' },
 
   // ── Part roles ─────────────────────────────────────────────────────────────
   label: { kind: 'part', status: 'implemented', wiresById: true },
@@ -74,6 +75,9 @@ export const ROLE_VOCABULARY: Record<string, RoleConcept> = {
   value: { kind: 'part', status: 'implemented', wiresById: true },
   placeholder: { kind: 'part', status: 'implemented', wiresById: true },
   indicator: { kind: 'part', status: 'implemented' },
+  // Self-contained like `indicator`, and the one part that resolves to no
+  // control at all — it asserts a fact about itself, so there is nothing to wire.
+  decoration: { kind: 'part', status: 'specified' },
   panel: { kind: 'part', status: 'implemented' },
   increment: { kind: 'part', status: 'none' },
   decrement: { kind: 'part', status: 'none' },
