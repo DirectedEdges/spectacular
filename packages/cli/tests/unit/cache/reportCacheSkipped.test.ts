@@ -13,7 +13,7 @@ function report(over: Partial<CacheReport> = {}): CacheReport {
     rebuilt: [],
     current: [],
     unfetched: [],
-    counts: { components: 0, styles: 0, variables: 0, icons: 0 },
+    counts: { components: 0, styles: 0, variables: 0, icons: 0, images: 0 },
     aliasCounts: {},
     failures: [],
     ...over,

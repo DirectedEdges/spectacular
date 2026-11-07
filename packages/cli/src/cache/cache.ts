@@ -16,6 +16,7 @@
  * | `styles.yaml`     | style name → key + type           | `<alias>.file/` (or `.file.json`) |
  * | `variables.yaml`  | token name → key, id, published   | `<alias>.variables.json` |
  * | `icons.yaml`      | glyph name → node id + key        | `<alias>.file/` (or `.file.json`) |
+ * | `images.yaml`     | fill style name → image hash + src | `<alias>.images.json` |
  *
  * Merged rather than per-library, because render wants one lookup, not N. Each entry
  * records the alias it came from: node ids are file-scoped, so knowing an entry's origin
@@ -39,8 +40,8 @@ import { glyphConventionSignature, hasGlyphConvention, type GlyphsConvention } f
 import { readJsonPayload } from '../utilities/payloadRead.js';
 import { SectionedFile, shadowIngestEnabled, shadowCompare } from '../utilities/sectionedFile.js';
 
-/** The four caches, by concern. Order is display order for reporting. */
-export const CACHE_CONCERNS = ['components', 'styles', 'variables', 'icons'] as const;
+/** The caches, by concern. Order is display order for reporting. */
+export const CACHE_CONCERNS = ['components', 'styles', 'variables', 'icons', 'images'] as const;
 export type CacheConcern = (typeof CACHE_CONCERNS)[number];
 
 /** What one alias's slice of a cache was built from — the staleness check's input. */
@@ -77,14 +78,33 @@ export interface StylesEntry { key: string; type: 'FILL' | 'TEXT' | 'EFFECT'; fi
 export interface VariablesEntry { key: string; id: string; published: boolean; file: string }
 export interface IconsEntry { id: string; key?: string; file: string }
 
-export type AnyCacheEntry = ComponentsEntry | StylesEntry | VariablesEntry | IconsEntry;
+/**
+ * A published fill style whose paint is an image, keyed by the style's Figma
+ * name (specs#889). This is the roster of a library's curated images, and the
+ * only place the Figma name survives — the asset file is named for its content
+ * hash, so nothing on disk says which style it came from.
+ *
+ * Both fields earn their place for a spec being authored by hand. `src` is what
+ * the React and Web Components readers resolve an `$image` pointer from; an
+ * entry without one renders nothing, and ADR-063 deliberately removed their
+ * ability to guess a filename from the hash. `imageHash` is the Figma identity
+ * that reverse-direction tooling matches on. A registry entry needs both, so
+ * the lookup carries both.
+ *
+ * `src` is relative to the config directory, and absent when the bytes have not
+ * been downloaded.
+ */
+export interface ImagesEntry { imageHash: string; src?: string; file: string }
 
-/** One alias's contribution to all four caches. */
+export type AnyCacheEntry = ComponentsEntry | StylesEntry | VariablesEntry | IconsEntry | ImagesEntry;
+
+/** One alias's contribution to every cache. */
 interface AliasSlice {
   components: { source: CacheSource | null; entries: Record<string, ComponentsEntry> };
   styles: { source: CacheSource | null; entries: Record<string, StylesEntry> };
   variables: { source: CacheSource | null; entries: Record<string, VariablesEntry> };
   icons: { source: CacheSource | null; entries: Record<string, IconsEntry> };
+  images: { source: CacheSource | null; entries: Record<string, ImagesEntry> };
 }
 
 export interface CacheOptions {
@@ -228,6 +248,7 @@ function buildAliasSlice(
     styles: { source: null, entries: {} },
     variables: { source: null, entries: {} },
     icons: { source: null, entries: {} },
+    images: { source: null, entries: {} },
   };
 
   const fileName = `${alias}.file.json`;
@@ -257,7 +278,7 @@ function buildAliasSlice(
     if (shadowIngestEnabled()) {
       const { data: monoData } = readJson(join(dataDir, fileName));
       if (monoData) {
-        const shadow: AliasSlice = { components: { source: null, entries: {} }, styles: { source: null, entries: {} }, variables: { source: null, entries: {} }, icons: { source: null, entries: {} } };
+        const shadow: AliasSlice = { components: { source: null, entries: {} }, styles: { source: null, entries: {} }, variables: { source: null, entries: {} }, icons: { source: null, entries: {} }, images: { source: null, entries: {} } };
         buildFileConcerns(alias, monoData, shadow, glyphSignature, fileSource, dataDir);
         collectGlyphsInto(alias, (monoData as { document?: unknown }).document, glyphs, shadow);
         shadowCompare(`cache:${alias}:components`, shadow.components.entries, empty.components.entries);
@@ -285,6 +306,27 @@ function buildAliasSlice(
         empty.variables.entries[name] = { ...entry, file: alias };
       }
       empty.variables.source = variablesSource;
+    }
+  }
+
+  // Fill-style image fills (specs#889). Written by `specs fetch --only <alias>,images`,
+  // which is the only thing that can resolve them: the hash comes from a node
+  // request, not from any payload the file download contains.
+  const imagesName = `${alias}.images.json`;
+  const imagesSource = sourceOf(dataDir, imagesName);
+  if (imagesSource) {
+    const { data, error } = readJson(join(dataDir, imagesName));
+    if (error) failures.push({ alias, file: imagesName, reason: error });
+    if (data) {
+      const styles = Array.isArray(data.styles) ? data.styles as Array<Record<string, unknown>> : [];
+      for (const style of styles) {
+        const { name, imageHash, src } = style;
+        if (typeof name !== 'string' || typeof imageHash !== 'string') continue;
+        empty.images.entries[name] = typeof src === 'string'
+          ? { imageHash, src, file: alias }
+          : { imageHash, file: alias };
+      }
+      empty.images.source = imagesSource;
     }
   }
 
@@ -361,6 +403,7 @@ export function refreshCache(options: CacheOptions): CacheReport {
     styles: readCacheFile<StylesEntry>(dataDir, 'styles'),
     variables: readCacheFile<VariablesEntry>(dataDir, 'variables'),
     icons: readCacheFile<IconsEntry>(dataDir, 'icons'),
+    images: readCacheFile<ImagesEntry>(dataDir, 'images'),
   };
 
   const next: { [K in CacheConcern]: CacheFile<AnyCacheEntry> } = {
@@ -368,13 +411,14 @@ export function refreshCache(options: CacheOptions): CacheReport {
     styles: { sources: {}, entries: {} },
     variables: { sources: {}, entries: {} },
     icons: { sources: {}, entries: {} },
+    images: { sources: {}, entries: {} },
   };
 
   const report: CacheReport = {
     rebuilt: [],
     current: [],
     unfetched: [],
-    counts: { components: 0, styles: 0, variables: 0, icons: 0 },
+    counts: { components: 0, styles: 0, variables: 0, icons: 0, images: 0 },
     aliasCounts: {},
     failures: [],
   };
@@ -382,7 +426,8 @@ export function refreshCache(options: CacheOptions): CacheReport {
   for (const alias of aliases) {
     const fileSource = fileSourceOf(dataDir, alias);
     const hasVariables = existsSync(join(dataDir, `${alias}.variables.json`));
-    if (!fileSource && !hasVariables) {
+    const hasImages = existsSync(join(dataDir, `${alias}.images.json`));
+    if (!fileSource && !hasVariables && !hasImages) {
       report.unfetched.push(alias);
       continue;
     }
@@ -392,6 +437,7 @@ export function refreshCache(options: CacheOptions): CacheReport {
       styles: fileSource,
       variables: sourceOf(dataDir, `${alias}.variables.json`),
       icons: fileSourceOf(dataDir, alias, glyphSignature),
+      images: sourceOf(dataDir, `${alias}.images.json`),
     };
 
     const stale = force || CACHE_CONCERNS.some(concern => {
@@ -400,7 +446,7 @@ export function refreshCache(options: CacheOptions): CacheReport {
       return !matches(existing[concern]?.sources[alias], current);
     });
 
-    report.aliasCounts[alias] = { components: 0, styles: 0, variables: 0, icons: 0 };
+    report.aliasCounts[alias] = { components: 0, styles: 0, variables: 0, icons: 0, images: 0 };
 
     if (!stale) {
       for (const concern of CACHE_CONCERNS) {
@@ -461,6 +507,7 @@ export function validateCache(options: Omit<CacheOptions, 'force'>): CacheProble
     styles: readCacheFile<StylesEntry>(dataDir, 'styles'),
     variables: readCacheFile<VariablesEntry>(dataDir, 'variables'),
     icons: readCacheFile<IconsEntry>(dataDir, 'icons'),
+    images: readCacheFile<ImagesEntry>(dataDir, 'images'),
   };
 
   for (const alias of aliases) {
@@ -470,6 +517,7 @@ export function validateCache(options: Omit<CacheOptions, 'force'>): CacheProble
       styles: fileSource,
       variables: sourceOf(dataDir, `${alias}.variables.json`),
       icons: fileSourceOf(dataDir, alias, glyphSignature),
+      images: sourceOf(dataDir, `${alias}.images.json`),
     };
 
     for (const concern of CACHE_CONCERNS) {

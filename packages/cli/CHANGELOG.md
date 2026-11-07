@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`specs fetch` downloads the images a library carries on published fill styles**, with a new `images` kind for a source's `fetch` list and for `--only`. Files land in `assets/images/` alongside what `generate --get-images` downloads, and neither path re-fetches the other's
+
+- **`data/cache/images.yaml` lists those images by their Figma style name**, carrying the image hash and the file path an `images` registry entry needs, so you can use a library image in a spec you write by hand
+
 ### Changed
 
 ### Fixed

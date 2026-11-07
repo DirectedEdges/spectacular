@@ -5,7 +5,7 @@ import { tmpdir } from 'os';
 import { parse } from 'yaml';
 import {
   refreshCache, validateCache, readCacheFile, cachePath, describeProblems,
-  type ComponentsEntry, type StylesEntry, type VariablesEntry, type IconsEntry,
+  type ComponentsEntry, type StylesEntry, type VariablesEntry, type IconsEntry, type ImagesEntry,
 } from '../../../src/cache/cache.js';
 
 const PATTERN = 'Icon / {i}';
@@ -64,10 +64,10 @@ describe('Cache', () => {
     refreshCache({ dataDir, aliases, glyphs: { match: PATTERN }, force });
 
   describe('building', () => {
-    it('writes all four caches', () => {
+    it('writes every cache', () => {
       const report = build();
       expect(report.rebuilt).toEqual(['library']);
-      expect(report.counts).toEqual({ components: 3, styles: 3, variables: 2, icons: 1 });
+      expect(report.counts).toEqual({ components: 3, styles: 3, variables: 2, icons: 1, images: 0 });
     });
 
     it('records only components that carry a published key', () => {
@@ -129,6 +129,78 @@ describe('Cache', () => {
       const report = build(['library', 'missing']);
       expect(report.unfetched).toEqual(['missing']);
       expect(report.rebuilt).toEqual(['library']);
+    });
+  });
+
+  // specs#889. The images payload is written by `specs fetch --only <alias>,images`;
+  // nothing in the file download can produce it, because the hash comes from a
+  // node request against each fill style.
+  describe('fill style images', () => {
+    const imagesPayload = (styles: unknown[]) => JSON.stringify({ fileKey: 'f', styles });
+
+    it('keys the library\'s curated images by their Figma style name', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), imagesPayload([
+        { name: 'Images / Wanaka', key: 'imgkey1', node_id: '1568:2977', imageHash: 'b60ac7bc', src: 'assets/images/b60ac7bc.png' },
+      ]));
+      const report = build();
+      const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
+      expect(cache.entries['Images / Wanaka']).toEqual({
+        imageHash: 'b60ac7bc', src: 'assets/images/b60ac7bc.png', file: 'library',
+      });
+      expect(report.counts.images).toBe(1);
+    });
+
+    it('records an image whose bytes never landed, with no src', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), imagesPayload([
+        { name: 'Images / Gone', key: 'k', node_id: '1:1', imageHash: 'deadbeef' },
+      ]));
+      build();
+      const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
+      expect(cache.entries['Images / Gone']).toEqual({ imageHash: 'deadbeef', file: 'library' });
+    });
+
+    it('writes an empty images cache when no payload exists, so "none" differs from "never built"', () => {
+      build();
+      const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
+      expect(cache.entries).toEqual({});
+      expect(cache.sources.library).toBeUndefined();
+    });
+
+    it('rebuilds an alias whose images payload changed, leaving the others alone', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), imagesPayload([
+        { name: 'Images / Wanaka', key: 'k', node_id: '1:1', imageHash: 'first' },
+      ]));
+      build();
+      writeFileSync(join(dataDir, 'library.images.json'), imagesPayload([
+        { name: 'Images / Wanaka', key: 'k', node_id: '1:1', imageHash: 'second', src: 'assets/images/second.png' },
+      ]));
+      expect(build().rebuilt).toEqual(['library']);
+      const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
+      expect(cache.entries['Images / Wanaka'].imageHash).toBe('second');
+    });
+
+    it('builds for an alias that has images fetched but no file payload', () => {
+      writeFileSync(join(dataDir, 'brand.images.json'), imagesPayload([
+        { name: 'Images / Brand', key: 'k', node_id: '1:1', imageHash: 'brandhash' },
+      ]));
+      const report = build(['library', 'brand']);
+      expect(report.unfetched).toEqual([]);
+      const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
+      expect(cache.entries['Images / Brand'].file).toBe('brand');
+    });
+
+    it('reports a payload it cannot parse instead of contributing silently nothing', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), '{ not json');
+      const report = build();
+      expect(report.failures.map(f => f.file)).toEqual(['library.images.json']);
+    });
+
+    it('makes a missing images cache a validation problem once the payload exists', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), imagesPayload([]));
+      const problems = validateCache({ dataDir, aliases: ['library'], glyphs: { match: PATTERN } });
+      expect(problems.filter(p => p.concern === 'images')).toEqual([
+        { concern: 'images', alias: 'library', reason: 'missing' },
+      ]);
     });
   });
 
@@ -270,7 +342,7 @@ describe('Cache', () => {
       expect(report.failures[0].alias).toBe('broken');
       expect(report.failures[0].file).toBe('broken.file.json');
       expect(report.failures[0].reason).toContain('broken.file.json');
-      expect(report.aliasCounts.broken).toEqual({ components: 0, styles: 0, variables: 0, icons: 0 });
+      expect(report.aliasCounts.broken).toEqual({ components: 0, styles: 0, variables: 0, icons: 0, images: 0 });
       // The healthy alias is unaffected — and its contribution is attributable.
       expect(report.aliasCounts.library.components).toBe(3);
       expect(report.counts.components).toBe(3);
@@ -289,7 +361,7 @@ describe('Cache', () => {
     it('records per-alias contributions when every payload is healthy', () => {
       const report = build();
       expect(report.failures).toEqual([]);
-      expect(report.aliasCounts.library).toEqual({ components: 3, styles: 3, variables: 2, icons: 1 });
+      expect(report.aliasCounts.library).toEqual({ components: 3, styles: 3, variables: 2, icons: 1, images: 0 });
     });
   });
 });

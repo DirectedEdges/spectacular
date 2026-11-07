@@ -3,6 +3,8 @@
  *
  * Purpose:
  * - Fetch file JSON, variables, and styles for one or more Figma files
+ * - Download the assets those payloads name: glyph SVGs (`icons`) and the image
+ *   fills carried by published fill styles (`images`, specs#889)
  * - Store raw payloads on disk (no transforms)
  * - Enable generate/batch to load and merge in-memory later
  */
@@ -26,10 +28,12 @@ import { PayloadSplitter, splitDirFor } from '../utilities/payloadSplit.js';
 import { lastFetchedBytes, preparingMessage, formatPayloadSize } from '../fetch/estimate.js';
 import { SectionedFile } from '../utilities/sectionedFile.js';
 import { resolveFigmaFileKey, slugifyBranchName, FigmaKeyError } from '../fetch/fileKey.js';
+import { fillStyleRefs, collectStyleImages, type StyleImage } from '../fetch/styleImages.js';
+import { ImageFillsResolver, IMAGES_DIR_NAME } from '../generate/imageFills.js';
 import { postGetVariables } from '../bridge/client.js';
 import { resolveFileKey } from '../bridge/pickConnection.js';
 
-type FetchKind = 'file' | 'variables' | 'styles' | 'icons';
+type FetchKind = 'file' | 'variables' | 'styles' | 'icons' | 'images';
 
 /**
  * A source to fetch. `config` sources come from `data.sources`; `adhoc` sources are
@@ -63,7 +67,18 @@ async function streamToString(stream: ReadableStream<Uint8Array> | null): Promis
   return Buffer.concat(chunks).toString('utf-8');
 }
 
-const FETCH_KINDS: readonly FetchKind[] = ['file', 'variables', 'styles', 'icons'];
+const FETCH_KINDS: readonly FetchKind[] = ['file', 'variables', 'styles', 'icons', 'images'];
+
+/**
+ * Kinds that derive what to download from another kind's payload, so they run
+ * after the straight downloads: `icons` needs `file`, `images` needs `styles`.
+ * Either may have been fetched this run or a previous one.
+ */
+const DERIVED_KINDS: readonly FetchKind[] = ['icons', 'images'];
+
+function isDerivedKind(kind: FetchKind): boolean {
+  return (DERIVED_KINDS as readonly FetchKind[]).includes(kind);
+}
 
 function isFetchKind(value: string): value is FetchKind {
   return (FETCH_KINDS as readonly string[]).includes(value);
@@ -405,7 +420,7 @@ export const Fetch = new Command('fetch')
   .option('--config <path>', 'Path to a config/ directory or legacy specs.config.yaml')
   .option('--data-dir <dir>', 'Override data directory (default: data.directory from the workspace settings, or ./data)')
   .option('--outDir <dir>', 'Deprecated: use --data-dir')
-  .option('--only <name[,name...]>', 'Fetch only these — a file alias from sources, a data kind (file, variables, styles, icons), or both')
+  .option('--only <name[,name...]>', 'Fetch only these — a file alias from sources, a data kind (file, variables, styles, icons, images), or both')
   .option(
     '--source <[alias=]url|key>',
     'Fetch a file or branch that is not in config — pass its Figma URL or key. Repeatable. Names itself after the branch unless you pass alias=',
@@ -660,6 +675,13 @@ export const Fetch = new Command('fetch')
             process.exit(ERROR_CODES.INVALID_ARGS);
           }
         }
+        // Image fills land beside glyph assets in the spec workspace, so they
+        // need the same setting. No convention declaration gates them: a fill
+        // style painting an image identifies itself (specs#889).
+        if (entry.fetch.includes('images') && wants('images') && !config.settings.spec.directory) {
+          console.error(`Error: ${entry.origin === 'adhoc' ? `source "${entry.alias}"` : `data.sources.${entry.alias}.fetch`} includes "images" but spec.directory is not set in the workspace settings`);
+          process.exit(ERROR_CODES.INVALID_ARGS);
+        }
       }
 
       // One source's download failure is recorded and reported; the remaining
@@ -687,7 +709,7 @@ export const Fetch = new Command('fetch')
         // recovers one kind and leaves the rest missing (specs#572).
         const completedKinds = new Set<string>();
         try {
-        for (const kind of entry.fetch.filter(k => k !== 'icons' && wants(k))) {
+        for (const kind of entry.fetch.filter(k => !isDerivedKind(k) && wants(k))) {
           activeKind = kind;
           // One clock for the kind, read by both stages below. What a caller waited
           // for is "variables", not "the transfer of variables after Figma finished
@@ -931,6 +953,90 @@ export const Fetch = new Command('fetch')
           const elapsed = stopSpinner();
           console.log(`✓ Downloaded: ${entry.alias}.glyphs (${downloaded}/${glyphs.length}, ${elapsed})`);
           completedKinds.add('icons');
+        }
+
+        // Images run after the other kinds for the same reason icons do: the
+        // fill styles they start from come from the saved styles payload, which
+        // must be present (this run or a previous one).
+        if (entry.fetch.includes('images') && wants('images')) {
+          activeKind = 'images';
+          const specDirectory = config.settings.spec.directory;
+          if (!specDirectory) {
+            console.error(`Error: ${entry.origin === 'adhoc' ? `source "${entry.alias}"` : `data.sources.${entry.alias}.fetch`} includes "images" but spec.directory is not set in the workspace settings`);
+            process.exit(ERROR_CODES.INVALID_ARGS);
+          }
+          const stylesPath = path.join(outDir, `${entry.alias}.styles.json`);
+          if (!fs.existsSync(stylesPath)) {
+            console.error(`Error: image fills require the styles payload — fetch "styles" for ${entry.alias} first (${stylesPath} not found)`);
+            throw new SourceFetchError(ERROR_CODES.FILE_ERROR);
+          }
+
+          const stopSpinner = startSpinner(`Downloading: ${entry.alias}.images`);
+          const refs = fillStyleRefs(readJsonPayload(stylesPath));
+          const styleImages = await collectStyleImages(refs, async ids => {
+            const url = `https://api.figma.com/v1/files/${entry.key}/nodes?ids=${encodeURIComponent(ids.join(','))}`;
+            const result = await figmaFetch(url, token);
+            if (result.status !== 200) {
+              stopSpinner();
+              const classification = classifyHttpStatus(result.status);
+              if (classification === 'auth') {
+                console.error(formatAuthError(result.status, entry.alias, 'images', configPath));
+                process.exit(ERROR_CODES.AUTH_ERROR);
+              }
+              if (classification === 'rate') {
+                console.error(formatRateLimitError(entry.alias, 'images', result.headers));
+                process.exit(ERROR_CODES.RATE_LIMIT);
+              }
+              console.error(`Error: HTTP ${result.status} while reading ${entry.alias} fill style nodes`);
+              throw new SourceFetchError(ERROR_CODES.NETWORK_ERROR);
+            }
+            return JSON.parse(await streamToString(result.stream));
+          });
+
+          // Hash-named files in the one images directory, shared with
+          // `generate --get-images`: a content-addressed name means a curated
+          // image and the same image detected on a component are one file, and
+          // neither path has to know the other ran. That is also why an ad-hoc
+          // source needs no directory of its own, where glyphs do — slug names
+          // collide across sources, hashes cannot.
+          const baseDir = path.resolve(configDir, specDirectory);
+          const existing = await ImageFillsResolver.findExisting(
+            new Set(styleImages.map(s => s.imageHash)), baseDir
+          );
+          const missing = new Set(styleImages.map(s => s.imageHash).filter(h => !existing.has(h)));
+          if (missing.size > 0) {
+            const urls = await ImageFillsResolver.fetchImageUrls(entry.key, token);
+            for (const [hash, filename] of await ImageFillsResolver.downloadAndWrite(missing, urls, baseDir)) {
+              existing.set(hash, filename);
+            }
+          }
+
+          // `src` is recorded relative to the config directory — the one form
+          // that is correct wherever spec.directory sits. `specs cache` copies
+          // it into images.yaml verbatim rather than deriving the path twice.
+          const imagesDirRelative = path.relative(configDir, path.join(baseDir, IMAGES_DIR_NAME));
+          const resolved: StyleImage[] = styleImages.map(image => {
+            const filename = existing.get(image.imageHash);
+            return filename
+              ? { ...image, src: path.join(imagesDirRelative, filename) }
+              : image;
+          });
+
+          await fs.writeFile(
+            path.join(outDir, `${entry.alias}.images.json`),
+            JSON.stringify({ fileKey: entry.key, styles: resolved }, null, 2),
+            'utf-8'
+          );
+
+          const elapsed = stopSpinner();
+          const withFiles = resolved.filter(image => image.src).length;
+          console.log(`✓ Downloaded: ${entry.alias}.images (${withFiles}/${styleImages.length} from ${refs.length} fill styles, ${elapsed})`);
+          // An image whose bytes never arrived keeps its hash and no src. Said
+          // here rather than left to be discovered as a blank in the cache.
+          if (withFiles < styleImages.length) {
+            console.warn(`⚠ ${styleImages.length - withFiles} image fill style(s) have no file under ${IMAGES_DIR_NAME}/ — re-run specs fetch --only ${entry.alias},images`);
+          }
+          completedKinds.add('images');
         }
         } catch (error) {
           clearInlineStatus();

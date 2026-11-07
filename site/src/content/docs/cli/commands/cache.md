@@ -20,7 +20,7 @@ That data arrives as whole Figma API responses. A file payload for a large libra
 
 ## What it writes
 
-Four files under `{data.directory}/cache/`, each covering every source you've fetched:
+Five files under `{data.directory}/cache/`, each covering every source you've fetched:
 
 | File | Maps | Built from |
 |------|------|------------|
@@ -28,12 +28,15 @@ Four files under `{data.directory}/cache/`, each covering every source you've fe
 | `styles.yaml` | style name → key and type | `{alias}.file/` (or `.file.json`) |
 | `variables.yaml` | token name → key, id, published flag | `{alias}.variables.json` |
 | `icons.yaml` | glyph name → node id and key | `{alias}.file/` (or `.file.json`) |
+| `images.yaml` | fill style name → image hash and file path | `{alias}.images.json` |
 
 They're generated files. Deleting them is safe — the next `specs cache` rebuilds them — and they should not be edited by hand.
 
 Each entry records which source it came from, because node ids are file-scoped: knowing an entry's origin is what lets `render` tell whether an id is usable in the file it's rendering into, and it lets one library be rebuilt without re-reading the others.
 
 `components.yaml` also records each component's raw Figma name. A spec refers to a component by a formatted key, and that transform is lossy — `DS Link/On overlay/M` and `DS Link On Overlay M` produce the same key — so the name cannot be recovered from the key. Recording it lets `render` place an instance of a component the workspace has no spec for: the library's names are formatted the same way and matched against the spec's key, then the component is imported by its published key. Names are stored raw and formatted at render time, so changing `spec.keys` needs no rebuild.
+
+`images.yaml` is the roster of a library's curated images — the image fills carried by published fill styles, keyed by the Figma style name. It carries both the image's content hash and the path to the downloaded file, because an `images` registry entry in a spec needs both: `src` is what the React and Web Components transforms resolve the image from, and the hash is the Figma identity. The style name lives nowhere else, since the asset file is named for its content.
 
 Every file also records what it was built from — the payload's name, size, and modification time, plus the glyph naming pattern for `icons.yaml`. That's how staleness is detected.
 
@@ -75,7 +78,7 @@ The cache is built for every source declared under `data.sources` in `config/set
 ```
   Cache rebuilt: library
   Not fetched, skipped: brand
-  Entries: 3567 components, 97 styles, 1458 variables, 469 icons
+  Entries: 3567 components, 97 styles, 1458 variables, 469 icons, 12 images
 ```
 
 `render` is stricter: it needs every declared source present and current, and fails naming the ones that aren't.
