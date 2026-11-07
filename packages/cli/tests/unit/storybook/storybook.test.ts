@@ -295,6 +295,13 @@ describe('templates', () => {
     }
   });
 
+  // The watcher development runs re-bundles the program and never re-copies
+  // templates, so dist/ holds whatever the last full build left. Resolving
+  // there first served a new template from a stale directory.
+  it('resolves templates from the source tree in a checkout, not from dist', () => {
+    expect(templatesDir()).toBe(path.resolve(here, '../../../src/storybook/templates'));
+  });
+
   it('renders placeholders and refuses unknown ones', () => {
     expect(renderTemplate('port {{PORT}}', { PORT: '6116' })).toBe('port 6116');
     expect(() => renderTemplate('{{NOPE}}', {})).toThrow(/NOPE/);
