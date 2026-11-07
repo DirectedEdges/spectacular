@@ -10,8 +10,51 @@ export default defineConfig({
   redirects: {
     // Page renamed when the glyphs convention outgrew the single name pattern (ADR-103)
     '/settings/glyph-name-pattern/': '/settings/glyphs/',
+    // Retired (#849) — per-key CSS claims live in the generated, guard-checked
+    // CSS binding; the hand page drifted (#691) and two documents about one
+    // mapping is how the drift started.
+    '/code/style-mapping/': '/schema/mappings/css/',
+    // Retired — the defaults table was redundant with the per-key style pages;
+    // the absence-is-ambiguous narrative moved to the mappings Overview
+    '/schema/mappings/defaults/': '/schema/mappings/',
     // Retired — content merged into the schema overview
     '/schema/document-map/': '/schema/',
+    // The style reference became a tree mirroring the schema's own containment,
+    // so a type's page now sits at the path that reaches it. These six had a
+    // page at the schema root as well, documenting the same thing twice.
+    '/schema/color-object/': '/schema/styles/color-object/',
+    '/schema/gradient-value/': '/schema/styles/gradient-value/',
+    '/schema/sides/': '/schema/styles/sides/',
+    '/schema/typography/': '/schema/styles/typography/',
+    '/schema/effects/': '/schema/styles/effects/',
+    '/schema/corners/': '/schema/styles/corner-radius/',
+    // Their member pages sat in sibling folders at the schema root and moved
+    // with them. Listed one by one: a `[...rest]` pattern here is read as a
+    // dynamic route and fails the build asking for a `getStaticPaths`, because
+    // `redirects` matches literal paths only.
+    '/schema/typography/font-family/': '/schema/styles/typography/font-family/',
+    '/schema/typography/font-size/': '/schema/styles/typography/font-size/',
+    '/schema/typography/font-style/': '/schema/styles/typography/font-style/',
+    '/schema/typography/hanging-list/': '/schema/styles/typography/hanging-list/',
+    '/schema/typography/hanging-punctuation/': '/schema/styles/typography/hanging-punctuation/',
+    '/schema/typography/leading-trim/': '/schema/styles/typography/leading-trim/',
+    '/schema/typography/letter-spacing/': '/schema/styles/typography/letter-spacing/',
+    '/schema/typography/line-height/': '/schema/styles/typography/line-height/',
+    '/schema/typography/list-spacing/': '/schema/styles/typography/list-spacing/',
+    '/schema/typography/paragraph-indent/': '/schema/styles/typography/paragraph-indent/',
+    '/schema/typography/paragraph-spacing/': '/schema/styles/typography/paragraph-spacing/',
+    '/schema/typography/text-case/': '/schema/styles/typography/text-case/',
+    '/schema/typography/text-decoration/': '/schema/styles/typography/text-decoration/',
+    '/schema/effects/background-blur/': '/schema/styles/effects/background-blur/',
+    '/schema/effects/layer-blur/': '/schema/styles/effects/layer-blur/',
+    '/schema/effects/shadows/': '/schema/styles/effects/shadows/',
+    '/schema/effects/shadows/blur/': '/schema/styles/effects/shadows/blur/',
+    '/schema/effects/shadows/color/': '/schema/styles/effects/shadows/color/',
+    '/schema/effects/shadows/inset/': '/schema/styles/effects/shadows/inset/',
+    '/schema/effects/shadows/offset-x/': '/schema/styles/effects/shadows/offset-x/',
+    '/schema/effects/shadows/offset-y/': '/schema/styles/effects/shadows/offset-y/',
+    '/schema/effects/shadows/spread/': '/schema/styles/effects/shadows/spread/',
+    '/schema/effects/shadows/visible/': '/schema/styles/effects/shadows/visible/',
   },
   integrations: [
     starlight({
@@ -84,7 +127,7 @@ export default defineConfig({
           collapsed: true,
           items: [
             { label: 'Overview', slug: 'schema' },
-            { label: 'Platform Neutrality', slug: 'schema/platform-neutrality' },
+            { label: 'Specification', slug: 'schema/specification' },
             { label: 'Decision Records (ADRs)', slug: 'adr' },
             {
               label: 'Parts',
@@ -97,26 +140,28 @@ export default defineConfig({
                 { label: 'Conditional', slug: 'schema/conditional' },
                 { label: 'Conventions', slug: 'schema/conventions' },
                 { label: 'Settings', slug: 'schema/settings' },
-                { label: 'Corners', slug: 'schema/corners' },
-                { label: 'Effects', slug: 'schema/effects' },
                 { label: 'Elements', slug: 'schema/elements' },
-                { label: 'Gradient Value', slug: 'schema/gradient-value' },
                 { label: 'Instance Examples', slug: 'schema/instance-examples' },
                 { label: 'Layout', slug: 'schema/layout' },
                 { label: 'Metadata', slug: 'schema/metadata' },
                 { label: 'Prop Binding', slug: 'schema/prop-binding' },
                 { label: 'Prop Configurations', slug: 'schema/prop-configurations' },
                 { label: 'Props', slug: 'schema/props' },
-                { label: 'Sides', slug: 'schema/sides' },
                 { label: 'Slot Content', slug: 'schema/slot-content' },
                 { label: 'Slot Content Reference', slug: 'schema/slot-content-ref' },
                 { label: 'Styles', slug: 'schema/styles' },
                 { label: 'Subcomponents', slug: 'schema/subcomponents' },
                 { label: 'Token Reference', slug: 'schema/token-reference' },
-                { label: 'Typography', slug: 'schema/typography' },
                 { label: 'Variants', slug: 'schema/variants' },
               ],
             },
+            // The 99 generated style pages are not a nav section. They are a
+            // containment tree five levels deep, and a sidebar flattens it into
+            // a list where `visible` appears three times with nothing to say
+            // which is the style key and which are members of `Blur` and
+            // `Shadow`. `Styles` is linked in the group above, and the pages
+            // reach each other through the `Type` and `Path` sections that name
+            // the relationship the sidebar cannot.
             {
               label: 'Documents',
               collapsed: true,
@@ -127,6 +172,22 @@ export default defineConfig({
                 { label: 'Composition API', slug: 'schema/documents/composition-api' },
                 { label: 'Composition Variants', slug: 'schema/documents/composition-variants' },
                 { label: 'Composition Examples', slug: 'schema/documents/composition-examples' },
+              ],
+            },
+            {
+              // Cluster pages are deliberately NOT in the nav: a cluster is
+              // reached from the platform page's Clusters table or from a key's
+              // row, and forty generated rule pages would bury the five pages
+              // that matter.
+              label: 'Platform Mappings',
+              collapsed: true,
+              items: [
+                { label: 'Overview', slug: 'schema/mappings' },
+                { label: 'Neutrality', slug: 'schema/platform-neutrality' },
+                { label: 'Figma', slug: 'schema/mappings/figma' },
+                { label: 'CSS', slug: 'schema/mappings/css' },
+                { label: 'React', slug: 'schema/mappings/react' },
+                { label: 'Web Components', slug: 'schema/mappings/webcomponents' },
               ],
             },
           ],

@@ -126,7 +126,7 @@ At least one of the two forms is declared; a component matching either is a glyp
 |----------|------|---------|-------------|
 | `separator` | `string` | `'.'` | The member-name separator in flat property names |
 
-The library authors [object-prop](/schema/props/#objectprop) members as separator-delimited flat property names — `margin.compact` and `margin.expanded` fold into one `margin` object prop (since 0.39.0, ADR-111; declared via the [objectProps setting](/settings/object-props/)). Absent means no folding: a property name containing the separator stays a flat prop. Each folded member records its flat source name in `$extensions['com.figma'].name`, so writing back to Figma reverses the fold without re-deriving names.
+The library authors [object-prop](/schema/props/object/) members as separator-delimited flat property names — `margin.compact` and `margin.expanded` fold into one `margin` object prop (since 0.39.0, ADR-111; declared via the [objectProps setting](/settings/object-props/)). Absent means no folding: a property name containing the separator stays a flat prop. Each folded member records its flat source name in `$extensions['com.figma'].name`, so writing back to Figma reverses the fold without re-deriving names.
 
 ### `stylesProp`
 
@@ -185,7 +185,7 @@ Which slot prop a component treats as its **default slot** — the one slot a la
 
 `match` is an array because one library may name this slot differently across component families — `children` on a page row, `items` on a list. Any pattern matches.
 
-The convention is read **once, at generation time**, against a component's actual prop names, and the slot prop it matches carries [`defaultSlot: true`](/schema/props/#slotprop) in the generated spec. What the marker then permits is a second shape for filling that slot. An instance filling a default slot may be nested as a plain child — an ordinary entry in its parent's [`children`](/schema/children/) array — instead of through a [`SlotContentRef`](/schema/slot-content-ref/). A **non**-default slot is unchanged: an explicit reference is the only shape that can say *which* of several slots a fill belongs to, and both shapes coexist in one spec. See [`slots.default`](/settings/default-slot/) for the worked before and after.
+The convention is read **once, at generation time**, against a component's actual prop names, and the slot prop it matches carries [`defaultSlot: true`](/schema/props/slot/default-slot/) in the generated spec. What the marker then permits is a second shape for filling that slot. An instance filling a default slot may be nested as a plain child — an ordinary entry in its parent's [`children`](/schema/children/) array — instead of through a [`SlotContentRef`](/schema/slot-content-ref/). A **non**-default slot is unchanged: an explicit reference is the only shape that can say *which* of several slots a fill belongs to, and both shapes coexist in one spec. See [`slots.default`](/settings/default-slot/) for the worked before and after.
 
 ### `states`
 

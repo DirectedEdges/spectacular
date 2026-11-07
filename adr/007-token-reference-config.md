@@ -4,6 +4,7 @@
 **Created**: 2026-03-01
 **Status**: ACCEPTED
 **Summary**: A `format.tokens` option replaces `variables`, `simplifyVariables` and `simplifyStyles` with one token output format.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none — extends ADR 006: Unified Token Reference Type)*
 

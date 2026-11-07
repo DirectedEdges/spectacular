@@ -4,6 +4,7 @@
 **Created**: 2026-06-12
 **Status**: ACCEPTED
 **Summary**: `SlotProp.minChildren` and `maxChildren` replace `minItems` and `maxItems`, aligning with Figma's slot settings.
+**Decides**: props.slot.minChildren, props.slot.maxChildren, props.slot.anyOf
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

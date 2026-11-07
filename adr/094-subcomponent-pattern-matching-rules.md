@@ -4,6 +4,7 @@
 **Created**: 2026-09-28
 **Status**: ACCEPTED
 **Summary**: Five rules fix how `{C}` and `{S}` match a name, so one `subcomponents` pattern means the same thing in every consumer.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none — amends ADR-031)*
 

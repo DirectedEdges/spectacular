@@ -147,8 +147,13 @@ export class StylingAnalyzer implements Transformer {
     await fs.writeFile(outputPath, content, 'utf-8');
   }
 
-  async finalize(outputDir: string, analysisDir?: string, foundations?: AnalyzerFoundations): Promise<void> {
-    if (this._componentData.size === 0) return;
+  async finalize(
+    outputDir: string,
+    analysisDir?: string,
+    foundations?: AnalyzerFoundations,
+    outputFormat?: 'JSON' | 'YAML',
+  ): Promise<void> {
+    if (outputFormat) this._outputFormat = outputFormat;
 
     const outDir = analysisDir ?? path.join(outputDir, ANALYSIS_DIR);
     await fs.ensureDir(outDir);

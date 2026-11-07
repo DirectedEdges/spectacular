@@ -4,6 +4,7 @@
 **Created**: 2026-02-26
 **Status**: ACCEPTED
 **Summary**: A composite `typography` property replaces fourteen flat text keys including `fontSize`, `lineHeight`, `letterSpacing` and `textStyleId`.
+**Decides**: styles.typography, styles.typography.fontFamily, styles.typography.fontSize, styles.typography.fontStyle, styles.typography.hangingList, styles.typography.hangingPunctuation, styles.typography.leadingTrim, styles.typography.letterSpacing, styles.typography.lineHeight, styles.typography.listSpacing, styles.typography.paragraphIndent, styles.typography.paragraphSpacing, styles.typography.textCase, styles.typography.textDecoration
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

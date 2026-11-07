@@ -4,6 +4,7 @@
 **Created**: 2026-04-23
 **Status**: ACCEPTED
 **Summary**: `mainAxisAlignment` and `crossAxisAlignment` with named enums replace `primaryAxisAlignItems` and `counterAxisAlignItems`.
+**Decides**: styles.crossAxisAlignment, styles.mainAxisAlignment
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

@@ -23,7 +23,7 @@ type PropConfigurations = Record<
 
 `InstanceExample.propConfigurations` accepts scalars, `null`, slot-content references, and `ObjectPropValue` — `PropBinding` is not permitted there.
 
-An `ObjectPropValue` sets the members of an [`ObjectProp`](/schema/props/#objectprop). Member names must not begin with `$`, which is what keeps the form distinguishable from `PropBinding` and the other `$`-keyed references:
+An `ObjectPropValue` sets the members of an [`ObjectProp`](/schema/props/object/). Member names must not begin with `$`, which is what keeps the form distinguishable from `PropBinding` and the other `$`-keyed references:
 
 ```yaml
 # A variant configuring two members; an omitted member keeps its resolved value
@@ -54,7 +54,7 @@ header: null
 
 PropConfigurations appear in four places:
 
-- **Variant `configuration`** — declares which prop combination activates a [variant](/schema/variants.md/#variant). When all listed props match their specified values, the variant's overrides are applied.
+- **Variant `configuration`** — declares which prop combination activates a [variant](/schema/variants/#variant). When all listed props match their specified values, the variant's overrides are applied.
 - **`invalidPropCombinations`** — an array on the [Component](/schema/component/) root (carried by the api concern) that declares prop combinations which should never occur together.
 - **`Element.propConfigurations`** — sets prop values on a nested instance element; accepts the full union (scalars, `PropBinding`, `CompositionRef`).
 - **`InstanceExample.propConfigurations`** — documents a complete configuration; scalars, `null`, and slot-content references.

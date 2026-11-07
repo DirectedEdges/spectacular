@@ -4,6 +4,7 @@
 **Created**: 2026-10-06
 **Status**: ACCEPTED
 **Summary**: A workspace is a chain of steps, each reading what the one before it wrote. `specs build` runs that chain once and exits; `specs run` runs it once and then watches, re-running from whichever step the change belongs to. The chain is read from the directory layout, so no setting was added. Steps run inside one process, which means the license is checked once per run instead of once per step — removing a failure where a throttled check quietly produced free-tier output under a paid key. `specs fetch` is not a step: it has no input the CLI can watch, so it stays something a person runs. `specs render` is a step but opts in, because it writes to a live Figma file.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none — extends ADR-053 `specs transform` and ADR-096 Specs Directory Layout)*
 

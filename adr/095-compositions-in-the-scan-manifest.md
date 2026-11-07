@@ -4,6 +4,7 @@
 **Created**: 2026-09-29
 **Status**: ACCEPTED
 **Summary**: A third `## Compositions` manifest section, curated by checkbox exactly as components are; the ready-for-dev marking on the outermost frame decides only which frames are eligible for a row.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none — amends the manifest format ADR-093 governs the curation half of)*
 

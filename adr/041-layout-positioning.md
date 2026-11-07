@@ -4,6 +4,7 @@
 **Created**: 2026-04-27
 **Status**: ACCEPTED
 **Summary**: `Position` and `PositionOffset` types describe constraint-based placement, replacing `x`, `y` and `layoutPositioning`.
+**Decides**: styles.bottom, styles.centerHorizontalOffset, styles.centerVerticalOffset, styles.end, styles.layoutMode, styles.position, styles.start, styles.top
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

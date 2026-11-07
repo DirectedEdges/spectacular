@@ -45,7 +45,7 @@ These are not a loosened form of [`ComponentApiDocument`](/schema/documents/comp
 
 ## Nested instance hierarchies
 
-A composition is usually a hierarchy of layout components nested in one another, each filling the next one's slot. When those slots are marked [`defaultSlot: true`](/schema/props/#slotprop), the hierarchy lives in the composition's **own** triplet as nested [children](/schema/children/) — the instances are anatomy elements of the composition, and the layout is the tree:
+A composition is usually a hierarchy of layout components nested in one another, each filling the next one's slot. When those slots are marked [`defaultSlot: true`](/schema/props/slot/default-slot/), the hierarchy lives in the composition's **own** triplet as nested [children](/schema/children/) — the instances are anatomy elements of the composition, and the layout is the tree:
 
 ```yaml
 title: Search results / Small

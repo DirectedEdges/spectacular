@@ -5,13 +5,7 @@ description: "A $slotContent JSON Pointer to a SlotContent or Composition entry"
 
 A `SlotContentRef` names the act of filling a slot. It is a single-key object whose `$slotContent` value is a JSON Pointer to the fill, so the same content can be authored once and referenced from many places.
 
-```ts
-interface SlotContentRef {
-  $slotContent: string;
-}
-```
-
-## Properties
+## Members
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|

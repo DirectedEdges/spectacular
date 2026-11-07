@@ -106,9 +106,10 @@ specs analyze --output ./packages/tokens/specs
 | `0` | Every spec analysed |
 | `1` | One or more specs failed to analyse — each is named by itself, above the summary |
 | `2` | The specs directory does not exist, or every analyzer named was unknown |
-| `3` | No component directories with an `api.yaml` were found |
 
 A failed spec does not stop the pass. The run analyses the rest, reports `N succeeded, M failed`, and exits non-zero.
+
+A catalogue with no specs in it exits `0`. The run says so on one line and each analyzer writes its report with zero counts and empty collections, so a workspace being authored from scratch gets an analysis surface before it has a spec.
 
 ## See Also
 

@@ -4,6 +4,7 @@
 **Created**: 2026-09-18
 **Status**: ACCEPTED
 **Summary**: `SpecApiDocument`, `SpecVariantsDocument` and `SpecExamplesDocument` type each file a `splitConcerns` run writes.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none — extends ADR-089)*
 

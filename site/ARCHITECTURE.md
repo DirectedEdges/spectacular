@@ -40,7 +40,7 @@ content).
 |---|---|
 | `astro.config.mjs` | Nav (`sidebar` array), port 4323, component overrides, `pro`/`experimental` badge constants, accordion script |
 | `src/content/docs/` | All pages; directory = URL prefix; `index.md(x)` = section root |
-| `src/content/docs/cli/commands/` | One page per CLI command, named for the command as `packages/cli/src/commands/` now is — so a page, its command and its source file share a name. Two exceptions worth knowing: the page is kebab-case where a command is camelCase (`apply-custom-tokens` ↔ `applyCustomTokens`), and `analyze` has a command file but no page |
+| `src/content/docs/cli/commands/` | One page per CLI command, named for the command as `packages/cli/src/commands/` now is — so a page, its command and its source file share a name. The set is 1:1 in both directions; the one difference is spelling, where the page is kebab-case and the command is camelCase (`apply-custom-tokens` ↔ `applyCustomTokens`) |
 | `src/content/docs/schema/` | Type pages + deep `styles/`/`typography/`/`effects/` property trees, plus cross-cutting pages that explain the contract rather than one node of it (`platform-neutrality`) |
 | `src/content/docs/code/` | One page per emitted artifact (`contract`, `scaffold`, `styles`, `stories`, `cssvars`) — what `specs react` / `specs webcomponents` write, linked from both command pages |
 | `src/content/docs/settings/` | One page per config key |
@@ -78,6 +78,29 @@ content).
   text, wipes and rebuilds `docs/adr/`.
 - `scripts/build-releases.mjs`: merges `packages/schema/CHANGELOG.md` +
   `packages/cli/CHANGELOG.md` into the tabbed releases page.
+- `scripts/build-mappings.mjs`: renders `schema/mappings/` (per-platform
+  binding pages + cluster pages) from `packages/schema/mappings/bindings/`,
+  with completeness enforced over both the style keys and the prop kinds.
+- `scripts/build-style-pages.mjs`: the `schema/styles/` tree from
+  `styles.schema.json`, the binding data, and `_style-page-content.json`.
+- `scripts/build-prop-pages.mjs`: the `schema/props/` tree (kind, member and
+  extensions pages) from `component.schema.json`, the binding data, and
+  `_prop-page-content.json`. `schema/props.md` stays the hand-written hub.
+- `scripts/build-specification.mjs`: wraps `packages/schema/SPECIFICATION.md`
+  as `schema/specification.md`.
+
+All five run via `predev`/`prebuild`; `npm run dev` additionally watches
+`packages/schema/schema/` and `packages/schema/mappings/` and reruns the
+affected generators. The generated trees (`docs/adr/`, `schema/mappings/`,
+`schema/styles/`, `schema/props/`, `schema/anatomy/`, `schema/specification.md`)
+are gitignored.
+
+**Build scripts carry no content.** Every sentence a generator emits lives in
+`scripts/content/` (one module per generator: `mappings.mjs`, `style-pages.mjs`,
+`prop-pages.mjs`, `anatomy-pages.mjs`); the scripts hold structure only —
+headings, labels, guards, assembly. Narrative that no schema member states
+lives further upstream in `packages/schema/mappings/_*-page-content.json`.
+Prose is edited in content modules, never in a build script.
 
 ## Verification
 

@@ -4,6 +4,7 @@
 **Created**: 2026-09-17
 **Status**: ACCEPTED
 **Summary**: `FigmaElementExtension.children` records a promoted container's hoisted fill beside the consumed styles, and container promotion sources widen to all closed-value layout members.
+**Decides**: styles.crossAxisAlignment, styles.itemSpacing, styles.layoutMode, styles.mainAxisAlignment, styles.padding, styles.wrap, styles.wrapAlignment
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none — amends the container decisions of ADR-076)*
 

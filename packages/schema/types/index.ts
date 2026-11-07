@@ -17,18 +17,20 @@ export type {
   ComponentVariantsSubcomponent,
   ComponentExamplesSubcomponent,
 } from './ComponentConcernDocument.js';
-export type { Anatomy, AnatomyElement, ElementTypeRef, SubcomponentRef, RoleConceptName, ActionConceptName, ActionEntry } from './Anatomy.js';
+export type { Anatomy, AnatomyElement, AnatomyElementExtensions, FigmaAnatomyElementExtension, ElementTypeRef, SubcomponentRef, RoleConceptName, ElementRole, ActionConceptName, ActionEntry } from './Anatomy.js';
+export type { ComponentName } from './ComponentName.js';
+export type { Scalar } from './Scalar.js';
 export type { Props, AnyProp, BooleanProp, StringProp, EnumProp, SlotProp, PrimitiveSlotContent, NumberProp, ObjectProp, ObjectPropMember, FigmaCodeOnlySource, FigmaPropExtension, PropExtensions } from './Props.js';
 export type { Variant, Variants } from './Variant.js';
 export type { Metadata, RunMetadata, Concern } from './Metadata.js';
 export type { Subcomponent, Subcomponents, SubcomponentSource } from './Subcomponent.js';
-export type { InstanceExample, InstanceExamples } from './InstanceExample.js';
+export type { InstanceExample, InstanceExamples, InstanceExampleConfigurationValue } from './InstanceExample.js';
 
 // Element and structure types
 export type { Element, Elements, ElementType, ElementExtensions, FigmaElementExtension } from './Element.js';
-export type { Layout, LayoutNode } from './Layout.js';
+export type { Layout, LayoutNode, LayoutBranch } from './Layout.js';
 export type { Children, SlotBinding } from './Children.js';
-export type { SlotContent } from './SlotContent.js';
+export type { SlotContent, SlotContentMap } from './SlotContent.js';
 export type { Composition, Compositions } from './Composition.js';
 export type {
   CompositionConcernDocument,
@@ -61,7 +63,7 @@ export type { Settings, ResolvedSettings, ColorFormat, SourceEntry } from './Set
 export { DEFAULT_SETTINGS } from './Settings.js';
 
 // Style types
-export type { Styles, ContentStyles, TextContentStyles, GlyphContentStyles, Style, ColorStyle, ColorObject, StyleKey, TokenReference, AspectRatioValue, AspectRatioStyle, Typography, Sides, Corners, ItemSpacing, LayoutMode, WrapAlignment, MainAxisAlignment, CrossAxisAlignment, Position, PositionOffset, StrokeDashPattern, TextAlignHorizontal, TextOverflow } from './Styles.js';
+export type { Styles, ContentStyles, TextContentStyles, GlyphContentStyles, Style, ColorStyle, ColorObject, StyleKey, TokenReference, AspectRatioValue, AspectRatioStyle, Typography, Sides, Corners, ItemSpacing, LayoutMode, WrapAlignment, MainAxisAlignment, CrossAxisAlignment, Position, PositionOffset, StrokeDashPattern, TextAlignHorizontal, TextOverflow, StrokeAlign, LayoutSizing, TextAlignVertical, PrimaryAxisSizingMode } from './Styles.js';
 export type { Shadow, Blur, Effects } from './Effects.js';
 export type { GradientStop, GradientCenter, LinearGradient, RadialGradient, AngularGradient, GradientValue } from './Gradient.js';
 

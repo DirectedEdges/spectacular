@@ -87,10 +87,16 @@ describe('PropsAnalyzer', () => {
     expect(fs.existsSync(path.join(compDir, 'props.yaml'))).toBe(false);
   });
 
-  it('does nothing when no components were processed', async () => {
+  it('writes an empty report when no components were processed', async () => {
     const a = new PropsAnalyzer();
-    await a.finalize!(outputDir, analysisDir);
-    expect(fs.existsSync(analysisDir)).toBe(false);
+    await a.finalize!(outputDir, analysisDir, undefined, 'YAML');
+    const report = yaml.parse(await fs.readFile(path.join(analysisDir, 'props.yaml'), 'utf-8')) as AggregateYaml;
+    expect(report.summary).toEqual({ totalProps: 0, totalComponents: 0, uniquePropNames: 0, typeDistribution: {} });
+    expect(report.propNameFrequency).toEqual([]);
+    expect(report.typeDiscordance).toEqual([]);
+    expect(report.enumDiscordance).toEqual([]);
+    expect(report.apiSurface).toEqual([]);
+    expect(report.slots).toEqual([]);
   });
 
   it('summary.totalProps counts all props across all scopes', async () => {

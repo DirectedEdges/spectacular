@@ -3,6 +3,7 @@
 **Branch**: `024-component-extends`
 **Created**: 2026-03-15
 **Status**: DRAFT
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

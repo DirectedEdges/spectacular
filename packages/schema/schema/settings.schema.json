@@ -1,10 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://specs.directededges.com/settings.schema.json",
+  "$id": "https://spectacular.systems/schema/0.39.0/settings.schema.json",
   "title": "Specs Settings",
   "description": "Choices about a run rather than facts about a library. Changing a setting produces different output, never incorrect output.",
   "definitions": {
     "SourceEntry": {
+      "examples": [{ "key": "abc123XYZ", "fetch": ["file", "variables"] }],
       "type": "object",
       "description": "A source the workspace reads from.",
       "properties": {
@@ -26,6 +27,7 @@
       "additionalProperties": false
     },
     "Settings": {
+      "examples": [{ "author": "Design Systems", "spec": { "format": "YAML", "keys": "CAMEL" } }],
       "type": "object",
       "description": "Run settings, grouped by concern. Each concern that owns a location carries its own directory.",
       "properties": {
@@ -38,13 +40,18 @@
           "description": "Which components of a library a run produces specs for. (ADR-093)",
           "properties": {
             "defaultSelection": {
-              "type": "string",
-              "enum": [
-                "READY_FOR_DEV",
-                "ALL"
-              ],
               "default": "READY_FOR_DEV",
-              "description": "The signal a first pass derives selection from. READY_FOR_DEV selects the components the library marks ready, and selects every component set and standalone component when the library marks none. ALL selects every component regardless of marking."
+              "description": "The signal a first pass derives selection from. READY_FOR_DEV selects the components the library marks ready, and selects every component set and standalone component when the library marks none. ALL selects every component regardless of marking.",
+              "oneOf": [
+                {
+                  "const": "READY_FOR_DEV",
+                  "description": "Selects the components the library marks ready, falling back to every component set and standalone component where the library marks none."
+                },
+                {
+                  "const": "ALL",
+                  "description": "Selects every component regardless of marking."
+                }
+              ]
             },
             "preserveManualSelections": {
               "type": "boolean",
@@ -86,87 +93,184 @@
               "description": "Directory the generated spec is written to."
             },
             "format": {
-              "type": "string",
-              "enum": [
-                "JSON",
-                "YAML"
-              ],
               "default": "YAML",
-              "description": "Serialization format. Defaults to YAML."
+              "description": "Serialization format. Defaults to YAML.",
+              "oneOf": [
+                {
+                  "const": "JSON",
+                  "description": "JavaScript Object Notation."
+                },
+                {
+                  "const": "YAML",
+                  "description": "Human-readable YAML, on the grounds that a spec is read and hand-edited far more often than it is parsed."
+                }
+              ]
             },
             "keys": {
-              "type": "string",
-              "enum": [
-                "SAFE",
-                "CAMEL",
-                "SNAKE",
-                "KEBAB",
-                "PASCAL",
-                "TRAIN"
-              ],
               "default": "CAMEL",
-              "description": "Key naming convention applied to anatomy keys, prop keys, and references to them. Every value other than SAFE is a lossy projection of the Figma name. Defaults to CAMEL."
+              "description": "Key naming convention applied to anatomy keys, prop keys, and references to them. Every value other than SAFE is a lossy projection of the Figma name. Defaults to CAMEL.",
+              "oneOf": [
+                {
+                  "const": "SAFE",
+                  "description": "Preserves the Figma name's structure without corrupting special characters, at the cost of keys code cannot address directly."
+                },
+                {
+                  "const": "CAMEL",
+                  "title": "camelCase",
+                  "description": "The casing every code consumer of a spec already uses."
+                },
+                {
+                  "const": "SNAKE",
+                  "title": "snake_case"
+                },
+                {
+                  "const": "KEBAB",
+                  "title": "kebab-case"
+                },
+                {
+                  "const": "PASCAL",
+                  "title": "PascalCase"
+                },
+                {
+                  "const": "TRAIN",
+                  "title": "Train-Case"
+                }
+              ]
             },
             "layout": {
-              "type": "string",
-              "enum": [
-                "LAYOUT",
-                "PARENT_CHILDREN",
-                "BOTH"
-              ],
               "default": "LAYOUT",
-              "description": "Layout representation format."
+              "description": "Layout representation format.",
+              "oneOf": [
+                {
+                  "const": "LAYOUT",
+                  "description": "A tree carrying layout properties."
+                },
+                {
+                  "const": "PARENT_CHILDREN",
+                  "description": "Parent-child relationships only, with no layout properties."
+                },
+                {
+                  "const": "BOTH",
+                  "description": "Both representations, at the cost of saying the same structure twice."
+                }
+              ]
             },
             "tokens": {
-              "type": "string",
-              "enum": [
-                "TOKEN",
-                "TOKEN_NAME",
-                "TOKEN_FIGMA_EXTENSIONS",
-                "FIGMA_NAME",
-                "CUSTOM",
-                "FIGMA_SYNTAX_WEB",
-                "FIGMA_SYNTAX_IOS",
-                "FIGMA_SYNTAX_ANDROID"
-              ],
               "default": "TOKEN",
-              "description": "Token reference serialization profile."
+              "description": "Token reference serialization profile.",
+              "oneOf": [
+                {
+                  "const": "TOKEN",
+                  "description": "A DTCG-aligned object carrying the token path and its `$type`, with no tool-specific metadata."
+                },
+                {
+                  "const": "TOKEN_NAME",
+                  "description": "The token path alone as a plain string — the most compact form, for pipelines that already hold a registry."
+                },
+                {
+                  "const": "TOKEN_FIGMA_EXTENSIONS",
+                  "description": "As TOKEN, plus a `$extensions[\"com.figma\"]` block of raw Figma identifiers, for debugging and migration tooling."
+                },
+                {
+                  "const": "FIGMA_NAME",
+                  "description": "The raw Figma-native name as a plain string, for token systems that mirror the Figma variable structure directly."
+                },
+                {
+                  "const": "CUSTOM",
+                  "description": "A token object supplied through `applyCustomTokens` and used verbatim. A reference with no custom object falls back to TOKEN_FIGMA_EXTENSIONS."
+                },
+                {
+                  "const": "FIGMA_SYNTAX_WEB",
+                  "description": "The Web code-syntax name a designer set in Figma. Falls back to TOKEN where none is defined."
+                },
+                {
+                  "const": "FIGMA_SYNTAX_IOS",
+                  "description": "The iOS code-syntax name. Falls back to TOKEN where none is defined."
+                },
+                {
+                  "const": "FIGMA_SYNTAX_ANDROID",
+                  "description": "The Android code-syntax name. Falls back to TOKEN where none is defined."
+                }
+              ]
             },
             "color": {
-              "type": "string",
-              "enum": [
-                "HEX",
-                "HEXA",
-                "RGB",
-                "RGBA",
-                "HSLA",
-                "HSB",
-                "OKLCH",
-                "OKLAB",
-                "OBJECT"
-              ],
               "default": "HEXA",
-              "description": "Color value output format. Defaults to HEXA, an 8-digit hex string carrying alpha."
+              "description": "Color value output format. Defaults to HEXA, an 8-digit hex string carrying alpha.",
+              "oneOf": [
+                {
+                  "const": "HEX",
+                  "description": "A 6-digit hex string. Discards alpha, so a translucent colour reads as opaque."
+                },
+                {
+                  "const": "HEXA",
+                  "description": "An 8-digit hex string carrying alpha — the most compact form that survives a round trip."
+                },
+                {
+                  "const": "RGB",
+                  "description": "CSS `rgb()` functional notation."
+                },
+                {
+                  "const": "RGBA",
+                  "description": "CSS `rgba()` functional notation with alpha, which is what Figma labels \"CSS\" in its colour picker."
+                },
+                {
+                  "const": "HSLA",
+                  "description": "CSS `hsla()` functional notation."
+                },
+                {
+                  "const": "HSB",
+                  "description": "Figma's native colour model, also known as HSV. Not a CSS function."
+                },
+                {
+                  "const": "OKLCH",
+                  "description": "CSS Color Level 4 perceptually uniform cylindrical notation."
+                },
+                {
+                  "const": "OKLAB",
+                  "description": "CSS Color Level 4 perceptually uniform rectangular notation."
+                },
+                {
+                  "const": "OBJECT",
+                  "description": "A full `ColorObject` with its colour space and components, preserving fidelity with no lossy conversion."
+                }
+              ]
             },
             "variantDepth": {
-              "type": "integer",
-              "enum": [
-                1,
-                2,
-                3,
-                9999
-              ],
               "default": 9999,
-              "description": "Depth of variant expansion; 9999 for unlimited."
+              "description": "Depth of variant expansion; 9999 for unlimited.",
+              "oneOf": [
+                {
+                  "const": 1,
+                  "description": "One level of variant properties."
+                },
+                {
+                  "const": 2,
+                  "description": "Two levels of variant properties."
+                },
+                {
+                  "const": 3,
+                  "description": "Three levels of variant properties."
+                },
+                {
+                  "const": 9999,
+                  "title": "Unlimited",
+                  "description": "A sentinel rather than a depth. Every variant property dimension is expanded."
+                }
+              ]
             },
             "details": {
-              "type": "string",
-              "enum": [
-                "FULL",
-                "LAYERED"
-              ],
               "default": "LAYERED",
-              "description": "Level of detail in output."
+              "description": "Level of detail in output.",
+              "oneOf": [
+                {
+                  "const": "FULL",
+                  "description": "Every variant carries its complete data, repeating whatever it shares with the default."
+                },
+                {
+                  "const": "LAYERED",
+                  "description": "A variant carries only what differs from the default, which the reader layers over it."
+                }
+              ]
             },
             "collapsePrimitiveWrapper": {
               "type": "boolean",
@@ -219,13 +323,18 @@
               "description": "Read Figma Dev Mode annotations and emit anatomy.<element>.role (ADR-067). The on-switch for the role feature: when false, annotations are not read and no role is emitted. Defaults to false."
             },
             "roleValidation": {
-              "type": "string",
-              "enum": [
-                "warn",
-                "error"
-              ],
               "default": "warn",
-              "description": "Severity for unmet required role obligations, such as a control with no accessible-name source (ADR-067). A setting rather than a convention: it describes how strict a run should be. 'warn' emits a diagnostic and continues; 'error' fails the transform. Defaults to 'warn'. Conflicts are errors regardless."
+              "description": "Severity for unmet required role obligations, such as a control with no accessible-name source (ADR-067). A setting rather than a convention: it describes how strict a run should be. 'warn' emits a diagnostic and continues; 'error' fails the transform. Defaults to 'warn'. Conflicts are errors regardless.",
+              "oneOf": [
+                {
+                  "const": "warn",
+                  "description": "Emits a diagnostic and continues."
+                },
+                {
+                  "const": "error",
+                  "description": "Fails the transform."
+                }
+              ]
             }
           },
           "additionalProperties": false
