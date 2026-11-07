@@ -12,7 +12,7 @@ Roles are stored in `anatomy.<element>.role` in the spec. The value is an open s
 The vocabulary splits into two kinds:
 
 - **Control roles** name an interactive or announced thing — `button`, `checkbox`, `textbox`, `disclosure`, `alert`. A control role changes what element is emitted and adds event handlers to the contract.
-- **Part roles** name a piece of a control — `label`, `value`, `errormessage`, `panel`. Most parts add **no handlers**: their value is id generation plus an attribute on some other element (a `<label htmlFor>`, an `aria-describedby`, an `aria-controls`). A part resolves **by component**, not by tree position: a part a value-bearing control accepts resolves to that component's single value-bearing control wherever either sits in the layout, and a part only the non-value-bearing concepts accept (`button`, `togglebutton`, `link`, `disclosure`) resolves to the nearest of those by proximity. Resolution never walks for an ancestor — a control's label and error message are usually siblings of it, not descendants.
+- **Part roles** name a piece of a control — `label`, `value`, `errormessage`, `panel`. Most parts add **no handlers**: their value is id generation plus an attribute on some other element (a `<label htmlFor>`, an `aria-describedby`, an `aria-controls`). A part resolves **by component**, not by tree position: a part a value-bearing control accepts resolves to that component's single value-bearing control wherever either sits in the layout, and a part only the non-value-bearing concepts accept (`button`, `togglebutton`, `link`, `disclosure`, `image`) resolves to the nearest of those by proximity. Resolution never walks for an ancestor — a control's label and error message are usually siblings of it, not descendants. One part, [`decoration`](/roles/decoration/), resolves to no control at all — it asserts a fact about itself alone.
 
 ## Where roles are authored
 
@@ -222,10 +222,13 @@ not predict reach: `password` is an HTML-derived name for a concept every platfo
 | WAI-ARIA role tokens | `button`, `link`, `checkbox`, `radio`, `switch`, `textbox`, `searchbox`, `spinbutton`, `slider`, `group`, `alert`, `status`, `progressbar` |
 | ARIA *attribute* or APG *pattern* names | `togglebutton`, `disclosure`, `errormessage`, `description` |
 | HTML element names | `textarea`, `password`, `label` |
-| Spectacular-native, no external counterpart | `value`, `placeholder`, `indicator`, `panel`, `increment`, `decrement` |
+| Spectacular-native, no external counterpart | `value`, `placeholder`, `indicator`, `decoration`, `panel`, `increment`, `decrement` |
+| Platform-neutral spelling of a per-platform token | `image` |
 
 Origin has exactly one consequence, and it belongs to the **web** transform alone: only the
-first row contains legal ARIA role values. Emitting `role="disclosure"` or `role="password"`
+first row contains legal ARIA role values. The last row is the one place where a concept name
+and its web token differ on purpose: the concept is `image`, the ARIA token is `img`, and the
+web transform emits the token. Emitting `role="disclosure"`, `role="password"`, or `role="image"`
 is invalid — assistive technology discards an unrecognized role, leaving the element with no
 semantics at all rather than approximate ones. Each role page states its web emission
 explicitly for this reason.
@@ -264,6 +267,7 @@ message — [Choosing a role](/roles/choosing/) gives the question that separate
 | `alert` | An assertive live region announcing interruptions | [status](/roles/status/) |
 | `status` | A polite live region announcing transient updates | [status](/roles/status/) |
 | `progressbar` | An element reporting progress toward completion | [status](/roles/status/) |
+| `image` | An element that is a picture, announced only when something names it | [image](/roles/image/) |
 
 ## Part role vocabulary
 
@@ -275,6 +279,7 @@ message — [Choosing a role](/roles/choosing/) gives the question that separate
 | `value` | The element standing in for the control's value |
 | `placeholder` | The element standing in for placeholder text |
 | `indicator` | Decorative state indicator (check glyph, switch thumb); `aria-hidden` |
+| `decoration` | An element conveying nothing at all; `aria-hidden`, and it resolves to no control |
 | `panel` | The region a `disclosure` shows and hides |
 | `increment` | Step-up affordance on a `spinbutton` |
 | `decrement` | Step-down affordance on a `spinbutton` |
