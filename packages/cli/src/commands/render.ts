@@ -32,10 +32,11 @@ export const Render = new Command('render')
   .option('--page <id>', 'Render onto this page id instead of the plugin\'s current page (recommended for scripted runs — immune to page drift)')
   .option('--overwrite', 'Delete any existing page component with the same title before rendering (without this, a title collision is an error)')
   .option('--watch', 'Watch the spec path and re-render on every change (implies --overwrite)')
+  .option('--grid', 'After each component lands, arrange everything render has placed on this page into rows approximating a 16:9 block, spaced 100px apart. Without it each render lands to the right of the last, so a catalogue walks off to arbitrary x')
   .option('--strict', 'Fail the render when an instance element cannot be resolved, instead of rendering a component with missing content')
   .option('--timing', 'Print a phase-by-phase timing report for the render (bridge manifests, then plugin render phases)')
   .option('--refresh-cache', 'Rebuild the render lookup caches from fetched data before rendering (see `specs cache`)')
-  .action(async (specPath: string | undefined, options: { config?: string; file?: string; page?: string; overwrite?: boolean; watch?: boolean; strict?: boolean; timing?: boolean; refreshCache?: boolean; verbose?: boolean }) => {
+  .action(async (specPath: string | undefined, options: { config?: string; file?: string; page?: string; overwrite?: boolean; grid?: boolean; watch?: boolean; strict?: boolean; timing?: boolean; refreshCache?: boolean; verbose?: boolean }) => {
     // Ahead of everything else: a stale cache is a hard failure on the bridge, and this
     // is the flag that fixes it without a separate command.
     if (options.refreshCache) {
@@ -186,6 +187,7 @@ export async function runRender(options: {
   file?: string;
   page?: string;
   overwrite?: boolean;
+  grid?: boolean;
   strict?: boolean;
 }): Promise<{ rendered: number; skipped?: string }> {
   // Before reading a single spec: rendering needs something on the other end,
@@ -258,7 +260,7 @@ export async function runRender(options: {
 // logged and retried on the next change (watch).
 async function renderSpecPath(
   specPath: string,
-  options: { file?: string; page?: string; overwrite?: boolean; strict?: boolean; timing?: boolean; workspaceConventions?: ResolvedConventions; workspaceSettings?: ResolvedSettings; devStatusByNodeId?: Map<string, WritableDevStatus> }
+  options: { file?: string; page?: string; overwrite?: boolean; grid?: boolean; strict?: boolean; timing?: boolean; workspaceConventions?: ResolvedConventions; workspaceSettings?: ResolvedSettings; devStatusByNodeId?: Map<string, WritableDevStatus> }
 ): Promise<number> {
   const { spec, resolvePath } = loadSpec(specPath);
   // The component, not the path it came from: the full path is noise on every line of a
@@ -274,7 +276,7 @@ async function renderSpecPath(
   const startedAt = Date.now();
   let result: RenderResponse;
   try {
-    result = await postRender({ specPath: resolvePath, spec, fileKey, pageId: options.page, overwrite: options.overwrite, conventions: options.workspaceConventions, settings: options.workspaceSettings, devStatus: devStatusForSpec(spec, options.devStatusByNodeId) });
+    result = await postRender({ specPath: resolvePath, spec, fileKey, pageId: options.page, overwrite: options.overwrite, grid: options.grid, conventions: options.workspaceConventions, settings: options.workspaceSettings, devStatus: devStatusForSpec(spec, options.devStatusByNodeId) });
   } finally {
     stopSpinner();
   }
@@ -379,7 +381,7 @@ function confirm(question: string): Promise<boolean> {
  */
 async function renderBatchDirectory(
   absDir: string,
-  options: { file?: string; page?: string; overwrite?: boolean; strict?: boolean; timing?: boolean; workspaceConventions?: ResolvedConventions; workspaceSettings?: ResolvedSettings; devStatusByNodeId?: Map<string, WritableDevStatus> },
+  options: { file?: string; page?: string; overwrite?: boolean; grid?: boolean; strict?: boolean; timing?: boolean; workspaceConventions?: ResolvedConventions; workspaceSettings?: ResolvedSettings; devStatusByNodeId?: Map<string, WritableDevStatus> },
   // In watch mode a batch is re-run on every change: don't re-confirm, and
   // don't exit the process on a failure the next save might fix.
   { watch = false }: { watch?: boolean } = {}
