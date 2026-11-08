@@ -2,7 +2,7 @@
 
 **Branch**: `117-library-image-assets`
 **Created**: 2026-11-08
-**Status**: DRAFT
+**Status**: ACCEPTED
 **Summary**: `images.match` becomes a naming pattern over laid-out image assets, and `images.component` alone names the designated image component.
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none — amends ADR-077's `images` vocabulary)*
