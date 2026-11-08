@@ -10,7 +10,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import yaml from 'yaml';
 import { resolveSpecsLayout } from '../../../utilities/specsLayout.js';
-import { readCacheFile, type ImagesEntry } from '../../../cache/cache.js';
+import { readCacheFile, type ImagesEntry, type ImageOrigin } from '../../../cache/cache.js';
 
 export interface ImagesJson {
   present: Array<{
@@ -21,7 +21,7 @@ export interface ImagesJson {
     name?: string;
     /** Where the image lives in Figma, from the cache. Empty when neither
      *  producer has recorded it — a file on disk nothing has accounted for. */
-    origin: Array<'style' | 'component'>;
+    origin: ImageOrigin[];
     /** Component keys whose registries point at this hash. */
     referencedBy: string[];
     bytes: number;

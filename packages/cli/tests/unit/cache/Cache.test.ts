@@ -141,7 +141,7 @@ describe('Cache', () => {
 
     /** What `fetch --only <alias>,images` writes. */
     const stylesPayload = (images: unknown[] = [
-      { imageHash: 'b60ac7bc', src: 'assets/images/b60ac7bc.png', styleName: 'Images / Wanaka', styleKey: 'imgkey1', nodeId: '1568:2977' },
+      { imageHash: 'b60ac7bc', src: 'assets/images/b60ac7bc.png', name: 'Images / Wanaka', origin: 'style', styleKey: 'imgkey1', nodeId: '1568:2977' },
     ]) => payload(images);
 
     /** What `generate --get-images` writes. */
@@ -177,7 +177,7 @@ describe('Cache', () => {
     // The case a hash key handles and a name key cannot.
     it('merges an image both producers found into one entry carrying both facts', () => {
       writeFileSync(join(dataDir, 'library.images.json'), payload([
-        { imageHash: 'shared', src: 'assets/images/shared.png', styleName: 'Images / Helsinki' },
+        { imageHash: 'shared', src: 'assets/images/shared.png', name: 'Images / Helsinki', origin: 'style' },
       ]));
       writeFileSync(join(dataDir, 'library.component-images.json'), payload([
         { imageHash: 'shared', src: 'assets/images/shared.png', usedBy: ['cardMedia'] },
@@ -196,7 +196,7 @@ describe('Cache', () => {
 
     it('unions the components reported across producers, sorted', () => {
       writeFileSync(join(dataDir, 'library.images.json'), payload([
-        { imageHash: 'shared', styleName: 'S', usedBy: ['zeta'] },
+        { imageHash: 'shared', name: 'S', usedBy: ['zeta'] },
       ]));
       writeFileSync(join(dataDir, 'library.component-images.json'), payload([
         { imageHash: 'shared', usedBy: ['alpha', 'zeta'] },
@@ -233,7 +233,7 @@ describe('Cache', () => {
 
     it('records an image whose bytes never landed, with no src', () => {
       writeFileSync(join(dataDir, 'library.images.json'), payload([
-        { imageHash: 'deadbeef', styleName: 'Images / Gone' },
+        { imageHash: 'deadbeef', name: 'Images / Gone' },
       ]));
       build();
       expect(readCacheFile<ImagesEntry>(dataDir, 'images')!.entries['deadbeef'])
@@ -249,7 +249,7 @@ describe('Cache', () => {
 
     it('builds for an alias that has images fetched but no file payload', () => {
       writeFileSync(join(dataDir, 'brand.images.json'), payload([
-        { imageHash: 'brandhash', styleName: 'Images / Brand' },
+        { imageHash: 'brandhash', name: 'Images / Brand' },
       ]));
       const report = build(['library', 'brand']);
       expect(report.unfetched).toEqual([]);

@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Storybook gains a Foundations Images page** showing every image in the workspace in a grid, named by its fill style where it has one, with the components that reference each and a list of any a spec references but nothing has downloaded
 
+- **`specs fetch` also downloads the images a library lays out on a page**, declared with `images.match: 'Image / {i}'` in `config/conventions/figma.yaml` — the way `glyphs.match` declares icons. A qualifying frame is a direct page child, or a direct child of a section that is one, so a placeholder inside a component is never taken for a library asset
+
+### Breaking
+
+- **The designated image component is declared on `images.component`, not `images.match`** (ADR-117). Move the component's name to `component`; `match` now takes a `{i}` naming pattern for laid-out image assets, and a `match` without `{i}` is reported and ignored
+
 ### Changed
 
 ### Fixed

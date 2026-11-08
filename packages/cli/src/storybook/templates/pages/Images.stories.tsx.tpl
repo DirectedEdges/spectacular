@@ -13,7 +13,7 @@ const images = data as {
     file: string;
     hash: string;
     name?: string;
-    origin: Array<'style' | 'component'>;
+    origin: Array<'style' | 'page' | 'component'>;
     referencedBy: string[];
     bytes: number;
   }>;
@@ -29,16 +29,19 @@ function kb(bytes: number) {
 /** Where the image lives in Figma. An empty origin means no producer has recorded it. */
 const ORIGIN_LABEL: Record<string, string> = {
   style: 'Fill style',
+  page: 'Laid out',
   component: 'On a component',
 };
 
-function originText(origin: Array<'style' | 'component'>) {
+function originText(origin: Array<'style' | 'page' | 'component'>) {
   if (origin.length === 0) return 'Unaccounted for';
   return origin.map((o) => ORIGIN_LABEL[o] ?? o).join(' · ');
 }
 
 function ImagesPage() {
-  const fromStyles = images.present.filter((i) => i.origin.includes('style')).length;
+  const curated = images.present.filter(
+    (i) => i.origin.includes('style') || i.origin.includes('page'),
+  ).length;
   const unaccounted = images.present.filter((i) => i.origin.length === 0).length;
 
   return (
@@ -76,7 +79,7 @@ function ImagesPage() {
 
       <p>
         Every image in the workspace, whichever way it arrived
-        ({images.present.length} total, {fromStyles} carried by a fill style
+        ({images.present.length} total, {curated} curated by the library
         {unaccounted > 0 ? `, ${unaccounted} unaccounted for` : ''}). Reference one
         from a spec by its file path under <code>assets/images/</code>.
       </p>

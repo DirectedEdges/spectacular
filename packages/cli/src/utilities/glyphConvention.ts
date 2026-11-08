@@ -61,26 +61,27 @@ export function glyphConventionName(
   if (!glyphs) return null;
 
   if (glyphs.match) {
-    const fromName = nameFormMatch(name, glyphs.match);
+    const fromName = matchNamePattern(name, glyphs.match);
     if (fromName) return fromName;
   }
 
   if (glyphs.structure && structureNode
       && !isPropertyBearing(structureNode)
       && matchesGlyphStructure(structureNode, glyphs.structure)) {
-    return nameFormMatch(name, glyphs.structure.name ?? '{i}');
+    return matchNamePattern(name, glyphs.structure.name ?? '{i}');
   }
 
   return null;
 }
 
 /**
- * The `{i}` name rule, as fetch has always evaluated it: every `{i}` becomes a capture,
- * and a pattern without `{i}` matches literally and yields the full name. (The engine's
- * element-detection matcher requires a capture; this tolerant form is the CLI's
- * long-standing fetch behavior, kept for literal single-icon declarations.)
+ * The `{i}` name rule, shared by the glyph and image-asset conventions (ADR-117):
+ * every `{i}` becomes a capture, and a pattern without `{i}` matches literally and
+ * yields the full name. (The engine's element-detection matcher requires a capture;
+ * this tolerant form is the CLI's long-standing fetch behavior, kept for literal
+ * single-icon declarations.)
  */
-function nameFormMatch(name: string, pattern: string): string | null {
+export function matchNamePattern(name: string, pattern: string): string | null {
   const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\{i\\\}/g, '(.+)');
   const regex = new RegExp(`^${escaped}$`);
   const normalized = name.replace(/\s+/g, ' ').trim();

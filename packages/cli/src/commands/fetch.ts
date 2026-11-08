@@ -4,7 +4,8 @@
  * Purpose:
  * - Fetch file JSON, variables, and styles for one or more Figma files
  * - Download the assets those payloads name: glyph SVGs (`icons`) and the image
- *   fills carried by published fill styles (`images`, specs#889)
+ *   fills carried by published fill styles and the images a library lays out on a
+ *   page (`images`, specs#889, ADR-117)
  * - Store raw payloads on disk (no transforms)
  * - Enable generate/batch to load and merge in-memory later
  */
@@ -28,7 +29,8 @@ import { PayloadSplitter, splitDirFor } from '../utilities/payloadSplit.js';
 import { lastFetchedBytes, preparingMessage, formatPayloadSize } from '../fetch/estimate.js';
 import { SectionedFile } from '../utilities/sectionedFile.js';
 import { resolveFigmaFileKey, slugifyBranchName, FigmaKeyError } from '../fetch/fileKey.js';
-import { fillStyleRefs, collectStyleImages, type StyleImage } from '../fetch/styleImages.js';
+import { fillStyleRefs, collectStyleImages } from '../fetch/styleImages.js';
+import { collectImageAssets, pagesOf } from '../fetch/assetImages.js';
 import { ImageFillsResolver, IMAGES_DIR_NAME } from '../generate/imageFills.js';
 import { postGetVariables } from '../bridge/client.js';
 import { resolveFileKey } from '../bridge/pickConnection.js';
@@ -71,7 +73,8 @@ const FETCH_KINDS: readonly FetchKind[] = ['file', 'variables', 'styles', 'icons
 
 /**
  * Kinds that derive what to download from another kind's payload, so they run
- * after the straight downloads: `icons` needs `file`, `images` needs `styles`.
+ * after the straight downloads: `icons` needs `file`, `images` needs `styles` and,
+ * where the asset pattern is declared, `file` too.
  * Either may have been fetched this run or a previous one.
  */
 const DERIVED_KINDS: readonly FetchKind[] = ['icons', 'images'];
@@ -971,6 +974,18 @@ export const Fetch = new Command('fetch')
             throw new SourceFetchError(ERROR_CODES.FILE_ERROR);
           }
 
+          // Laid-out image assets need the file payload as well, and only when the
+          // library declares the pattern that identifies them (ADR-117). Absent a
+          // declaration this half simply finds nothing — a convention is never
+          // inferred, because a wrong guess fabricates assets.
+          const assetPattern = figmaOf(config.conventions).images?.match;
+          const imagesFilePath = path.join(outDir, `${entry.alias}.file.json`);
+          const imagesSectioned = SectionedFile.open(outDir, entry.alias);
+          if (assetPattern && !imagesSectioned && !fs.existsSync(imagesFilePath)) {
+            console.error(`Error: images.match is declared, so image assets require the file payload — fetch "file" for ${entry.alias} first (${imagesFilePath} not found)`);
+            throw new SourceFetchError(ERROR_CODES.FILE_ERROR);
+          }
+
           const stopSpinner = startSpinner(`Downloading: ${entry.alias}.images`);
           const refs = fillStyleRefs(readJsonPayload(stylesPath));
           const styleImages = await collectStyleImages(refs, async ids => {
@@ -993,6 +1008,26 @@ export const Fetch = new Command('fetch')
             return JSON.parse(await streamToString(result.stream));
           });
 
+          // Laid-out assets come out of the file payload, which already carries
+          // each frame's own fills — so unlike a fill style, whose defining node
+          // is absent from the document tree, this half costs no request.
+          const imageAssets = assetPattern
+            ? collectImageAssets(
+                imagesSectioned
+                  ? imagesSectioned.pageEntries().map(e => imagesSectioned.loadPage(e))
+                  : pagesOf(readJsonPayload(imagesFilePath)),
+                assetPattern
+              )
+            : [];
+
+          // One entry per image, whichever way it was found, each stating its own
+          // `origin`. A hash found both ways is one entry: the cache merges on the
+          // key, so the two halves cannot compete for a name.
+          const found = [
+            ...styleImages.map(image => ({ imageHash: image.imageHash, name: image.name, origin: 'style' as const, styleKey: image.key, nodeId: image.node_id })),
+            ...imageAssets.map(asset => ({ imageHash: asset.imageHash, name: asset.name, origin: 'page' as const, nodeId: asset.nodeId })),
+          ];
+
           // Hash-named files in the one images directory, shared with
           // `generate --get-images`: a content-addressed name means a curated
           // image and the same image detected on a component are one file, and
@@ -1000,10 +1035,9 @@ export const Fetch = new Command('fetch')
           // source needs no directory of its own, where glyphs do — slug names
           // collide across sources, hashes cannot.
           const baseDir = path.resolve(configDir, specDirectory);
-          const existing = await ImageFillsResolver.findExisting(
-            new Set(styleImages.map(s => s.imageHash)), baseDir
-          );
-          const missing = new Set(styleImages.map(s => s.imageHash).filter(h => !existing.has(h)));
+          const wanted = new Set(found.map(image => image.imageHash));
+          const existing = await ImageFillsResolver.findExisting(wanted, baseDir);
+          const missing = new Set([...wanted].filter(h => !existing.has(h)));
           if (missing.size > 0) {
             const urls = await ImageFillsResolver.fetchImageUrls(entry.key, token);
             for (const [hash, filename] of await ImageFillsResolver.downloadAndWrite(missing, urls, baseDir)) {
@@ -1015,41 +1049,33 @@ export const Fetch = new Command('fetch')
           // that is correct wherever spec.directory sits. `specs cache` copies
           // it into images.yaml verbatim rather than deriving the path twice.
           const imagesDirRelative = path.relative(configDir, path.join(baseDir, IMAGES_DIR_NAME));
-          const resolved: StyleImage[] = styleImages.map(image => {
-            const filename = existing.get(image.imageHash);
-            return filename
-              ? { ...image, src: path.join(imagesDirRelative, filename) }
-              : image;
-          });
 
-          // An `images` array keyed on `imageHash` is the shape both producers
-          // write: `generate --get-images` records the same fields for the
-          // images it finds on components, so the cache merges the two by hash
-          // without knowing which wrote which. `styleKey` and `nodeId` are this
-          // producer's own provenance — the join back to styles.yaml, and the
-          // node the paint was read from — and the cache ignores them.
+          // An `images` array keyed on `imageHash` is the shape every producer
+          // writes: `generate --get-images` records the same fields for the images
+          // it finds on components, so the cache merges them all by hash without
+          // knowing which wrote which. `styleKey` and `nodeId` are this producer's
+          // own provenance — the join back to styles.yaml, and the node the paint
+          // was read from — and the cache ignores them.
           await fs.writeFile(
             path.join(outDir, `${entry.alias}.images.json`),
             JSON.stringify({
               fileKey: entry.key,
-              images: resolved.map(image => ({
-                imageHash: image.imageHash,
-                ...(image.src ? { src: image.src } : {}),
-                styleName: image.name,
-                styleKey: image.key,
-                nodeId: image.node_id,
-              })),
+              images: found.map(image => {
+                const filename = existing.get(image.imageHash);
+                return { ...image, ...(filename ? { src: path.join(imagesDirRelative, filename) } : {}) };
+              }),
             }, null, 2),
             'utf-8'
           );
 
           const elapsed = stopSpinner();
-          const withFiles = resolved.filter(image => image.src).length;
-          console.log(`✓ Downloaded: ${entry.alias}.images (${withFiles}/${styleImages.length} from ${refs.length} fill styles, ${elapsed})`);
+          const withFiles = found.filter(image => existing.has(image.imageHash)).length;
+          const sources = [`${refs.length} fill styles`, ...(assetPattern ? [`${imageAssets.length} laid out`] : [])];
+          console.log(`✓ Downloaded: ${entry.alias}.images (${withFiles}/${found.length} from ${sources.join(' + ')}, ${elapsed})`);
           // An image whose bytes never arrived keeps its hash and no src. Said
           // here rather than left to be discovered as a blank in the cache.
-          if (withFiles < styleImages.length) {
-            console.warn(`⚠ ${styleImages.length - withFiles} image fill style(s) have no file under ${IMAGES_DIR_NAME}/ — re-run specs fetch --only ${entry.alias},images`);
+          if (withFiles < found.length) {
+            console.warn(`⚠ ${found.length - withFiles} image(s) have no file under ${IMAGES_DIR_NAME}/ — re-run specs fetch --only ${entry.alias},images`);
           }
           completedKinds.add('images');
         }

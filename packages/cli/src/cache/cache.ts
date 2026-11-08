@@ -61,6 +61,21 @@ export interface CacheSource {
   glyphConvention?: string;
 }
 
+/**
+ * Where an image lives in Figma — not which command found it.
+ *
+ * `style` is a published fill style's paint, `page` an asset frame a library laid
+ * out and named to the `images.match` pattern (ADR-117), `component` a fill on a
+ * component. One image can be more than one of these.
+ */
+export type ImageOrigin = 'style' | 'page' | 'component';
+
+const IMAGE_ORIGINS: readonly ImageOrigin[] = ['style', 'page', 'component'];
+
+function isImageOrigin(value: unknown): value is ImageOrigin {
+  return typeof value === 'string' && (IMAGE_ORIGINS as readonly string[]).includes(value);
+}
+
 export interface CacheFile<E> {
   /**
    * Partition key → the payload those entries came from.
@@ -159,7 +174,7 @@ export interface ImagesEntry {
    * an image that is both style-carried and component-used says so rather than
    * one producer having to win.
    */
-  origin: Array<'style' | 'component'>;
+  origin: ImageOrigin[];
   file: string;
 }
 
@@ -425,18 +440,23 @@ function buildImagesConcern(
     if (!data) continue;
 
     for (const image of Array.isArray(data.images) ? data.images as Array<Record<string, unknown>> : []) {
-      // The payload says `styleName` because there it names a style, beside
-      // that style's key and node id. Here it names the image, so it is `name`.
-      const { imageHash, src, styleName, usedBy } = image;
+      const { imageHash, src, name, usedBy } = image;
       if (typeof imageHash !== 'string') continue;
       const existing = slice.images.entries[imageHash];
+      // An entry states its own origin, because one payload can carry more than
+      // one: `fetch` finds images on fill styles and laid out on a page, and the
+      // two are different facts about where the image lives. The producer's
+      // declared origin is the fallback for a payload that does not say.
+      const entryOrigin = isImageOrigin(image.origin) ? image.origin : origin;
       slice.images.entries[imageHash] = {
         // A producer that resolved the bytes wins over one that did not: the
         // path is the same file either way, and an absent src means unresolved.
         ...(typeof src === 'string' ? { src } : existing?.src ? { src: existing.src } : {}),
-        ...(typeof styleName === 'string' ? { name: styleName } : existing?.name ? { name: existing.name } : {}),
+        ...(typeof name === 'string' ? { name } : existing?.name ? { name: existing.name } : {}),
         ...(mergeUsedBy(existing?.usedBy, usedBy)),
-        origin: existing ? [...existing.origin, origin] : [origin],
+        origin: existing?.origin.includes(entryOrigin)
+          ? existing.origin
+          : existing ? [...existing.origin, entryOrigin] : [entryOrigin],
         file: alias,
       };
     }
