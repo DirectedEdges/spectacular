@@ -228,7 +228,7 @@ describe('buildImagesData', () => {
     fs.writeFileSync(path.join(data, 'cache', 'images.yaml'),
       'sources:\n  library:styles:\n    from: library.images.json\n    bytes: 1\n    mtime: x\n'
       + 'entries:\n'
-      + '  aaa111:\n    src: assets/images/aaa111.png\n    styleName: Images / Wanaka\n    origin:\n      - style\n    file: library\n'
+      + '  aaa111:\n    src: assets/images/aaa111.png\n    name: Images / Wanaka\n    origin:\n      - style\n    file: library\n'
       + '  bbb222:\n    src: assets/images/bbb222.jpg\n    usedBy:\n      - hero\n    origin:\n      - component\n    file: library\n');
 
     // The component references the component-found image and one that was never downloaded.
@@ -250,8 +250,8 @@ describe('buildImagesData', () => {
   it('names an image from the fill style it was fetched from, and leaves the rest unnamed', () => {
     const { tmp, specs, images, data } = fixture();
     const result = buildImagesData(specs, images, data)!;
-    expect(result.present[0].styleName).toBe('Images / Wanaka');
-    expect(result.present[1].styleName).toBeUndefined();
+    expect(result.present[0].name).toBe('Images / Wanaka');
+    expect(result.present[1].name).toBeUndefined();
     fs.removeSync(tmp);
   });
 
@@ -294,7 +294,7 @@ describe('buildImagesData', () => {
     fs.removeSync(path.join(data, 'cache', 'images.yaml'));
     const result = buildImagesData(specs, images, data)!;
     expect(result.present.map(i => i.hash)).toEqual(['aaa111', 'bbb222']);
-    expect(result.present.every(i => i.styleName === undefined)).toBe(true);
+    expect(result.present.every(i => i.name === undefined)).toBe(true);
     fs.removeSync(tmp);
   });
 

@@ -144,8 +144,14 @@ export interface IconsEntry { id: string; key?: string; file: string }
  */
 export interface ImagesEntry {
   src?: string;
-  /** The Figma fill style carrying this image, when a style carries it. */
-  styleName?: string;
+  /**
+   * What Figma calls this image — the name of the fill style carrying it, which
+   * is the only name an image ever has. Absent for an image found on a
+   * component, whose registry key is derived from a layer and scoped to that
+   * component. Not `styleName`: `origin` already says a style carries it, and
+   * `name` is what `components.yaml` calls the Figma name of a thing.
+   */
+  name?: string;
   /** Component keys whose registries reference it, when a component uses it. */
   usedBy?: string[];
   /**
@@ -419,6 +425,8 @@ function buildImagesConcern(
     if (!data) continue;
 
     for (const image of Array.isArray(data.images) ? data.images as Array<Record<string, unknown>> : []) {
+      // The payload says `styleName` because there it names a style, beside
+      // that style's key and node id. Here it names the image, so it is `name`.
       const { imageHash, src, styleName, usedBy } = image;
       if (typeof imageHash !== 'string') continue;
       const existing = slice.images.entries[imageHash];
@@ -426,7 +434,7 @@ function buildImagesConcern(
         // A producer that resolved the bytes wins over one that did not: the
         // path is the same file either way, and an absent src means unresolved.
         ...(typeof src === 'string' ? { src } : existing?.src ? { src: existing.src } : {}),
-        ...(typeof styleName === 'string' ? { styleName } : existing?.styleName ? { styleName: existing.styleName } : {}),
+        ...(typeof styleName === 'string' ? { name: styleName } : existing?.name ? { name: existing.name } : {}),
         ...(mergeUsedBy(existing?.usedBy, usedBy)),
         origin: existing ? [...existing.origin, origin] : [origin],
         file: alias,

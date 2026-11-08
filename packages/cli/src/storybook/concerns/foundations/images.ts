@@ -18,7 +18,7 @@ export interface ImagesJson {
     file: string;
     hash: string;
     /** The Figma fill style carrying this image, when a style carries it. */
-    styleName?: string;
+    name?: string;
     /** Where the image lives in Figma, from the cache. Empty when neither
      *  producer has recorded it — a file on disk nothing has accounted for. */
     origin: Array<'style' | 'component'>;
@@ -141,7 +141,7 @@ export function buildImagesData(
     return {
       file,
       hash,
-      ...(entry?.styleName ? { styleName: entry.styleName } : {}),
+      ...(entry?.name ? { name: entry.name } : {}),
       origin: entry?.origin ?? [],
       // The spec tree is walked rather than taken from the entry's `usedBy`:
       // it covers every spec on disk, where `usedBy` covers only what a
@@ -154,9 +154,9 @@ export function buildImagesData(
   // Named before the unnamed, each group alphabetical: a curated set a reader
   // can scan by name is the point of the page, and a hash sorts as noise.
   present.sort((a, b) =>
-    (a.styleName && b.styleName) ? a.styleName.localeCompare(b.styleName)
-      : a.styleName ? -1
-        : b.styleName ? 1
+    (a.name && b.name) ? a.name.localeCompare(b.name)
+      : a.name ? -1
+        : b.name ? 1
           : a.hash.localeCompare(b.hash));
 
   const onDisk = new Set(present.map(p => p.hash));

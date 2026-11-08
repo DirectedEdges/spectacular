@@ -203,7 +203,7 @@ The point of fetching these is to make the library's images available to whoever
 entries:
   b60ac7bc8ed5d5b5b7f676b27f46ab44eb2355ef:
     src: assets/images/b60ac7bc8ed5d5b5b7f676b27f46ab44eb2355ef.png
-    styleName: Images / Wanaka
+    name: Images / Wanaka
     origin: [style]
     file: library
 ```

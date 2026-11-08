@@ -155,7 +155,7 @@ describe('Cache', () => {
       const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
       expect(cache.entries['b60ac7bc']).toEqual({
         src: 'assets/images/b60ac7bc.png',
-        styleName: 'Images / Wanaka',
+        name: 'Images / Wanaka',
         origin: ['style'],
         file: 'library',
       });
@@ -187,7 +187,7 @@ describe('Cache', () => {
       const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
       expect(cache.entries['shared']).toEqual({
         src: 'assets/images/shared.png',
-        styleName: 'Images / Helsinki',
+        name: 'Images / Helsinki',
         usedBy: ['cardMedia'],
         origin: ['style', 'component'],
         file: 'library',
@@ -227,7 +227,7 @@ describe('Cache', () => {
       ]));
       expect(build().rebuilt).toEqual(['library']);
       const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
-      expect(cache.entries['b60ac7bc'].styleName).toBe('Images / Wanaka');
+      expect(cache.entries['b60ac7bc'].name).toBe('Images / Wanaka');
       expect(cache.entries['14dacdfc'].usedBy).toEqual(['heroBanner', 'pagingCarousel']);
     });
 
@@ -237,7 +237,7 @@ describe('Cache', () => {
       ]));
       build();
       expect(readCacheFile<ImagesEntry>(dataDir, 'images')!.entries['deadbeef'])
-        .toEqual({ styleName: 'Images / Gone', origin: ['style'], file: 'library' });
+        .toEqual({ name: 'Images / Gone', origin: ['style'], file: 'library' });
     });
 
     it('writes an empty images cache when no payload exists, so "none" differs from "never built"', () => {

@@ -12,7 +12,7 @@ const images = data as {
   present: Array<{
     file: string;
     hash: string;
-    styleName?: string;
+    name?: string;
     origin: Array<'style' | 'component'>;
     referencedBy: string[];
     bytes: number;
@@ -115,7 +115,7 @@ function ImagesPage() {
             />
             <figcaption style={{ fontSize: 12, lineHeight: 1.5, marginTop: 8 }}>
               <div style={{ fontWeight: 600, wordBreak: 'break-word' }}>
-                {image.styleName ?? <span style={{ opacity: 0.6 }}>Unnamed</span>}
+                {image.name ?? <span style={{ opacity: 0.6 }}>Unnamed</span>}
               </div>
               <div style={{ opacity: 0.7 }}>
                 {originText(image.origin)} · {kb(image.bytes)}

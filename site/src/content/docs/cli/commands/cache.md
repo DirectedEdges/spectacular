@@ -44,7 +44,7 @@ Entries are keyed by the image's **content hash**, because it is the only identi
 entries:
   3c064860d14e1c2af909ae15fb8b21551395c9fa:
     src: assets/images/3c064860….png
-    styleName: Images / Helsinki
+    name: Images / Helsinki
     usedBy: [cardMedia]
     origin: [style, component]
     file: library
