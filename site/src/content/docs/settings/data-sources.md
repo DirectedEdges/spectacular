@@ -22,7 +22,7 @@ The artifact kinds a source's `fetch` list can name:
 | `variables` | Figma variable collections and their values. Used for token resolution during `generate` |
 | `styles` | Figma styles (color, text, effect). Used for style resolution during `generate` |
 | `icons` | The glyph assets matched by [`figma.glyphs.match`](/settings/glyphs/), extracted as SVG files. Requires that convention to be declared and the `file` payload to be fetched |
-| `images` | The image fills carried by published fill styles — a library's curated images — downloaded into `assets/images/` and listed by style name in the render cache. Requires the `styles` payload to be fetched. See [Fetching Image Fills Carried by Styles](/cli/commands/fetch/#fetching-image-fills-carried-by-styles) |
+| `images` | A library's curated images — those carried by published fill styles, plus any laid out as named frames on a page once [`figma.images.match`](/settings/images/#laid-out-image-assets) declares the pattern — downloaded into `assets/images/` and listed in the render cache. Requires the `styles` payload, and the `file` payload too when that pattern is declared. See [Fetching Image Fills Carried by Styles](/cli/commands/fetch/#fetching-image-fills-carried-by-styles) |
 
 ## Properties
 

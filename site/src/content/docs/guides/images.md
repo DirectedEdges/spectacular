@@ -1,9 +1,9 @@
 ---
 title: "Images"
-description: "Capture image fills and image-source props — as a designated image component or a container background fill"
+description: "Capture image fills and image-source props, and reach the images a library curates for itself"
 ---
 
-Design systems use images two ways, and Spectacular captures both. Sometimes an image is a **layer fill** — a card with a photographic background, a hero banner painted directly on a container. Other times it flows through a dedicated **image component** — a `dsImage` or `dsAvatar` with a `source`-like prop that renders whatever image is passed in. Which one you get is a declared convention, not a guess.
+A design system holds images in more than one place, and Spectacular reaches all of them. An image can be a **layer fill** — a card with a photographic background, a hero banner painted on a container. It can flow through a dedicated **image component** — a `dsImage` or `dsAvatar` with a `source`-like prop. And a library can **curate a set of its own**, the way it curates icons: images on published fill styles, or laid out as named frames on a page, belonging to no component at all. Which of these you get is a declared convention, not a guess.
 
 ## The Problem
 
@@ -30,7 +30,7 @@ images:
         imageHash: 705867125834a686a51bdf161a0a39cdba0f9a58
 ```
 
-## The Two Patterns
+## The Three Patterns
 
 ### Image as a layer fill
 
@@ -64,6 +64,12 @@ dsAvatar:
 
 Sourcing binds through `propConfigurations`, never through `backgroundImage` — `backgroundImage` is reserved for the no-component fill case.
 
+### A set the library curates
+
+The images a library publishes for its own sake, belonging to no component: photographs on published **fill styles**, and frames **laid out on a page** and named to a pattern, the way a page of icons holds glyph components.
+
+These are the images someone reaches for when authoring something new, so they are not tied to a component spec at all. `specs fetch` downloads them with its [`images`](/cli/commands/fetch/#fetching-image-fills-carried-by-styles) kind and records them in `data/cache/images.yaml`, which is the roster the next author reads. Declare the page pattern as [`images.match`](/settings/images/#laid-out-image-assets); fill styles need no declaration, because a style painting an image identifies itself.
+
 ## Configuration
 
 Everything lives in one block: [`figma.images`](/settings/images/) in `config/conventions/figma.yaml`. Its presence is the on-switch, and each member is an independent representation trigger:
@@ -71,17 +77,21 @@ Everything lives in one block: [`figma.images`](/settings/images/) in `config/co
 ```yaml
 # config/conventions/figma.yaml
 images:
+  match: 'Image / {i}'       # naming pattern for images laid out on a page, {i} = the name
+  component: DS Image        # the designated image component (requires sourceProps)
   backgroundImage: true      # detect image fills → Styles.backgroundImage
-  match: dsImage             # designate an image component (requires sourceProps)
-  sourceProps: [source]      # code-only props typed as images; first = dsImage's source prop
+  sourceProps: [source]      # code-only props typed as images; first = the component's own
 ```
 
 | Goal | Convention | Behavior |
 |------|--------|----------|
 | Background fills only | `backgroundImage: true` | Every image fill → `backgroundImage` on containers |
-| Component + fill fallback | `match` + `sourceProps` + `backgroundImage: true` | Image props route through the component; stray fills still emit as `backgroundImage` |
-| Component only | `match` + `sourceProps` | The component is the **only** image representation; stray fills are not detected |
+| Component + fill fallback | `component` + `sourceProps` + `backgroundImage: true` | Image props route through the component; stray fills still emit as `backgroundImage` |
+| Component only | `component` + `sourceProps` | The component is the **only** image representation; stray fills are not detected |
 | Typed image props only | `sourceProps` alone | Listed code-only props re-type to `ImageProp`; no fill detection, no component routing |
+| A curated set laid out on a page | `match` | Named frames become library images, fetched with the [`images`](/cli/commands/fetch/#images-laid-out-on-a-page) kind |
+
+`match` names a *pattern*, not a component. Until [ADR-117](/adr/117-library-image-assets/) it named the component, and that value now belongs on `component` — see [Legacy name](/settings/images/#legacy-name).
 
 ## Object Fit
 
@@ -94,10 +104,33 @@ The `images` registry stores each image once. An entry carries the Figma identit
 The Figma plugin cannot embed raw image bytes on the component asset (Figma caps saved data), so it emits identity-only entries and additionally duplicates each detected image into the **Foundations** section for human reference. The REST/CLI path is how you get actual image files.
 
 1. **Detect** — emit `$image` references and the registry, entries carrying only the Figma identity.
-2. **Resolve** (CLI's `generate` command only) — `specs generate --get-images` fetches the bytes, writes each distinct image once to `assets/images/<imageHash>.<ext>` at the workspace root, and ADDS `src` (the file's path relative to the referencing spec file); the identity survives for reverse-direction tooling.
+2. **Resolve** — the bytes are downloaded and each distinct image is written once to `assets/images/<imageHash>.<ext>` at the workspace root, with `src` added to the registry entry; the identity survives for reverse-direction tooling.
+
+Two commands resolve bytes into that one directory, and because the filename is the image's content hash neither re-downloads the other's work:
+
+| Command | Finds | Recorded as |
+|---|---|---|
+| `specs generate --get-images` | images on the components being generated | `src` on the component's own registry entry |
+| `specs fetch` with the [`images`](/cli/commands/fetch/#fetching-image-fills-carried-by-styles) kind | the library's own images — on published fill styles, and laid out on a page | entries in [`data/cache/images.yaml`](/cli/commands/cache/#what-it-writes) |
+
+## Finding what the library already has
+
+`data/cache/images.yaml` is the roster of every image the workspace holds, keyed by content hash, each entry carrying what the library calls it, where it lives in Figma, and which components use it:
+
+```yaml
+entries:
+  b60ac7bc8ed5d5b5b7f676b27f46ab44eb2355ef:
+    src: assets/images/b60ac7bc8ed5d5b5b7f676b27f46ab44eb2355ef.png
+    name: Images / Wanaka
+    origin: [style]
+    file: library
+```
+
+`origin` says where the image lives — `style`, `pageFrame`, or `component`, and an image can be more than one. The whole set is also browsable as the **Foundations → Images** page in a published Storybook.
+
+That file is what makes a library image usable in a spec you are writing by hand: [Using a library image in a spec you are writing](/cli/commands/fetch/#using-a-library-image-in-a-spec-you-are-writing) shows the registry entry to author from it.
 
 The REST runtime resolves entries via a second call (Get Image Fills, whose S3 URLs expire ~14 days), downloading the bytes into emitted files — never persisting the URL or embedding base64. `$image` pointers always resolve to a registry entry, so they never dangle.
-:::
 
 ## Further Reading
 
