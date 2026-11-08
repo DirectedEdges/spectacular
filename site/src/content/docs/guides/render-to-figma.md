@@ -221,6 +221,8 @@ specs render specs/components/deButton/ --watch
 
 Without `--watch`, a title collision is an error; [`--overwrite`](/cli/commands/render/#--overwrite) deletes the existing same-titled component first. That's destructive, so an interactive batch of more than one component asks for confirmation.
 
+Each render lands to the right of the last, so rendering many components walks the output into one very wide row. [`--grid`](/cli/commands/render/#--grid) arranges everything `render` has placed on the page into a block of rows instead, re-arranging after each component lands. Only components `render` created move; anything you drew stays where it is.
+
 When a render is slow, [`--timing`](/cli/commands/render/#--timing) attributes the wall clock to bridge lookup work and each plugin write phase.
 
 ## Stage 9 — Scripted Runs

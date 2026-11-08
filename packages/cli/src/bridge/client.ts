@@ -34,7 +34,7 @@ export interface RenderRequestBody {
   fileKey?: string;
   /** Delete a same-titled page node before rendering, instead of erroring on the collision. */
   overwrite?: boolean;
-  /** Re-arrange everything render has placed on the page into a 16:9 block of rows, once
+  /** Re-arrange everything render has placed on the page into a compact block of rows, once
    *  this component has landed. Without it, output keeps marching right at 100px apiece. */
   grid?: boolean;
   /**
