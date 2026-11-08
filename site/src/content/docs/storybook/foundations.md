@@ -46,9 +46,10 @@ should not have to read the spec tree to find out what is available.
   first; an image file is named for its content hash, so the style name is the
   only name there is. Images found on components have no library-level name and
   follow, with their filename.
-- Each image says where it lives in Figma — on a fill style, on a component, or
-  both. An image the cache has no record of reads as **unaccounted for**, which
-  usually means a file downloaded before either command kept a record.
+- Each image says where it lives in Figma — on a fill style, laid out on a page,
+  on a component, or more than one. An image the cache has no record of reads as
+  **unaccounted for**, which usually means a file downloaded before any command
+  kept a record.
 - Each image names the components that reference it, so a curated image nothing
   uses yet reads as available rather than as missing.
 - **An image a spec references with no file on disk** is listed at the top, the

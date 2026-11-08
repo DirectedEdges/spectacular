@@ -68,6 +68,7 @@ gives up, so a retry starts that work over rather than picking it up.
 - Fetching `images` additionally requires:
   - `spec.directory` set in `config/settings.yaml` — image files are written to the spec workspace, not the data directory
   - the source's `styles` payload — listed before `images` in the same `fetch` array, or fetched in a previous run
+  - the source's `file` payload as well, when [`images.match`](/settings/images/#laid-out-image-assets) declares a pattern for laid-out image assets — they are read from the file, not from a separate request
 
 ## Options
 
@@ -181,7 +182,25 @@ data:
       fetch: ['file', 'variables', 'styles', 'images']
 ```
 
-How it works:
+`images` covers two of the three ways a library holds an image — the fill styles it publishes, and the assets it lays out on a page. The third, images placed on components, belongs to `generate --get-images`.
+
+### Images laid out on a page
+
+A library can also curate images the way it curates icons: a page of them, each named to a pattern. Declare the pattern as [`images.match`](/settings/images/#laid-out-image-assets):
+
+```yaml
+# config/conventions/figma.yaml
+images:
+  match: 'Image / {i}'
+```
+
+A frame qualifies when its name matches **and** it sits as a direct child of a page, or as a direct child of a section that is itself a direct page child. The captured `{i}` is the image's name.
+
+Unlike a fill style, an asset frame is already in the file payload and carries its own fills, so finding these costs no extra request — only their bytes are downloaded. That is also why declaring `images.match` makes the `file` payload a requirement of the `images` kind.
+
+Nothing is detected unless the pattern is declared. A convention is never inferred: a wrong guess would publish placeholders as library content, where absence merely finds nothing.
+
+### How it works
 
 - Every published `FILL` style in the source's styles payload is read back node by node, because a fill style's paint is not in the file payload at all — the file's style map carries the name, key and type only. Styles painting a colour are skipped; styles painting an image yield a Figma image hash.
 - Bytes are downloaded through the same Get Image Fills endpoint `generate --get-images` uses, and written to `assets/images/<imageHash>.<ext>` — the same directory, named for the image's content. A curated image and the same image detected on a component are therefore one file, and an image already on disk is never downloaded twice.
