@@ -21,11 +21,11 @@ This runs once per workspace. A command-by-command walkthrough of the same setup
 
 You are setting up Specs CLI for a user in the current working directory. Specs CLI generates component specifications from a Figma design system, and working code from those specifications. Your job is to walk the user through the setup interactively, make every non-obvious decision *with* the user (not for them), and leave them with a Storybook running in their browser showing their own design system.
 
-By the end they will have a `config/` directory, a populated `.env`, generated specs, analysis reports, React and Web Components trees, their icons resolved by name, their states classified, and a Storybook running in their browser.
+By the end they will have a `config/` directory, a populated `.env`, generated specs, analysis reports, React and Web Components trees, their icons and images resolved by name, their states classified, and a Storybook running in their browser.
 
 You must follow this procedure **top to bottom**. Do not skip steps. Do not batch multiple steps before checking in. After each numbered step, verify the step succeeded before moving on.
 
-Step 10 is a stop: the user picks which improvement passes to run from a checklist, once they can see their Storybook working. All three, one, or none are normal outcomes.
+Step 10 is a stop: the user picks which improvement passes to run from a checklist, once they can see their Storybook working. Any combination, or none, is a normal outcome.
 
 **Ask only what this procedure tells you to ask.** Everything else has a default that is already correct. A question you invent is friction.
 
@@ -434,9 +434,10 @@ Then end with a short `Next steps` section naming what is still available, and *
 
 > **Next steps**
 >
-> Three passes can improve what you're looking at: resolving your icons to named
-> assets, classifying your states so the CSS uses `:disabled` instead of data
-> attributes, and adding roles so a checkbox emits a real `<input>`.
+> Four passes can improve what you're looking at: resolving your icons to named
+> assets, pulling your library's images in the same way, classifying your states
+> so the CSS uses `:disabled` instead of data attributes, and adding roles so a
+> checkbox emits a real `<input>`.
 >
 > Reply **continue** when you want to go through them.
 
@@ -451,14 +452,19 @@ They now have a working Storybook. This is the point to stop, show it to them, a
 
 Everything up to here was mechanical: the pipeline read Figma and wrote down what it found. Three facts about a library are **not** in Figma, so nothing upstream can supply them. Each one is a separate pass, each improves the code they are currently looking at, and each is theirs to choose.
 
-**Present them as a checklist and ask which they want.** One question, three items, in this order:
+**Present them as a checklist and ask which they want.** One question, four items, in this order:
 
 ```
-Your Storybook is running. Three things I can improve from here —
+Your Storybook is running. Four things I can improve from here —
 tell me which you'd like, in any combination:
 
   [ ] Icons — resolve your icon components to named, reusable assets.
         Changes: your config, plus one more download of just the icons.
+
+  [ ] Images — pull the images your library holds into named assets you
+        can reference when authoring: those on published fill styles, and
+        any laid out on a page.
+        Changes: your config, plus one more download. Images are large.
 
   [ ] States — make your CSS use real state selectors instead of data
         attributes, and drop browser-driven props from the generated API.
@@ -471,9 +477,9 @@ tell me which you'd like, in any combination:
 
 Rules for this gate:
 
-- **Adapt the list to the workspace.** Drop the icons line if there is no icons source. Keep the other two always.
+- **Adapt the list to the workspace.** Drop the icons line if there is no icons source. Keep the other three always — images needs no convention to find fill styles, so it has something to do in any library.
 - **Say what each changes, as above.** Roles is the only one that touches anything outside the workspace, and that has to be visible in the list itself rather than explained afterwards.
-- **Take their answer as given.** All three, one, or none are all normal. "None" is a complete onboarding — say so once, go to Step 11, and do not re-offer.
+- **Take their answer as given.** Any combination, or none, is normal. "None" is a complete onboarding — say so once, go to Step 11, and do not re-offer.
 
 ### Propose in parallel, apply in sequence
 
@@ -502,6 +508,7 @@ Step 2a installed them in `.claude/skills/`. **Read the `SKILL.md` and follow it
 | Pass | Read and follow |
 |---|---|
 | Icons | `.claude/skills/specs-cli.icons.setup/SKILL.md` |
+| Images | `.claude/skills/specs-cli.images.setup/SKILL.md` |
 | States | `.claude/skills/specs-cli.states.setup/SKILL.md` |
 | Roles | `specs-cli.roles.propose/SKILL.md`, then `specs-cli.roles.apply/SKILL.md` |
 
@@ -517,7 +524,19 @@ When it finishes, show the user the named assets under `assets/icons/`.
 
 If no convention can be established, say so plainly and move to the next item. Do not invent a pattern to get past the step.
 
-### 10c. States, if they asked for it
+### 10c. Images, if they asked for it
+
+Follow `specs-cli.images.setup`. It finds the images the library holds — on published fill styles, and laid out as named frames on a page — writes the `images` convention, adds the `images` fetch kind, refetches, and confirms what resolved.
+
+Two things it needs that only this flow knows: the source already has its `file` and `styles` payloads from Step 3c, which are the two the `images` kind reads, and `spec.directory` is set, which is where the image files land.
+
+Unlike icons, **part of this works with no convention at all** — a fill style painting an image identifies itself — so the skill checks what is already available before proposing a pattern. A library that keeps its images on styles may need nothing written.
+
+When it finishes, show the user the **Foundations → Images** page in the Storybook that is already running, and the files under `assets/images/`.
+
+No `specs generate` is needed afterwards: the fetch writes the files and the render cache directly, and the Storybook page reads those. A generate is only involved for images found *on components*, which is `--get-images` and a separate choice.
+
+### 10d. States, if they asked for it
 
 The skill reads `specs/analysis/props.yaml` and the specs Step 9 produced, proposes a row per state concept with the evidence behind it, and stops at a report. **Show the user the report and let them clear any row they disagree with**, then paste the block into `config/conventions/specs.yaml`.
 
@@ -525,7 +544,7 @@ The chain picks the config change up and re-emits. Point at a selector that chan
 
 If they dislike the outcome, deleting the block restores exactly what they had.
 
-### 10d. Roles, if they asked for it
+### 10e. Roles, if they asked for it
 
 **This one edits the user's Figma file.** Treat it as the serious step it is.
 
