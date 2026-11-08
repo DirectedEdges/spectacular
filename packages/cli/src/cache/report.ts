@@ -39,12 +39,12 @@ export function reportCache(report: CacheReport, attempted: readonly string[] = 
     console.log('  In the render cache (every source, not only this run):');
   }
   for (const [alias, c] of aliasEntries) {
-    const line = `${c.components} components, ${c.styles} styles, ${c.variables} variables, ${c.icons} icons`;
+    const line = `${c.components} components, ${c.styles} styles, ${c.variables} variables, ${c.icons} icons, ${c.images} images`;
     console.log(`    ${alias}: ${failedAliases.has(alias) ? `✗ FAILED — ${line}` : line}`);
   }
   console.log(
     `  Cache entries: ${counts.components} components, ${counts.styles} styles, ` +
-    `${counts.variables} variables, ${counts.icons} icons`
+    `${counts.variables} variables, ${counts.icons} icons, ${counts.images} images`
   );
 
   for (const failure of failures) {

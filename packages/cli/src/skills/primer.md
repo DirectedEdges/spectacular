@@ -64,7 +64,10 @@ Three rules, and the first is the one that gets broken:
 | What the library declares about itself | `config/settings.yaml`, `config/conventions/*.yaml` | `--config` |
 | **What is legal in a spec** | `node_modules/@directededges/specs-schema/` — `types/*.ts` and `schema/*.schema.json` | a CLI dependency, so always present |
 | What actually shipped | the emitted platform trees | `react.directory`, `webcomponents.directory` |
+| **What the library already has, by name** — components, styles, tokens, icons, images | `<data>/cache/*.yaml` — `components`, `styles`, `variables`, `icons`, `images` | `data.directory`; written by `specs fetch`, rebuilt by `specs cache` |
 | Where to look (never what is true) | `<spec>/analysis/*.yaml`, `<data>/<alias>.manifest.md` | as above |
+
+The cache row is the one to reach for before authoring anything new. `images.yaml` answers "what images does this library have and what is each called" without reading a single component spec — keyed by content hash, each entry carrying `src`, the library's `name` for it, the components that `usedBy` it, and an `origin` of `style`, `pageFrame` or `component` saying where it lives in Figma. `icons.yaml` answers the same question for glyphs.
 
 ## Names, keys and conventions
 
@@ -110,7 +113,7 @@ https://raw.githubusercontent.com/DirectedEdges/specs/main/site/src/content/docs
 
 | Question | `<path>` |
 |---|---|
-| What does this setting accept? | `settings/<topic>.md` — `states`, `glyphs`, `subcomponents`, `tokens`, `keys`, `curation`, `data-sources`, … |
+| What does this setting accept? | `settings/<topic>.md` — `states`, `glyphs`, `images`, `subcomponents`, `tokens`, `keys`, `curation`, `data-sources`, … |
 | How do I express this correctly in data? | `guides/<guide>.md` — the derivations table above names them |
 | What is a role, and which exist? | `roles/index.md`, and a page per role |
 | What does a command do? | `cli/commands/<name>.md` |

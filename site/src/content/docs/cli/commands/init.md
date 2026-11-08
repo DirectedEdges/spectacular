@@ -80,7 +80,9 @@ data:
   sources:
     library:
       key: YOUR_FIGMA_FILE_KEY
-      fetch: [file, variables, styles, icons]
+      # add `icons` once a glyphs convention is declared, and `images` to pull
+      # the library's own images — see settings/data-sources
+      fetch: [file, variables, styles]
 
 assets:
   directory: ./assets

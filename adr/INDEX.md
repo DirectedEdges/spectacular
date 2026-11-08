@@ -4,6 +4,7 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
+| 117 | A Library's Images Are Assets It Lays Out, Named by a Pattern | (reserved, draft on `117-library-image-assets`) |
 | 115 | Closed Style Value Sets | |
 | 114 | Describe Enum Options Where They Are Declared | (reserved, draft in PR #799) |
 | 113 | Style defaults belong to the schema | (reserved, draft in PR #799) |
@@ -26,6 +27,7 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
+| 117 | A Library's Images Are Assets It Lays Out, Named by a Pattern | `images.match` becomes a `{i}` naming pattern over laid-out image assets; `images.component` alone names the designated image component |
 | 116 | Nested style members declare their own defaults | 23 of 30 optional composite members declare a `default`; required members declare none; `lineHeight` settles on `'AUTO'` |
 | 115 | Closed Style Value Sets | Five keys that inherited an open string wrapper become named closed sets, each dropping three value forms nothing writes |
 | 114 | Describe Enum Options Where They Are Declared | A closed value set declares `oneOf` branches of `const` with a description, so every option documents itself |

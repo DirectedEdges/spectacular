@@ -155,8 +155,21 @@ export interface Transformer {
   readonly perComponentOutput?: string;
 
   run(apiYaml: Record<string, unknown>, context: TransformerContext): Promise<void>;
-  /** Called once after all components have been processed. Use for cross-component aggregate output. */
-  finalize?(outputDir: string, analysisDir?: string, foundations?: AnalyzerFoundations): Promise<void>;
+  /**
+   * Called once after all components have been processed. Use for cross-component
+   * aggregate output.
+   *
+   * `outputFormat` is the run's format, repeated here because `run` is where a
+   * transformer otherwise learns it — and a run over an empty catalogue never calls
+   * `run`, so the report would be written in whatever format the field happened to
+   * be initialised with rather than the one the workspace configured.
+   */
+  finalize?(
+    outputDir: string,
+    analysisDir?: string,
+    foundations?: AnalyzerFoundations,
+    outputFormat?: 'JSON' | 'YAML',
+  ): Promise<void>;
   /** Receive workspace facts before any spec is visited (see {@link AnalyzerSetup}). */
   setup?(facts: AnalyzerSetup): void;
 }

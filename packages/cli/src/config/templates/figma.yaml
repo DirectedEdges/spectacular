@@ -58,10 +58,14 @@ subcomponents:
 # How the library expresses images; each member is an independent trigger
 # https://spectacular.systems/guides/images/
 # images:
+#   # Naming pattern for images laid out on a page, {i} capturing the name.
+#   # A frame qualifies as a direct page child, or inside one of its sections.
+#   # Add `images` to a source's fetch list to download them.
+#   match: Image / {i}
+#   # The library's image component; requires sourceProps
+#   component: DS Image
 #   # Container fills emit as backgroundImage
 #   backgroundImage: true
-#   # The library's image component; requires sourceProps
-#   match: DS Image
 #   # Image-typed code-only props; the first is the image component's own
 #   sourceProps:
 #     - imageSource

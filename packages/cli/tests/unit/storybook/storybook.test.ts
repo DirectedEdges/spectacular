@@ -9,6 +9,7 @@ import { deriveTabs, deriveCompositions, deriveModes } from '../../../src/storyb
 import { kebabizePath } from '../../../src/transforms/css/values/tokens.js';
 import { buildColorData } from '../../../src/storybook/concerns/foundations/color.js';
 import { buildIconsData } from '../../../src/storybook/concerns/foundations/icons.js';
+import { buildImagesData } from '../../../src/storybook/concerns/foundations/images.js';
 import { buildTypographyData } from '../../../src/storybook/concerns/foundations/typography.js';
 import { templatesDir, renderTemplate } from '../../../src/storybook/templates.js';
 import type { Workspace } from '../../../src/storybook/workspace.js';
@@ -208,14 +209,117 @@ describe('buildIconsData', () => {
   });
 });
 
+describe('buildImagesData', () => {
+  /** A workspace with both download paths' output and one unresolved reference. */
+  function fixture(): { tmp: string; specs: string; images: string; data: string } {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'specs-sb-img-'));
+    const specs = path.join(tmp, 'specs');
+    const images = path.join(tmp, 'assets', 'images');
+    const data = path.join(tmp, 'data');
+    fs.ensureDirSync(path.join(specs, 'hero'));
+    fs.ensureDirSync(images);
+    fs.ensureDirSync(path.join(data, 'cache'));
+
+    // Two files on disk: one fetched from a fill style, one found on a component.
+    fs.writeFileSync(path.join(images, 'aaa111.png'), 'png');
+    fs.writeFileSync(path.join(images, 'bbb222.jpg'), 'jpg');
+
+    // Keyed by hash, with `origin` saying where each lives in Figma.
+    fs.writeFileSync(path.join(data, 'cache', 'images.yaml'),
+      'sources:\n  library:styles:\n    from: library.images.json\n    bytes: 1\n    mtime: x\n'
+      + 'entries:\n'
+      + '  aaa111:\n    src: assets/images/aaa111.png\n    name: Images / Wanaka\n    origin:\n      - style\n    file: library\n'
+      + '  bbb222:\n    src: assets/images/bbb222.jpg\n    usedBy:\n      - hero\n    origin:\n      - component\n    file: library\n');
+
+    // The component references the component-found image and one that was never downloaded.
+    fs.writeFileSync(path.join(specs, 'hero', 'api.yaml'), 'anatomy:\n  media:\n    type: image\n');
+    fs.writeFileSync(path.join(specs, 'hero', 'images.yaml'),
+      'images:\n'
+      + '  backdrop:\n    src: ../../assets/images/bbb222.jpg\n    $extensions:\n      com.figma:\n        imageHash: bbb222\n'
+      + '  pending:\n    $extensions:\n      com.figma:\n        imageHash: ccc333\n');
+    return { tmp, specs, images, data };
+  }
+
+  it('lists every image on disk, whichever path downloaded it', () => {
+    const { tmp, specs, images, data } = fixture();
+    const result = buildImagesData(specs, images, data)!;
+    expect(result.present.map(i => i.hash)).toEqual(['aaa111', 'bbb222']);
+    fs.removeSync(tmp);
+  });
+
+  it('names an image from the fill style it was fetched from, and leaves the rest unnamed', () => {
+    const { tmp, specs, images, data } = fixture();
+    const result = buildImagesData(specs, images, data)!;
+    expect(result.present[0].name).toBe('Images / Wanaka');
+    expect(result.present[1].name).toBeUndefined();
+    fs.removeSync(tmp);
+  });
+
+  // Read from the cache, never inferred from a missing name — a style-carried
+  // image with no name would otherwise look component-found.
+  it('takes each image\'s origin from the cache', () => {
+    const { tmp, specs, images, data } = fixture();
+    const result = buildImagesData(specs, images, data)!;
+    expect(result.present.find(i => i.hash === 'aaa111')!.origin).toEqual(['style']);
+    expect(result.present.find(i => i.hash === 'bbb222')!.origin).toEqual(['component']);
+    fs.removeSync(tmp);
+  });
+
+  it('reports an empty origin for a file neither producer has accounted for', () => {
+    const { tmp, specs, images, data } = fixture();
+    fs.writeFileSync(path.join(images, 'ccc444.png'), 'png');
+    const result = buildImagesData(specs, images, data)!;
+    expect(result.present.find(i => i.hash === 'ccc444')!.origin).toEqual([]);
+    fs.removeSync(tmp);
+  });
+
+  it('reports which components reference each image', () => {
+    const { tmp, specs, images, data } = fixture();
+    const result = buildImagesData(specs, images, data)!;
+    expect(result.present.find(i => i.hash === 'bbb222')!.referencedBy).toEqual(['hero']);
+    // A curated image nothing uses yet is still available to author with.
+    expect(result.present.find(i => i.hash === 'aaa111')!.referencedBy).toEqual([]);
+    fs.removeSync(tmp);
+  });
+
+  it('flags a registry entry whose image was never downloaded', () => {
+    const { tmp, specs, images, data } = fixture();
+    const result = buildImagesData(specs, images, data)!;
+    expect(result.missing).toEqual([{ hash: 'ccc333', referencedBy: ['hero'] }]);
+    fs.removeSync(tmp);
+  });
+
+  it('works with no cache at all, so images predating the images kind still list', () => {
+    const { tmp, specs, images, data } = fixture();
+    fs.removeSync(path.join(data, 'cache', 'images.yaml'));
+    const result = buildImagesData(specs, images, data)!;
+    expect(result.present.map(i => i.hash)).toEqual(['aaa111', 'bbb222']);
+    expect(result.present.every(i => i.name === undefined)).toBe(true);
+    fs.removeSync(tmp);
+  });
+
+  it('builds nothing for a workspace with no images and no references', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'specs-sb-img-'));
+    expect(buildImagesData(path.join(tmp, 'specs'), path.join(tmp, 'images'), tmp)).toBeNull();
+    fs.removeSync(tmp);
+  });
+});
+
 describe('templates', () => {
   it('ships every host template and page template', () => {
     const dir = templatesDir();
     for (const file of ['package.json.tpl', 'tsconfig.json.tpl', 'main.ts.tpl', 'preview.tsx.tpl', 'manager.tsx.tpl', 'manager-head.html.tpl', 'ComponentDocs.tsx.tpl',
-      'pages/Color.stories.tsx.tpl', 'pages/Typography.stories.tsx.tpl', 'pages/Icons.stories.tsx.tpl',
+      'pages/Color.stories.tsx.tpl', 'pages/Typography.stories.tsx.tpl', 'pages/Icons.stories.tsx.tpl', 'pages/Images.stories.tsx.tpl',
       'pages/GettingStarted.stories.tsx.tpl', 'pages/Analysis.stories.tsx.tpl', 'pages/VersionsStub.stories.tsx.tpl']) {
       expect(fs.existsSync(path.join(dir, file)), file).toBe(true);
     }
+  });
+
+  // The watcher development runs re-bundles the program and never re-copies
+  // templates, so dist/ holds whatever the last full build left. Resolving
+  // there first served a new template from a stale directory.
+  it('resolves templates from the source tree in a checkout, not from dist', () => {
+    expect(templatesDir()).toBe(path.resolve(here, '../../../src/storybook/templates'));
   });
 
   it('renders placeholders and refuses unknown ones', () => {

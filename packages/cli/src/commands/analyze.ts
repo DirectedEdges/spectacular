@@ -142,11 +142,15 @@ export async function runAnalyze(
   );
   const componentDirs = specs.filter(s => s.kind === 'component').map(s => s.key);
 
-  // An empty catalogue is a state, not an error: a fresh authoring workspace
-  // has zero specs and a complete token language, and the foundations report
-  // exists precisely for it. Component-fed analyzers quietly write nothing.
+  // An empty catalogue is a state a workspace passes through, not a failure. A
+  // workspace being authored from scratch has fetched data and no specs yet, and
+  // the analysis reports are the thing it watches fill up — so the run proceeds
+  // and every analyzer writes its report with nothing in it. Refusing to run left
+  // `analysis/` with no files at all, which reads as a broken command rather than
+  // as an empty catalogue, and threw out of the `analyze` pipeline step on a
+  // workspace whose only problem was that nobody had authored a spec yet.
   if (componentDirs.length === 0) {
-    console.warn(`[analyze] no component specs found in ${componentsDir} — component reports will be empty; foundations still runs from fetched data`);
+    console.log(`[analyze] no component specs found in ${componentsDir} — reports will be empty.`);
   }
 
   const reads = (analyzer: Transformer, kind: SpecKind): boolean =>
@@ -247,7 +251,7 @@ export async function runAnalyze(
 
   for (const analyzer of analyzers) {
     if (analyzer.finalize) {
-      await analyzer.finalize(outputPath, analysisDir, foundations);
+      await analyzer.finalize(outputPath, analysisDir, foundations, config.settings.spec.format);
     }
   }
 

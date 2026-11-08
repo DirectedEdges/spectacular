@@ -41,6 +41,7 @@ import ROLES_PROPOSE from './rolesPropose.md';
 import ROLES_APPLY from './rolesApply.md';
 import STATES_SETUP from './statesSetup.md';
 import ICONS_SETUP from './iconsSetup.md';
+import IMAGES_SETUP from './imagesSetup.md';
 import AUTHORING_PRIMER from './authoringPrimer.md';
 import REF_STYLES from './references/styles.md';
 import REF_SLOTS_LAYOUT from './references/slots-layout.md';
@@ -83,6 +84,7 @@ export const SKILL_ASSETS: SkillAsset[] = [
   { name: 'specs-cli.roles.apply', markdown: ROLES_APPLY },
   { name: 'specs-cli.states.setup', markdown: STATES_SETUP },
   { name: 'specs-cli.icons.setup', markdown: ICONS_SETUP },
+  { name: 'specs-cli.images.setup', markdown: IMAGES_SETUP },
   {
     name: 'specs-cli.authoring.primer',
     markdown: AUTHORING_PRIMER,

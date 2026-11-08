@@ -344,6 +344,33 @@ specs/
 
 `$image` pointers (in `backgroundImage` fills and `ImageBinding` examples) are unaffected — resolution touches one registry entry per image, never the references. Files are named by Figma's content hash, so an image shared by many components is downloaded and stored once, and re-runs are idempotent. Figma's download URLs are temporary and are never persisted. `src` is written relative to the spec file that carries it, so its depth follows the layout: `../../assets/images/...` from a component folder, `../assets/images/...` from a flat one.
 
+#### What it records for the images lookup
+
+`--get-images` also writes down what it found, so [`data/cache/images.yaml`](/cli/commands/cache/#what-it-writes) covers all three ways a library holds an image. Generate is the only command that sees the third — a fill on a component — and without a record those images exist on disk and inside one component's spec, leaving the lookup missing a third of its subject.
+
+It writes `{data.directory}/<alias>.component-images.json`, attributed to the source the specs were generated from, and rebuilds the render cache as its last step — so a [`render`](/cli/commands/render/) straight after a generate never meets a cache the generate just invalidated. Each image appears in `images.yaml` with `origin: [component]`, and `usedBy` naming the components that reference it, by spec key.
+
+An image found **both** ways is one entry carrying both facts. A photograph published as a fill style *and* placed on a card reads:
+
+```yaml
+25a26b806cc3ed542b6df2da5740d1bb652b1913:
+  src: assets/images/25a26b806cc3ed542b6df2da5740d1bb652b1913.png
+  name: Images / Emirates Stadium
+  usedBy: [deCard, patternsFilterPage]
+  origin: [style, component]
+  file: library
+```
+
+**A scoped run never removes what a fuller run recorded.** Generating three components sees fewer images than a catalogue pass, and an image did not stop existing because today's run was narrow — so the record merges by hash and only ever adds or updates:
+
+```
+✓ Recorded 1 component image(s) for the images cache (5 kept from an earlier pass)
+```
+
+Nothing prunes it, which is the cost of that rule: an image a component no longer uses stays listed. Deleting `<alias>.component-images.json` and re-running is the reset.
+
+Plain `specs generate` records nothing — it still resolves `src` for images whose files are already on disk, but only `--get-images` makes images that run's business, so a regenerate never dirties a cache it does not rebuild.
+
 ### `--from-bridge`
 Generate from the current selection in a connected Figma file via the [CLI bridge](/cli/commands/bridge/), instead of from a manifest or downloaded JSON. See [Bridge Mode](#bridge-mode).
 

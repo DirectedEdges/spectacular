@@ -9,18 +9,34 @@ Image processing is controlled by one block: `figma.images`. A library fact — 
 |---|---|
 | **File** | `config/conventions/figma.yaml` |
 | **Path** | `images` |
-| **Type** | block (`backgroundImage`, `match`, `sourceProps`) |
+| **Type** | block (`match`, `component`, `backgroundImage`, `sourceProps`) |
 | **Default** | absent (no image processing) |
 
 ## Properties
 
-Three triggers, combinable freely:
+Four triggers, combinable freely:
 
 | Property | Type | Required | Default | Description |
 |----------|------|----------|---------|-------------|
-| `backgroundImage` | `boolean` | No | `false` | Detect `IMAGE`-type fills on containers as [`Styles.backgroundImage`](/schema/styles/); the fallback for stray fills when `match` is set |
-| `match` | `string` | No | — | Designated image component name (e.g. `DS Image`): instances of it are the image primitive. Requires a non-empty `sourceProps` — `sourceProps[0]` is its source prop, routed via `propConfigurations` |
+| `match` | `string` | No | — | Naming pattern identifying the images a library lays out on a page, with `{i}` capturing the image name (e.g. `Image / {i}`). The same form [`glyphs.match`](/settings/glyphs/) takes |
+| `component` | `string` | No | — | What this platform calls the designated image component (e.g. `DS Image` in Figma, `DsImage` in React): instances of it are the image primitive. Requires a non-empty `sourceProps` — `sourceProps[0]` is its source prop, routed via `propConfigurations` |
+| `backgroundImage` | `boolean` | No | `false` | Detect `IMAGE`-type fills on containers as [`Styles.backgroundImage`](/schema/styles/); the fallback for stray fills when `component` is set |
 | `sourceProps` | `string[]` | No | — | Code-only prop names (exact, raw Figma names — the same convention as subcomponent and glyph patterns) that re-type from `StringProp` to [`ImageProp`](/schema/props/) on any component |
+
+## Laid-Out Image Assets
+
+A library curates images the way it curates icons — a page of them, named for what they are. `match` is how that set is declared:
+
+```yaml
+images:
+  match: 'Image / {i}'
+```
+
+A frame qualifies when its name matches the pattern **and** it sits either as a direct child of a page, or as a direct child of a section that is itself a direct child of a page. That position rule is what separates a curated grid from an image used incidentally deeper in the file — a pattern matched at any depth would extract placeholders inside components as library assets.
+
+The captured `{i}` is the image's name. `{i}` is the same placeholder `glyphs.match` uses: in a glyph pattern it captures an icon's name, in an image pattern an image's, and the property it sits in says which.
+
+A library nesting its images more than one section deep is not detected, and nothing reports the absence — the images are simply not found.
 
 ## Example
 
@@ -36,7 +52,7 @@ Component with background-fill fallback — image props route through `DS Image`
 ```yaml
 images:
   backgroundImage: true
-  match: DS Image
+  component: DS Image
   sourceProps: [source, image]
 ```
 
@@ -44,7 +60,7 @@ Component only — the designated component is the sole image representation; st
 
 ```yaml
 images:
-  match: DS Image
+  component: DS Image
   sourceProps: [source]
 ```
 
@@ -95,7 +111,7 @@ Each `images` entry holds the Figma identity (`$extensions['com.figma'].imageHas
 
 ## Legacy name
 
-In the pre-split `specs.config.yaml`, this block was `config.processing.images` and the designated component was named by `imageComponent`. That file is no longer read — [`specs migrate config`](/cli/commands/migrate/) converts it, moving `imageComponent` to `match`.
+In the pre-split `specs.config.yaml`, this block was `config.processing.images` and the designated component was named by `imageComponent`. That file is no longer read — [`specs migrate config`](/cli/commands/migrate/) converts it, moving `imageComponent` to `component`.
 
 ## Further reading
 

@@ -7,24 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.37.0] - Unreleased
 
+### Breaking
+
+- **The designated image component is declared on `images.component`, not `images.match`** (ADR-117). Move the component's name to `component`; `match` now takes a `{i}` naming pattern for laid-out image assets, and a `match` without `{i}` is reported and ignored
+
 ### Added
 
 - `specs analyze foundations` — the workspace's token language as one authoring-facing manifest (`analysis/foundations.yaml`): variables and named styles consolidated as ready-to-paste `{$token, $type}` objects carrying names only (alias targets by name, descriptions where the library wrote one, platform code-name presence — never resolved values), plus every icon glyph with its formatted key spelling beside the raw name. Each variable also carries its default-mode `defaultValue` (alias chains resolved, colors as hex) — for understanding a token, never for authoring. Reads the fetched data, not the catalogue, so it runs on a workspace with zero specs (#881)
-- `specs analyze` on an empty catalogue warns and continues instead of erroring — component reports are quietly empty; foundations still runs (#881)
 
-### Fixed
+- **An element annotated `role: image` emits a real image element**, with its fill carried on `src` and its fit stated as `object-fit` instead of painted as a background.
 
-- `--authored` no longer reports the missing `metadata.source` it exists to forgive — three guaranteed warnings per spec on every clean run trained sessions to filter warnings, which is how a real one gets lost. The durable fix is authored provenance (ADR-106, #873); this removes the noise until it lands
-- `analysis/foundations.yaml` lists each variable collection's modes — the library's theming axes, previously discoverable only by accident in emitted CSS
-- `specs validate` reports what each used dimension token resolves to in the default mode (`strokeWeight: …/2x → 16`) — a multiplier name read as pixels shipped a 16px outline with 0 errors. Orientation only: values are themed, and nothing passes or fails on them
-- `specs validate` warns when an authored platform file sits beside the scaffold that no supplemental entry mentions — the emitters load an authored `component.*` only when `platforms.<tree>` names it, so an unmentioned file is dead while everything reports clean
-- `specs validate` resolves image pointers against the spec's own `images` registry — a dangling `#/images/<key>`, or a file-qualified spelling the schema doesn't define, previously shipped a grey image with 0 errors
-- `specs validate` checks `instanceExamples` configurations against the contract — declared props, boolean types, enum membership — exactly as it already checked a variant's `configuration`. Unchecked, a stale example (`size: Large` after the enum dropped it) validated clean and reached Storybook as a silently wrong story
-- `specs render --watch` over a directory re-renders **only the specs whose files changed** — it previously re-rendered the whole catalogue on every event, onto whatever page the plugin had open. The start-up pass now renders nothing (a watch means re-render *on change*), and only concern-file events trigger at all, so `specs analyze` writing its reports no longer causes renders (#884)
+- **An element annotated `role: decoration` is hidden from assistive technology**, and both concepts are now recognised by `specs analyze roles`.
+
+- **`specs fetch` downloads the images a library carries on published fill styles**, with a new `images` kind for a source's `fetch` list and for `--only`. Files land in `assets/images/` alongside what `generate --get-images` downloads, and neither path re-fetches the other's
+
+- **`data/cache/images.yaml` lists every image the workspace holds**, keyed by image hash and carrying the file path, the Figma style name where there is one, and whether the image lives on a fill style, on a component, or both — so you can use any library image in a spec you write by hand without reading the spec tree to find it
+
+- **Storybook gains a Foundations Images page** showing every image in the workspace in a grid, named by its fill style where it has one, with the components that reference each and a list of any a spec references but nothing has downloaded
+
+- **`specs fetch` also downloads the images a library lays out on a page**, declared with `images.match: 'Image / {i}'` in `config/conventions/figma.yaml` — the way `glyphs.match` declares icons. A qualifying frame is a direct page child, or a direct child of a section that is one, so a placeholder inside a component is never taken for a library asset
+
+- **`specs generate --get-images` records the images it finds on components**, so one lookup covers all three ways a library holds an image. A scoped run never removes what a fuller run recorded, and the cache is rebuilt as the command's last step so a render straight after needs no manual refresh
+
+- **`specs skills install` emits `specs-cli.images.setup`**, which finds a library's images, writes the `images` convention, refetches, and proves what resolved — the images counterpart to `icons.setup`. Workspace setup offers it as a fourth improvement pass
 
 ### Changed
 
 ### Fixed
+
+- `--authored` no longer reports the missing `metadata.source` it exists to forgive — three guaranteed warnings per spec on every clean run trained sessions to filter warnings, which is how a real one gets lost. The durable fix is authored provenance (ADR-106, #873); this removes the noise until it lands
+
+- `analysis/foundations.yaml` lists each variable collection's modes — the library's theming axes, previously discoverable only by accident in emitted CSS
+
+- `specs validate` reports what each used dimension token resolves to in the default mode (`strokeWeight: …/2x → 16`) — a multiplier name read as pixels shipped a 16px outline with 0 errors. Orientation only: values are themed, and nothing passes or fails on them
+
+- `specs validate` warns when an authored platform file sits beside the scaffold that no supplemental entry mentions — the emitters load an authored `component.*` only when `platforms.<tree>` names it, so an unmentioned file is dead while everything reports clean
+
+- `specs validate` resolves image pointers against the spec's own `images` registry — a dangling `#/images/<key>`, or a file-qualified spelling the schema doesn't define, previously shipped a grey image with 0 errors
+
+- `specs validate` checks `instanceExamples` configurations against the contract — declared props, boolean types, enum membership — exactly as it already checked a variant's `configuration`. Unchecked, a stale example (`size: Large` after the enum dropped it) validated clean and reached Storybook as a silently wrong story
+
+- `specs render --watch` over a directory re-renders **only the specs whose files changed** — it previously re-rendered the whole catalogue on every event, onto whatever page the plugin had open. The start-up pass now renders nothing (a watch means re-render *on change*), and only concern-file events trigger at all, so `specs analyze` writing its reports no longer causes renders (#884)
+
+- **A variant that sets an aspect ratio now changes the element's shape.** The ratio was emitted alongside the width and height the default block fixed, which CSS ignores, so every ratio option rendered as the default.
+
+- **`specs analyze` runs on a workspace with no specs in it**, writing every report with zero counts and empty collections rather than failing — so a catalogue you are authoring from scratch has an analysis surface before it has a spec, and `specs build` and `specs run` get through
+
+- **Analysis reports take the format `spec.format` declares even when the run read no specs**, where an empty catalogue in a YAML workspace previously wrote all seven as `.json`
 
 - **`specs analyze keys` now measures the Figma name behind each object-prop member** (ADR-111), under a `margin.compact` key and one segment at a time, so a declared separator is never flagged. A divergent row carries `segment`, naming the half to fix
 

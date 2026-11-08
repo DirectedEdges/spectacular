@@ -272,6 +272,7 @@ export default defineConfig({
               items: [
                 { label: 'skills', slug: 'cli/commands/skills' },
                 { label: 'icons.setup', slug: 'cli/skills/icons-setup' },
+                { label: 'images.setup', slug: 'cli/skills/images-setup' },
                 { label: 'states.setup', slug: 'cli/skills/states-setup' },
               ],
             },

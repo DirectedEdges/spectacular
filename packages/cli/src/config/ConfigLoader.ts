@@ -660,20 +660,30 @@ export class ConfigLoader {
         if (img.sourceProps !== undefined && (!Array.isArray(img.sourceProps) || sourceProps.length === 0)) {
           console.warn(`Invalid ${where} images.sourceProps: expected a non-empty array of strings. Ignoring sourceProps.`);
         }
+        // `match` is a naming pattern over laid-out image assets, so it must carry
+        // the `{i}` capture — a pattern without one matches a single literal name
+        // and would silently find at most one image (ADR-117).
         let match = typeof img.match === 'string' && (img.match as string).trim() !== ''
           ? (img.match as string).trim()
           : undefined;
         if (img.match !== undefined && !match) {
           console.warn(`Invalid ${where} images.match: expected a non-empty string. Ignoring match.`);
         }
-        // The designated component needs a forwarding target: sourceProps[0].
-        if (match && sourceProps.length === 0) {
-          console.warn(`${where} images.match requires a non-empty sourceProps (sourceProps[0] is its source prop). Ignoring match.`);
+        if (match && !match.includes('{i}')) {
+          console.warn(`${where} images.match must include the {i} placeholder, which captures the image name (e.g. "Image / {i}"). Ignoring match.`);
           match = undefined;
         }
-        const component = typeof img.component === 'string' && (img.component as string).trim() !== ''
+        let component = typeof img.component === 'string' && (img.component as string).trim() !== ''
           ? (img.component as string).trim()
           : undefined;
+        if (img.component !== undefined && !component) {
+          console.warn(`Invalid ${where} images.component: expected a non-empty string. Ignoring component.`);
+        }
+        // The designated component needs a forwarding target: sourceProps[0].
+        if (component && sourceProps.length === 0) {
+          console.warn(`${where} images.component requires a non-empty sourceProps (sourceProps[0] is its source prop). Ignoring component.`);
+          component = undefined;
+        }
         platform.images = {
           backgroundImage: img.backgroundImage === true,
           ...(match && { match }),
