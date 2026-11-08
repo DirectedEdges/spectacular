@@ -110,7 +110,7 @@ Two commands resolve bytes into that one directory, and because the filename is 
 
 | Command | Finds | Recorded as |
 |---|---|---|
-| `specs generate --get-images` | images on the components being generated | `src` on the component's own registry entry |
+| `specs generate --get-images` | images on the components being generated | `src` on the component's own registry entry, and an entry in `data/cache/images.yaml` with `origin: [component]` |
 | `specs fetch` with the [`images`](/cli/commands/fetch/#fetching-image-fills-carried-by-styles) kind | the library's own images — on published fill styles, and laid out on a page | entries in [`data/cache/images.yaml`](/cli/commands/cache/#what-it-writes) |
 
 ## Finding what the library already has

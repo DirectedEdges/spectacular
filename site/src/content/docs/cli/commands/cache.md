@@ -52,6 +52,8 @@ entries:
 
 `origin` says where the image lives in Figma, not which command found it: `style` for a published fill style's paint, `pageFrame` for a frame a library laid out on a page and named to the [`images.match`](/settings/images/#laid-out-image-assets) pattern, `component` for a fill on a component. One image can be more than one of these. An empty `origin` means a file is present that no producer has recorded; re-run both commands to account for it. `src` is what the React and Web Components transforms resolve an `$image` pointer from, and an entry without one is an image whose bytes have not been downloaded — a legitimate state, not a failure, which is why nothing prunes it.
 
+Both producers refresh the cache as their last step — `fetch` for the images it downloads, `generate --get-images` for the ones it finds on components — so a `render` straight after either never meets a cache that command just invalidated.
+
 Every file also records what it was built from — the payload's name, size, and modification time, plus the glyph naming pattern for `icons.yaml`. That's how staleness is detected. For `images.yaml` there is one such record per producer, keyed `{alias}:styles` and `{alias}:components`, so one producer's payload changing never reports the other as stale.
 
 ## Staleness
