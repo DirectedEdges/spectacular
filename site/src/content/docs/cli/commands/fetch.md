@@ -60,11 +60,15 @@ gives up, so a retry starts that work over rather than picking it up.
 
 - `FIGMA_TOKEN` must be set in your environment (not needed with `--from-bridge`).
 - `config/settings.yaml` must include `data.directory` and `data.sources`.
-- Fetching `variables` over REST requires your Figma organization to be on an **Enterprise** plan — Figma restricts the variables REST endpoints regardless of your Spectacular license. On any other plan, fetch variables through the plugin instead with [`--from-bridge`](#fetching-variables-via-the-bridge). `file`, `styles`, and `icons` data work over REST on any plan. See [CLI Requirements](/cli/#requirements).
+- Fetching `variables` over REST requires your Figma organization to be on an **Enterprise** plan — Figma restricts the variables REST endpoints regardless of your Spectacular license. On any other plan, fetch variables through the plugin instead with [`--from-bridge`](#fetching-variables-via-the-bridge). `file`, `styles`, `icons`, and `images` data work over REST on any plan. See [CLI Requirements](/cli/#requirements).
 - Fetching `icons` additionally requires:
   - a `figma.glyphs` convention — `match` and/or `structure` — in `config/conventions/figma.yaml` (see [Glyph Name Pattern](/guides/glyph-name-pattern/))
   - `spec.directory` set in `config/settings.yaml` — icon assets are written to the spec workspace, not the data directory
   - the source's `file` payload — listed before `icons` in the same `fetch` array, or fetched in a previous run
+- Fetching `images` additionally requires:
+  - `spec.directory` set in `config/settings.yaml` — image files are written to the spec workspace, not the data directory
+  - the source's `styles` payload — listed before `images` in the same `fetch` array, or fetched in a previous run
+  - the source's `file` payload as well, when [`images.match`](/settings/images/#laid-out-image-assets) declares a pattern for laid-out image assets — they are read from the file, not from a separate request
 
 ## Options
 
@@ -81,7 +85,7 @@ specs fetch --data-dir ./custom-data
 > **Deprecated alias**: `--outDir` still works but will emit a deprecation warning. Prefer `--data-dir`.
 
 ### `--only <name[,name...]>`
-Narrow the fetch by source alias, by data kind, or both, comma-separated. Aliases come from `data.sources`; kinds are `file`, `variables`, `styles`, and `icons`. An alias fetches every kind for that source; a kind fetches it for every source; `--only library,icons` fetches only the icons of the `library` source. Names that shadow both an alias and a kind, or match nothing, fail with an error naming the valid values.
+Narrow the fetch by source alias, by data kind, or both, comma-separated. Aliases come from `data.sources`; kinds are `file`, `variables`, `styles`, `icons`, and `images`. An alias fetches every kind for that source; a kind fetches it for every source; `--only library,icons` fetches only the icons of the `library` source. Names that shadow both an alias and a kind, or match nothing, fail with an error naming the valid values.
 
 ### `--source <[alias=]url|key>`
 Fetch a file or branch that is not in `data.sources` — see [Fetching Figma Branches](#fetching-figma-branches). Repeatable.
@@ -115,7 +119,7 @@ It covers every source in your config that has been fetched — the ones downloa
 ```
   Cache rebuilt: library
   Not fetched, skipped: brand
-  Entries: 3567 components, 97 styles, 1458 variables, 469 icons
+  Entries: 3567 components, 97 styles, 1458 variables, 469 icons, 12 images
 ```
 
 ## Examples
@@ -164,6 +168,91 @@ specs fetch --only library,icons --verbose
 ```
 
 The downloaded assets match the slugs referenced by generated component output (masked glyph spans resolve `/assets/icons/<slug>.svg`), so serving `assets/icons/` as a static assets directory — for example in Storybook — makes icons render without further mapping. Keeping icons in the spec workspace means a cloned workspace renders completely without re-fetching.
+
+## Fetching Image Fills Carried by Styles
+
+A library's curated images usually live on published **fill styles** — a style named `Images / Wanaka` whose paint is a photograph, rather than an image placed on a component. Add `images` to a source's `fetch` array to download them:
+
+```yaml
+# config/settings.yaml
+data:
+  sources:
+    library:
+      key: YOUR_FILE_KEY
+      fetch: ['file', 'variables', 'styles', 'images']
+```
+
+`images` covers two of the three ways a library holds an image — the fill styles it publishes, and the assets it lays out on a page. The third, images placed on components, belongs to `generate --get-images`.
+
+### Images laid out on a page
+
+A library can also curate images the way it curates icons: a page of them, each named to a pattern. Declare the pattern as [`images.match`](/settings/images/#laid-out-image-assets):
+
+```yaml
+# config/conventions/figma.yaml
+images:
+  match: 'Image / {i}'
+```
+
+A frame qualifies when its name matches **and** it sits as a direct child of a page, or as a direct child of a section that is itself a direct page child. The captured `{i}` is the image's name.
+
+Unlike a fill style, an asset frame is already in the file payload and carries its own fills, so finding these costs no extra request — only their bytes are downloaded. That is also why declaring `images.match` makes the `file` payload a requirement of the `images` kind.
+
+Nothing is detected unless the pattern is declared. A convention is never inferred: a wrong guess would publish placeholders as library content, where absence merely finds nothing.
+
+### How it works
+
+- Every published `FILL` style in the source's styles payload is read back node by node, because a fill style's paint is not in the file payload at all — the file's style map carries the name, key and type only. Styles painting a colour are skipped; styles painting an image yield a Figma image hash.
+- Bytes are downloaded through the same Get Image Fills endpoint `generate --get-images` uses, and written to `assets/images/<imageHash>.<ext>` — the same directory, named for the image's content. A curated image and the same image detected on a component are therefore one file, and an image already on disk is never downloaded twice.
+- What it found is recorded in `{data.directory}/<alias>.images.json`, and from there into `{data.directory}/cache/images.yaml` — the roster of every image the workspace holds, keyed by image hash. See [cache](/cli/commands/cache/#what-it-writes).
+
+Because the fill styles come from the saved styles payload, `images` runs after the other kinds. If that payload is missing, fetch exits with an error telling you to fetch `styles` first.
+
+```bash
+# Refresh just the image assets (styles payload already on disk)
+specs fetch --only library,images --verbose
+```
+
+### Using a library image in a spec you are writing
+
+The point of fetching these is to make the library's images available to whoever is authoring a component or composition by hand. `images.yaml` is where the Figma style name survives — the file on disk is named for its content hash, so nothing about the file says which style it came from:
+
+```yaml
+# data/cache/images.yaml
+entries:
+  b60ac7bc8ed5d5b5b7f676b27f46ab44eb2355ef:
+    src: assets/images/b60ac7bc8ed5d5b5b7f676b27f46ab44eb2355ef.png
+    name: Images / Wanaka
+    origin: [style]
+    file: library
+```
+
+The key and the `src` are what belong in the component's `images` registry. `src` is what the React and Web Components transforms resolve an `$image` pointer from; the hash is the Figma identity that reverse-direction tooling matches on:
+
+```yaml
+images:
+  wanaka:
+    src: ../../assets/images/b60ac7bc8ed5d5b5b7f676b27f46ab44eb2355ef.png
+    $extensions:
+      com.figma:
+        imageHash: b60ac7bc8ed5d5b5b7f676b27f46ab44eb2355ef
+```
+
+The `src` in `images.yaml` is relative to your config directory; in the spec it is relative to the spec file, so prefix it to suit your output layout. An entry with no `src` at all renders nothing — the transforms resolve from `src` and never guess a filename from the hash.
+
+### How this differs from `generate --get-images`
+
+The two paths download the same bytes into the same directory and never duplicate each other's work, but they start from different places:
+
+| | `fetch` with `images` | `generate --get-images` |
+|---|---|---|
+| Finds images in | published fill styles | the fills of the components being generated |
+| Needs | the `styles` payload | a generate run over Figma data |
+| Opt-in through | `images` in a source's `fetch` array | the `--get-images` flag and `processing.images` in `config/conventions/figma.yaml` |
+| Writes | `assets/images/`, its own images payload, and `cache/images.yaml` | `assets/images/`, and `src` into the generated specs |
+| Shows up in the cache as | `origin: [style]`, with the fill style's name | `origin: [component]`, with the components that use it |
+
+A curated image no component uses needs the first. An image placed on a component needs the second. A library with both wants both, and an image found both ways is one entry in the cache carrying both — its style name and its usage.
 
 ## Fetching Variables via the Bridge
 

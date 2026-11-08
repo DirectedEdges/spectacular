@@ -68,6 +68,17 @@ describe('ConfigTemplates', () => {
       expect(template).not.toContain('states:');
     });
 
+    // The scaffold once offered `match: DS Image`, which the loader rejects for
+    // lacking the `{i}` capture — so uncommenting it dropped the convention and
+    // warned. A template must not fail the validator it is scaffolded against.
+    it('scaffolds the images block the loader accepts: a {i} pattern, and the component on `component`', () => {
+      const template = generateFigmaConventionsTemplate();
+      const match = template.match(/^#\s+match: (.+)$/m);
+      expect(match, 'the images block should scaffold a `match:` line').not.toBeNull();
+      expect(match![1]).toContain('{i}');
+      expect(template).toContain('component: DS Image');
+    });
+
     it('should include commented glyphs block for icon glyph naming', () => {
       const template = generateFigmaConventionsTemplate();
       expect(template).toContain('glyphs:');
