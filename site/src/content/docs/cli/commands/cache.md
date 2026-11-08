@@ -20,7 +20,7 @@ That data arrives as whole Figma API responses. A file payload for a large libra
 
 ## What it writes
 
-Four files under `{data.directory}/cache/`, each covering every source you've fetched:
+Five files under `{data.directory}/cache/`, each covering every source you've fetched:
 
 | File | Maps | Built from |
 |------|------|------------|
@@ -28,6 +28,7 @@ Four files under `{data.directory}/cache/`, each covering every source you've fe
 | `styles.yaml` | style name → key and type | `{alias}.file/` (or `.file.json`) |
 | `variables.yaml` | token name → key, id, published flag | `{alias}.variables.json` |
 | `icons.yaml` | glyph name → node id and key | `{alias}.file/` (or `.file.json`) |
+| `images.yaml` | image hash → file path, style name, usage | `{alias}.images.json` and `{alias}.component-images.json` |
 
 They're generated files. Deleting them is safe — the next `specs cache` rebuilds them — and they should not be edited by hand.
 
@@ -35,7 +36,25 @@ Each entry records which source it came from, because node ids are file-scoped: 
 
 `components.yaml` also records each component's raw Figma name. A spec refers to a component by a formatted key, and that transform is lossy — `DS Link/On overlay/M` and `DS Link On Overlay M` produce the same key — so the name cannot be recovered from the key. Recording it lets `render` place an instance of a component the workspace has no spec for: the library's names are formatted the same way and matched against the spec's key, then the component is imported by its published key. Names are stored raw and formatted at render time, so changing `spec.keys` needs no rebuild.
 
-Every file also records what it was built from — the payload's name, size, and modification time, plus the glyph naming pattern for `icons.yaml`. That's how staleness is detected.
+`images.yaml` is the roster of every image the workspace holds, and it is the one cache built from two payloads. Two commands find images independently and neither can derive the other's: [`fetch`](/cli/commands/fetch/) reads the images a library carries on its published fill styles, and [`generate --get-images`](/cli/commands/generate/) reads the fills placed on components. Each records what it found; the cache merges them.
+
+Entries are keyed by the image's **content hash**, because it is the only identifier every image has — a fill style names its image, a fill on a component does not. Keying by hash is also what lets the two producers merge rather than compete: an image that is both a curated fill style and in use on a component is one file and one entry carrying both facts.
+
+```yaml
+entries:
+  3c064860d14e1c2af909ae15fb8b21551395c9fa:
+    src: assets/images/3c064860….png
+    name: Images / Helsinki
+    usedBy: [cardMedia]
+    origin: [style, component]
+    file: library
+```
+
+`origin` says where the image lives in Figma, not which command found it: `style` for a published fill style's paint, `pageFrame` for a frame a library laid out on a page and named to the [`images.match`](/settings/images/#laid-out-image-assets) pattern, `component` for a fill on a component. One image can be more than one of these. An empty `origin` means a file is present that no producer has recorded; re-run both commands to account for it. `src` is what the React and Web Components transforms resolve an `$image` pointer from, and an entry without one is an image whose bytes have not been downloaded — a legitimate state, not a failure, which is why nothing prunes it.
+
+Both producers refresh the cache as their last step — `fetch` for the images it downloads, `generate --get-images` for the ones it finds on components — so a `render` straight after either never meets a cache that command just invalidated.
+
+Every file also records what it was built from — the payload's name, size, and modification time, plus the glyph naming pattern for `icons.yaml`. That's how staleness is detected. For `images.yaml` there is one such record per producer, keyed `{alias}:styles` and `{alias}:components`, so one producer's payload changing never reports the other as stale.
 
 ## Staleness
 
@@ -75,7 +94,7 @@ The cache is built for every source declared under `data.sources` in `config/set
 ```
   Cache rebuilt: library
   Not fetched, skipped: brand
-  Entries: 3567 components, 97 styles, 1458 variables, 469 icons
+  Entries: 3567 components, 97 styles, 1458 variables, 469 icons, 12 images
 ```
 
 `render` is stricter: it needs every declared source present and current, and fails naming the ones that aren't.

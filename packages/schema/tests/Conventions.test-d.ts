@@ -36,7 +36,7 @@ const figmaEncoding: Conventions = {
       codeOnlyProps: { match: 'Code only props' },
       subcomponents: { scope: 'PAGE', match: ['{C} / _ / {S}'], exclude: ['{C} / Examples / {S}'] },
       instanceExamples: { scope: 'FILE', match: ['{C} Example'], parentNames: ['Examples'] },
-      images: { backgroundImage: true, match: 'DS Image', sourceProps: ['imageSource'] },
+      images: { backgroundImage: true, match: 'DS Image / {i}', component: 'DS Image', sourceProps: ['imageSource'] },
       slotConstraints: true,
       inferNumberProps: true,
       defaultFillWidth: 375,
@@ -67,7 +67,7 @@ const noComposable: PlatformConventions = {};
 const _badComposable: PlatformConventions = { slotPrimitives: ['children'] };
 
 // Figma may take a vocabulary member — the reason it is not special-cased
-const figmaVocabulary: PlatformConventions = { images: { match: 'DS Image' } };
+const figmaVocabulary: PlatformConventions = { images: { component: 'DS Image' } };
 
 // @ts-expect-error — platforms is a map, not the old figma scope
 const oldShape: Conventions = { figma: { naming: 'NONE' } };
@@ -141,11 +141,16 @@ const dottedSource: PrimitiveRule = { source: 'typography.fontStyle', values: { 
 // @ts-expect-error — source is required
 const ruleWithoutSource: PrimitiveRule = { prop: 'text' };
 
-// ─── Images: encoding and vocabulary in one block (ADR-077) ───────────────────
+// ─── Images: encoding and vocabulary in one block (ADR-077, ADR-117) ──────────
 
 const imageBoth: PlatformConventions = {
-  images: { backgroundImage: true, match: 'DS Image', component: 'DsImage', sourceProps: ['imageSource'] },
+  images: { backgroundImage: true, match: 'Image / {i}', component: 'DS Image', sourceProps: ['imageSource'] },
 };
+
+// `match` is a naming pattern over laid-out image assets; `component` is what this
+// platform calls the designated image component. Each stands alone (ADR-117).
+const imageAssetsOnly: PlatformConventions = { images: { match: 'Image / {i}' } };
+const imageComponentOnly: PlatformConventions = { images: { component: 'DS Image', sourceProps: ['source'] } };
 
 // ─── defaultFillWidth (ADR-081) ───────────────────────────────────────────────
 

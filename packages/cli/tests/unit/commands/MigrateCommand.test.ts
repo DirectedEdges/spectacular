@@ -123,7 +123,7 @@ describe('migrateConfigV1 (config v1 → v2 mapping)', () => {
     expect(result.conventions).toEqual({ codeOnlyProps: { match: '^_' } });
   });
 
-  it('maps processing.images.imageComponent to conventions.figma.images.match', () => {
+  it('maps processing.images.imageComponent to conventions.figma.images.component', () => {
     const result = migrateConfigV1({
       config: {
         processing: {
@@ -132,7 +132,7 @@ describe('migrateConfigV1 (config v1 → v2 mapping)', () => {
       },
     });
     expect(result.conventions).toEqual({
-      images: { match: 'DS Image', backgroundImage: true, sourceProps: ['imageSource'] },
+      images: { component: 'DS Image', backgroundImage: true, sourceProps: ['imageSource'] },
     });
   });
 
@@ -437,7 +437,7 @@ config:
     });
     expect(config.conventions.platforms!.figma.images).toEqual({
       backgroundImage: true,
-      match: 'DS Image',
+      component: 'DS Image',
       sourceProps: ['imageSource'],
     });
 

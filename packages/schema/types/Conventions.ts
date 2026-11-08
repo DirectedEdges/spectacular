@@ -169,11 +169,11 @@ export interface PrimitiveEntry {
  * in it:
  *
  * - **Encoding** — `naming`, `glyphs`, `codeOnlyProps`, `subcomponents`,
- *   `instanceExamples`, `images.backgroundImage`, `images.sourceProps`,
+ *   `instanceExamples`, `images.match`, `images.backgroundImage`, `images.sourceProps`,
  *   `slotConstraints`, `inferNumberProps`, `slotPrimitives`. These say how this platform
  *   expresses something the spec models explicitly. A Figma library has no first-class
  *   notion of a subcomponent, so it encodes one in a layer-name pattern.
- * - **Vocabulary** — `stylesProp`, `images.match`, `images.component`. These say which of
+ * - **Vocabulary** — `stylesProp`, `images.component`. These say which of
  *   this platform's components implements a spec concept, and how it is authored.
  *
  * Neither group belongs to a direction or to a platform: a name pattern is decoded when
@@ -255,14 +255,23 @@ export interface PlatformConventions {
      */
     backgroundImage?: boolean;
     /**
-     * Vocabulary. The Figma name of the designated image component (e.g. `"DS Image"`).
-     * Requires a non-empty `sourceProps`.
+     * Encoding. Naming pattern identifying the image assets a library lays out on a
+     * page, with `{i}` capturing the image name — the same form `glyphs.match` takes
+     * (ADR-117). A frame qualifies when its name matches and it sits as a direct child
+     * of a page, or as a direct child of a section that is itself a direct page child.
+     *
+     * The position rule is what separates a curated grid from an image used
+     * incidentally deeper in the file; a pattern matched at any depth would extract
+     * placeholders inside components as library assets.
      */
     match?: string;
     /**
-     * Vocabulary. The same component's name on this platform (e.g. `"DsImage"`) — the
-     * translation target for a `match` declared by whichever platform produced the spec.
-     * It is not validated against that name; an unmatched `component` is inert.
+     * Vocabulary. What this platform calls the designated image component — `"DS Image"`
+     * in Figma, `"DsImage"` in React (ADR-117). Each platform declares its own name in
+     * its own conventions file, so one key serves both directions.
+     *
+     * Requires a non-empty `sourceProps`, whose first entry is this component's own
+     * source prop.
      */
     component?: string;
     /**
@@ -613,7 +622,9 @@ export interface ResolvedPlatformConventions {
   /** How this platform expresses images. Optional; absence means no image convention. */
   images?: {
     backgroundImage: boolean;
+    /** Naming pattern identifying image assets laid out on a page, `{i}` capturing the name. */
     match?: string;
+    /** What this platform calls the designated image component. */
     component?: string;
     sourceProps: string[];
   };

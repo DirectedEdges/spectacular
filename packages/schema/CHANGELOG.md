@@ -7,8 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.40.0] - Unreleased
 
+### Breaking
+
+- `PlatformConventions.images.match` — a naming pattern over laid-out image assets, previously a component name (ADR-117)
+- `PlatformConventions.images.component` — this platform's own name for the designated image component (ADR-117)
+
 ### Added
 
+- `DSPEC-54` — an image asset is a pattern-matching frame on a page or in one of its sections
+- `DSPEC-55` — a declared `images.component` requires a non-empty `images.sourceProps`
 - `mappings/bindings/` is published. The binding data states which platform realises each style key and how, which is a fact about the contract and belongs with it. A consumer can now read it from the package rather than the repo (#837)
 - Every option of all 31 closed value sets — a description of what choosing it does (ADR-114)
 - `Styles` — `examples` on all 46 properties, each valid against its own property
@@ -33,6 +40,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `TokenReference.$token` — described as the slash-separated path the corpus uses, not a dot-separated one
 
 ### Removed
+
+### Migration
+
+- `images.match` → `images.component`: move a designated image component's name to `component`, and read `match` as a `{i}` naming pattern for the images a library lays out on a page. A declaration left on `match` fails validation, since the block admits no additional properties
 
 
 ## [0.39.0] - 2026-10-29

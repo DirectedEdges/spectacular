@@ -417,6 +417,8 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-51 | A consumer applies nothing for a `mixed` value, and never substitutes one of the varying values or a platform default | consumer | §4.6 |
 | DSPEC-52 | An optional member of a `Styles` composite type declares a `default` where its own schema can express the value an absent member carries, and any declared `default` validates against that member's schema | package | §4.1b, ADR-116 |
 | DSPEC-53 | A required member of a `Styles` composite type declares no `default` | package | §4.1b, ADR-116 |
+| DSPEC-54 | A frame is an image asset only when its name matches `images.match` and it is a direct child of a page, or of a section that is itself a direct page child; a match at any other depth is not an asset | producer | conventions reference, ADR-117 |
+| DSPEC-55 | A declared `images.component` requires a non-empty `images.sourceProps`, whose first entry is that component's own source prop | validator | conventions reference, ADR-077/117 |
 
 Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.
 

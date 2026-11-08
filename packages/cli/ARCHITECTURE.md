@@ -120,7 +120,8 @@ hook blocks it).
   `clearTimeout` would silently start killing slow downloads. Giving up also
   discards the build — Figma starts over on the next request — so nothing here
   retries, and the failure says so rather than implying a cheap retry.
-- `src/fetch/` holds what only `fetch` uses — `estimate.ts`, `fileKey.ts`. A second
+- `src/fetch/` holds what only `fetch` uses — `estimate.ts`, `fileKey.ts`,
+  `styleImages.ts`. A second
   caller moves it out, by the entry rule above — to the one feature that imports it,
   or to `utilities/` when several do. That is why the payload split and its reader do
   not live here: `sectionedFile.ts` imports `payloadSplit.ts` and shares its format
@@ -131,6 +132,23 @@ hook blocks it).
   payload's size on disk), and deliberately answers in bands rather than
   figures — the measured rate spans a wide enough range that a number would
   claim precision the data does not support.
+- **A cache concern's provenance is one record per payload file, not per alias.**
+  The partition key is the alias for every concern built from a single payload per
+  source; `images.yaml` is built from two — `fetch` records the images a library
+  carries on fill styles, `generate --get-images` the ones placed on components —
+  so its keys are `<alias>:styles` and `<alias>:components`. That keeps one
+  producer's rebuild from reporting the other as stale. Images also always rebuild
+  from their payloads rather than carrying entries forward: the payloads are
+  kilobytes where a file payload is hundreds of megabytes, and an entry can be
+  co-owned by both producers, so carrying one half forward while rebuilding the
+  other would duplicate or drop it.
+- **Two fetch kinds are derived from another kind's payload and so run last**:
+  `icons` needs `file`, `images` needs `styles`. Either prerequisite may have
+  landed this run or a previous one, which is why the check is for the payload on
+  disk rather than for the kind being in the same `fetch` list. Both write assets
+  into the spec workspace — `assets/icons/`, `assets/images/` — because an asset
+  is consumed by every target and produced by none, so it outlives the
+  regenerable data cache.
 - **`fetch` is the only consumer of a source's file key**, which is why
   `normalizeSources` validates and resolves every `data.sources.*.key` instead of
   `ConfigLoader` doing it: the bridge and Storybook read aliases and `fetch`
@@ -155,7 +173,7 @@ the work lives in the feature folder.
 | `build`, `run` | The whole chain over `src/pipeline/` — `build` once then exits, `run` once then watches. What they share as commands is `pipeline/chainCommand.ts` (ADR-101) |
 | `generate` | Figma file / manifest / bridge → specs |
 | `scan` | Discover components → `<alias>.manifest.md` |
-| `fetch` | Figma REST download (file, variables, styles, icons); `--from-bridge` reads variables through the plugin instead (non-Enterprise path) |
+| `fetch` | Figma REST download (file, variables, styles, icons, images); `--from-bridge` reads variables through the plugin instead (non-Enterprise path) |
 | `cache` | Render lookup caches |
 | `applyCustomTokens` | Inject custom tokens into foundations |
 | `react`, `webcomponents` | Emit one platform target whole — component, contract, stylesheet, stories. Both are four lines over `emit/targets.ts`, which also holds the `emitTarget()` the chain calls in-process |

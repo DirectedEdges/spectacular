@@ -844,16 +844,31 @@ instanceExamples:
     });
   });
 
-  describe('conventions.figma.images validation (ADR-063)', () => {
-    it('resolves a full block: backgroundImage, trimmed match, trimmed sourceProps', () => {
-      writeSplitFile('conventions/figma.json', JSON.stringify({ images: { backgroundImage: true, match: ' DS Image ', sourceProps: [' imageSource ', 'src'] } }));
+  describe('conventions.figma.images validation (ADR-063, ADR-117)', () => {
+    it('resolves a full block: backgroundImage, trimmed match and component, trimmed sourceProps', () => {
+      writeSplitFile('conventions/figma.json', JSON.stringify({ images: { backgroundImage: true, match: ' Image / {i} ', component: ' DS Image ', sourceProps: [' imageSource ', 'src'] } }));
 
       const config = configLoader.load();
       expect(config.conventions.platforms!.figma.images).toEqual({
         backgroundImage: true,
-        match: 'DS Image',
+        match: 'Image / {i}',
+        component: 'DS Image',
         sourceProps: ['imageSource', 'src'],
       });
+    });
+
+    it('a match without the {i} capture is dropped — it would find one literal name', () => {
+      writeSplitFile('conventions/figma.json', JSON.stringify({ images: { match: 'DS Image' } }));
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.images).not.toHaveProperty('match');
+    });
+
+    it('resolves match alone — a library with laid-out assets and no designated component', () => {
+      writeSplitFile('conventions/figma.yaml', "images:\n  match: 'Image / {i}'");
+
+      const config = configLoader.load();
+      expect(config.conventions.platforms!.figma.images).toEqual({ backgroundImage: false, match: 'Image / {i}', sourceProps: [] });
     });
 
     it('fills-only: backgroundImage alone resolves with defaults', () => {
@@ -870,12 +885,12 @@ instanceExamples:
       expect(config.conventions.platforms!.figma.images).toEqual({ backgroundImage: false, sourceProps: ['Image'] });
     });
 
-    it('match without sourceProps is dropped (needs a forwarding target)', () => {
-      writeSplitFile('conventions/figma.json', JSON.stringify({ images: { backgroundImage: true, match: 'DS Image' } }));
+    it('component without sourceProps is dropped (needs a forwarding target)', () => {
+      writeSplitFile('conventions/figma.json', JSON.stringify({ images: { backgroundImage: true, component: 'DS Image' } }));
 
       const config = configLoader.load();
       expect(config.conventions.platforms!.figma.images).toEqual({ backgroundImage: true, sourceProps: [] });
-      expect(config.conventions.platforms!.figma.images).not.toHaveProperty('match');
+      expect(config.conventions.platforms!.figma.images).not.toHaveProperty('component');
     });
 
     it('coerces a non-boolean backgroundImage to false', () => {

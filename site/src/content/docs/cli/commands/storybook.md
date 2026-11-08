@@ -92,10 +92,11 @@ instance. Always publishes.
 
 ### `foundations`
 
-The generated [Color, Icons, and Typography pages](/storybook/foundations/)
-and the data files they read (`data/colors.json`, `icons.json`,
+The generated [Color, Icons, Images, and Typography pages](/storybook/foundations/)
+and the data files they read (`data/colors.json`, `icons.json`, `images.json`,
 `typography.json`). Reads the fetched library payloads — variables, the style
-map, the glyph directory — plus the specs for glyph references, and applies
+map, the glyph directory, the image directory — plus the specs for glyph and
+image references, and applies
 the author's [`conventions/storybook.yaml`](/storybook/customization/)
 choices. Publishes when the workspace has the data; a workspace that never
 ran `fetch` gets no Foundations section rather than empty pages.

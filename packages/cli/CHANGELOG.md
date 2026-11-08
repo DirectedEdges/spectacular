@@ -13,6 +13,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **An element annotated `role: decoration` is hidden from assistive technology**, and both concepts are now recognised by `specs analyze roles`.
 
+- **`specs fetch` downloads the images a library carries on published fill styles**, with a new `images` kind for a source's `fetch` list and for `--only`. Files land in `assets/images/` alongside what `generate --get-images` downloads, and neither path re-fetches the other's
+
+- **`data/cache/images.yaml` lists every image the workspace holds**, keyed by image hash and carrying the file path, the Figma style name where there is one, and whether the image lives on a fill style, on a component, or both — so you can use any library image in a spec you write by hand without reading the spec tree to find it
+
+- **Storybook gains a Foundations Images page** showing every image in the workspace in a grid, named by its fill style where it has one, with the components that reference each and a list of any a spec references but nothing has downloaded
+
+- **`specs fetch` also downloads the images a library lays out on a page**, declared with `images.match: 'Image / {i}'` in `config/conventions/figma.yaml` — the way `glyphs.match` declares icons. A qualifying frame is a direct page child, or a direct child of a section that is one, so a placeholder inside a component is never taken for a library asset
+
+- **`specs generate --get-images` records the images it finds on components**, so one lookup covers all three ways a library holds an image. A scoped run never removes what a fuller run recorded, and the cache is rebuilt as the command's last step so a render straight after needs no manual refresh
+
+- **`specs skills install` emits `specs-cli.images.setup`**, which finds a library's images, writes the `images` convention, refetches, and proves what resolved — the images counterpart to `icons.setup`. Workspace setup offers it as a fourth improvement pass
+
+### Breaking
+
+- **The designated image component is declared on `images.component`, not `images.match`** (ADR-117). Move the component's name to `component`; `match` now takes a `{i}` naming pattern for laid-out image assets, and a `match` without `{i}` is reported and ignored
+
 ### Changed
 
 ### Fixed

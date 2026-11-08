@@ -186,7 +186,7 @@
         },
         "images": {
           "type": "object",
-          "description": "How this platform expresses images. Encoding: backgroundImage, sourceProps. Vocabulary: match (the Figma name of the designated image component) and component (the same component's name on this platform). Absence means no image convention. (ADR-063, ADR-077)",
+          "description": "How this platform expresses images. Encoding: match, backgroundImage, sourceProps. Vocabulary: component. Absence means no image convention. (ADR-063, ADR-077, ADR-117)",
           "properties": {
             "backgroundImage": {
               "type": "boolean",
@@ -195,7 +195,8 @@
             },
             "match": {
               "type": "string",
-              "description": "Vocabulary. Figma name of the designated image component (e.g. 'DS Image'). Requires a non-empty sourceProps."
+              "description": "Encoding. Naming pattern identifying the image assets a library lays out on a page, with {i} capturing the image name. A frame qualifies when its name matches and it sits as a direct page child, or as a direct child of a section that is itself a direct page child. (ADR-117)",
+              "examples": ["Image / {i}"]
             },
             "sourceProps": {
               "type": "array",
@@ -206,7 +207,8 @@
             },
             "component": {
               "type": "string",
-              "description": "Vocabulary. The same component's name on this platform (e.g. 'DsImage') \u2014 the translation target for a match declared by whichever platform produced the spec. Not validated against it; an unmatched component is inert. (ADR-077)"
+              "description": "Vocabulary. What this platform calls the designated image component. Each platform declares its own name in its own conventions file, so one key serves both directions. Requires a non-empty sourceProps. (ADR-077, ADR-117)",
+              "examples": ["DS Image"]
             }
           },
           "additionalProperties": false
