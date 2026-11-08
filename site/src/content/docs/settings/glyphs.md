@@ -70,6 +70,8 @@ Without a `glyphs` block, the layer is treated as an ordinary element and no `co
 
 The pattern must include the `{i}` placeholder, which marks where the glyph name appears in the component name. Internally `{i}` becomes a `(.+)` capture group and the matched text is used as the glyph's `content` value. See [Icon Glyphs](/guides/glyph-name-pattern/) for the full pattern syntax.
 
+`{i}` is the asset-name placeholder generally, not only the icon-name one — [`images.match`](/settings/images/#laid-out-image-assets) uses it to capture an image's name. The property it sits in says which asset is being named.
+
 ## `structure`
 
 Declares the child structure a glyph component has in this library, for libraries whose glyph components are plainly named (`Cross`, `Chevron down`) and carry no name pattern.

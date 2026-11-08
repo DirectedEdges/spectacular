@@ -3,7 +3,7 @@
 **Branch**: `117-library-image-assets`
 **Created**: 2026-11-08
 **Status**: DRAFT
-**Summary**: *(written at implementation — see `/specs.adr.implement`)*
+**Summary**: `images.match` becomes a naming pattern over laid-out image assets, and `images.component` alone names the designated image component.
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none — amends ADR-077's `images` vocabulary)*
 
@@ -84,7 +84,7 @@ A frame qualifies when its name matches the declared pattern **and** it sits eit
 
 ```yaml
 images:
-  match: 'Image / {n}'
+  match: 'Image / {i}'
 ```
 
 **Pros**:
@@ -138,7 +138,7 @@ images:
 
 # After
 images:
-  match: 'Image / {n}'     # naming pattern — consistent with glyphs.match
+  match: 'Image / {i}'     # naming pattern — consistent with glyphs.match
   component: DS Image      # what this platform calls the designated image component
   sourceProps: [source]
 ```
@@ -174,26 +174,29 @@ For example `images.sourceComponent`, pairing with `sourceProps`, or a return to
 
 ## Options Considered — Decision 3: The capture placeholder
 
-### Option A: `{n}`, for the captured name *(Selected)*
+### Option A: `{i}`, the existing placeholder *(Selected)*
 
 ```yaml
 images:
-  match: 'Image / {n}'
+  match: 'Image / {i}'
 ```
 
+`i` is the initial of *image* as readily as of *icon*, so the existing placeholder covers this case without being redefined.
+
 **Pros**:
-- The existing placeholders are initials of what they capture — `{C}` component, `{S}` subcomponent, `{i}` icon. `{n}` for name follows that rule for a thing whose own initial is already taken.
-- Reads unambiguously beside `{i}`: one captures an icon's name, one captures an image's.
+- Adds nothing to the vocabulary an author has to learn. A library already declaring `glyphs.match: 'Icon / {i}'` writes `images.match: 'Image / {i}'` with no new rule.
+- The placeholders are initials of what they capture — `{C}` component, `{S}` subcomponent, `{i}` icon *or* image — and `i` serves both subjects honestly rather than by stretching.
+- The block disambiguates. `{i}` inside `glyphs.match` captures an icon name; inside `images.match` it captures an image name. No declaration is ever ambiguous about which, because the property it sits in says so.
+- One placeholder for "the asset's own name" generalises if a third asset kind ever wants the same treatment.
 
 **Cons / Trade-offs**:
-- Adds a fourth placeholder to the vocabulary a library author has to learn.
-- `{n}` names the *capture* where the others name the *subject*, so the rule it follows is not quite the rule the others follow.
+- The published glyphs documentation calls `{i}` the icon-name placeholder, so that description has to widen to name both subjects.
 
 ---
 
-### Option B: Reuse `{i}` *(Rejected)*
+### Option B: `{n}`, for the captured name *(Rejected)*
 
-**Rejected because**: `{i}` is documented as the icon-name placeholder, and the glyph convention is the one a reader meets first. Giving it a second subject inside a different block re-creates, in the placeholder vocabulary, exactly the ambiguity this ADR removes from `match`.
+**Rejected because**: it buys disambiguation nobody needs — the enclosing property already says which asset is being named — at the cost of a fourth placeholder in a vocabulary whose whole value is being small. It also names the *capture* where every other placeholder names the *subject*, so it would be the one placeholder following a different rule.
 
 ---
 
@@ -225,7 +228,7 @@ images:
 # After
 images:
   backgroundImage?: boolean
-  match?: string          # naming pattern over image asset frames, {n} capturing the name
+  match?: string          # naming pattern over image asset frames, {i} capturing the name
   component?: string      # what this platform calls the designated image component
   sourceProps?: string[]
 ```
@@ -245,8 +248,8 @@ No member is added or removed. Both changes are to what a declared member *means
 # #/definitions/PlatformConventions/properties/images/properties
 match:
   type: string
-  description: "Naming pattern identifying image asset frames laid out on a library page, using the {n} placeholder to capture the image name."
-  examples: ['Image / {n}']
+  description: "Naming pattern identifying image asset frames laid out on a library page, using the {i} placeholder to capture the image name."
+  examples: ['Image / {i}']
 component:
   type: string
   description: "What this platform calls the designated image component. Requires a non-empty sourceProps."
