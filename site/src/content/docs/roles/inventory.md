@@ -44,7 +44,7 @@ emitted and adds handlers to the contract.
 | [`alert`](/roles/status/) | An assertive live region announcing interruptions | **Implemented** |
 | [`status`](/roles/status/) | A polite live region announcing transient updates | **Implemented** |
 | [`progressbar`](/roles/status/) | An element reporting progress toward completion | **Implemented** |
-| [`image`](/roles/image/) | An element that is a picture, announced only when something names it | **Specified** |
+| [`image`](/roles/image/) | An element that is a picture, announced only when something names it | **Implemented** |
 
 ## Part roles
 
@@ -57,7 +57,7 @@ it resolves to no control, because it asserts a fact about itself alone.
 |------|----------|--------|
 | [`label`](/roles/label/) | The control's visible label; wires `htmlFor`. On a `group` it emits `<legend>` | **Implemented** |
 | [`indicator`](/roles/indicator/) | Decorative state indicator (check glyph, switch thumb); `aria-hidden` | **Implemented** |
-| [`decoration`](/roles/decoration/) | An element conveying nothing at all; `aria-hidden`, and it resolves to no control | **Specified** |
+| [`decoration`](/roles/decoration/) | An element conveying nothing at all; `aria-hidden`, and it resolves to no control | **Implemented** |
 | `description` | Supplementary text; wires `aria-describedby` | **Implemented** — described on the [errormessage](/roles/errormessage/) page |
 | [`errormessage`](/roles/errormessage/) | Validation message; wires `aria-describedby` when it renders | **Implemented** |
 | [`value`](/roles/value/) | The element standing in for the control's value | **Implemented** |

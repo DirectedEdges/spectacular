@@ -5,7 +5,7 @@ description: "Declare that an element conveys nothing, so assistive technology s
 
 `decoration` declares that an element carries no meaning a user needs to perceive — a background texture, a divider flourish, a gradient panel, an icon that merely repeats the text beside it. Without it a transform cannot tell such an element from one that matters, so it must expose all of them or none; the ones it exposes announce as "graphic" with no name, which is noise a screen reader user has to step past.
 
-**Status** — React: Specified • Web Components: Specified • iOS: Not yet planned • Android: Not yet planned
+**Status** — React: Implemented • Web Components: Implemented • iOS: Not yet planned • Android: Not yet planned
 
 The name is specs-native. ARIA's nearest token is `presentation`, which strips an element's own semantics and is therefore inert on the containers this lands on — a different mechanism with a similar word, and borrowing it would invite a transform to emit it.
 
@@ -19,8 +19,10 @@ Apply the following roles to elements:
 
 | Where | What is emitted |
 |---|---|
-| The decoration element | `aria-hidden="true"`, plus `focusable="false"` where the element emits an `<svg>` |
+| The decoration element | `aria-hidden="true"` |
 | Everything else | Nothing |
+
+One attribute, whatever the element is. Nothing emits `focusable="false"`, which belongs on an `<svg>` root — neither web target emits one, because a drawing is a span carrying the glyph as a CSS mask.
 
 Tag, classes, `data-element` values, layout, and styling are unchanged — only the attribute is added, so nothing visual changes.
 
@@ -90,15 +92,10 @@ Nothing. `decoration` is a declaration the component acts on for itself. It adds
 
 ```tsx
 // before
-<svg className="card__flourish" data-element="backgroundFlourish">{/* … */}</svg>
+<span className="card__flourish" data-element="backgroundFlourish" />
 
 // after
-<svg
-  className="card__flourish"
-  data-element="backgroundFlourish"
-  aria-hidden="true"
-  focusable="false"
->{/* … */}</svg>
+<span className="card__flourish" data-element="backgroundFlourish" aria-hidden="true" />
 ```
 
 ### Contract
@@ -107,9 +104,10 @@ None.
 
 ## Web Components
 
-Identical — `aria-hidden="true"` on the element inside the shadow root. No host involvement, because the attribute describes the decoration, not the component.
+The same attribute, with one difference:
 
-A root `decoration` is the one difference: the host cannot be hidden from inside its own shadow root, so the attribute lands on the host element itself. A component that is wholly decorative is a reasonable thing to build, and a consumer composing it inherits the hiding without having to know.
+- A **root** decoration sets it on the host, because nothing can hide itself from inside its own shadow root. A wholly decorative component is a reasonable thing to build, and a consumer composing it inherits the hiding without having to know
+- Anywhere else the attribute lands on the element in the shadow root, with no host involvement
 
 ## iOS
 

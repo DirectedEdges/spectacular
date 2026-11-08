@@ -178,13 +178,18 @@ wins for the whole set.
 
 ## What a swapped element looks like
 
-A role that replaces an element's tag — a container becoming a `<button>`, an `<a>`, or a
-collapsed `<input>` — would inherit that element's user-agent styling: borders,
-backgrounds, fonts, and padding the design never drew. The `css` transformer neutralizes
-this wherever a role swaps the element: the swapped element gets `appearance: none`, zero
-border, margin and padding, no background, and inherited font, color, and text alignment,
-so the spec's own declarations govern and the before and after render alike. Anchors
-additionally drop link decoration.
+A role that replaces an element's tag — a container becoming a `<button>`, an `<a>`, an
+`<img>`, or a collapsed `<input>` — would inherit that element's user-agent styling:
+borders, backgrounds, fonts, and padding the design never drew. The `css` transformer
+neutralizes this wherever a role swaps the element: the swapped element gets
+`appearance: none`, zero border, margin and padding, no background, and inherited font,
+color, and text alignment, so the spec's own declarations govern and the before and after
+render alike. Anchors additionally drop link decoration.
+
+An [image](/roles/image/) additionally takes `display: block` and full width and height,
+because what a replaced element brings is not chrome but an **intrinsic size** the box it
+replaced did not have — left unsized, its box comes from the asset rather than from the
+layout, and `object-fit` has nothing to fit.
 
 What a swap *can* change is structure, and each page records its own case: a proxy-input
 role injects one sibling, a rehosted glyph adds one wrapper level, and the textbox

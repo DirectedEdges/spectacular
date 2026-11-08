@@ -5,7 +5,7 @@ description: "Emit a real image element, and let the accessible name decide whet
 
 `image` declares that an element *is* a picture — a photo, an illustration, a chart, an avatar, a logo. Without it an image drawn in Figma emits as a container with a `background-image` declaration, which announces nothing, carries no name, and gives a consumer no place to put the one fact only they know: what this particular picture shows. The alt-text rule that follows from that — **decorative unless something names it** — then has to be hand-authored per component, in every consuming codebase, forever.
 
-**Status** — React: Specified • Web Components: Specified • iOS: Not yet planned • Android: Not yet planned
+**Status** — React: Implemented • Web Components: Implemented • iOS: Not yet planned • Android: Not yet planned
 
 The concept is named `image` and the web emission is `role="img"`. The web token is an abbreviation; the concept is not.
 
@@ -25,12 +25,16 @@ What is emitted depends on both the element and whether a name resolves:
 | Landing on | Named | Unnamed |
 |---|---|---|
 | An element whose only fill is an image and which has no children | `<img src alt={name}>` | `<img src alt="">` |
-| `glyph` or `vector` | `<svg role="img" aria-label={name}>` | `<svg aria-hidden="true" focusable="false">` |
+| `glyph` or `vector` | `role="img"` and `aria-label={name}` on the drawing | `aria-hidden="true"` on the drawing |
 | A container with children, or an image behind content | `role="img"` and `aria-label={name}` on the existing tag | Tag unchanged; nothing emitted |
 
-The first row is the only one that swaps the element, so it is the only one the [swapped-element reset](/roles/#what-a-swapped-element-looks-like) applies to: the `<img>` gets `appearance: none`, zero border, margin and padding, and the fill moves from `background-image` to the `src` attribute with `object-fit` carrying the fit.
+A drawing is not an `<svg>` in either web target — both emit a span carrying the glyph as a CSS mask — so the attributes land on that span and nothing emits `focusable="false"`, which belongs on an `<svg>` root.
 
-**`aria-hidden` is not emitted on the first or third row, and that is not an omission.** An `<img alt="">` is already removed from the accessibility tree by the empty `alt`, and an unnamed container announces nothing to begin with. Only the `<svg>` path needs the attribute, because a graphic is announced on some platforms even without a name. An element that needs its whole subtree hidden is a [decoration](/roles/decoration/), not an unnamed image.
+The first row is the only one that swaps the element, so it is the only one the [swapped-element reset](/roles/#what-a-swapped-element-looks-like) applies to. Alongside the shared declarations, the `<img>` takes `display: block`, `width: 100%` and `height: 100%`, and the fill moves from `background-image` to the `src` attribute with `object-fit` carrying the fit.
+
+**The sizing is not cosmetic.** An image element carries an intrinsic size and the box it replaced did not, so a flex parent stretches a `<div>` to the full cross axis and does not stretch a replaced element. Left unsized, the box takes the asset's own proportions — and `object-fit` then has nothing to fit, so `cover` and `contain` render identically.
+
+**`aria-hidden` is not emitted on the first or third row, and that is not an omission.** An `<img alt="">` is already removed from the accessibility tree by the empty `alt`, and an unnamed container announces nothing to begin with. The drawing row states it because a glyph span is hidden by default: the role's conditional attribute is what *un-hides* a named one. An element that needs its whole subtree hidden is a [decoration](/roles/decoration/), not an unnamed image.
 
 ### The accessible name
 
@@ -131,9 +135,10 @@ Where a prop is nominated as the accessible-name source, `alt` is not generated 
 
 The custom element **is** the root, so a root `image` cannot become an `<img>` tag. A real `<img>` is emitted **inside** the shadow root, and the host keeps the root's layout and appearance:
 
-- The inner image is exposed as `part="image"`
-- `alt` is a host attribute, reflected onto the inner `<img>`; an absent attribute reflects as `alt=""`
+- The inner image is exposed as `part="image"`. A non-root image claims no part of its own, because the element already carries one named for its anatomy key
+- `alt` binds into the inner `<img>` from the component's own member, and is empty where the member is unset — the decorative case
 - A non-root `image` is an ordinary element in the template and carries the tag directly
+- Conditional semantics spell through Lit's `nothing`; `undefined` would reach the DOM as that string
 
 Name routing across a shadow boundary does not apply here, because an image's name is a string rather than an id reference — `aria-label` and `alt` both carry text, so the [`partText()` convention](/roles/#parts-across-a-composed-component) is not needed. A composed caption component providing `label` is the one exception, and it uses that convention like any other text-bearing part.
 
