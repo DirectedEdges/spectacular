@@ -7,6 +7,7 @@ import {
   TEXT_PROPERTIES, backgroundImageDecls, gradientRingRule, inlineBlockIfBoxed, isGlyphLike, overlapRule,
   preserveLineBreaks,
 } from './elementRules.js';
+import { imageRoleTakesFill, imageElementFitDecls } from './imageRole.js';
 import { defaultContentStylesLines, slotAdmitsComponents } from './contentRules.js';
 import { resolveContentStyles } from '../analysis/contentStylesRead.js';
 import type { ImagesCssContext, RootForm } from '../types.js';
@@ -54,7 +55,13 @@ export function defaultBlockLines(input: DefaultBlockInput): DefaultBlockResult 
       ...layoutToCSS(styles, tokensFormat, facts.parentLayoutMode(elemKey), true, facts.parentCrossAxisAlignment(elemKey), elemTypes[elemKey] === 'instance'),
       ...styleToCSS(styles, tokensFormat, elemTypes[elemKey], { ...facts.styleOptions(elemKey), isDefaultBlock: true }),
     ];
-    if ('backgroundImage' in styles) decls.push(...backgroundImageDecls(styles.backgroundImage, images));
+    if ('backgroundImage' in styles) {
+      decls.push(
+        ...(imageRoleTakesFill(elemKey, elemRoles, elemTypes, styles, facts.parentOf)
+          ? imageElementFitDecls(styles.backgroundImage)
+          : backgroundImageDecls(styles.backgroundImage, images)),
+      );
+    }
 
     // Ellipses are circular unless the spec sets an explicit radius.
     if (elemTypes[elemKey] === 'ellipse' && !decls.some(d => d.startsWith('border-radius:'))) {

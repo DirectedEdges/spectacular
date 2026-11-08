@@ -9,9 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **An element annotated `role: image` emits a real image element**, with its fill carried on `src` and its fit stated as `object-fit` instead of painted as a background.
+
+- **An element annotated `role: decoration` is hidden from assistive technology**, and both concepts are now recognised by `specs analyze roles`.
+
 ### Changed
 
 ### Fixed
+
+- **A variant that sets an aspect ratio now changes the element's shape.** The ratio was emitted alongside the width and height the default block fixed, which CSS ignores, so every ratio option rendered as the default.
 
 - **`specs analyze` runs on a workspace with no specs in it**, writing every report with zero counts and empty collections rather than failing — so a catalogue you are authoring from scratch has an analysis surface before it has a spec, and `specs build` and `specs run` get through
 

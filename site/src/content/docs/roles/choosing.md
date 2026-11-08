@@ -116,19 +116,51 @@ always-present one is `description`.
 a native control is one element with attributes. Without these parts a transform would have to
 guess which layer is which.
 
-## Decoration that announces nothing: `indicator`
+## Decoration that announces nothing: `indicator`, `decoration`
 
-**Evidence:** a glyph, vector, or small container that appears in some variants and not others —
-a tick inside a checkbox, the knob of a switch, a chevron on a disclosure.
+**Evidence:** a glyph, vector, or small container with no text and no pointer affordance — a tick
+inside a checkbox, the knob of a switch, a chevron on a disclosure, a background flourish, a
+divider rule.
 
 > **Does this element convey state the control already announces?**
 
-If yes, it is an [`indicator`](/roles/indicator/), and its job is **subtraction**: the control
-already says "checked", so a glyph that also exposes itself announces the same fact twice, the
-second time as noise. This is the one part that exists to remove something.
+| Answer | Role |
+|---|---|
+| Yes — it draws a state the control reports | [`indicator`](/roles/indicator/) |
+| No, and it conveys nothing anyone needs | [`decoration`](/roles/decoration/) |
+| No, and it conveys something new | Neither — see below |
 
-An element that appears conditionally but conveys something *new* — a count, a warning text — is
-not an indicator.
+Both emit `aria-hidden="true"`, and the job of both is **subtraction**: the control already says
+"checked", so a glyph that also exposes itself announces the same fact twice, the second time as
+noise like "checkmark graphic."
+
+Prefer `indicator` wherever it fits. It says more — it is validated against an accepting control,
+and [`radio`](/roles/radio/) consumes it into styling rather than emitting it — and the extra it
+says is checked. `decoration` is for elements that belong to no control at all, which is why it is
+the only part that resolves to nothing.
+
+An element that appears conditionally but conveys something *new* — a count, a warning text, a
+status dot — is neither. Hiding it removes information.
+
+## Pictures: `image`, `decoration`
+
+**Evidence:** a rectangle, ellipse, or frame painted with an image fill; a component named image,
+photo, avatar, thumbnail, logo, or illustration; a prop of `type: image`.
+
+> **Could two instances of this element reasonably need different alt text?**
+
+| Answer | Role |
+|---|---|
+| Yes — the picture changes per instance | [`image`](/roles/image/) |
+| No — it is the same meaningless art every time | [`decoration`](/roles/decoration/) |
+
+`image` hands the naming decision to the consumer and defaults to decorative when they say
+nothing, so an avatar used beside a name stays silent while the same avatar used alone can be
+named. `decoration` takes the decision away, which is correct for a texture and wrong for a photo.
+
+Where the picture is *also* interactive — a clickable thumbnail, a logo that navigates — the
+element that activates takes [`button`](/roles/button/) or [`link`](/roles/link/), and `image`
+goes on the picture inside it. One element the component owns carries at most one role.
 
 ## Gathering controls: `group`
 
