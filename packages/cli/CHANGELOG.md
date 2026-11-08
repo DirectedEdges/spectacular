@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`specs skills install` emits `specs-cli.images.setup`**, which finds a library's images, writes the `images` convention, refetches, and proves what resolved — the images counterpart to `icons.setup`. Workspace setup offers it as a fourth improvement pass
 
+- **`specs render --grid` arranges the rendered components into a 4:3 block instead of a row running off the canvas.** Each render lands 100px to the right of whatever is already on the page, so rendering a catalogue walked the output into one very wide row that no zoom-to-fit could show usefully. With the flag, everything `render` has placed on that page is laid into rows 100px apart in canvas order — the block at least as wide as 4:3 and never taller — after each component lands, so a single render, a `--watch` rebuild and a full catalogue all end in the same correct arrangement. Only nodes `render` created are moved; anything else on the page keeps its position and the block anchors clear of it, and the components stay direct children of the canvas rather than being gathered into a frame. Off by default.
+
 ### Changed
 
 ### Fixed

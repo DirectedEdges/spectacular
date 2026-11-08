@@ -210,7 +210,7 @@ export class BridgeOperations<S extends Sendable> {
   /**
    * Send a single renderComponent message over the WebSocket and wait for the result.
    */
-  async sendRender(specPath: string, rawPageId: string | null, fileKey?: string, preParsedSpec?: Record<string, unknown>, overwrite?: boolean, conventions?: ResolvedConventions, settings?: ResolvedSettings, devStatus?: DevStatusRequest): Promise<RenderResult> {
+  async sendRender(specPath: string, rawPageId: string | null, fileKey?: string, preParsedSpec?: Record<string, unknown>, overwrite?: boolean, conventions?: ResolvedConventions, settings?: ResolvedSettings, devStatus?: DevStatusRequest, grid?: boolean): Promise<RenderResult> {
     const conn = this.registry.resolve(fileKey);
 
     let spec: Record<string, unknown>;
@@ -272,7 +272,7 @@ export class BridgeOperations<S extends Sendable> {
     // A large component set against a big library can take minutes today; a timeout
     // shorter than the render discards a result the plugin actually produced.
     const { requestId, promise } = this.requests.create(300000, 'Timed out waiting for renderComponent-result.');
-    const payload = JSON.stringify({ type: 'renderComponent', requestId, spec, pageId, instanceIdManifest: manifest, glyphIdManifest, stylesManifest, variablesManifest, overwrite, conventions, settings, devStatus });
+    const payload = JSON.stringify({ type: 'renderComponent', requestId, spec, pageId, instanceIdManifest: manifest, glyphIdManifest, stylesManifest, variablesManifest, overwrite, conventions, settings, devStatus, grid });
 
     const sentAt = Date.now();
     conn.ws.send(payload);
