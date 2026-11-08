@@ -283,7 +283,7 @@ The `images` block declares `additionalProperties: false`, so no declaration can
 | `react-from-specs` | Recompile | No read of either member today |
 | `webcomponents-from-specs` | Recompile | No read of either member today |
 | `from-specs` | Recompile | Shared core; no read of either member today |
-| `specs-plugin-2` | Recompile | Reads the `images` block only through `specs-from-figma`, never directly, so it inherits that package's adoption rather than making its own |
+| `specs-plugin-2` | Update usage | It does not *read* the block, but it **writes** one: its settings panel builds the convention and puts the designated component's name on `match`. That field has to move to `component`, or the engine stops finding it and image-component routing fails silently |
 
 A configuration migration path already exists for this block and will need the new mapping: the pre-split `processing.images.imageComponent` currently converts to `match` and must convert to `component` instead.
 
