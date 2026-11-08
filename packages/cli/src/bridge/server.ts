@@ -364,16 +364,16 @@ const http = createServer((req, res) => {
     return;
   }
 
-  type RenderParams = { specPath?: string; spec?: Record<string, unknown>; pageId?: string | null; fileKey?: string; overwrite?: boolean; conventions?: ResolvedConventions; settings?: ResolvedSettings; devStatus?: DevStatusRequest };
+  type RenderParams = { specPath?: string; spec?: Record<string, unknown>; pageId?: string | null; fileKey?: string; overwrite?: boolean; conventions?: ResolvedConventions; settings?: ResolvedSettings; devStatus?: DevStatusRequest; grid?: boolean };
   withJsonBody<RenderParams>(req, res, (p) => {
-    const { specPath: specArg, spec: preParsedSpec, pageId = null, fileKey, overwrite, conventions, settings, devStatus } = p;
+    const { specPath: specArg, spec: preParsedSpec, pageId = null, fileKey, overwrite, conventions, settings, devStatus, grid } = p;
     // Absolute, because workspace derivation walks up from a real path. The previous
     // shape tested `!specArg` twice, the second time unreachably.
     if (!specArg) throw new BadRequest('specPath is required.');
     if (!isAbsolute(specArg)) {
       throw new BadRequest('specPath must be absolute when no startup workspace is configured.');
     }
-    return ops.sendRender(specArg, pageId, fileKey, preParsedSpec, overwrite, conventions, settings, devStatus);
+    return ops.sendRender(specArg, pageId, fileKey, preParsedSpec, overwrite, conventions, settings, devStatus, grid);
   });
 });
 

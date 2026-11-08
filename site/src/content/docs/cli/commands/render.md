@@ -88,6 +88,20 @@ This is destructive — the existing component is removed, not merged into. When
 specs render specs/components/deButton.yaml --overwrite
 ```
 
+### `--grid`
+
+Arrange everything `render` has placed on the page into rows approximating a 4:3 block, spaced 100px apart horizontally and vertically. Off by default.
+
+Without it, each component lands 100px to the right of whatever is already on the page, so rendering a catalogue walks the output into a single row running off to arbitrary x. With it, the arrangement runs after each component lands — one render and a whole catalogue both end in a correct block, and a `--watch` rebuild returns its component to its own place in the block rather than beside it.
+
+The rows read in canvas order, which is the order the components were rendered in. Each row is as tall as its tallest member and its items sit at the row's top. The block is at least as wide as 4:3 and never taller; where the component sizes admit no such arrangement, a single row is used.
+
+Only nodes `render` created are moved. Anything else on the page stays exactly where it is, and the block anchors 100px to the right of it. The components stay direct children of the canvas — nothing is re-parented and no containing frame is created, so each one remains independently selectable.
+
+```bash
+specs render --grid
+```
+
 ### `--watch`
 
 Watch the spec path and re-render on every change. Implies `--overwrite`, since each re-render replaces the component produced by the last one.
