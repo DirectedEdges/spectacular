@@ -13,7 +13,7 @@ const images = data as {
     file: string;
     hash: string;
     name?: string;
-    origin: Array<'style' | 'page' | 'component'>;
+    origin: Array<'style' | 'pageFrame' | 'component'>;
     referencedBy: string[];
     bytes: number;
   }>;
@@ -29,18 +29,18 @@ function kb(bytes: number) {
 /** Where the image lives in Figma. An empty origin means no producer has recorded it. */
 const ORIGIN_LABEL: Record<string, string> = {
   style: 'Fill style',
-  page: 'Laid out',
+  pageFrame: 'Laid out',
   component: 'On a component',
 };
 
-function originText(origin: Array<'style' | 'page' | 'component'>) {
+function originText(origin: Array<'style' | 'pageFrame' | 'component'>) {
   if (origin.length === 0) return 'Unaccounted for';
   return origin.map((o) => ORIGIN_LABEL[o] ?? o).join(' · ');
 }
 
 function ImagesPage() {
   const curated = images.present.filter(
-    (i) => i.origin.includes('style') || i.origin.includes('page'),
+    (i) => i.origin.includes('style') || i.origin.includes('pageFrame'),
   ).length;
   const unaccounted = images.present.filter((i) => i.origin.length === 0).length;
 

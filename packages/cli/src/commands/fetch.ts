@@ -1025,7 +1025,7 @@ export const Fetch = new Command('fetch')
           // key, so the two halves cannot compete for a name.
           const found = [
             ...styleImages.map(image => ({ imageHash: image.imageHash, name: image.name, origin: 'style' as const, styleKey: image.key, nodeId: image.node_id })),
-            ...imageAssets.map(asset => ({ imageHash: asset.imageHash, name: asset.name, origin: 'page' as const, nodeId: asset.nodeId })),
+            ...imageAssets.map(asset => ({ imageHash: asset.imageHash, name: asset.name, origin: 'pageFrame' as const, nodeId: asset.nodeId })),
           ];
 
           // Hash-named files in the one images directory, shared with

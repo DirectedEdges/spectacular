@@ -304,6 +304,7 @@ The documentation surface is also incomplete today — the published `images` se
 ## Consequences
 
 - A library can publish a curated set of images by laying them out on a page and naming them to a pattern, the same way it already publishes icons — and the set is reachable without any component using it and without any fill style carrying it.
+- The image lookup gains a third `origin` value, `pageFrame`, beside `style` and `component` — named for the node that carries the image rather than for the page it sits on. An image can carry more than one origin, so a frame that is also a fill style's paint is one entry stating both.
 - `match` means a naming pattern everywhere in the conventions contract except `codeOnlyProps.match`, which is named here as the remaining exception and left for its own decision.
 - Each platform declares what it calls the designated image component under one key, in its own file, as every other per-platform vocabulary member already works.
 - Every library declaring `images.match` as a component name must move it to `images.component`. There is no overlap period: the block admits no additional properties, so an unmigrated declaration fails validation and says so.

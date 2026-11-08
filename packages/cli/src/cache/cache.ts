@@ -64,13 +64,16 @@ export interface CacheSource {
 /**
  * Where an image lives in Figma — not which command found it.
  *
- * `style` is a published fill style's paint, `page` an asset frame a library laid
- * out and named to the `images.match` pattern (ADR-117), `component` a fill on a
- * component. One image can be more than one of these.
+ * `style` is a published fill style's paint, `pageFrame` an asset frame a library
+ * laid out on a page and named to the `images.match` pattern (ADR-117),
+ * `component` a fill on a component. One image can be more than one of these.
+ *
+ * `pageFrame` rather than `page`: the image is on a frame, and the page is where
+ * that frame sits. The value names the node that carries the image.
  */
-export type ImageOrigin = 'style' | 'page' | 'component';
+export type ImageOrigin = 'style' | 'pageFrame' | 'component';
 
-const IMAGE_ORIGINS: readonly ImageOrigin[] = ['style', 'page', 'component'];
+const IMAGE_ORIGINS: readonly ImageOrigin[] = ['style', 'pageFrame', 'component'];
 
 function isImageOrigin(value: unknown): value is ImageOrigin {
   return typeof value === 'string' && (IMAGE_ORIGINS as readonly string[]).includes(value);
