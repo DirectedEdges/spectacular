@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **An element annotated `role: image` emits a real image element**, with its fill carried on `src` and its fit stated as `object-fit` instead of painted as a background.
+
+- **An element annotated `role: decoration` is hidden from assistive technology**, and both concepts are now recognised by `specs analyze roles`.
+
 - **`specs fetch` downloads the images a library carries on published fill styles**, with a new `images` kind for a source's `fetch` list and for `--only`. Files land in `assets/images/` alongside what `generate --get-images` downloads, and neither path re-fetches the other's
 
 - **`data/cache/images.yaml` lists every image the workspace holds**, keyed by image hash and carrying the file path, the Figma style name where there is one, and whether the image lives on a fill style, on a component, or both — so you can use any library image in a spec you write by hand without reading the spec tree to find it
@@ -18,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+
+- **A variant that sets an aspect ratio now changes the element's shape.** The ratio was emitted alongside the width and height the default block fixed, which CSS ignores, so every ratio option rendered as the default.
 
 - **`specs analyze` runs on a workspace with no specs in it**, writing every report with zero counts and empty collections rather than failing — so a catalogue you are authoring from scratch has an analysis surface before it has a spec, and `specs build` and `specs run` get through
 
