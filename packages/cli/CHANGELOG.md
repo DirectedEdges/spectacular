@@ -13,11 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   The stylesheet half is this package's. Where an `image` role takes an element's fill onto a `src` attribute, `background-image` is no longer emitted for it and the fit is stated against the content box — `object-fit` and `object-position` in place of `background-size`, `background-position` and `background-repeat`. Emitting both painted the picture twice and gave the fit two different boxes to apply to. Only that path changes: a drawing has no fill to move, and an image painted behind content keeps its tag and its background exactly as before.
 
-  The element also joins the swapped-element reset, with one declaration of its own: `display: block`. An inline replaced element sits on the text baseline and leaves descender space beneath it, which reads as a few unexplained pixels of gap under every picture. It is a floor rather than an override — a `display` the spec declares still wins, because the reset rules land first.
+  The element also joins the swapped-element reset, with three declarations of its own: `display: block`, `width: 100%`, `height: 100%`. What an image element carries that the box it replaced did not is its **intrinsic size**, and both of the consequences need neutralising. Inline, it sits on the text baseline and leaves descender space beneath it — a few unexplained pixels of gap under every picture. Unsized, its box comes from the asset rather than from the layout: a `<div>` has no intrinsic size, so a flex container stretched it to the full cross axis and `background-size` had a real box to fit into, while a replaced element is not stretched, leaving `object-fit` nothing to do and making `cover` and `contain` render identically. All three are a floor rather than an override — the reset lands before every spec declaration, so a width, height or display the spec states still wins.
 
 ### Changed
 
 ### Fixed
+
+- **An `aspectRatio` variant now actually changes the element's shape.** A variant stating a ratio emitted `aspect-ratio` and nothing else, so the width and height the default block declared both stayed in force — and CSS ignores `aspect-ratio` when both dimensions are definite. Every such variant rendered identically to the default, which in a library with six ratio options reads as a dead control rather than a styling bug. The variant now releases the fixed height alongside the ratio.
+
+  This rule already existed for a single style set: a style set stating a ratio does not also emit its authored height, because a fixed height beats `aspect-ratio` in the cascade. What was missing is that the same reasoning applies **across** blocks, where the pinned dimension comes from a different rule than the ratio. Nothing is released where the default block stated a ratio of its own, since its height was already withheld.
 
 - **`specs analyze` runs on a workspace with no specs in it**, writing every report with zero counts and empty collections rather than failing — so a catalogue you are authoring from scratch has an analysis surface before it has a spec, and `specs build` and `specs run` get through
 

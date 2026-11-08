@@ -34,12 +34,22 @@ export function uaResetDecls(role: string): string[] {
   ];
   // An anchor is not a button: it carries link decoration rather than a border.
   if (role === 'link') decls.push('text-decoration: none');
-  // An image carries none of the chrome above — what it carries is baseline
-  // alignment. An inline replaced element sits on the text baseline and leaves
-  // descender space beneath it, which reads as a few unexplained pixels of gap
-  // under every picture. It is a floor, not an override: a `display` the spec
-  // declares still wins, because these rules land first.
-  if (role === 'image') decls.push('display: block');
+  // An image carries none of the chrome above. What it carries is its own
+  // INTRINSIC SIZE, which is the thing the box it replaced did not have, and
+  // two consequences follow:
+  //
+  // - An inline replaced element sits on the text baseline and leaves descender
+  //   space beneath it — a few unexplained pixels of gap under every picture.
+  // - Its box is sized from the picture rather than from the layout. A `<div>`
+  //   has no intrinsic size, so a flex container stretched it to the full cross
+  //   axis and `background-size` had a real box to fit into; a replaced element
+  //   is not stretched, so without these the box takes the asset's own
+  //   proportions and `object-fit` has nothing left to do — `cover` and
+  //   `contain` render identically, which is how this was found.
+  //
+  // A floor, not an override: these land before every spec declaration, so a
+  // width, height or display the spec states still wins.
+  if (role === 'image') decls.push('display: block', 'width: 100%', 'height: 100%');
   return decls;
 }
 

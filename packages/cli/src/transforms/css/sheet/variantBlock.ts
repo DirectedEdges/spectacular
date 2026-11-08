@@ -10,6 +10,7 @@ import { composedSelector, elemSelector, rootSelector } from './selectors.js';
 import { expandVariantSelectors } from './variantSelectors.js';
 import { backgroundImageDecls, gradientRingRule, inlineBlockIfBoxed, overlapRule } from './elementRules.js';
 import { imageRoleTakesFill, imageElementFitDecls } from './imageRole.js';
+import { ratioReleaseDecls } from './ratioRelease.js';
 import { slotAdmitsComponents, variantContentStylesLines } from './contentRules.js';
 import { attrNameFor } from './hostAttributes.js';
 import type { ImagesCssContext, RootForm } from '../types.js';
@@ -193,6 +194,7 @@ export function variantBlockLines(input: VariantBlockInput): string[] {
         ...revealDecls,
         ...layoutToCSS(styles, tokensFormat, facts.parentLayoutMode(elemKey), false, facts.parentCrossAxisAlignment(elemKey), elemTypes[elemKey] === 'instance'),
         ...styleToCSS(styles, tokensFormat, elemTypes[elemKey], facts.styleOptions(elemKey)),
+        ...ratioReleaseDecls(styles, defaultElements[elemKey]),
       ];
       if ('backgroundImage' in styles) {
         decls.push(
