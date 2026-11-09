@@ -43,7 +43,7 @@ An external specification already covers most of this ground. The Design System 
 
 ## Options Considered
 
-Twelve decisions are recorded below, each with its own alternatives. The Decision section that follows introduces nothing that is not chosen here.
+Thirteen decisions are recorded below, each with its own alternatives. The Decision section that follows introduces nothing that is not chosen here.
 
 ### D1 — How many documents, and divided by what
 
@@ -442,6 +442,43 @@ Drop `author` and `updated` as git's job.
 
 ---
 
+### D13 — What a token pointer names
+
+D7 and D11 both let a pointer name a token: a guideline's `alternatives`, and a `dontUseWhen` subject's. A DSDS pointer's `to` names an entry by its id, and a token id may use capitals and slashes but **must not contain a space** — the rule is that an id is lowercase words joined by dashes with dots between parts, and that *"a token's `id` MAY also use a design tool's own capitals and slashes, like `Color/Action/Primary`"*. Figma names are full of spaces. Every one of `DE Color/Action/Hover background`, `DE Color/Text/Primary Inverse`, `DE Color/Surface/Very low contrast`, and the collection `DE Palette Brand 2` is unusable as written.
+
+DSDS specifies nothing about design-tool translation — no rule for spaces in tool names, no round-tripping guidance, no mapping from a DTCG path to an id. It does supply two pieces that together answer the question. Its processing model defines a name-to-identifier algorithm — *"lowercase the text, turn each run of characters other than `a`–`z` and `0`–`9` into one dash, and remove any dash at either end"* — and every entry carries `name`, the readable label, separate from `id`, the machine key.
+
+#### Option A: Derive the id from `spec.tokens`, normalizing only when the result is not legal *(Selected)*
+
+Authored content is unaffected: a `to` in an authored `alternatives` carries the token path exactly as the rest of the system spells it, because the authored document is a source format rather than a DSDS document (see D7's scope limit). The translation is the exporter's, in two parts:
+
+> A DSDS exporter derives a token's `id` from whatever the workspace's `spec.tokens` profile emits for that token. If the result is not a legal DSDS id, it is normalized with DSDS's own algorithm, applied per path segment so the slashes a token id is permitted to keep are kept. The exporter MUST also emit the token's original path as `name`, unmodified.
+
+`spec.tokens` is already this system's single answer to how a token is named for a given consumer — eight profiles behind one enum, settled by ADR-007. A `tokens` profile a team has already chosen is a better source for their ids than a scheme invented here.
+
+**Pros**:
+- One naming authority. A team on `FIGMA_SYNTAX_IOS` gets `DSColor.alertInfoBg` as the id, which is already legal and already what they use; a team on the default gets `ds-color/alert/info/background`.
+- The algorithm is DSDS's own, not this ADR's, so there is nothing to defend and nothing to keep in sync with a spec revision.
+- `name` carries the original path, so the transform never has to be reversed. It cannot be — case folding and the collapse of every non-alphanumeric run into one dash make it many-to-one — and `name` means that does not matter.
+- Nothing authored changes, no spec output changes, and the `tokens` setting is not touched. The slug exists only inside an exported document.
+- Verified against the component-marathon library: all 272 tokens slug to distinct ids under this rule, including the case-only pair `DE Color/Text/Primary Inverse` and `DE Color/Icon/Primary inverse`, which stay distinct because their groups differ.
+
+**Cons / Trade-offs**:
+- `spec.tokens` is a Pro setting, so the id a given library exports depends on the workspace's entitlement and configuration. Two workspaces can export the same library with different ids.
+- Zero collisions is a fact about one library, not a guarantee. A library with two tokens in one group differing only by case or punctuation would collide, and the exporter needs a collision check that fails loudly rather than silently merging two tokens.
+- A pointer in an authored file holds a token path, while the same field in the exported document holds an id. The field means something slightly different on each side of the exporter, and only the scope limit in D7 makes that coherent.
+- The rule binds an exporter this ADR does not write, so nothing enforces it yet.
+
+#### Option B: Always slug the token path, ignoring `spec.tokens` *(Rejected)*
+
+**Rejected because**: it adds a ninth token naming scheme immediately outside the single setting built to hold the other eight, and a team whose tokens genuinely are `--ds-color-alert-info-bg` would receive ids matching nothing they use. Configuration-independent output is a real benefit, but not one worth a second naming authority.
+
+#### Option C: Add a `DSDS` profile to `spec.tokens` *(Rejected)*
+
+**Rejected because**: `spec.tokens` shapes spec output, so a new profile changes every token reference in every spec, and promote-primitives tables match against whatever the profile emits. That is a far larger blast radius than an export format needs, and it would put a DSDS concern inside the spec contract rather than at the boundary where it belongs.
+
+---
+
 ## Decision
 
 ### Type changes (`types/`)
@@ -603,7 +640,7 @@ SelectionSubject:
 | `src/validate/supplemental.schema.json` | Deleted — superseded by the published schema |
 | `src/validate/supplemental.ts` | Compile the published `supplemental.schema.json` and a new `guidelines.schema.json` instead of the local copy |
 | `src/validate/run.ts` | Validate `guidelines.yaml` wherever it validates `supplemental.yaml`, at all three scopes from D10 |
-| `src/validate/references.ts` | Resolve a `schemaGap.path` that is a JSON Schema pointer; check a `useWhen` / `dontUseWhen` `$token` against the library the way `$token` is already checked in specs; resolve every `Pointer.to` in `alternatives`, `refines`, `evidence`, and `checks` |
+| `src/validate/references.ts` | Resolve a `schemaGap.path` that is a JSON Schema pointer; check a `useWhen` / `dontUseWhen` `$token` against the library the way `$token` is already checked in specs; resolve every `Pointer.to` in `alternatives`, `refines`, `evidence`, and `checks`, matching a token pointer against `analysis/foundations.yaml` by its authored path rather than any derived id |
 | `src/skills/*.md` | Update the authoring skills that describe the sidecar's shape |
 
 The reference-level checks issue #870 asks for land here, against the closed enums this ADR provides: an entry citing an anatomy element or prop must cite one that exists in the sibling `api.yaml`, and a `schemaGap.path` that is a JSON Schema pointer must resolve.
@@ -616,7 +653,11 @@ The reference-level checks issue #870 asks for land here, against the closed enu
 
 **On the DSDS divergences, and the export rule that bounds them.** Three places depart from DSDS 0.23.1, each argued where it is made: `may` on `ObligationLevel` (D7), `instead` on `GuidelineEntry` (D7), and `$description` plus the `useWhen` / `dontUseWhen` sections, which have no DSDS counterpart at all (D11). The document shape is also not a DSDS document — see the scope limit in D7.
 
-One normative requirement follows, and it binds any exporter this schema ever gets: **`instead` is appended to `statement` as a sentence when emitting DSDS, never dropped.** `alternatives` needs no such rule, because it is DSDS's own field and survives export intact. The rule exists only for the prose remedy, and it means a consumer that ignores unknown fields loses the field and keeps the content rather than publishing a prohibition with its fix stripped off.
+**Three normative requirements on any exporter this schema ever gets.** None is implementable here, because no exporter exists yet; all three are decided so the exporter is not guesswork.
+
+1. **`instead` is appended to `statement` as a sentence, never dropped.** `alternatives` needs no such rule — it is DSDS's own field and survives intact. This one exists only for the prose remedy, so a consumer that ignores unknown fields loses the field and keeps the content rather than publishing a prohibition with its fix stripped off.
+2. **A token's `id` is derived from the workspace's `spec.tokens` profile, normalized per path segment with DSDS's algorithm only when the profile's output is not a legal id** (D13).
+3. **A token entry always carries its original path in `name`, unmodified.** The id transform is many-to-one and cannot be reversed; `name` is why it never has to be.
 
 **On the authored files.** Five authored files need editing for this contract, all of them workspace content rather than package content, so none of it gates this ADR. The four `supplemental.yaml` files move their `guidelines` sections out, turn `schemaGap` strings into objects, drop `regenerationRisk`, drop the `platforms` map's file paths, and resolve the entries whose `schemaGap` reads `"none"` by moving them into the spec or justifying them. `foundations/color.yaml` moves to `foundations/color/guidelines.yaml` and converts its obligation keys to `level` values with `instead`.
 
@@ -665,6 +706,9 @@ One normative requirement follows, and it binds any exporter this schema ever ge
 - The boundary between a `dontUseWhen` subject and a `must-not` rule is a judgment with no mechanical test. `foundations/color.yaml` already states the ramp-step prohibition in both places, so the duplication is live rather than hypothetical.
 - `meta.status` makes the difference between proposed and ratified guidance a field rather than a convention, which is what a ratification step needs to read.
 - `meta.author` and `meta.updated` duplicate git and will go stale. Nothing in the validator can catch that.
+- A token keeps one spelling everywhere a human writes it. The DSDS-legal id exists only inside an exported document, derived from the workspace's `spec.tokens` profile, and never enters a spec, a generator, or Figma.
+- Because the id derives from a Pro setting, two workspaces can export the same library under different token ids. That is correct — it follows the naming each team already chose — but it means an id is not a stable cross-workspace identifier.
+- The id transform is lossy and irreversible, and `name` carrying the original path is the only thing that makes it safe. An exporter that omits `name` produces a document whose tokens cannot be traced back to the library.
 - Obligation is a sortable, filterable, renderable field instead of the first word of a sentence, which is what a documentation pipeline needs to group `must` rules apart from `should` ones.
 - `ComponentConcern`, `Platform`, and `FoundationConcern` close, so #870's reference checks run against known value sets and a misspelled concern fails validation rather than creating a silent section.
 - Guidance gains a verification story through `checkedBy` and `checks`, and an `automated` guideline cannot be authored without naming what automates it.
@@ -682,7 +726,9 @@ One normative requirement follows, and it binds any exporter this schema ever ge
 - **Design System Documentation Specification (DSDS) 0.23.1** — [designsystemdocspec.org/specification](https://designsystemdocspec.org/specification). Source of the guideline item shape adopted under D7: the `statement` / `level` / `checkedBy` / `checks` / `evidence` / `alternatives` / `refines` field names, the `must` / `should` / `should-not` / `must-not` level set, the `automated` / `assisted` / `manual` verification set, the `checks`-required-when-`automated` rule, and the pointer shape — `to` or `href`, never both. `alternatives` carries DSDS's `alternative-to` relationship and is valid on a guideline item; D11 extends its use to a `dontUseWhen` subject. `same-as` and `relates-to` are available via `refs` and used as DSDS defines them.
 
   Departures, each argued where it is made: `may` added to the level set (D7); `instead` added for a prose remedy (D7); the section-level `for` audience not adopted (Notes); and `useWhen` / `dontUseWhen` with `$description` having no DSDS counterpart at all (D11). The document shape is a source format that maps to DSDS rather than DSDS itself, because DSDS requires `kind` and `for` on a section and this schema carries neither — see the scope limit in D7. `meta` (D12) is drawn from authored content, not DSDS.
+- **DSDS processing model** — [designsystemdocspec.org/processing](https://designsystemdocspec.org/processing). Source of the name-to-identifier algorithm adopted under D13: lowercase, each run of characters other than `a`–`z` and `0`–`9` becomes one dash, dashes at either end removed. The spec defines it for generating addresses from statements, terms, and titles; D13 applies it per path segment to a token path. The processing model also confirms pointer matching is exact, with no case-folding or normalization at resolution time.
 - **RFC 2119** — the obligation semantics DSDS's `level` values carry, and the source of the added `may`.
+- **`spec.tokens` setting** — `site/src/content/docs/settings/tokens.md`, decided by ADR-007. The eight token-naming profiles D13 derives a DSDS token id from.
 - **`packages/cli/src/validate/supplemental.schema.json`** — the experimental CLI-defined contract this ADR promotes, splits, and deletes.
 - **`DirectedEdges/spectacular#870`** — the validation work this ADR unblocks.
 - **component-marathon workspace, `specs/components/{badge,button,icon,image}/supplemental.yaml` and `specs/foundations/color.yaml`** — the authored evidence the shape is drawn from.
