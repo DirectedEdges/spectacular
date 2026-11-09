@@ -172,6 +172,8 @@ export default defineConfig({
                 { label: 'Composition API', slug: 'schema/documents/composition-api' },
                 { label: 'Composition Variants', slug: 'schema/documents/composition-variants' },
                 { label: 'Composition Examples', slug: 'schema/documents/composition-examples' },
+                { label: 'Supplemental', slug: 'schema/documents/supplemental' },
+                { label: 'Guidelines', slug: 'schema/documents/guidelines' },
               ],
             },
             {

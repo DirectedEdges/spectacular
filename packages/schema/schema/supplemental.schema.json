@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://spectacular.systems/schema/0.40.0/supplemental.schema.json",
+  "title": "Specs Supplemental Sidecar Schema",
+  "description": "What a component needs beyond what the spec can carry, authored beside it as supplemental.yaml. The audience is whoever builds the component. Overlay-only: every entry names the schema path that cannot carry it, so anything the schema can carry belongs in the spec. What a component's user must observe is the other sidecar's subject — guidelines.schema.json. Three scopes share this shape: one component, every component, and one foundation; entries across scopes are additive rather than overriding (DSPEC-56). (ADR-118)",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "meta": { "$ref": "sidecar.schema.json#/definitions/SidecarMeta" },
+    "anatomy": {
+      "$ref": "#/definitions/Section",
+      "description": "Requirements about the element tree: what parts a component has and how they nest."
+    },
+    "props": {
+      "$ref": "#/definitions/Section",
+      "description": "Requirements about the props a component takes, and what a caller may pass."
+    },
+    "styles": {
+      "$ref": "#/definitions/Section",
+      "description": "Requirements about the style values a component's parts carry."
+    },
+    "slotComposition": {
+      "$ref": "#/definitions/Section",
+      "description": "Requirements about what may fill a slot, in what quantity, and in what arrangement."
+    },
+    "events": {
+      "$ref": "#/definitions/Section",
+      "description": "Requirements about what a component emits, and when."
+    },
+    "accessibility": {
+      "$ref": "#/definitions/Section",
+      "description": "Requirements about what assistive technology receives, and what a caller must supply for it."
+    },
+    "behavior": {
+      "$ref": "#/definitions/Section",
+      "description": "Requirements about what a component does in response to interaction or state."
+    },
+    "motion": {
+      "$ref": "#/definitions/Section",
+      "description": "Requirements about how a component traverses a change rather than where it ends up."
+    },
+    "layout": {
+      "$ref": "#/definitions/Section",
+      "description": "Requirements about how a component's parts are arranged and sized relative to each other."
+    },
+    "overrides": {
+      "$ref": "#/definitions/Section",
+      "description": "Requirements about what a caller may replace or supply in place of a component's own part."
+    },
+    "naming": {
+      "$ref": "#/definitions/Section",
+      "description": "Requirements about why a component, prop, or part carries the name it does."
+    }
+  },
+  "definitions": {
+    "Section": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Entries for one concern the spec cannot fully carry.",
+      "items": { "$ref": "#/definitions/SupplementalEntry" }
+    },
+    "SchemaGap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "need"],
+      "description": "The surface that would carry a requirement, and why it cannot. Named rather than asserted — an entry that cannot name its gap belongs in the spec.",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The schema pointer or workspace-relative target that would carry this. A JSON Schema pointer is resolved by a validator (DSPEC-58); a gap in the library's own data names the report instead, because a missing motion token is not a gap in styles.schema.json."
+        },
+        "need": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What that target cannot express, and why it cannot."
+        }
+      }
+    },
+    "SupplementalEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["intent", "schemaGap"],
+      "description": "One requirement the spec cannot carry.",
+      "properties": {
+        "intent": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A testable statement of what the component must do, written to transfer directly to a test criterion. No rationale prose."
+        },
+        "schemaGap": {
+          "$ref": "#/definitions/SchemaGap",
+          "description": "The surface that would carry this requirement, and why it does not."
+        },
+        "platforms": {
+          "$ref": "sidecar.schema.json#/definitions/Platforms",
+          "description": "The platforms this applies to. Absent means every platform."
+        },
+        "checkedBy": {
+          "$ref": "sidecar.schema.json#/definitions/CheckedBy",
+          "description": "How this is checked."
+        },
+        "checks": {
+          "$ref": "sidecar.schema.json#/definitions/Pointers",
+          "description": "What does the checking. Required when checkedBy is automated."
+        }
+      },
+      "if": {
+        "properties": { "checkedBy": { "const": "automated" } },
+        "required": ["checkedBy"]
+      },
+      "then": { "required": ["checks"] }
+    }
+  }
+}

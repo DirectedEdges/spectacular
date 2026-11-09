@@ -3,7 +3,7 @@
 **Branch**: `118-supplemental-and-guidelines-sidecars`
 **Created**: 2026-11-09
 **Status**: DRAFT
-**Summary**: *(written at implementation — see `/specs.adr.implement`)*
+**Summary**: `SupplementalDocument` and `GuidelinesDocument` join the concern documents as authored sidecars, one for builders and one for consumers.
 **Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none; promotes and splits the experimental CLI-defined `supplemental.schema.json`)*
@@ -683,6 +683,7 @@ The rules JSON Schema cannot express, each stated in the specification rather th
 | `DSPEC-59` | An exporter emitting DSDS appends `instead` to `statement` as a sentence and never drops it | producer |
 | `DSPEC-60` | An exporter derives a token's DSDS `id` from the workspace's `spec.tokens` profile, normalizing per path segment only when that output is not a legal id | producer |
 | `DSPEC-61` | An exporter emits a token's original path as `name`, unmodified, so the derived `id` never has to be reversed | producer |
+| `DSPEC-62` | A directory under `foundations/` is named from the `FoundationConcern` vocabulary. This is the rule that gives `FoundationConcern` an enforcement home: it governs a path, and a document schema validates contents rather than the path that selected it | validator |
 
 The authored-override naming rule from D5 — `component.tsx` or `component.ts` beside the scaffold — gets no rule id here. It binds the transform packages' emitters, not a Specs document, so it belongs in those packages' own documentation. The preference for `alternatives` over `instead` likewise stays in the authoring skill: it is guidance to an author, not a requirement on a document.
 
@@ -706,7 +707,9 @@ The reference-level checks issue #870 asks for land here, against the closed enu
 
 **On the DSDS divergences, and the export rule that bounds them.** Three places depart from DSDS 0.23.1, each argued where it is made: `may` on `ObligationLevel` (D7), `instead` on `GuidelineEntry` (D7), and `$description` plus the `useWhen` / `dontUseWhen` sections, which have no DSDS counterpart at all (D11). The document shape is also not a DSDS document — see the scope limit in D7.
 
-**Three normative requirements on any exporter this schema ever gets.** None is implementable here, because no exporter exists yet; all three are decided so the exporter is not guesswork.
+**A DSDS exporter is out of scope for this ADR, and is not deferred work.** No exporter exists, none is planned here, and nothing in this ADR produces one. What this ADR does is make an exporter cheap to write later by shaping the source so the mapping is mechanical — and by deciding the rules below now, while the reasoning is in front of us, rather than leaving them to whoever eventually writes one.
+
+**Three normative requirements on any exporter this schema ever gets.** None is implementable here, because no exporter exists. All three are stated so the exporter is not guesswork.
 
 1. **`instead` is appended to `statement` as a sentence, never dropped.** `alternatives` needs no such rule — it is DSDS's own field and survives intact. This one exists only for the prose remedy, so a consumer that ignores unknown fields loses the field and keeps the content rather than publishing a prohibition with its fix stripped off.
 2. **A token's `id` is derived from the workspace's `spec.tokens` profile, normalized per path segment with DSDS's algorithm only when the profile's output is not a legal id** (D13).
@@ -753,7 +756,7 @@ The reference-level checks issue #870 asks for land here, against the closed enu
 - A prohibition and its remedy are one entry, so neither can be deleted without the other and a reader cannot act on the first without seeing the second.
 - Most remedies are now resolvable data rather than prose, because `alternatives` holds a pointer and most off-limits things have a nameable replacement. A validator can check that the replacement exists; it could never check a sentence.
 - The absence of `alternatives` says something true: nothing replaces this. `color.yaml`'s four `Utility/*` families have no replacement and its ramp steps do, and that distinction is currently invisible in the authored file.
-- Export is lossless in content and lossy only in structure, and only for the prose remedy: the normative rule folds `instead` into `statement`. No consumer receives a prohibition with its fix stripped off.
+- Export *would be* lossless in content and lossy only in structure, and only for the prose remedy, because the normative rule folds `instead` into `statement`. Stated in the conditional deliberately: no exporter exists, writing one is out of scope here, and until one does the rule binds nothing.
 - The schema does not enforce `alternatives` over `instead` when both would work. An author who writes prose where a pointer was available produces a valid document that is worse than it needed to be, and only review catches it.
 - Selection guidance stops being prose. `useWhen` and `dontUseWhen` give a reader the scannable table of what each token, prop, or variant is for — and leave the rules section short enough to read in full.
 - The boundary between a `dontUseWhen` subject and a `must-not` rule is a judgment with no mechanical test. `foundations/color.yaml` already states the ramp-step prohibition in both places, so the duplication is live rather than hypothetical.

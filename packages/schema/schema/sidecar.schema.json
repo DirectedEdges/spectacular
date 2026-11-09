@@ -1,0 +1,183 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://spectacular.systems/schema/0.40.0/sidecar.schema.json",
+  "title": "Specs Sidecar Shared Definitions",
+  "description": "The vocabulary the two authored sidecar documents share: the concern, platform, verification and pointer sets, plus the header both open with. Referenced by supplemental.schema.json and guidelines.schema.json rather than restated in either. A sidecar is authored by hand — no run writes one — so it carries no metadata.source and records authorship and review status instead. (ADR-118)",
+  "definitions": {
+    "SidecarMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Authorship and review status for a sidecar document as a whole. Every member is optional; status is the member that earns the block, because nothing else distinguishes a proposal from ratified guidance.",
+      "properties": {
+        "concern": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The subject this document covers, restating what the containing directory names — a foundation concern at the foundation scope, a component name at the component scope."
+        },
+        "status": {
+          "description": "Where the document sits in its review cycle.",
+          "oneOf": [
+            {
+              "const": "proposed",
+              "description": "Drafted and awaiting a ratifier; its statements are not yet the system's position."
+            },
+            {
+              "const": "ratified",
+              "description": "Reviewed and adopted; its statements are the system's position."
+            },
+            {
+              "const": "deprecated",
+              "description": "Superseded or withdrawn; kept for the record and not to be followed."
+            }
+          ]
+        },
+        "author": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Who authored it. Duplicates git history, and is here for a reader who will not consult git."
+        },
+        "updated": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "When it was last revised, as YYYY-MM-DD. Hand-maintained, so it can go stale."
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 },
+          "description": "The generated reports this document was synthesized from, as workspace-relative paths."
+        }
+      }
+    },
+    "Platform": {
+      "description": "A platform an entry is scoped to. Each value names an emission target: the two web frameworks this system emits, the two native platforms whose single sanctioned framework makes the platform name sufficient, and a group covering both web targets at once.",
+      "examples": ["react"],
+      "oneOf": [
+        {
+          "const": "react",
+          "description": "React, emitted by react-from-specs."
+        },
+        {
+          "const": "webcomponents",
+          "description": "Lit web components, emitted by webcomponents-from-specs."
+        },
+        {
+          "const": "web",
+          "description": "Both web targets at once; expands to react and webcomponents, and may not be named beside either leaf."
+        },
+        {
+          "const": "ios",
+          "description": "iOS, as Swift with SwiftUI."
+        },
+        {
+          "const": "android",
+          "description": "Android, as Kotlin with Jetpack Compose."
+        }
+      ]
+    },
+    "Platforms": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/definitions/Platform" },
+      "description": "The platforms an entry applies to. Absent means every platform. Because web expands to both web targets, naming it beside react or webcomponents states one thing twice and is rejected.",
+      "not": {
+        "allOf": [
+          { "contains": { "const": "web" } },
+          {
+            "anyOf": [
+              { "contains": { "const": "react" } },
+              { "contains": { "const": "webcomponents" } }
+            ]
+          }
+        ]
+      }
+    },
+    "CheckedBy": {
+      "description": "How a statement is checked. The checks member names what does the checking, and is required whenever this is automated.",
+      "examples": ["manual"],
+      "oneOf": [
+        {
+          "const": "automated",
+          "description": "A test or lint rule decides it, with no human reading required."
+        },
+        {
+          "const": "assisted",
+          "description": "A tool surfaces candidates and a human judges them."
+        },
+        {
+          "const": "manual",
+          "description": "A human decides it, with no tool involved."
+        }
+      ]
+    },
+    "Pointer": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A reference to one thing, either inside this workspace or outside it. Exactly one member is present: to names something the workspace holds, href names something it does not. Resolution of to is DSPEC-57.",
+      "properties": {
+        "to": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What this points at inside the workspace — a token in analysis/foundations.yaml, a component, or an item within one."
+        },
+        "href": {
+          "type": "string",
+          "format": "uri",
+          "description": "What this points at outside the workspace, as an absolute URL."
+        }
+      },
+      "oneOf": [{ "required": ["to"] }, { "required": ["href"] }]
+    },
+    "Pointers": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/Pointer" },
+      "description": "One or more references to things, inside this workspace or outside it."
+    },
+    "Ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A pointer that states its relationship explicitly, for the relationships that have no field of their own.",
+      "required": ["rel"],
+      "properties": {
+        "to": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What this points at inside the workspace."
+        },
+        "href": {
+          "type": "string",
+          "format": "uri",
+          "description": "What this points at outside the workspace, as an absolute URL."
+        },
+        "rel": {
+          "description": "What the target is to the thing carrying this ref.",
+          "oneOf": [
+            {
+              "const": "same-as",
+              "description": "The target states the same thing at another scope, and the duplication is deliberate."
+            },
+            {
+              "const": "relates-to",
+              "description": "The target is an issue or document bearing on this, without restating it."
+            },
+            {
+              "const": "source",
+              "description": "The target is the code or package this comes from."
+            },
+            {
+              "const": "design",
+              "description": "The target is the design file or frame this comes from."
+            },
+            {
+              "const": "demo",
+              "description": "The target is a running example of this."
+            }
+          ]
+        }
+      },
+      "oneOf": [{ "required": ["to"] }, { "required": ["href"] }]
+    }
+  }
+}

@@ -76,3 +76,24 @@ export type { SlotContentRef } from './SlotContentRef.js';
 
 // Conditional types
 export type { Conditional, ConditionExpression, ConditionArgs } from './Conditional.js';
+
+// Sidecar types — the authored documents beside a spec (ADR-118)
+export type {
+  SidecarMeta,
+  SidecarStatus,
+  ComponentConcern,
+  FoundationConcern,
+  Platform,
+  CheckedBy,
+  Pointer,
+  Ref,
+  RefRelationship,
+} from './Sidecar.js';
+export type { SupplementalDocument, SupplementalEntry, SchemaGap } from './SupplementalDocument.js';
+export type {
+  GuidelinesDocument,
+  GuidelineEntry,
+  ObligationLevel,
+  SelectionGuidance,
+  SelectionSubject,
+} from './GuidelinesDocument.js';
