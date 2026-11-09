@@ -167,9 +167,16 @@ One `supplemental.yaml` per component. Each entry names its platforms. Absence m
 - Validates against the `Platform` enum directly, so a typo fails. The shipped schema types the map's values as free-form strings, so a wrong path validates today.
 - An entry that applies to iOS but is not yet implemented there can say so — it lists `ios` and no file exists yet. Under the map that case is indistinguishable from "does not apply to iOS".
 
+**The path moves to a naming rule.** `icon` and `image` both state that the emitter redirects its stories to the authored `component.tsx` *because the entry names it*. Whether that is what the emitter actually does is unverified against emitter source, but it does not need to be verified to decide where the filename belongs. The rule, decided here:
+
+> An emitter looks for `component.<ext>` beside the scaffold it generates, in the platform's own tree. If that file exists, the emitter imports it in place of the scaffold and points the generated stories at it. `.tsx` for React, `.ts` for Web Components. Nothing in the spec or either sidecar names the file.
+
+All four authored files already use exactly these two names, so the rule codifies what is being written rather than asking anyone to change. The rule is a transform convention, not a schema fact, so it is documented in the transform packages and their docs — this ADR records the decision and the reason the schema is no longer the place for it.
+
 **Cons / Trade-offs**:
-- `icon` and `image` both state that the emitter redirects its stories to the authored `component.tsx` *because the entry names it*. That claim comes from the authored files' own prose and is unverified against emitter source. If it is real, the filename it reads has to come from somewhere else after this change — a naming convention the emitter applies, which is where a build-time fact belongs.
-- A builder arriving at an entry no longer learns where it is implemented from the entry itself.
+- A builder arriving at an entry no longer learns where it is implemented from the entry itself; they learn it from a convention they have to know.
+- A convention is weaker than a declaration. A hand-written file under any other name becomes invisible, with no error — the scaffold is simply used instead, and the overlay silently stops applying.
+- The rule has to be implemented and documented in two packages before the authored files can drop their `platforms` paths, so the migration has an ordering constraint the rest of this ADR does not.
 
 #### Option B: A map from platform to the authored file *(Rejected)*
 
@@ -629,7 +636,7 @@ One normative requirement follows, and it binds any exporter this schema ever ge
 |----------|--------|------------|
 | `specs-cli` | Update usage | Deletes its private schema copy, imports the published pair, validates `guidelines.yaml` at three scopes, and gains #870's reference checks. The authoring skills' descriptions of the sidecar need rewriting. |
 | `specs-from-figma` | None | Generate never writes either sidecar; both are authored. |
-| `react-from-specs`, `webcomponents-from-specs` | Verify one claim, possibly add a convention | `platforms` no longer carries a file path (D5). If the story-redirect behavior the authored files describe is real and reads that path, the emitters need a naming convention to supply it instead — an authored `component.tsx` or `component.ts` beside the scaffold. That claim is unverified in this ADR and must be checked before implementation, because the answer decides whether a convention has to be written. |
+| `react-from-specs`, `webcomponents-from-specs` | Implement and document the naming rule | `platforms` no longer carries a file path (D5), so each emitter looks for `component.tsx` / `component.ts` beside its scaffold and imports it in place of the scaffold when present. Whether either emitter already behaves this way is unverified — if it does, this is a documentation change; if it reads the sidecar path today, it is a code change. Either way the rule is the same, and it must land before the authored files drop their paths. |
 | `figma-from-specs` | None | Neither sidecar renders to canvas. |
 | Spec workspaces | Author migration | Four marathon `supplemental.yaml` files need the edits listed in Notes. `foundations/color.yaml` moves to `foundations/color/guidelines.yaml`, its five obligation keys become `level` values with `instead` on the paired entries, and its `could` entry becomes `may`. |
 
@@ -662,6 +669,7 @@ One normative requirement follows, and it binds any exporter this schema ever ge
 - `ComponentConcern`, `Platform`, and `FoundationConcern` close, so #870's reference checks run against known value sets and a misspelled concern fails validation rather than creating a silent section.
 - Guidance gains a verification story through `checkedBy` and `checks`, and an `automated` guideline cannot be authored without naming what automates it.
 - The overlay-only discipline now applies to half the sidecar. `guidelines.yaml` has no `schemaGap`, so nothing mechanical stops a guideline that should have been a spec field — that judgment moves to review.
+- Where a hand-written override lives becomes a convention — `component.tsx` or `component.ts` beside the scaffold — rather than a field. A file under any other name is invisible to the emitter and fails silently, with the scaffold used in its place.
 - The hazard `regenerationRisk` recorded loses its home. That an overlay rides an emitted BEM class, and goes silent if the class changes, is true of several `button` entries and is no longer written down anywhere.
 - Two of the three scopes ship without an authored file behind them, and conflicting obligation levels across scopes are an authoring error no validator catches.
 - `Platform` and `Conventions.platforms` name iOS differently — `ios` here, `swiftui` in the conventions example keys. The divergence is deliberate and costs nothing while it holds: `Conventions.platforms` is an open map keyed by implementation id, where a framework name is the right granularity, and `Platform` is a closed enum naming emission targets, where the platform is. It would start to bite only if a second sanctioned framework appeared on iOS or Android, which the workspace's platform-examples policy rules out — Swift with SwiftUI and Kotlin with Jetpack Compose, one each. The web is the side with two, and that is exactly why `web` exists as a group.
