@@ -8,7 +8,7 @@
  * `styles.effects.shadows[].offsetX`. That generalises — a new nested type needs
  * no new vocabulary and no new rule.
  *
- * Two things are deliberately not nested:
+ * Three things are deliberately not nested:
  *
  *   - **Value-union wrappers** (`*StyleValue`). A key's value may be a literal,
  *     a token, a binding or a conditional; that is the set of forms the value
@@ -18,6 +18,11 @@
  *     would repeat `$token`, `$type` and `$extensions` under all 46 and inflate
  *     the tree from 113 pages to 307. They are documented once at the schema
  *     root and linked.
+ *   - **A union's named object branches** — see `BRANCH_TYPES`. Three gradient
+ *     types differing by one `const` are three shapes of one thing, so they are
+ *     expanded side by side on the union's page where the difference is legible,
+ *     and the types they reference sit one level below the union rather than
+ *     four levels below a style key.
  *
  * Usage:  node scripts/build-style-pages.mjs
  */
@@ -74,6 +79,31 @@ const isWrapper = (n) => /StyleValue$|^Style$|^StyleKey$/.test(n);
  * the filename glued to the type: `component.schema.jsonPropBinding`.
  */
 const DEF_PREFIX = /^.*#\/definitions\//;
+
+/**
+ * Types that are documented on their union's page rather than on pages of their
+ * own: the named object branches of a union that is itself a thing rather than a
+ * set of value forms.
+ *
+ * `GradientValue`'s three branches differ by one `const` and a centre-or-angle,
+ * so a page apiece put three near-identical pages between a reader and the one
+ * type they were after, and pushed `stops` down to
+ * `styles/background-color/linear-gradient/stops/` — four levels to reach a list
+ * of two members. Expanded on the union's page they read as three shapes side by
+ * side, which is what distinguishes them, and `GradientStop` is one hop away.
+ *
+ * Wrapper unions are excluded, because their branches are not shapes of one
+ * thing — they are the forms a value may take, and `ColorObject` is a shared
+ * type reached from six places with a page it has earned.
+ */
+const BRANCH_TYPES = new Set();
+for (const [name, def] of Object.entries(defs)) {
+  if (isWrapper(name)) continue;
+  const named = (def.oneOf ?? def.anyOf ?? [])
+    .map((b) => b.$ref?.replace(DEF_PREFIX, ''))
+    .filter((t) => t && defs[t]?.properties);
+  if (named.length > 1) for (const t of named) BRANCH_TYPES.add(t);
+}
 
 const rehome = (s) =>
   typeof s === 'string'
@@ -346,6 +376,16 @@ const admitsValue = (n, v, depth = 0) => {
     if (n.additionalProperties === false) {
       for (const k of Object.keys(v)) if (!n.properties?.[k]) return false;
     }
+    /**
+     * A present property has to satisfy its own schema, not merely exist.
+     * `LinearGradient`, `RadialGradient` and `AngularGradient` are told apart
+     * only by their `type` const — the rest of the shape is identical — so
+     * stopping at the key names made all three admit all three, and the
+     * ANGULAR example was claimed by whichever branch sorted first.
+     */
+    for (const [k, sub] of Object.entries(n.properties ?? {})) {
+      if (k in v && !admitsValue(sub, v[k], depth + 1)) return false;
+    }
     return true;
   }
   return false;
@@ -381,9 +421,17 @@ const namedTypes = (node, depth = 0, out = []) => {
 const typeLabel = (name) =>
   handWritten.has(kebab(name))
     ? `[\`${name}\`](/schema/${kebab(name)}/)`
-    : SHARED.has(name) && isDocumentable(name)
+    : SHARED.has(name) && isDocumentable(name) && !BRANCH_TYPES.has(name)
       ? `[\`${name}\`](/schema/styles/${kebab(name)}/)`
       : `\`${name}\``;
+
+/** The page a type's own documentation lives on, or null when it has none. */
+const pageOfType = (name) =>
+  handWritten.has(kebab(name))
+    ? `/schema/${kebab(name)}/`
+    : SHARED.has(name) && isDocumentable(name) && !BRANCH_TYPES.has(name)
+      ? `/schema/styles/${kebab(name)}/`
+      : null;
 
 /**
  * A shared type earns a page whether it is an object or a union. `GradientValue`
@@ -409,20 +457,30 @@ const isDocumentable = (t) => Boolean(defs[t] && (defs[t].properties || defs[t].
  * properties and description. Without this they had no pages at all, and the
  * union's own page could only name them as plain text.
  */
+/**
+ * A branch entry's `spec` is the branch's own definition, resolved in place,
+ * rather than a property schema pointing at one. `refsOf` reads `$ref`, `items`
+ * and the union keywords and never `properties`, so a resolved branch def
+ * yielded no refs to follow and traversal stopped on it: `LinearGradient`
+ * reached none of `type`, `angle` or `stops`, and nothing anywhere reached
+ * `GradientStop`. The third element names the definition to descend into
+ * directly, and is null for a plain property.
+ */
 const childEntries = (node) => {
   const own = Object.entries(node.properties ?? {});
-  if (own.length) return own;
+  if (own.length) return own.map(([k, spec]) => [k, spec, null]);
   return (node.oneOf ?? node.anyOf ?? [])
     .map((b) => b.$ref?.replace(DEF_PREFIX, ''))
     .filter((t) => t && defs[t]?.properties)
-    .map((t) => [t, defs[t]]);
+    .map((t) => [t, defs[t], t]);
 };
 
 const pathsReaching = {};
 {
   const probe = (node, path, seen) => {
-    for (const [key, spec] of childEntries(node)) {
+    for (const [key, spec, branch] of childEntries(node)) {
       const p = [...path, key];
+      if (branch && !seen.has(branch)) probe(defs[branch], p, new Set([...seen, branch]));
       for (const t of refsOf(spec)) {
         if (!defs[t] || VALUE_FORMS.has(t)) continue;
         (pathsReaching[t] ??= new Set()).add(p.join('.'));
@@ -437,9 +495,14 @@ const SHARED = new Set(Object.entries(pathsReaching).filter(([, s]) => s.size > 
 // ── Build the containment tree ───────────────────────────────────────────────
 const nodes = [];
 const walk = (node, path, seen) => {
-  for (const [key, spec] of childEntries(node)) {
+  for (const [key, spec, branch] of childEntries(node)) {
     const p = [...path, key];
+    // An inline-documented branch contributes no page and no subtree. The
+    // shared types it references are reached by `probe`, which still descends
+    // into it, so they keep their canonical pages one level below the union.
+    if (branch && BRANCH_TYPES.has(branch)) continue;
     nodes.push({ path: p, spec, parentDef: node, required: new Set(node.required ?? []) });
+    if (branch && !seen.has(branch)) walk(defs[branch], p, new Set([...seen, branch]));
     for (const t of refsOf(spec)) {
       if (!defs[t] || seen.has(t) || VALUE_FORMS.has(t) || SHARED.has(t)) continue;
       walk(defs[t], p, new Set([...seen, t]));
@@ -453,7 +516,9 @@ walk(defs.Styles, [], new Set(['Styles']));
  * `styles/`, with its own children nested beneath it. One whose page already
  * exists at the schema root is linked there instead.
  */
-const sharedRoots = [...SHARED].filter((t) => !handWritten.has(kebab(t)) && isDocumentable(t));
+const sharedRoots = [...SHARED].filter(
+  (t) => !handWritten.has(kebab(t)) && isDocumentable(t) && !BRANCH_TYPES.has(t)
+);
 for (const t of sharedRoots) {
   nodes.push({ path: [t], spec: { ...defs[t], $sharedType: t }, parentDef: defs.Styles, required: new Set() });
   walk(defs[t], [t], new Set(['Styles', t]));
@@ -643,14 +708,39 @@ for (const node of nodes) {
    * same split `walk` made when it emitted them.
    */
   const membersOf = (t, indent = '  ') => {
-    const owned = Object.keys(defs[t]?.properties ?? {});
+    const owned = Object.entries(defs[t]?.properties ?? {});
     if (!owned.length) return '';
-    const base = SHARED.has(t) && !handWritten.has(kebab(t)) ? [t] : p;
+    const base = SHARED.has(t) && !handWritten.has(kebab(t)) && !BRANCH_TYPES.has(t) ? [t] : p;
     return owned
-      .map((m) => {
+      .map(([m, sub]) => {
         const path = [...base, m];
-        const exists = nodes.some((n) => n.path.join('.') === path.join('.'));
-        return `${indent}- ${exists ? `[\`${m}\`](${urlOf(path)})` : `\`${m}\``}`;
+        const own = nodes.some((n) => n.path.join('.') === path.join('.')) ? urlOf(path) : null;
+        /**
+         * A member of an inline-documented branch has no page of its own, so
+         * the only route onward is its type's. Linking the member name to that
+         * page is what lets `stops` reach `GradientStop` in one hop instead of
+         * through a branch page that exists only to hold the link.
+         */
+        const viaType = own
+          ? null
+          : [...refsOf(sub)].map(pageOfType).find(Boolean) ?? null;
+        const url = own ?? viaType;
+        const name = url ? `[\`${m}\`](${url})` : `\`${m}\``;
+        /**
+         * The gloss only where the member has no page to carry it — a linked
+         * member page states its own value and description, and repeating them
+         * in the list made the parent page a second copy of its children.
+         *
+         * A discriminant's value says more than its description does: every
+         * gradient type's `type` is described as "Discriminant", and which
+         * constant to write is the fact a reader came for.
+         */
+        const gloss = own
+          ? ''
+          : sub.const !== undefined
+            ? `\`${JSON.stringify(sub.const)}\``
+            : sub.description ?? '';
+        return `${indent}- ${name}${gloss ? ` — ${gloss}` : ''}`;
       })
       .join('\n');
   };
@@ -714,17 +804,22 @@ for (const node of nodes) {
     const ordered = [...branches].sort((a, b) => tierOf(a) - tierOf(b));
 
     /**
-     * Members are listed beneath their branch only where exactly one branch
-     * has any. `GradientValue` admits three gradient types that each carry a
-     * `type`, a centre or an angle, and `stops`; expanding all three repeats
-     * near-identical member lists and buries the distinction between them,
-     * which is what that page's own branch descriptions are for.
+     * Members are listed beneath their branch in two cases: where exactly one
+     * branch has any, and where the branches are inline-documented, which is
+     * the only place their members are stated at all.
+     *
+     * Not wherever several branches happen to be objects: a union mixing a
+     * shared type with a local one would print the shared type's member list a
+     * second time, under a page that is not its canonical one.
      */
     const expandable = ordered.filter((br) => {
       const t = br.$ref?.replace(DEF_PREFIX, '');
       return t && !VALUE_FORMS.has(t) && Object.keys(defs[t]?.properties ?? {}).length;
     });
-    const expandOnly = expandable.length === 1 ? expandable[0] : null;
+    const expandAll =
+      expandable.length > 1 &&
+      expandable.every((br) => BRANCH_TYPES.has(br.$ref?.replace(DEF_PREFIX, '')));
+    const expandOnly = !expandAll && expandable.length === 1 ? expandable[0] : null;
 
     /**
      * Each example assigned to the one form it illustrates, first match wins.
@@ -836,7 +931,10 @@ for (const node of nodes) {
       const gloss =
         br.description ?? (named ? (defs[named]?.title ?? defs[named]?.description) : null) ?? br.title ?? '';
 
-      const members = br === expandOnly && !hasOwnPage(named) ? membersOf(named, '') : '';
+      const members =
+        (expandAll && BRANCH_TYPES.has(named)) || (br === expandOnly && !hasOwnPage(named))
+          ? membersOf(named, '')
+          : '';
 
       const mine = examplesFor(br);
       const shown = mine.length
@@ -882,7 +980,7 @@ for (const node of nodes) {
       const why = defs[itemType].title ?? node.description ?? defs[itemType].description ?? '';
       return {
         heading: 'Value',
-        body: `${ARRAY_OF}\n\n#### \`${itemType}\`\n\n${[why, membersOf(itemType, '')].filter(Boolean).join('\n\n')}`,
+        body: `${ARRAY_OF}\n\n#### ${typeLabel(itemType)}\n\n${[why, membersOf(itemType, '')].filter(Boolean).join('\n\n')}`,
       };
     }
 
@@ -1056,7 +1154,28 @@ for (const node of nodes) {
   const usedBy = (() => {
     const t = spec.$sharedType;
     if (!t) return null;
-    const paths = [...(pathsReaching[t] ?? [])].sort();
+    /**
+     * A path is truncated at its deepest segment that has a page, then the
+     * duplicates that creates collapse.
+     *
+     * `pathsReaching` records containment, which is finer than the page tree:
+     * `GradientStop` is reached by `backgroundColor.LinearGradient.stops` and
+     * two sibling branches, none of which is a page since the branches are
+     * documented inline. Rendered whole, the list was twelve links to nine
+     * URLs that do not exist and four that do.
+     */
+    const pages = new Set(nodes.map((n) => n.path.join('.')));
+    const paths = [
+      ...new Set(
+        [...(pathsReaching[t] ?? [])].map((path) => {
+          const segs = path.split('.');
+          while (segs.length && !pages.has(segs.join('.'))) segs.pop();
+          return segs.join('.');
+        })
+      ),
+    ]
+      .filter(Boolean)
+      .sort();
     if (!paths.length) return null;
     return paths.map((path) => `- [\`styles.${path}\`](/schema/styles/${path.split('.').map(kebab).join('/')}/)`).join('\n');
   })();

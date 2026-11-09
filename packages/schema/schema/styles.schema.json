@@ -482,18 +482,16 @@
           "description": "Stop position along the gradient vector, normalised 0–1"
         },
         "color": {
+          "description": "Stop color. A gradient stop cannot itself hold a gradient, so this is ColorStyleValue without the gradient and null arms.",
           "oneOf": [
             {
-              "type": "string",
-              "description": "Formatted color string when Config.format.color is non-OBJECT"
+              "$ref": "#/definitions/ColorString"
             },
             {
-              "$ref": "#/definitions/ColorObject",
-              "description": "Stop color as a DTCG Color object"
+              "$ref": "#/definitions/ColorObject"
             },
             {
-              "$ref": "#/definitions/TokenReference",
-              "description": "Stop color as a token reference"
+              "$ref": "#/definitions/TokenReference"
             }
           ]
         }
@@ -615,6 +613,7 @@
     },
     "ColorObject": {
       "type": "object",
+      "title": "An inline resolved color — a `colorSpace` such as `srgb`, `display-p3` or `oklch`, plus its `components`, as in `{ colorSpace: srgb, components: [1, 0.4, 0], alpha: 1 }`. Carried when `settings.spec.color` asks for an object rather than a string.",
       "description": "Inline resolved color value per DTCG Color Module §4.1. `colorSpace` and `components` are required; `alpha` defaults to 1 (fully opaque) when omitted; `hex` is an optional 6-digit sRGB fallback (#RRGGBB — no alpha channel in hex). Consumers SHOULD prefer `colorSpace` + `components` for rendering.",
       "examples": [{ "colorSpace": "srgb", "components": [1, 0.4, 0], "alpha": 1 }, { "colorSpace": "oklch", "components": [0.7, 0.15, 50] }],
       "properties": {
@@ -728,17 +727,30 @@
       ],
       "additionalProperties": false
     },
+    "ColorString": {
+      "type": "string",
+      "title": "A color as one string — `#FF6600`, `#FF6600FF`, `rgb(255, 102, 0)`, `rgba(255, 102, 0, 1)`, `hsla(24, 100%, 50%, 1)`, `hsb(24, 100%, 100%)`, `oklch(0.7 0.15 50 / 1)` or `oklab(0.7 0.1 0.1 / 1)`.",
+      "description": "A color as a single string, in one of eight notations: 6-digit hex, 8-digit hex carrying alpha, `rgb()`, `rgba()`, `hsla()`, `hsb()`, `oklch()` or `oklab()`. Which one a spec carries is set by `settings.spec.color`, and that setting can also ask for a `ColorObject` instead of a string. There is no plain `hsl()` form — the HSL notation always carries alpha.",
+      "examples": [
+        "#FF6600",
+        "#FF6600FF",
+        "rgb(255, 102, 0)",
+        "rgba(255, 102, 0, 1)",
+        "hsla(24, 100%, 50%, 1)",
+        "hsb(24, 100%, 100%)",
+        "oklch(0.7 0.15 50 / 1)",
+        "oklab(0.7 0.1 0.1 / 1)"
+      ]
+    },
     "ColorStyleValue": {
       "examples": ["#FF6600FF"],
-      "description": "Color style value. Covers formatted color string, inline resolved color object, token reference, inline gradient, or null. The string arm is emitted when Config.format.color is set to a non-OBJECT format.",
+      "description": "Color style value. Covers formatted color string, inline resolved color object, token reference, inline gradient, or null.",
       "oneOf": [
         {
-          "type": "string",
-          "description": "A color written in one of the supported string notations, such as hex, rgb(), hsl(), hsb(), oklch() or oklab()."
+          "$ref": "#/definitions/ColorString"
         },
         {
-          "$ref": "#/definitions/ColorObject",
-          "description": "Inline resolved color value with colorSpace, components, optional alpha, and optional 6-digit hex fallback."
+          "$ref": "#/definitions/ColorObject"
         },
         {
           "$ref": "#/definitions/TokenReference"
@@ -1408,18 +1420,16 @@
         "color": {
           "oneOf": [
             {
-              "type": "string",
-              "description": "Formatted color string when Config.format.color is non-OBJECT"
+              "$ref": "#/definitions/ColorString"
             },
             {
-              "$ref": "#/definitions/ColorObject",
-              "description": "DTCG Color object"
+              "$ref": "#/definitions/ColorObject"
             },
             {
               "$ref": "#/definitions/TokenReference"
             }
           ],
-          "description": "Shadow color"
+          "description": "Shadow color. A shadow cannot hold a gradient, so this is ColorStyleValue without the gradient and null arms."
         }
       },
       "required": [
@@ -1622,7 +1632,7 @@
     },
     "TokenReference": {
       "type": "object",
-      "title": "A design token resolved by the consuming platform.",
+      "title": "A design token, written as a `$token` path plus a `$type`, as in `{ $token: Color/On surface, $type: color }`. The consuming platform resolves it to a value.",
       "description": "Platform-neutral token reference. $token and $type are the complete platform-facing API surface; $extensions[\"com.figma\"] carries Figma extraction provenance only and is not required by platform consumers.",
       "examples": [{ "$token": "Color/On surface", "$type": "color" }],
       "required": [

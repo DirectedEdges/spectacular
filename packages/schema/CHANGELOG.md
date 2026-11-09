@@ -32,12 +32,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Typography.textCase` — `default: "ORIGINAL"`; `Typography.textDecoration` and `Typography.leadingTrim` — `default: "NONE"`
 - `Typography.hangingPunctuation`, `Typography.hangingList` — `default: false`
 - `DSPEC-52`, `DSPEC-53` — an optional composite member declares a default; a required one declares none
+- `ColorString` — a colour as one string, naming every notation it may take with an example of each, and the setting that selects between them. Admits exactly what the untyped `string` arm admitted
+- `ColorObject`, `TokenReference` — titles showing the shape rather than naming it: a `colorSpace` with its `components`, a `$token` path with its `$type`
 
 ### Changed
 
 - Closed value sets — declared as `oneOf` branches of `const` rather than a bare `enum`; admits the same values (ADR-114)
 - `Styles.position`, `Styles.layoutMode`, `Styles.textOverflow`, `Styles.textAlignHorizontal` — descriptions no longer restate their own option meanings
 - `TokenReference.$token` — described as the slash-separated path the corpus uses, not a dot-separated one
+- `ColorStyleValue`, `GradientStop.color`, `Shadow.color` — every arm is a bare `$ref` taking its description from the type it refers to, so the three colour forms read the same across all eight properties that admit them. Validates identically
 
 ### Removed
 

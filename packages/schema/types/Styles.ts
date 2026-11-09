@@ -227,15 +227,26 @@ export interface ColorObject { /** Candidate */
 }
 
 /**
+ * A colour as a single string, in one of eight notations: `#FF6600`, `#FF6600FF`,
+ * `rgb(255, 102, 0)`, `rgba(255, 102, 0, 1)`, `hsla(24, 100%, 50%, 1)`,
+ * `hsb(24, 100%, 100%)`, `oklch(0.7 0.15 50 / 1)` or `oklab(0.7 0.1 0.1 / 1)`.
+ * Which one a spec carries is set by `Settings.spec.color`, and that setting can also
+ * ask for a {@link ColorObject} instead of a string. There is no plain `hsl()` form.
+ *
+ * Named rather than inlined as `string` so the notations are defined in one place —
+ * every colour-valued arm in the schema and in these types refers here.
+ *
+ * Mirrors `ColorString` in `schema/styles.schema.json`.
+ */
+export type ColorString = string;
+
+/**
  * Colour-specific style value type.
  * Mirrors `ColorStyleValue` in `schema/styles.schema.json`.
  * Used for `backgroundColor`, `fillColor`, `textColor`, and `strokes` — the four properties
  * whose values are always colour-semantics and may carry gradient data.
- *
- * The `string` arm covers formatted colour strings (e.g. `#FF6600`, `rgba(...)`)
- * emitted when `Settings.spec.color` is set to a non-`OBJECT` format.
  */
-export type ColorStyle = string | ColorObject | TokenReference | GradientValue | null;
+export type ColorStyle = ColorString | ColorObject | TokenReference | GradientValue | null;
 
 /**
  * Inline typography properties grouped into a composite object.
