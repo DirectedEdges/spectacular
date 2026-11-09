@@ -485,13 +485,12 @@ Authored content is unaffected: a `to` in an authored `alternatives` carries the
 
 | File | Change | Bump |
 |------|--------|------|
-| `Platform.ts` *(new)* | Add `Platform` — `'react' \| 'webcomponents' \| 'web' \| 'ios' \| 'android'` | MINOR |
-| `Concerns.ts` *(new)* | Add `ComponentConcern` — the eleven values from D3; add `FoundationConcern` — the eight values from D10 | MINOR |
-| `SidecarMeta.ts` *(new)* | Add `SidecarMeta` — `concern`, `status`, `author`, `updated`, `sources`; add `SidecarStatus` | MINOR |
-| `Pointer.ts` *(new)* | Add `Pointer` — DSDS's `to` / `href` shape; add `Ref` — a pointer carrying an explicit `rel` | MINOR |
-| `SupplementalDocument.ts` *(new)* | Add `SupplementalDocument`, `SupplementalSection`, `SupplementalEntry`, `SchemaGap`, `CheckedBy` | MINOR |
-| `GuidelinesDocument.ts` *(new)* | Add `GuidelinesDocument`, `GuidelinesSection`, `GuidelineEntry`, `ObligationLevel`, `SelectionGuidance`, `SelectionSubject` | MINOR |
+| `Sidecar.ts` *(new)* | Add `SidecarMeta` and `SidecarStatus`; add the vocabulary both documents share — `ComponentConcern` (D3), `FoundationConcern` (D10), `Platform` (D6), `CheckedBy` (D8), `Pointer` and `Ref` (D7) | MINOR |
+| `SupplementalDocument.ts` *(new)* | Add `SupplementalDocument`, `SupplementalEntry`, `SchemaGap` | MINOR |
+| `GuidelinesDocument.ts` *(new)* | Add `GuidelinesDocument`, `GuidelineEntry`, `ObligationLevel`, `SelectionGuidance`, `SelectionSubject` | MINOR |
 | `index.ts` | Re-export every type above | MINOR |
+
+**On the file layout.** `ARCHITECTURE.md`'s constitution digest states that enums have no separate file — a closed set is a string-literal union inside the owning type file. Four of this ADR's closed sets are owned by neither document, because both read them: `ComponentConcern`, `FoundationConcern`, `Platform`, and `CheckedBy`. `Sidecar.ts` is the owning file for the sidecar concept itself, holding `SidecarMeta` alongside the vocabulary both documents draw on, so no file is enum-only and no closed set is orphaned. `ObligationLevel` lives in `GuidelinesDocument.ts`, the only document that has one.
 
 **Example — new shape** (`types/SupplementalDocument.ts`):
 ```yaml
@@ -580,6 +579,21 @@ Ref:
 
 **Example — new shape** (`schema/supplemental.schema.json`):
 ```yaml
+# Every closed set is oneOf branches of const, one per value, each described
+# (DSPEC-48, DSPEC-49) — never a bare `enum` array
+Platform:
+  oneOf:
+    - const: react
+      description: "React, emitted by react-from-specs."
+    - const: webcomponents
+      description: "Lit web components, emitted by webcomponents-from-specs."
+    - const: web
+      description: "Both web targets at once; expands to react and webcomponents, and may not be named beside either."
+    - const: ios
+      description: "iOS, as Swift with SwiftUI."
+    - const: android
+      description: "Android, as Kotlin with Jetpack Compose."
+
 # The platform group ban from D6, and the checks requirement from D8
 SupplementalEntry:
   required: [intent, schemaGap]
@@ -589,23 +603,38 @@ SupplementalEntry:
       type: array
       minItems: 1
       uniqueItems: true
-      items: { enum: [react, webcomponents, web, ios, android] }
+      items: { $ref: "#/definitions/Platform" }
       # `web` expands to both web leaves, so naming it beside either is contradictory
       not:
         allOf:
           - contains: { const: web }
-          - contains: { enum: [react, webcomponents] }
+          - anyOf:
+              - contains: { const: react }
+              - contains: { const: webcomponents }
   if:    { properties: { checkedBy: { const: automated } }, required: [checkedBy] }
   then:  { required: [checks] }
 ```
 
 **Example — new shape** (`schema/guidelines.schema.json`):
 ```yaml
+ObligationLevel:
+  oneOf:
+    - const: must
+      description: "An absolute requirement; a usage that disregards it is wrong."
+    - const: should
+      description: "A strong recommendation; disregard it only with a considered reason."
+    - const: should-not
+      description: "A strong recommendation against; do it only with a considered reason."
+    - const: must-not
+      description: "An absolute prohibition; a usage that does it is wrong."
+    - const: may
+      description: "A permission the system grants and neither requires nor discourages."
+
 GuidelineEntry:
   required: [statement, level]
   additionalProperties: false
   properties:
-    level: { enum: [must, should, should-not, must-not, may] }
+    level: { $ref: "#/definitions/ObligationLevel" }
     instead: { type: string, minLength: 1 }
     alternatives: { type: array, items: { $ref: "#/definitions/Pointer" } }
   if:    { properties: { checkedBy: { const: automated } }, required: [checkedBy] }
@@ -632,6 +661,30 @@ SelectionSubject:
     - required: [$token]
     - required: [$name]
 ```
+
+### Specification changes (`packages/schema/SPECIFICATION.md`)
+
+§1.5 declares document kinds and identity fully specified in the specification, so two new document kinds land there rather than in the reference pages alone.
+
+| Section | Change |
+|---|---|
+| §2.1 Document kinds | Two rows: Supplemental (`supplemental.schema.json`) and Guidelines (`guidelines.schema.json`) |
+| §2.1 Document kinds | A paragraph distinguishing generated documents from authored sidecars, since the existing six are all generated |
+| §2.3 Required members | A carve-out: an authored sidecar carries no `metadata.source`, because it was never generated from a Figma node. It carries `meta` instead, which records authorship and review status rather than provenance |
+| §9 Rule catalogue | Six rows, `DSPEC-56` through `DSPEC-61`, below |
+
+The rules JSON Schema cannot express, each stated in the specification rather than left in this ADR, since §1.6 binds no consumer to an ADR:
+
+| Rule | Statement | Class |
+|---|---|---|
+| `DSPEC-56` | A supplemental or guidelines document at the catalogue scope and one at the component scope both apply; neither overrides the other, and an entry is a statement about a subject rather than a value at a key | consumer |
+| `DSPEC-57` | A `Pointer.to` resolves to something that exists in the workspace — a token in `analysis/foundations.yaml`, a component, or an item within one | validator |
+| `DSPEC-58` | A `schemaGap.path` that is a JSON Schema pointer resolves against the named schema file | validator |
+| `DSPEC-59` | An exporter emitting DSDS appends `instead` to `statement` as a sentence and never drops it | producer |
+| `DSPEC-60` | An exporter derives a token's DSDS `id` from the workspace's `spec.tokens` profile, normalizing per path segment only when that output is not a legal id | producer |
+| `DSPEC-61` | An exporter emits a token's original path as `name`, unmodified, so the derived `id` never has to be reversed | producer |
+
+The authored-override naming rule from D5 — `component.tsx` or `component.ts` beside the scaffold — gets no rule id here. It binds the transform packages' emitters, not a Specs document, so it belongs in those packages' own documentation. The preference for `alternatives` over `instead` likewise stays in the authoring skill: it is guidance to an author, not a requirement on a document.
 
 ### CLI changes (`packages/cli/`)
 
