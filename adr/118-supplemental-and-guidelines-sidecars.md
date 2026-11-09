@@ -211,27 +211,38 @@ The enum is `react`, `webcomponents`, `web`, `ios`, `android`. `web` expands to 
 
 ### D7 — The `guidelines.yaml` entry shape
 
-This decision is adopted from the Design System Documentation Specification (DSDS) 0.23.1, published at [designsystemdocspec.org/specification](https://designsystemdocspec.org/specification). The field names `statement`, `level`, `checkedBy`, and `checks`, the `must` / `should` / `should-not` / `must-not` value set, the `automated` / `assisted` / `manual` value set, and the rule that `checks` is required when `checkedBy` is `automated` are all DSDS's, not this ADR's. What is ours is the decision to adopt them rather than invent, the builder-versus-consumer split under D1 that DSDS does not model, and two declared additions named below.
+This decision is adopted from the Design System Documentation Specification (DSDS) 0.23.1, published at [designsystemdocspec.org/specification](https://designsystemdocspec.org/specification). DSDS's, not this ADR's: the item field names `statement`, `level`, `checkedBy`, `checks`, `evidence`, `alternatives`, and `refines`; the `must` / `should` / `should-not` / `must-not` value set; the `automated` / `assisted` / `manual` value set; the rule that `checks` is required when `checkedBy` is `automated`; and the pointer shape — either `to` for something inside the project or `href` for something outside it, never both.
 
-#### Option A: DSDS field names, DSDS levels plus `may`, and an `instead` field *(Selected)*
+What is ours: the decision to adopt rather than invent, the builder-versus-consumer split under D1 that DSDS does not model, and the additions declared below.
 
-`statement`, `level`, `checkedBy`, `checks` — DSDS names, used as DSDS defines them. `level` is one of `must`, `should`, `should-not`, `must-not`, `may`. An optional `instead` carries the corrective statement when the entry is a prohibition.
+**One scope limit worth stating plainly.** A `guidelines.yaml` *item* is a DSDS guideline item. The *document* is not a DSDS document. DSDS requires `kind` and `for` on every section, and this ADR uses concern keys as the top-level map and rejects `for` (Notes). So the mapping is item-for-item and section-by-construction: an exporter wraps a concern's entries in a DSDS section, supplying `kind: guidelines` and `for: all`. Nothing is lost, but the document is a source format that maps cleanly to DSDS rather than DSDS itself, and earlier drafts of this ADR overstated that.
 
-Two additions to DSDS, both deliberate:
+#### Option A: DSDS item fields, DSDS levels plus `may`, DSDS `alternatives` for a nameable remedy, and `instead` for a prose one *(Selected)*
 
-- **`may`** is RFC 2119's fifth level and is not in DSDS 0.23.1's set. It is added because `foundations/color.yaml` already needs it: its `could` entry — that the three `*inverse` tokens are meant to travel together whenever a surface is dark enough to flip content — is a permission, and recording it as `should` would assert an obligation the system does not hold.
-- **`instead`** pairs a prohibition with its remedy in one entry, which is how `color.yaml` already authors them. It exports as a DSDS namespaced extension.
+A guideline entry is a DSDS guideline item: `statement`, `level`, `checkedBy`, `checks`, `evidence`, `alternatives`, `refines`, each used as DSDS defines it. `level` is one of `must`, `should`, `should-not`, `must-not`, `may`.
+
+The remedy for a prohibition is carried two ways, because the authored content contains two kinds of remedy:
+
+- **`alternatives`** when the remedy is a *thing* — DSDS's own field, whose relationship is `alternative-to`, holding pointers rather than prose. A pointer has either `to`, naming something in the project, or `href`, naming something outside it, and MUST NOT have both. "Never use a glyph-only `button`" points at `iconButton`; "never style from `DE Palette/Red/44`" points at the semantic token that aliases it. This is the common case and it is native DSDS.
+- **`instead`** when the remedy is a *rule*, not a thing. `color.yaml`'s "style from the semantic token that aliases the ramp step" names no single token — it names a layer to style from. A pointer cannot hold that sentence, so one extension field does.
+
+Two additions to DSDS, both deliberate and both minimal:
+
+- **`may`** is RFC 2119's fifth level and is absent from DSDS 0.23.1's four. `color.yaml` already needs it: its `could` entry — that the three `*inverse` tokens are meant to travel together whenever a surface is dark enough to flip content — is a permission, and recording it as `should` would assert an obligation the system does not hold.
+- **`instead`** covers only the prose remedy above. **Export rule: when emitting DSDS, `instead` is appended to `statement` as a sentence, never dropped.** A consumer that ignores unknown fields then loses the field and keeps the content, which is the opposite of publishing a prohibition with its fix stripped off.
 
 **Pros**:
-- A `guidelines.yaml` section is a DSDS guidelines section in field names and in four of five level values, so export is a pass-through for everything but two named extensions.
+- Every remedy that names a thing is expressed in DSDS's own field, so most pairs export with no extension at all.
+- `alternatives` holds a pointer, which a validator can resolve — `instead` and a prose remedy cannot be checked against anything.
+- One idea stays in one entry either way. A reader who hits the prohibition cannot miss the remedy, and the pair cannot drift apart or be half-deleted.
 - RFC 2119 semantics are what the authored prose already reaches for in both the component files and `color.yaml`.
 - `checkedBy` and `checks` give an obligation a verification story, which no field carries today.
-- `instead` keeps one idea in one entry. A reader who hits the prohibition cannot miss the remedy, and the pair cannot drift apart or be half-deleted.
 
 **Cons / Trade-offs**:
+- Two fields for one concept, and the line between them is a judgment: an author who could write a pointer may write prose instead, and nothing catches it. The rule is that `alternatives` is preferred whenever the remedy can be named, and that rule lives in the authoring skill, not the schema.
 - `should-not` and `must-not` instead of the `never` the authored files use, so authoring is a small translation every time.
-- `warn` has no level. `color.yaml` uses it as a key and one `badge` entry carries it mid-sentence; both become `should-not` with the hazard explained in the statement, which loses the distinction between "this is inadvisable" and "this will surprise you".
-- Two extensions mean a DSDS consumer that ignores unknown fields silently drops every remedy. The prohibition survives the export; the fix does not.
+- `warn` has no level. `color.yaml` uses it as a key and one `badge` entry carries it mid-sentence; both become `should-not` with the hazard explained in the statement, which loses the distinction between "this is inadvisable" and "this will surprise you". Accepted.
+- The export rule is a normative requirement on a tool this ADR does not write. Nothing enforces it until an exporter exists.
 
 #### Option B: DSDS four levels, verbatim, no additions *(Rejected)*
 
@@ -357,18 +368,34 @@ dontUseWhen:
 
 This is a different kind of statement from a rule. A rule says what an author must do; these say what each thing in a set is for. Thirty tokens as thirty `should` entries is unreadable, and the table is the most immediately useful content in the file.
 
-#### Option A: First-class sections on `guidelines.yaml`, at every scope *(Selected)*
+#### Option A: First-class sections on `guidelines.yaml`, at every scope, with `alternatives` on an off-limits subject *(Selected)*
 
 `useWhen` and `dontUseWhen` sit beside the concern keys on any `guidelines.yaml`. Each holds subject lists keyed by subject kind — `tokens` is the only kind the authored file uses; `props`, `variants`, and `slotFills` are the component-scope kinds.
 
+A `dontUseWhen` subject takes an optional `alternatives` — the same DSDS pointer array a guideline item carries under D7, pointing at what to use instead. This is where the field earns the most: an off-limits subject almost always has a nameable replacement, which is precisely what a pointer holds.
+
+```yaml
+dontUseWhen:
+  tokens:
+    - $token: "DE Palette/*"
+      $description: "a raw ramp step — styling from a ramp bypasses the layer that carries intent and theming"
+      alternatives: [{ to: "DE Color/Alert/Error/Background" }]
+    - $token: "DE Color/Utility/Figma/*"
+      $description: "Figma plugin and panel chrome, not product surfaces"
+      # no alternatives — nothing replaces it, it is simply not for product
+```
+
 **Pros**:
 - Keeps the scannable table that makes `color.yaml` useful, instead of dissolving it into thirty entries.
+- `alternatives` turns "don't use this" into "use that instead" as resolvable data rather than a sentence, and it reuses a field already being adopted rather than inventing a second mechanism.
+- Its absence is meaningful: a subject with no `alternatives` has no replacement, which is true of the four `Utility/*` families in `color.yaml` and false of the ramp steps. That distinction is currently invisible.
 - `badge`'s "choose colour for the status reported, not decoration — the options are the Alert families" is already selection guidance wearing a rule's clothes, so the component scope needs this too.
 - Separating "what is this for" from "what must you do" means the rules section stays short enough to read in full.
 
 **Cons / Trade-offs**:
-- A third entry shape to specify and validate, and `$description` is a DSDS-less field on a DSDS-shaped document.
-- The line between a `dontUseWhen` subject and a `must-not` rule is a judgment call. "Never style from a ramp step" appears in `color.yaml` both as a `dontUseWhen` token and as a paired `never`/`must` guideline, so the authored evidence already duplicates across the two.
+- A third entry shape to specify and validate, and `$description` is a DSDS-less field.
+- The line between a `dontUseWhen` subject and a `must-not` rule is a judgment call. "Never style from a ramp step" appears in `color.yaml` both as a `dontUseWhen` token and as a paired `never`/`must` guideline, so the authored evidence already duplicates across the two. DSDS's `same-as` pointer — valid on a section item, linking to an equivalent item in the same section kind — is the mechanism for declaring that duplication deliberate, and it is available here without further invention.
+- A pointer's `to` names something in the project. Whether a token path is addressable that way depends on how a library's tokens are identified at export, so `to` on a token subject is the least-proven part of this decision.
 - The component-scope subject kinds have no authored instance, so only `tokens` is drawn from evidence.
 
 #### Option B: Foundations only *(Rejected)*
@@ -417,6 +444,7 @@ Drop `author` and `updated` as git's job.
 | `Platform.ts` *(new)* | Add `Platform` — `'react' \| 'webcomponents' \| 'web' \| 'ios' \| 'android'` | MINOR |
 | `Concerns.ts` *(new)* | Add `ComponentConcern` — the eleven values from D3; add `FoundationConcern` — the eight values from D10 | MINOR |
 | `SidecarMeta.ts` *(new)* | Add `SidecarMeta` — `concern`, `status`, `author`, `updated`, `sources`; add `SidecarStatus` | MINOR |
+| `Pointer.ts` *(new)* | Add `Pointer` — DSDS's `to` / `href` shape; add `Ref` — a pointer carrying an explicit `rel` | MINOR |
 | `SupplementalDocument.ts` *(new)* | Add `SupplementalDocument`, `SupplementalSection`, `SupplementalEntry`, `SchemaGap`, `CheckedBy` | MINOR |
 | `GuidelinesDocument.ts` *(new)* | Add `GuidelinesDocument`, `GuidelinesSection`, `GuidelineEntry`, `ObligationLevel`, `SelectionGuidance`, `SelectionSubject` | MINOR |
 | `index.ts` | Re-export every type above | MINOR |
@@ -441,7 +469,13 @@ SupplementalEntry:
   schemaGap: SchemaGap            # required — the overlay-only gate
   platforms?: Platform[]          # absent = applies to every platform
   checkedBy?: CheckedBy
-  checks?: string[]               # required when checkedBy is 'automated'
+  checks?: Pointer[]              # required when checkedBy is 'automated'
+
+# DSDS's pointer: `to` for something inside the project, `href` for
+# something outside it. Exactly one, never both (schema-enforced).
+Pointer:
+  to?: string                     # an entry id, or `entryId#address` for an item within one
+  href?: string
 
 SchemaGap:
   path: string                    # JSON Schema pointer, or any repo-relative target
@@ -461,9 +495,12 @@ GuidelinesDocument:
 GuidelineEntry:
   statement: string               # required — the rule, DSDS field name
   level: ObligationLevel          # required — RFC 2119 semantics
-  instead?: string                # the remedy, when the entry is a prohibition
+  alternatives?: Pointer[]        # the remedy when it names a thing — DSDS `alternative-to`
+  instead?: string                # the remedy when it names a rule, not a thing
+  refines?: Pointer               # elaborates another guideline — DSDS
+  evidence?: Pointer[]            # source material supporting the rule — DSDS `cites`
   checkedBy?: CheckedBy
-  checks?: string[]               # required when checkedBy is 'automated'
+  checks?: Pointer[]              # required when checkedBy is 'automated'
 
 # DSDS 0.23.1's four, plus RFC 2119's `may` — see D7 for why
 ObligationLevel: 'must' | 'should' | 'should-not' | 'must-not' | 'may'
@@ -479,6 +516,14 @@ SelectionSubject:
   $token?: string
   $name?: string
   $description: string            # required — what it is for, or why it is off-limits
+  alternatives?: Pointer[]        # dontUseWhen only — what to use instead; absence means nothing replaces it
+  refs?: Ref[]                    # DSDS `same-as` when this restates an item at another scope
+
+# A pointer carrying an explicit relationship, as DSDS's `refs` array requires
+Ref:
+  to?: string
+  href?: string
+  rel: 'same-as' | 'relates-to' | 'source' | 'design' | 'demo'
 ```
 
 ### Schema changes (`schema/`)
@@ -518,14 +563,27 @@ GuidelineEntry:
   properties:
     level: { enum: [must, should, should-not, must-not, may] }
     instead: { type: string, minLength: 1 }
+    alternatives: { type: array, items: { $ref: "#/definitions/Pointer" } }
   if:    { properties: { checkedBy: { const: automated } }, required: [checkedBy] }
   then:  { required: [checks] }
+
+# DSDS: a pointer has `to` or `href`, and MUST NOT have both
+Pointer:
+  additionalProperties: false
+  properties: { to: { minLength: 1 }, href: { format: uri } }
+  oneOf:
+    - required: [to]
+    - required: [href]
 
 # Exactly one subject key, never both — `$token` for tokens, `$name` elsewhere
 SelectionSubject:
   required: [$description]
   additionalProperties: false
-  properties: { $token: {...}, $name: {...}, $description: { minLength: 1 } }
+  properties:
+    $token: {...}
+    $name: {...}
+    $description: { minLength: 1 }
+    alternatives: { type: array, items: { $ref: "#/definitions/Pointer" } }
   oneOf:
     - required: [$token]
     - required: [$name]
@@ -538,7 +596,7 @@ SelectionSubject:
 | `src/validate/supplemental.schema.json` | Deleted — superseded by the published schema |
 | `src/validate/supplemental.ts` | Compile the published `supplemental.schema.json` and a new `guidelines.schema.json` instead of the local copy |
 | `src/validate/run.ts` | Validate `guidelines.yaml` wherever it validates `supplemental.yaml`, at all three scopes from D10 |
-| `src/validate/references.ts` | Resolve a `schemaGap.path` that is a JSON Schema pointer; check a `useWhen` / `dontUseWhen` `$token` against the library the way `$token` is already checked in specs |
+| `src/validate/references.ts` | Resolve a `schemaGap.path` that is a JSON Schema pointer; check a `useWhen` / `dontUseWhen` `$token` against the library the way `$token` is already checked in specs; resolve every `Pointer.to` in `alternatives`, `refines`, `evidence`, and `checks` |
 | `src/skills/*.md` | Update the authoring skills that describe the sidecar's shape |
 
 The reference-level checks issue #870 asks for land here, against the closed enums this ADR provides: an entry citing an anatomy element or prop must cite one that exists in the sibling `api.yaml`, and a `schemaGap.path` that is a JSON Schema pointer must resolve.
@@ -549,7 +607,9 @@ The reference-level checks issue #870 asks for land here, against the closed enu
 
 **On what stays out of v1.** DSDS's section-level `for` audience of `all` / `human` / `agent` is not adopted as a field. The builder-versus-consumer split under D1 is the audience axis this schema needs, and `for: all` is what a DSDS export emits. An agent-only guideline is a real future case with no authored instance behind it. No `title` either — the three scope paths name their subject, and `meta.concern` restates it for a reader who has only the file.
 
-**On the two DSDS divergences.** `may` on `ObligationLevel` and `instead` on `GuidelineEntry` are the only places this schema departs from DSDS 0.23.1, and both are recorded in D7 with the authored entry that forced them. A DSDS consumer that drops unknown fields keeps every prohibition and loses every remedy, which is the cost of `instead` and the reason it is worth naming rather than burying.
+**On the DSDS divergences, and the export rule that bounds them.** Three places depart from DSDS 0.23.1, each argued where it is made: `may` on `ObligationLevel` (D7), `instead` on `GuidelineEntry` (D7), and `$description` plus the `useWhen` / `dontUseWhen` sections, which have no DSDS counterpart at all (D11). The document shape is also not a DSDS document — see the scope limit in D7.
+
+One normative requirement follows, and it binds any exporter this schema ever gets: **`instead` is appended to `statement` as a sentence when emitting DSDS, never dropped.** `alternatives` needs no such rule, because it is DSDS's own field and survives export intact. The rule exists only for the prose remedy, and it means a consumer that ignores unknown fields loses the field and keeps the content rather than publishing a prohibition with its fix stripped off.
 
 **On the authored files.** Five authored files need editing for this contract, all of them workspace content rather than package content, so none of it gates this ADR. The four `supplemental.yaml` files move their `guidelines` sections out, turn `schemaGap` strings into objects, drop `regenerationRisk`, drop the `platforms` map's file paths, and resolve the entries whose `schemaGap` reads `"none"` by moving them into the spec or justifying them. `foundations/color.yaml` moves to `foundations/color/guidelines.yaml` and converts its obligation keys to `level` values with `instead`.
 
@@ -557,9 +617,9 @@ The reference-level checks issue #870 asks for land here, against the closed enu
 
 ## Type ↔ Schema Impact
 
-- **Symmetric**: Yes. The two document types have a schema file each; `Platform.ts`, `Concerns.ts`, and `SidecarMeta.ts` contribute types referenced by both schemas rather than standalone schema files.
-- **Parity check**: `SupplementalDocument` ↔ `supplemental.schema.json` root. `GuidelinesDocument` ↔ `guidelines.schema.json` root. `ComponentConcern` ↔ the closed `properties` key set in both. `SidecarMeta` ↔ the `meta` definition in both. `Platform` ↔ the `platforms` array's `items.enum`. `ObligationLevel` ↔ `GuidelineEntry.level`'s `enum`. `CheckedBy` ↔ `checkedBy`'s `enum` in both. `SelectionGuidance` and `SelectionSubject` ↔ the `useWhen` / `dontUseWhen` definitions.
-- **Asymmetries, all deliberate**: three constraints are expressible in JSON Schema and not in TypeScript — `checks` required when `checkedBy` is `automated`, the ban on `web` appearing beside a web leaf, and exactly one of `$token` or `$name` on a `SelectionSubject`. Each is documented on its type as a constraint the schema enforces, so a reader of the types learns the rule even though the compiler will not apply it.
+- **Symmetric**: Yes. The two document types have a schema file each; `Platform.ts`, `Concerns.ts`, `SidecarMeta.ts`, and `Pointer.ts` contribute types referenced by both schemas rather than standalone schema files.
+- **Parity check**: `SupplementalDocument` ↔ `supplemental.schema.json` root. `GuidelinesDocument` ↔ `guidelines.schema.json` root. `ComponentConcern` ↔ the closed `properties` key set in both. `SidecarMeta` ↔ the `meta` definition in both. `Platform` ↔ the `platforms` array's `items.enum`. `ObligationLevel` ↔ `GuidelineEntry.level`'s `enum`. `CheckedBy` ↔ `checkedBy`'s `enum` in both. `Pointer` ↔ the `Pointer` definition, referenced from `checks`, `alternatives`, `refines`, and `evidence`. `SelectionGuidance` and `SelectionSubject` ↔ the `useWhen` / `dontUseWhen` definitions.
+- **Asymmetries, all deliberate**: four constraints are expressible in JSON Schema and not in TypeScript — `checks` required when `checkedBy` is `automated`; the ban on `web` appearing beside a web leaf; exactly one of `$token` or `$name` on a `SelectionSubject`; and exactly one of `to` or `href` on a `Pointer`, which is DSDS's own MUST NOT. Each is documented on its type as a constraint the schema enforces, so a reader of the types learns the rule even though the compiler will not apply it.
 
 ---
 
@@ -588,9 +648,12 @@ The reference-level checks issue #870 asks for land here, against the closed enu
 ## Consequences
 
 - A component's sidecar content divides by reader: builders read `supplemental.yaml`, consumers read `guidelines.yaml`, and neither wades through the other's entries.
-- A `guidelines.yaml` is a DSDS 0.23.1 guidelines document in field names and in four of five level values, so publishing to a DSDS consumer is a pass-through apart from two named extensions, `may` and `instead`.
-- A DSDS consumer that drops unknown fields keeps every prohibition and loses every `instead` remedy. Any export path has to decide whether to fold the remedy into the statement rather than emit a rule with its fix stripped off.
+- A `guidelines.yaml` entry is a DSDS 0.23.1 guideline item in field names and in four of five level values. The document around it is a source format that maps to DSDS section-by-section, not a DSDS document — an exporter supplies the `kind` and `for` that DSDS requires and this schema does not carry.
 - A prohibition and its remedy are one entry, so neither can be deleted without the other and a reader cannot act on the first without seeing the second.
+- Most remedies are now resolvable data rather than prose, because `alternatives` holds a pointer and most off-limits things have a nameable replacement. A validator can check that the replacement exists; it could never check a sentence.
+- The absence of `alternatives` says something true: nothing replaces this. `color.yaml`'s four `Utility/*` families have no replacement and its ramp steps do, and that distinction is currently invisible in the authored file.
+- Export is lossless in content and lossy only in structure, and only for the prose remedy: the normative rule folds `instead` into `statement`. No consumer receives a prohibition with its fix stripped off.
+- The schema does not enforce `alternatives` over `instead` when both would work. An author who writes prose where a pointer was available produces a valid document that is worse than it needed to be, and only review catches it.
 - Selection guidance stops being prose. `useWhen` and `dontUseWhen` give a reader the scannable table of what each token, prop, or variant is for — and leave the rules section short enough to read in full.
 - The boundary between a `dontUseWhen` subject and a `must-not` rule is a judgment with no mechanical test. `foundations/color.yaml` already states the ramp-step prohibition in both places, so the duplication is live rather than hypothetical.
 - `meta.status` makes the difference between proposed and ratified guidance a field rather than a convention, which is what a ratification step needs to read.
@@ -608,7 +671,9 @@ The reference-level checks issue #870 asks for land here, against the closed enu
 
 ## References
 
-- **Design System Documentation Specification (DSDS) 0.23.1** — [designsystemdocspec.org/specification](https://designsystemdocspec.org/specification). Source of the `guidelines.yaml` entry shape adopted under D7: the `statement` / `level` / `checkedBy` / `checks` field names, the `must` / `should` / `should-not` / `must-not` level set, the `automated` / `assisted` / `manual` verification set, and the `checks`-required-when-`automated` rule. Three deliberate departures, each argued where it is made: `may` is added to the level set (D7), `instead` is added to the entry (D7), and the section-level `for` audience of `all` / `human` / `agent` is not adopted (Notes). `useWhen` / `dontUseWhen` (D11) and `meta` (D12) have no DSDS counterpart and are drawn from authored content instead.
+- **Design System Documentation Specification (DSDS) 0.23.1** — [designsystemdocspec.org/specification](https://designsystemdocspec.org/specification). Source of the guideline item shape adopted under D7: the `statement` / `level` / `checkedBy` / `checks` / `evidence` / `alternatives` / `refines` field names, the `must` / `should` / `should-not` / `must-not` level set, the `automated` / `assisted` / `manual` verification set, the `checks`-required-when-`automated` rule, and the pointer shape — `to` or `href`, never both. `alternatives` carries DSDS's `alternative-to` relationship and is valid on a guideline item; D11 extends its use to a `dontUseWhen` subject. `same-as` and `relates-to` are available via `refs` and used as DSDS defines them.
+
+  Departures, each argued where it is made: `may` added to the level set (D7); `instead` added for a prose remedy (D7); the section-level `for` audience not adopted (Notes); and `useWhen` / `dontUseWhen` with `$description` having no DSDS counterpart at all (D11). The document shape is a source format that maps to DSDS rather than DSDS itself, because DSDS requires `kind` and `for` on a section and this schema carries neither — see the scope limit in D7. `meta` (D12) is drawn from authored content, not DSDS.
 - **RFC 2119** — the obligation semantics DSDS's `level` values carry, and the source of the added `may`.
 - **`packages/cli/src/validate/supplemental.schema.json`** — the experimental CLI-defined contract this ADR promotes, splits, and deletes.
 - **`DirectedEdges/spectacular#870`** — the validation work this ADR unblocks.
