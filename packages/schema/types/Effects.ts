@@ -1,4 +1,4 @@
-import { TokenReference, ColorObject } from "./Styles.js";
+import { TokenReference, ColorObject, ColorString } from "./Styles.js";
 
 /**
  * A single evaluated shadow (drop or inner).
@@ -19,8 +19,8 @@ export interface Shadow {
   offsetY: number | TokenReference;
   blur: number | TokenReference;
   spread: number | TokenReference;
-  /** Shadow color — DTCG Color object, token reference, or formatted string when `Settings.spec.color` is non-`OBJECT`. */
-  color: string | ColorObject | TokenReference;
+  /** Shadow color. A shadow cannot hold a gradient, so this is `ColorStyle` without the gradient and null arms. */
+  color: ColorString | ColorObject | TokenReference;
 }
 
 /**
