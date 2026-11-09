@@ -22,8 +22,6 @@ one of them determines any single output, so the rule below *is* the mapping.`,
 
 export const RULE_INDEX = {
   none: '*None declared.*',
-  caseTable: (rows) => `${rows}-row case table`,
-  prose: 'prose — not yet a case table',
 };
 
 // ── The unit surfaces (props, anatomy, values & references) ─────────────────

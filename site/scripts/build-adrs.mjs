@@ -6,33 +6,15 @@
  * Usage:  node scripts/build-adrs.mjs
  */
 
-import { readdirSync, readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { adrStatus, adrTitle } from './lib/adr.mjs';
+import { createEmitter } from './lib/emit.mjs';
+import { quoteScalar } from './lib/markdown.mjs';
+import { adrDir, docs } from './lib/paths.mjs';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const root = resolve(__dirname, '..');
-const repo = resolve(root, '..');
-
-const srcDir = resolve(repo, 'adr');
-const outDir = resolve(root, 'src/content/docs/adr');
-
-/** Quote a string for a YAML double-quoted scalar. */
-function yaml(text) {
-  return `"${text.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
-}
-
-/** `# ADR: Foo Bar` or `# ADR 058: Foo Bar` → `Foo Bar` */
-function extractTitle(md) {
-  const m = md.match(/^#\s+(?:ADR[\s-]*\d*\s*:\s*)?(.+)$/m);
-  return m ? m[1].trim() : null;
-}
-
-/** `**Status**: ACCEPTED — because` → `ACCEPTED` */
-function extractStatus(md) {
-  const m = md.match(/^\*\*Status\*\*:\s*(\S+)/m);
-  return m ? m[1].replace(/[^A-Z]/gi, '').toUpperCase() : null;
-}
+const srcDir = adrDir;
+const outDir = join(docs, 'adr');
 
 /** Escape text destined for raw HTML in the generated index. */
 function escapeHtml(text) {
@@ -129,10 +111,10 @@ const files = readdirSync(srcDir)
 const accepted = [];
 
 for (const file of files) {
-  const md = readFileSync(resolve(srcDir, file), 'utf-8');
-  if (extractStatus(md) !== 'ACCEPTED') continue;
+  const md = readFileSync(join(srcDir, file), 'utf-8');
+  if (adrStatus(md) !== 'ACCEPTED') continue;
 
-  const title = extractTitle(md);
+  const title = adrTitle(md);
   if (!title) {
     console.warn(`⚠ ${file}: no H1 title, skipped`);
     continue;
@@ -150,20 +132,24 @@ const adrs = accepted.map(({ file, md, slug, title, number }) => {
   return { number, slug, title, summary, body: formatMetadata(stripTitle(md)) };
 });
 
-rmSync(outDir, { recursive: true, force: true });
-mkdirSync(outDir, { recursive: true });
+// Written in place and swept, not wiped and rebuilt. The wipe is why `adr/`
+// could not be watched: removing this whole directory and writing it back takes
+// a running `astro dev` down, so an ADR edit could not trigger a rebuild. A
+// record that is deleted or moves out of ACCEPTED still loses its page — the
+// sweep removes any markdown this run did not write.
+const emit = createEmitter({ root: outDir, label: 'site/src/content/docs/adr/' });
 
 for (const adr of adrs) {
   const frontmatter = [
     '---',
-    `title: ${yaml(adr.title)}`,
-    adr.summary ? `description: ${yaml(adr.summary.replace(/`/g, ''))}` : null,
+    `title: ${quoteScalar(adr.title)}`,
+    adr.summary ? `description: ${quoteScalar(adr.summary.replace(/`/g, ''))}` : null,
     '---',
   ]
     .filter(Boolean)
     .join('\n');
 
-  writeFileSync(resolve(outDir, `${adr.slug}.md`), `${frontmatter}\n\n${adr.body}`);
+  emit.write(join(outDir, `${adr.slug}.md`), `${frontmatter}\n\n${adr.body}`);
 }
 
 const rows = [...adrs]
@@ -196,5 +182,5 @@ ${rows}
 </table>
 `;
 
-writeFileSync(resolve(outDir, 'index.md'), index);
-console.log(`✓ Built ${adrs.length} ADR pages + index in site/src/content/docs/adr/`);
+emit.write(join(outDir, 'index.md'), index);
+console.log(emit.summary(emit.commit()));

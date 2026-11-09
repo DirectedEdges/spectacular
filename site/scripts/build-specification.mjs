@@ -8,15 +8,12 @@
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const root = resolve(__dirname, '..');
-const repo = resolve(root, '..');
+import { docs, pkg } from './lib/paths.mjs';
 
-const src = resolve(repo, 'packages/schema/SPECIFICATION.md');
-const out = resolve(root, 'src/content/docs/schema/specification.md');
+const src = join(pkg, 'SPECIFICATION.md');
+const out = join(docs, 'schema/specification.md');
 
 const md = readFileSync(src, 'utf8');
 

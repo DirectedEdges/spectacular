@@ -28,6 +28,12 @@ export default defineConfig({
     '/schema/typography/': '/schema/styles/typography/',
     '/schema/effects/': '/schema/styles/effects/',
     '/schema/corners/': '/schema/styles/corner-radius/',
+    // The three gradient types are documented on the union's own page, side by
+    // side, rather than on a page each — see `BRANCH_TYPES` in
+    // build-style-pages.mjs. Their own members never had pages that resolved.
+    '/schema/styles/gradient-value/linear-gradient/': '/schema/styles/gradient-value/',
+    '/schema/styles/gradient-value/radial-gradient/': '/schema/styles/gradient-value/',
+    '/schema/styles/gradient-value/angular-gradient/': '/schema/styles/gradient-value/',
     // Their member pages sat in sibling folders at the schema root and moved
     // with them. Listed one by one: a `[...rest]` pattern here is read as a
     // dynamic route and fails the build asking for a `getStaticPaths`, because

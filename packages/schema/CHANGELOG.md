@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Typography.textCase` — `default: "ORIGINAL"`; `Typography.textDecoration` and `Typography.leadingTrim` — `default: "NONE"`
 - `Typography.hangingPunctuation`, `Typography.hangingList` — `default: false`
 - `DSPEC-52`, `DSPEC-53` — an optional composite member declares a default; a required one declares none
+- `ColorString` — a colour as one string, naming every notation it may take with an example of each, and the setting that selects between them. Admits exactly what the untyped `string` arm admitted
+- `ColorObject`, `TokenReference` — titles showing the shape rather than naming it: a `colorSpace` with its `components`, a `$token` path with its `$type`
 
 ### Changed
 
@@ -43,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SlotProp` — described as the component's composable region, naming the request language ("composable", "consumers supply") that means one; `SlotBinding.examples` states that the default fill carries the slot's default state, hidden-by-default content included
 - `SlotProp.anyOf` — the description now states that no entry kind is ever required and that a slot with nothing to list omits the member; `minItems: 1` stays, so an empty list is invalid rather than a second spelling of absence
 - `PositionOffset` — its description now states how offsets combine per axis: one edge pins at the element's own size, opposite edges stretch it between them (`top: 0` + `bottom: 0` spans the parent's height), a centre offset centres its axis. Stated once on the shared definition every edge references, per the constitution's documentation rules; the combination semantics previously existed only in the render bindings, so an author asking "can I pin four edges" found no answer where the value is declared. Description and examples only — no validation change
+- `ColorStyleValue`, `GradientStop.color`, `Shadow.color` — every arm is a bare `$ref` taking its description from the type it refers to, so the three colour forms read the same across all eight properties that admit them. Validates identically
 
 ### Removed
 
