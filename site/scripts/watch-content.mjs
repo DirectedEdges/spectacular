@@ -53,13 +53,27 @@ const WATCHED = [
       resolve(site, 'scripts/build-anatomy-pages.mjs'),
     ],
   },
-  /**
-   * `adr/` is deliberately not watched. `build-adrs.mjs` removes its whole
-   * output directory and writes it back, which a running `astro dev` does not
-   * survive — the same flaw `build-style-pages.mjs` had. Firing it on every
-   * ADR keystroke would take the server down repeatedly. Watch it once that
-   * generator writes in place.
-   */
+  {
+    /**
+     * Watched now that `build-adrs.mjs` writes in place. It used to remove its
+     * whole output directory and write it back, which a running `astro dev`
+     * does not survive — the same flaw the style pages had — so firing it on
+     * every ADR keystroke would have taken the server down repeatedly. It now
+     * shares the emitter the other generators use: an unchanged page keeps its
+     * mtime, and only a record that actually changed triggers a reload.
+     *
+     * The style, prop and anatomy generators also read `adr/`, for the
+     * Decisions section on each page, so an edit here invalidates them too.
+     */
+    dir: resolve(repo, 'adr'),
+    match: /\.md$/,
+    run: [
+      resolve(site, 'scripts/build-adrs.mjs'),
+      resolve(site, 'scripts/build-style-pages.mjs'),
+      resolve(site, 'scripts/build-prop-pages.mjs'),
+      resolve(site, 'scripts/build-anatomy-pages.mjs'),
+    ],
+  },
 ];
 
 const astro = spawn('npx', ['astro', 'dev'], { cwd: site, stdio: 'inherit' });
