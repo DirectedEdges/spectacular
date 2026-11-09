@@ -18,26 +18,22 @@
  * Usage:  node scripts/build-mappings.mjs
  */
 
-import { readFileSync, writeFileSync, readdirSync, mkdirSync, rmSync, existsSync } from 'node:fs';
-import { dirname, resolve, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 // All page copy lives in content/ — this script holds structure only:
 // headings, column headers, field labels, guards, and assembly.
 import {
   RULE, RULE_INDEX, SURFACES, PLATFORM, DEPENDENT, OVERVIEW, BANNER,
   PAGE_DESCRIPTIONS, rulePageDescription, fallbackPageDescription,
 } from './content/mappings.mjs';
+import { createEmitter } from './lib/emit.mjs';
+import { frontmatter } from './lib/markdown.mjs';
+import { docsSchema, schemaDir, bindingsDir } from './lib/paths.mjs';
+import { kebab, PLATFORM_TITLE } from './lib/naming.mjs';
 
-const here = dirname(fileURLToPath(import.meta.url));
-const site = resolve(here, '..');
-const repo = resolve(site, '..');
-const pkg = join(repo, 'packages/schema');
-const bindingsDir = join(pkg, 'mappings/bindings');
 
-const schema = JSON.parse(readFileSync(join(pkg, 'schema/styles.schema.json'), 'utf8'));
+const schema = JSON.parse(readFileSync(join(schemaDir, 'styles.schema.json'), 'utf8'));
 const styleProps = Object.keys(schema.definitions.Styles.properties);
-const styleDescription = (key) =>
-  schema.definitions.Styles.properties[key]?.description ?? '';
 
 /**
  * The prop kinds, read off `AnyProp`'s own union so a kind added to the schema
@@ -47,7 +43,7 @@ const styleDescription = (key) =>
  * which shares `type: string` with StringProp and is discriminated by `enum`'s
  * presence — the kind id still reads off the definition name).
  */
-const componentSchema = JSON.parse(readFileSync(join(pkg, 'schema/component.schema.json'), 'utf8'));
+const componentSchema = JSON.parse(readFileSync(join(schemaDir, 'component.schema.json'), 'utf8'));
 const propKinds = componentSchema.definitions.AnyProp.oneOf.map((b) =>
   b.$ref.replace(/^.*#\/definitions\//, '').replace(/Prop$/, '').toLowerCase()
 );
@@ -86,7 +82,6 @@ const REFERENCE_PAGES = {
   nested: '/schema/prop-configurations/',
 };
 
-const TITLES = { figma: 'Figma', css: 'CSS', react: 'React', webcomponents: 'Web Components' };
 const DISPOSITION_ORDER = ['bound', 'approximated', 'unsupported', 'unverified'];
 
 const badge = (d) =>
@@ -148,7 +143,6 @@ const fmt = (p) => {
   }
 };
 
-const kebab = (s) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`).replace(/^-/, '');
 
 /**
  * What each declared case table is called on the page. A rule may qualify
@@ -432,7 +426,7 @@ const renderAnatomy = (ctx) =>
  * selection, and how styles attach.
  */
 const renderDependent = ({ platform, title, b, styles, dependsOn, file, propsSection, rulesIdx }) => {
-  const base = dependsOn.map((d) => `[${TITLES[d] ?? d}](${d.toUpperCase()}.md)`).join(", ");
+  const base = dependsOn.map((d) => `[${PLATFORM_TITLE[d] ?? d}](${d.toUpperCase()}.md)`).join(", ");
   const overrides = Object.entries(styles);
 
   for (const [k, v] of overrides) {
@@ -488,7 +482,7 @@ const renderPlatform = (file) => {
   const platform = file.replace(/\.json$/, '');
   const b = JSON.parse(readFileSync(join(bindingsDir, file), 'utf8'));
   const styles = b.concepts?.styles ?? {};
-  const title = TITLES[platform] ?? platform;
+  const title = PLATFORM_TITLE[platform] ?? platform;
   const dependsOn = b.dependsOn ?? [];
 
   const extra = Object.keys(styles).filter((k) => !styleProps.includes(k));
@@ -695,7 +689,7 @@ ${losses}` };
 // Nothing else ever read that intermediate, so it is gone: this script renders
 // straight to the site (#837).
 
-const outDir = resolve(site, 'src/content/docs/schema/mappings');
+const outDir = join(docsSchema, 'mappings');
 
 const PAGE_TITLES = { CSS: 'CSS', WEBCOMPONENTS: 'Web Components', INDEX: 'Platform Mappings' };
 
@@ -717,7 +711,7 @@ const renderOverview = (files) => {
       Object.keys(b.concepts?.styleRules ?? {}).length +
       Object.keys(b.concepts?.propRules ?? {}).length +
       Object.keys(b.concepts?.anatomyRules ?? {}).length;
-    return `| [${TITLES[platform] ?? platform}](${platform.toUpperCase()}.md) | ${b.role ?? b.realises ?? ''} | ${ruleCount} |`;
+    return `| [${PLATFORM_TITLE[platform] ?? platform}](${platform.toUpperCase()}.md) | ${b.role ?? b.realises ?? ''} | ${ruleCount} |`;
   });
 
   return `# Platform Mappings
@@ -743,18 +737,24 @@ ${OVERVIEW.absentKeys}
 };
 
 /**
- * Style keys that have a generated reference page. Read from the page tree
- * rather than the schema, so a key whose page is missing is never linked.
+ * The style keys this page may link, read from the schema.
+ *
+ * Every property of `Styles` gets a reference page: `build-style-pages.mjs`
+ * emits one node per property of the root unconditionally, so the set of keys
+ * and the set of pages are the same 46. That is the invariant this relies on,
+ * and the generator that would break it is the one that counts them.
+ *
+ * It used to read the emitted `schema/styles/` directory instead, which was
+ * wrong in a way no warm checkout could show: `build-mappings` runs *before*
+ * `build-style-pages` in the chain, and the styles tree is gitignored, so on a
+ * clean clone the directory was absent, the guard returned an empty list, and
+ * every style key on every mapping page rendered as a plain code span instead
+ * of a link. Reading the schema also removes the ordering constraint between
+ * the two generators.
  */
-const STYLE_KEYS = (() => {
-  const dir = resolve(site, 'src/content/docs/schema/styles');
-  if (!existsSync(dir)) return [];
-  const slugs = new Set(readdirSync(dir).filter((f) => f.endsWith('.md')).map((f) => f.replace(/\.md$/, '')));
-  return styleProps
-    .filter((k) => slugs.has(kebab(k)))
-    // Longest first, so `maxWidth` is not shadowed by a prefix match on `max`.
-    .sort((a, b) => b.length - a.length);
-})();
+const STYLE_KEYS = [...styleProps]
+  // Longest first, so `maxWidth` is not shadowed by a prefix match on `max`.
+  .sort((a, b) => b.length - a.length);
 
 /** One rendered body, wrapped as a Starlight page with its links rewritten. */
 const sitePage = ({ label, body, platform, rule }) => {
@@ -807,14 +807,7 @@ const sitePage = ({ label, body, platform, rule }) => {
 
   return {
     out,
-    contents: `---
-title: "${title}"
-description: "${description}"
----
-
-${BANNER}
-
-${linked}`,
+    contents: `${frontmatter({ title, description })}\n\n${BANNER}\n\n${linked}`,
   };
 };
 
@@ -847,16 +840,19 @@ pages.push({ label: 'INDEX.md', body: renderOverview(files), platform: 'INDEX' }
 for (const { label, body } of pages) checkNoLeaks(label, body);
 
 if (!failures.length) {
-  // Replaced wholesale, so a renamed or deleted rule cannot leave a page.
-  if (existsSync(outDir)) rmSync(outDir, { recursive: true, force: true });
-  mkdirSync(outDir, { recursive: true });
-
+  // Written in place and then swept, rather than replaced wholesale. A renamed
+  // or deleted rule still cannot leave a page behind — the sweep removes any
+  // markdown this run did not write — but an unchanged page keeps its mtime, so
+  // a running `astro dev` is not asked to reload every page on every run.
+  const emit = createEmitter({ root: outDir, label: 'site/src/content/docs/schema/mappings/' });
   for (const page of pages) {
     const { out, contents } = sitePage(page);
-    mkdirSync(dirname(out), { recursive: true });
-    writeFileSync(out, contents);
-    console.log(`mappings: wrote /schema/mappings/${out.slice(outDir.length + 1).replace(/\.md$/, '')}`);
+    emit.write(out, contents);
   }
+  // Swept only here, inside the no-failures branch: a run that failed its
+  // completeness check has written nothing, and must not delete anything
+  // either.
+  console.log(emit.summary(emit.commit()));
 }
 
 if (failures.length) {

@@ -15,33 +15,29 @@
  * Usage:  node scripts/build-anatomy-pages.mjs
  */
 
-import { readFileSync, writeFileSync, mkdirSync, rmSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 // All page copy lives in content/ — this script holds structure only.
 import {
   BANNER, PATH_ROOT, CARRIES_INTRO, DECISIONS_NONE, SOURCE_SECTION,
 } from './content/anatomy-pages.mjs';
-import { dirname, resolve, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { loadAdrs, decisionBullets } from './lib/adr.mjs';
+import { frontmatter } from './lib/markdown.mjs';
+import { createEmitter } from './lib/emit.mjs';
+import { loadBindings, platformBindingSections } from './lib/bindings.mjs';
+import { BINDING_LABELS } from './content/common.mjs';
+import { docsSchema, schemaDir, mappingsDir, bindingsDir, adrDir, transforms } from './lib/paths.mjs';
+import { kebab, PLATFORMS, PLATFORM_TITLE } from './lib/naming.mjs';
+import { join } from 'node:path';
 
-const here = dirname(fileURLToPath(import.meta.url));
-const site = resolve(here, '..');
-const repo = resolve(site, '..');
-const pkg = join(repo, 'packages/schema');
-const outRoot = join(site, 'src/content/docs/schema/anatomy');
+const outRoot = join(docsSchema, 'anatomy');
 
-const defs = JSON.parse(readFileSync(join(pkg, 'schema/component.schema.json'), 'utf8')).definitions;
+const defs = JSON.parse(readFileSync(join(schemaDir, 'component.schema.json'), 'utf8')).definitions;
 
-const preservedFile = join(pkg, 'mappings/_anatomy-page-content.json');
+const preservedFile = join(mappingsDir, '_anatomy-page-content.json');
 const preserved = existsSync(preservedFile) ? JSON.parse(readFileSync(preservedFile, 'utf8')) : { types: {} };
 
-const bindings = Object.fromEntries(
-  ['figma', 'css', 'react', 'webcomponents']
-    .filter((p) => existsSync(join(pkg, `mappings/bindings/${p}.json`)))
-    .map((p) => [p, JSON.parse(readFileSync(join(pkg, `mappings/bindings/${p}.json`), 'utf8'))])
-);
-const PLATFORM = { figma: 'Figma', css: 'CSS', react: 'React', webcomponents: 'Web Components' };
+const bindings = loadBindings();
 
-const kebab = (s) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`).replace(/^-/, '');
 
 /** The eleven types, each with the gloss its own union branch declares. */
 const TYPES = defs.ElementType.oneOf.map((b) => ({ type: b.const, description: b.description ?? '' }));
@@ -57,8 +53,8 @@ const TYPES = defs.ElementType.oneOf.map((b) => ({ type: b.const, description: b
 const TABLE_TYPE_OF = { frame: 'container', component: null };
 const styleKeysByType = (() => {
   const paths = [
-    `${repo}/../specs-transforms/packages/specs-from-figma/src/Component/Styles/style-bindings.json`,
-    `${repo}/../specs-transforms/packages/figma-from-specs/src/Styles/style-bindings.json`,
+    join(transforms, 'packages/specs-from-figma/src/Component/Styles/style-bindings.json'),
+    join(transforms, 'packages/figma-from-specs/src/Styles/style-bindings.json'),
   ];
   const out = {};
   for (const p of paths) {
@@ -74,50 +70,10 @@ const styleKeysByType = (() => {
   return out;
 })();
 
-// ── ADR decisions, same declaration contract as the style and prop pages ─────
-const isAccepted = (src) =>
-  (src.match(/^\*\*Status\*\*:\s*(\S+)/m)?.[1]?.replace(/[^A-Za-z]/g, '').toUpperCase() ?? '') === 'ACCEPTED';
+const adrs = loadAdrs(adrDir);
 
-const declaredDecides = (src) => {
-  const line = src.match(/^\*\*Decides\*\*:\s*(.+)$/m)?.[1]?.trim();
-  if (!line) return null;
-  if (/^(none|—|-|\*\(none\)\*)$/i.test(line)) return [];
-  return line.replace(/`/g, '').split(',').map((s) => s.trim()).filter(Boolean);
-};
+const emit = createEmitter({ root: outRoot, label: 'site/src/content/docs/schema/anatomy/' });
 
-const adrsFor = (key, path) => {
-  const dir = join(repo, 'adr');
-  if (!existsSync(dir)) return [];
-  const codeSpans = (text) => (text.match(/`[^`\n]+`/g) ?? []).join(' ');
-  const re = new RegExp(`(?<![\\w-])${key}(?![\\w-])`);
-  const mentionsKey = (text) => re.test(codeSpans(text));
-  const out = [];
-  for (const f of readdirSync(dir).filter((n) => /^\d{3}-.*\.md$/.test(n))) {
-    const src = readFileSync(join(dir, f), 'utf8');
-    if (!isAccepted(src)) continue;
-    const title = (src.match(/^#\s+(?:ADR[\s-]*\d*\s*:\s*)?(.+)$/m)?.[1] ?? f).trim();
-    const declared = declaredDecides(src);
-    const derivedDecides = () => {
-      const summary = src.match(/^\*\*Summary\*\*:\s*(.+)$/m)?.[1] ?? '';
-      const decision = src.match(/^## Decision[ \t]*\r?\n[\s\S]*?(?=^## |(?![\s\S]))/m)?.[0] ?? '';
-      return mentionsKey(title) || mentionsKey(summary) || mentionsKey(decision);
-    };
-    const decides = declared ? declared.includes(path) : derivedDecides();
-    if (!decides) continue;
-    out.push({ num: f.slice(0, 3), title, file: f });
-  }
-  return out;
-};
-
-const emitted = new Set();
-const writeIfChanged = (file, contents) => {
-  emitted.add(file);
-  if (existsSync(file) && readFileSync(file, 'utf8') === contents) return false;
-  writeFileSync(file, contents);
-  return true;
-};
-
-let written = 0;
 for (const { type, description } of TYPES) {
   const kept = preserved.types?.[type] ?? {};
 
@@ -128,27 +84,14 @@ for (const { type, description } of TYPES) {
    * sibling types, and the notes. The former Resolved jointly section split
    * these facts across two places, and neither was complete.
    */
-  const bindingRows = Object.entries(bindings)
-    .map(([platform, b]) => {
-      const v = b.concepts?.anatomy?.[type] ?? { disposition: 'unverified' };
-      const realises = v.target
-        ? `\`${v.target}\``
-        : v.module
-          ? (v.module.length ? v.module.map((m) => `\`${m}\``).join(', ') : '—')
-          : (v.realises ?? '—');
-      const fields = `**Disposition**: ${v.disposition === 'unverified' ? '**unverified**' : v.disposition} · **Realised by**: ${realises}`;
-      const ruleEntries = Object.entries(b.concepts?.anatomyRules ?? {})
-        .filter(([, c]) => (c.keys ?? []).includes(type))
-        .map(([name, c]) => {
-          const others = c.keys.filter((k) => k !== type);
-          return `[${name}](/schema/mappings/${platform}/rules/${kebab(name)}/)${
-            others.length ? ` — with ${others.map((k) => `[\`${k}\`](/schema/anatomy/${k}/)`).join(', ')}` : ''
-          }`;
-        });
-      const ruleLine = ruleEntries.length ? `\n\n**Rules**: ${ruleEntries.join(' · ')}` : '';
-      return `### [${PLATFORM[platform]}](/schema/mappings/${platform}/)\n\n${fields}${ruleLine}${v.notes ? `\n\n${v.notes}` : ''}`;
-    })
-    .join('\n\n');
+  const bindingRows = platformBindingSections({
+    bindings,
+    unit: type,
+    conceptKey: 'anatomy',
+    rulesKey: 'anatomyRules',
+    siblingBase: '/schema/anatomy/',
+    labels: BINDING_LABELS,
+  });
 
   /**
    * Which style keys an element of this type carries — the inverse of the
@@ -167,15 +110,12 @@ for (const { type, description } of TYPES) {
     .join('');
 
   const decisions = (() => {
-    const adrs = adrsFor(type, `anatomy.${type}`);
-    if (!adrs.length) return DECISIONS_NONE;
-    return `${adrs.map((a) => `- [ADR-${a.num}](/adr/${a.file.replace(/\.md$/, '')}/) — ${a.title}`).join('\n')}\n`;
+    const deciding = adrs.decidedBy(type, `anatomy.${type}`);
+    if (!deciding.length) return DECISIONS_NONE;
+    return `${decisionBullets(deciding)}\n`;
   })();
 
-  const page = `---
-title: "${type}"
-description: "${description.replace(/"/g, '\\"').slice(0, 300)}"
----
+  const page = `${frontmatter({ title: type, description })}
 
 ${BANNER}
 
@@ -196,24 +136,7 @@ ${decisions}
 ${SOURCE_SECTION}
 `;
 
-  mkdirSync(outRoot, { recursive: true });
-  if (writeIfChanged(join(outRoot, `${type}.md`), page)) written++;
+  emit.write(join(outRoot, `${type}.md`), page);
 }
 
-/** Pages from an earlier run that this one no longer emits. */
-const removed = (() => {
-  const out = [];
-  if (!existsSync(outRoot)) return out;
-  for (const entry of readdirSync(outRoot)) {
-    const full = join(outRoot, entry);
-    if (entry.endsWith('.md') && !emitted.has(full)) {
-      rmSync(full);
-      out.push(full);
-    }
-  }
-  return out;
-})();
-
-console.log(
-  `${emitted.size} pages under site/src/content/docs/schema/anatomy/ — ${written} changed, ${emitted.size - written} unchanged, ${removed.length} removed`
-);
+console.log(emit.summary(emit.commit()));

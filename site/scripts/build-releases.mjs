@@ -6,15 +6,12 @@
  */
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const root = resolve(__dirname, '..');
-const repo = resolve(root, '..');
+import { docs, pkg } from './lib/paths.mjs';
 
-const schemaLog = readFileSync(resolve(repo, 'packages/schema/CHANGELOG.md'), 'utf-8');
-const cliLog = readFileSync(resolve(repo, 'packages/cli/CHANGELOG.md'), 'utf-8');
+const schemaLog = readFileSync(join(pkg, 'CHANGELOG.md'), 'utf-8');
+const cliLog = readFileSync(join(pkg, '../cli/CHANGELOG.md'), 'utf-8');
 
 /** Strip preamble and downshift headings so ## becomes ###, ### becomes #### */
 function stripPreamble(md) {
@@ -76,7 +73,7 @@ const cliContent = stripPreamble(cliLog);
 const schemaVersions = extractVersions(schemaLog);
 const cliVersions = extractVersions(cliLog);
 
-const outDir = resolve(root, 'src/content/docs/overview');
+const outDir = join(docs, 'overview');
 mkdirSync(outDir, { recursive: true });
 
 const page = `---
@@ -113,5 +110,5 @@ ${buildTocNav(cliVersions)}
 </Tabs>
 `;
 
-writeFileSync(resolve(outDir, 'releases.mdx'), page);
+writeFileSync(join(outDir, 'releases.mdx'), page);
 console.log('✓ Built site/src/content/docs/overview/releases.mdx');
