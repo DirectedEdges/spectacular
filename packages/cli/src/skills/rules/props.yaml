@@ -26,11 +26,12 @@ default:
 variantProps:
   guidelines:
     - must: "declare a boolean prop whose value drives variant deltas — it appears in any `variants[].configuration` — with `$extensions: {com.figma: {type: VARIANT}}`; the renderer otherwise models it as a Figma BOOLEAN property, which can only toggle visibility, and the styling deltas never land on the canvas"
-      note: "enum props become variant axes on their own; the marker is specifically the styling-driving boolean's"
+      note: "enum props — string and number alike — become variant axes on their own, no marker; the marker is specifically the styling-driving boolean's"
 codeOnly:
   guidelines:
     - must: "declare a prop that exists only in code — never as a Figma variant axis — with `$extensions: {com.figma: {type: TEXT, source: {kind: codeOnlyProp, layer: <name>}, name: <name>}}`; the renderer's code-only handling reads exactly this declaration, and an undeclared string prop's disposition in the component set is guesswork (an accessibility label is the canonical case)"
     - never: "coin the `name`/`layer` value yourself — it is the library's own Figma vocabulary, and teams differ (`a11yLabel`, `Accessible label`, …); take it from the designer's language or the workspace's Figma naming convention applied to the prop key, and surface the choice under Decisions to confirm"
+    - must: "read `layer` as this prop's own sub-layer — one per code-only prop (`layer: headingLevel` for a `headingLevel` prop) — never the name of a shared container holding all code-only props"
 invalidPropCombinations:
   guidelines:
     - must: "declare illegal prop combinations as `invalidPropCombinations` in api.yaml — api vocabulary (prop names and values), never in variants"

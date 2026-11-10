@@ -36,10 +36,11 @@ Rules: a requirement goes supplemental only after naming the schema path that ca
 
 Read, in order:
 
-1. The component folder list (`specs/components/`) — what exists to nest or emulate. The new component's folder key must not collide.
-2. `analysis/props.yaml` — the system's prop vocabulary. Reuse a prop name and its value set when the concept matches; never coin a synonym for a prop the system already has.
-3. `analysis/styling.byToken.yaml` and `analysis/styling.byComponent.yaml` — which tokens the system uses for which properties. Your token choices come from here.
-4. `analysis/dependencies.byComponent.yaml` — how components nest, for choosing `instanceOf` targets.
+1. `config/conventions/*.yaml` — the workspace's declared vocabulary: component naming, prop naming, platform idioms. A convention that names your component or its props settles the naming before anything else gets a vote; in an empty catalogue the conventions are the *only* place the system's vocabulary lives.
+2. The component folder list (`specs/components/`) — what exists to nest or emulate. The new component's folder key must not collide.
+3. `analysis/props.yaml` — the system's prop vocabulary. Reuse a prop name and its value set when the concept matches; never coin a synonym for a prop the system already has.
+4. `analysis/styling.byToken.yaml` and `analysis/styling.byComponent.yaml` — which tokens the system uses for which properties. Your token choices come from here.
+5. `analysis/dependencies.byComponent.yaml` — how components nest, for choosing `instanceOf` targets.
 
 If `analysis/` is missing or stale, run `specs analyze` first. A report that is empty at this catalogue size is skipped, not studied. When emulating the closest sibling, read **all three** of its concern files — the pattern a task hinges on has sat in the one file a session skipped. Decide and write down: components to nest, the closest sibling to emulate (idiom only — structure always comes from the schema), and the token set.
 

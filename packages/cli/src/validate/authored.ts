@@ -40,6 +40,10 @@ export function authoredValidator(kind: AuthoredKind): ValidateFunction {
   const AjvExport = req('ajv');
   const Ajv = AjvExport.default ?? AjvExport;
   const ajv = new Ajv({ allErrors: true, strict: false, allowUnionTypes: true });
+  // The schemas use standard formats (date-time, uri); without this they are
+  // ignored and every compile prints an "unknown format" line.
+  const addFormatsExport = req('ajv-formats');
+  (addFormatsExport.default ?? addFormatsExport)(ajv);
 
   const file = req.resolve(`@directededges/specs-schema/schema/${kind}`);
   const schema = JSON.parse(fs.readFileSync(file, 'utf8'));

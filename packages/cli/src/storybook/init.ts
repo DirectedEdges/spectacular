@@ -108,6 +108,14 @@ export function init(ws: Workspace, options: InitOptions): InitResult {
   // The override tree: the customer's, from the start. No command writes into it.
   fs.ensureDirSync(path.join(ws.storybookDir, 'content-overrides'));
 
+  // The platform story trees main.ts globs over, before anything is emitted.
+  // The globs are unconditional so a server started before the first emit still
+  // picks the stories up when they appear; that only works if the directories
+  // exist when the server boots.
+  for (const dir of ['react/src/components', 'react/src/compositions', 'webcomponents/src/components', 'webcomponents/src/compositions']) {
+    fs.ensureDirSync(path.join(ws.root, dir));
+  }
+
   // Seed tabs.json: the manager imports it at build time, so it must exist
   // before the first publish. Publish rewrites it from the same derivation.
   const tabsFile = path.join(ws.storybookDir, 'content', 'components', 'tabs.json');

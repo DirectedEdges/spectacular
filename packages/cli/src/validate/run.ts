@@ -198,8 +198,11 @@ export function runValidate(options: ValidateOptions): ValidateResult {
       // the scaffold is reached only if one of them imports it, and the sidecar's
       // `checks` pointers are the only place that records such a dependency.
       if (kind === 'component') {
+        // The finding names the platform file it is about — a workspace-relative
+        // path, not a spec-folder file. Pointing at `supplemental.yaml /checks`
+        // when no such file existed sent a session to inspect nothing.
         for (const w of unreachableAuthoredFiles(name, supplementalDoc, options.workspaceDir ?? path.dirname(path.resolve(options.specsPath)))) {
-          findings.push({ kind, spec: name, file: 'supplemental.yaml', path: '/checks', message: w, level: 'warning' });
+          findings.push({ kind, spec: name, file: w.file, path: '/', message: w.message, level: 'warning' });
         }
       }
 
@@ -264,9 +267,27 @@ function collectResolvedTokens(
 
 /** The filenames each platform's emitter owns — anything else in a component's folder is authored. */
 const EMITTED_FILES: Record<string, ReadonlySet<string>> = {
-  react: new Set(['contract.ts', 'scaffold.tsx', 'stories.tsx', 'styles.css']),
-  webcomponents: new Set(['api.ts', 'contract.ts', 'host.css', 'light.css', 'scaffold.ts', 'stories.ts']),
+  react: new Set(['contract.ts', 'metadata.ts', 'scaffold.tsx', 'stories.tsx', 'styles.css']),
+  webcomponents: new Set(['api.ts', 'contract.ts', 'host.css', 'light.css', 'metadata.ts', 'scaffold.ts', 'stories.ts']),
 };
+
+/**
+ * This list restates another package's output roster and has drifted once
+ * already (metadata.ts arrived and authored specs were warned about generated
+ * files) — so the header the emitters stamp on every file they own is the
+ * authoritative check, and the list is only a fast path.
+ */
+function isGeneratedFile(file: string): boolean {
+  try {
+    const fd = fs.openSync(file, 'r');
+    const buf = Buffer.alloc(120);
+    const n = fs.readSync(fd, buf, 0, 120, 0);
+    fs.closeSync(fd);
+    return /^(\/\/|\/\*)\s*Generated\. Do not edit/.test(buf.toString('utf8', 0, n));
+  } catch {
+    return false;
+  }
+}
 
 /**
  * The conventional authored entry point per platform tree. An emitter looks for
@@ -299,7 +320,7 @@ const AUTHORED_ENTRY_POINTS: Record<string, ReadonlySet<string>> = {
  * are the one place that records such a dependency — which makes this a weaker
  * check than it was, and a warning rather than an error.
  */
-function unreachableAuthoredFiles(componentKey: string, supplemental: unknown, workspaceDir: string): string[] {
+function unreachableAuthoredFiles(componentKey: string, supplemental: unknown, workspaceDir: string): Array<{ file: string; message: string }> {
   const mentioned: string[] = [];
   const collectStrings = (node: unknown): void => {
     if (typeof node === 'string') { mentioned.push(node); return; }
@@ -309,7 +330,7 @@ function unreachableAuthoredFiles(componentKey: string, supplemental: unknown, w
   collectStrings(supplemental);
   const mentionedAnywhere = (file: string): boolean => mentioned.some(s => s.includes(file));
   const folder = componentKey.charAt(0).toUpperCase() + componentKey.slice(1);
-  const warnings: string[] = [];
+  const warnings: Array<{ file: string; message: string }> = [];
   for (const [tree, emitted] of Object.entries(EMITTED_FILES)) {
     const dir = path.join(workspaceDir, tree, 'src', 'components', folder);
     if (!fs.existsSync(dir)) continue;
@@ -317,11 +338,14 @@ function unreachableAuthoredFiles(componentKey: string, supplemental: unknown, w
     for (const file of fs.readdirSync(dir).sort()) {
       if (emitted.has(file)) continue;
       if (entryPoints.has(file)) continue;
-      if (!fs.statSync(path.join(dir, file)).isFile()) continue;
+      const full = path.join(dir, file);
+      if (!fs.statSync(full).isFile()) continue;
+      if (isGeneratedFile(full)) continue;
       if (!mentionedAnywhere(file)) {
-        warnings.push(
-          `authored file ${tree}/src/components/${folder}/${file} may be unreachable — only ${[...entryPoints].join(' or ')} is loaded by convention, and no supplemental entry mentions this file`
-        );
+        warnings.push({
+          file: `${tree}/src/components/${folder}/${file}`,
+          message: `authored file may be unreachable — only ${[...entryPoints].join(' or ')} is loaded by convention, and no supplemental entry mentions this file`,
+        });
       }
     }
   }

@@ -126,13 +126,14 @@ function specsPublishOnChange() {
 const config: StorybookConfig = {
   stories: [
     ...contentStories(),
-    // Components and compositions, for the platform trees the workspace emitted.
-    ...(fs.existsSync(path.join(workspaceRoot, 'react/src'))
-      ? ['../../react/src/components/**/stories.tsx', '../../react/src/compositions/**/stories.tsx']
-      : []),
-    ...(fs.existsSync(path.join(workspaceRoot, 'webcomponents/src'))
-      ? ['../../webcomponents/src/components/**/stories.ts', '../../webcomponents/src/compositions/**/stories.ts']
-      : []),
+    // Components and compositions, for the platform trees the workspace emits.
+    // Unconditional: a server started before the first emit must still pick the
+    // stories up when they appear. `storybook init` guarantees the directories
+    // exist so the globs are valid at boot.
+    '../../react/src/components/**/stories.tsx',
+    '../../react/src/compositions/**/stories.tsx',
+    '../../webcomponents/src/components/**/stories.ts',
+    '../../webcomponents/src/compositions/**/stories.ts',
   ],
   // Docs pages — controls and actions are Storybook core since 9; argTypes
   // come from react-docgen over the generated scaffolds' prop interfaces.

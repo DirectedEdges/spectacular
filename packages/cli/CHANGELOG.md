@@ -37,6 +37,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Storybook shows components emitted after the server started.** The scaffold's story globs were guarded by `fs.existsSync` on the platform trees, so a server that booted before the first emit silently never registered any component — `storybook publish` reported current and validation passed while the sidebar stayed empty. The globs are now unconditional and `specs storybook init` creates the platform story directories so they are valid at boot. Re-run `specs storybook init --force` in an existing workspace to pick up the new `main.ts`
+
+- `specs validate` no longer prints "unknown format" lines — the schemas' standard formats (`date-time`, `uri`) are now registered via `ajv-formats` and actually validate, instead of being ignored with a warning on every compile (~30 lines per run)
+
+- The unreachable-authored-file warning names the platform file it is about, as a workspace-relative path, instead of attributing it to `supplemental.yaml /checks` — a location that was fabricated when no supplemental file existed. It also no longer fires on generated files: `metadata.ts` joined the emitters' output after the validator's roster was written, and any file stamped with the emitters' "Generated. Do not edit" header is now recognized regardless of the roster
+
 - `--authored` no longer reports the missing `metadata.source` it exists to forgive — three guaranteed warnings per spec on every clean run trained sessions to filter warnings, which is how a real one gets lost. The durable fix is authored provenance (ADR-106, #873); this removes the noise until it lands
 
 - `analysis/foundations.yaml` lists each variable collection's modes — the library's theming axes, previously discoverable only by accident in emitted CSS

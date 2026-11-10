@@ -21,7 +21,10 @@ function formatText(findings: Finding[], counts: { component: number; compositio
   for (const f of findings) {
     const mark = f.level === 'error' ? '✗' : '⚠';
     const kindDir = f.kind === 'component' ? 'components' : 'compositions';
-    console.log(`${mark} ${kindDir}/${f.spec}/${f.file} ${f.path} — ${f.message}`);
+    // A file with a slash is already a workspace-relative path (a platform-tree
+    // finding); a bare name is a file inside the spec's folder.
+    const loc = f.file.includes('/') ? f.file : `${kindDir}/${f.spec}/${f.file}`;
+    console.log(`${mark} ${loc} ${f.path} — ${f.message}`);
   }
   const errors = findings.filter(f => f.level === 'error').length;
   const warnings = findings.filter(f => f.level === 'warning').length;

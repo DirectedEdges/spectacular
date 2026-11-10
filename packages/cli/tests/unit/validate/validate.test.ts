@@ -266,7 +266,10 @@ describe('specs validate', () => {
 
       fs.writeFileSync(path.join(tree, 'orphan.ts'), '');
       const again = runValidate({ specsPath: wsSpecs, workspaceDir: ws }).findings;
-      expect(again.some(f => f.level === 'warning' && f.message.includes('orphan.ts') && f.message.includes('may be unreachable'))).toBe(true);
+      // The finding names the platform file in `file` (a workspace-relative
+      // path), not in the message — pointing at supplemental.yaml fabricated a
+      // location when that file did not exist.
+      expect(again.some(f => f.level === 'warning' && f.file === 'react/src/components/Badge/orphan.ts' && f.message.includes('may be unreachable'))).toBe(true);
       fs.rmSync(ws, { recursive: true, force: true });
     });
   });

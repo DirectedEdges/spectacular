@@ -33,6 +33,10 @@ export function concernValidators(): ConcernValidators {
   const AjvExport = req('ajv');
   const Ajv = AjvExport.default ?? AjvExport;
   const ajv = new Ajv({ allErrors: true, strict: false, allowUnionTypes: true });
+  // The schemas use standard formats (date-time, uri); without this they are
+  // ignored and every compile prints an "unknown format" line.
+  const addFormatsExport = req('ajv-formats');
+  (addFormatsExport.default ?? addFormatsExport)(ajv);
 
   const schemaDir = path.dirname(req.resolve('@directededges/specs-schema/schema/component-concern'));
   for (const file of fs.readdirSync(schemaDir).filter(f => f.endsWith('.schema.json'))) {
