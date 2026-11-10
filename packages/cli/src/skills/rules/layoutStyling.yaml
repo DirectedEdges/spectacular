@@ -33,3 +33,4 @@ position:
       adr: 41
     - must: "swap offset edges in a placement variant — null the old edge, set the new one (`bottom: null` + `top: -6`)"
       never: "stack both edges of an axis"
+    - could: "pin a full-bleed layer to all four sides (`top: 0, end: 0, bottom: 0, start: 0`) — a state background or scrim stretches with its parent, and is the sanctioned departure from the one-edge-per-axis rule (ruled by the system owner, Pill round)"
