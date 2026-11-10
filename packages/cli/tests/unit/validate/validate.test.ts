@@ -229,8 +229,12 @@ describe('specs validate', () => {
     });
   });
 
-  describe('undeclared authored platform files', () => {
-    it('warns on an authored file the sidecar never mentions, and accepts mentioned ones', () => {
+  // ADR-118 changed this check's premise. `platforms` no longer carries a file
+  // path, and the emitters never read it — an authored `component.tsx` wins over
+  // the scaffold because of its name. So the conventional entry point is never
+  // unreachable, and only a file beside it that nothing mentions is suspect.
+  describe('unreachable authored platform files', () => {
+    it('never warns on the conventional entry point, warns on an unmentioned sibling', () => {
       const ws = fs.mkdtempSync(path.join(os.tmpdir(), 'specs-ws-'));
       const wsSpecs = path.join(ws, 'specs');
       const tree = path.join(ws, 'react', 'src', 'components', 'Badge');
@@ -245,9 +249,11 @@ describe('specs validate', () => {
         supplemental: {
           behavior: [{
             intent: 'fades in',
-            schemaGap: 'no motion in Styles',
-            platforms: { react: 'component.tsx' },
-            regenerationRisk: 'low — imports motion.css beside it',
+            schemaGap: { path: 'styles.schema.json#/definitions/Styles', need: 'no motion properties' },
+            platforms: ['react'],
+            checkedBy: 'assisted',
+            // The one place a dependency on a sibling file is still recorded.
+            checks: [{ to: 'react/src/components/Badge/motion.css' }],
           }],
         },
       } as Record<string, unknown>;
@@ -255,12 +261,12 @@ describe('specs validate', () => {
         fs.writeFileSync(path.join(dir, `${concern}.yaml`), yaml.stringify(doc));
       }
       const findings = runValidate({ specsPath: wsSpecs, workspaceDir: ws }).findings;
-      const dead = findings.filter(f => f.message.includes('loaded by nothing'));
-      expect(dead).toHaveLength(0);
+      // component.tsx is loaded by convention; motion.css is named in `checks`.
+      expect(findings.filter(f => f.message.includes('may be unreachable'))).toHaveLength(0);
 
       fs.writeFileSync(path.join(tree, 'orphan.ts'), '');
       const again = runValidate({ specsPath: wsSpecs, workspaceDir: ws }).findings;
-      expect(again.some(f => f.level === 'warning' && f.message.includes('orphan.ts') && f.message.includes('loaded by nothing'))).toBe(true);
+      expect(again.some(f => f.level === 'warning' && f.message.includes('orphan.ts') && f.message.includes('may be unreachable'))).toBe(true);
       fs.rmSync(ws, { recursive: true, force: true });
     });
   });
@@ -296,12 +302,17 @@ describe('specs validate', () => {
     });
   });
 
-  describe('supplemental sidecar', () => {
+  // The two authored documents (ADR-118). Both contracts are published by
+  // specs-schema now; the CLI's private copy of the supplemental schema is gone.
+  describe('supplemental document', () => {
     const entry = {
       intent: 'Tooltip positions against its trigger',
-      schemaGap: 'component-concern.schema.json — no positioning-engine concept',
-      platforms: { react: 'useTooltipPosition.ts' },
-      regenerationRisk: 'low — hook beside the scaffold',
+      schemaGap: {
+        path: 'component-concern.schema.json#/definitions/ComponentVariantsDocument',
+        need: 'no positioning-engine concept exists, so no authored surface can state it',
+      },
+      platforms: ['react'],
+      checkedBy: 'manual',
     };
 
     it('passes a well-formed supplemental.yaml', () => {
@@ -322,6 +333,98 @@ describe('specs validate', () => {
       });
       const errors = errorsOf(runValidate({ specsPath: specsDir }).findings);
       expect(errors.some(f => f.file === 'supplemental.yaml' && f.path.includes('schemaGap'))).toBe(true);
+    });
+
+    it('rejects a string schemaGap — the experimental contract\'s shape', () => {
+      writeSpec('components', 'badge', {
+        ...validSpec(),
+        supplemental: { events: [{ intent: 'x', schemaGap: 'styles.schema.json' }] },
+      });
+      const errors = errorsOf(runValidate({ specsPath: specsDir }).findings);
+      expect(errors.some(f => f.file === 'supplemental.yaml' && f.path.includes('schemaGap'))).toBe(true);
+    });
+
+    it('rejects `web` named beside a web leaf', () => {
+      writeSpec('components', 'badge', {
+        ...validSpec(),
+        supplemental: { motion: [{ ...entry, platforms: ['web', 'react'] }] },
+      });
+      const errors = errorsOf(runValidate({ specsPath: specsDir }).findings);
+      expect(errors.some(f => f.file === 'supplemental.yaml' && f.path.includes('platforms'))).toBe(true);
+    });
+
+    it('requires checks when checkedBy is automated', () => {
+      writeSpec('components', 'badge', {
+        ...validSpec(),
+        supplemental: { motion: [{ ...entry, checkedBy: 'automated' }] },
+      });
+      expect(errorsOf(runValidate({ specsPath: specsDir }).findings).length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('guidelines document', () => {
+    const rule = {
+      statement: 'Use a badge for a value that changes while on screen.',
+      level: 'must-not',
+      alternatives: [{ to: 'liveRegion' }],
+    };
+
+    it('passes a well-formed guidelines.yaml', () => {
+      writeSpec('components', 'badge', { ...validSpec(), guidelines: { slotComposition: [rule] } });
+      expect(runValidate({ specsPath: specsDir }).findings).toEqual([]);
+    });
+
+    it('rejects an obligation level outside the RFC 2119 set', () => {
+      writeSpec('components', 'badge', {
+        ...validSpec(),
+        guidelines: { styles: [{ statement: 'x', level: 'never' }] },
+      });
+      const errors = errorsOf(runValidate({ specsPath: specsDir }).findings);
+      expect(errors.some(f => f.file === 'guidelines.yaml' && f.path.includes('level'))).toBe(true);
+    });
+
+    it('rejects an entry carrying a schemaGap — that is the other document\'s gate', () => {
+      writeSpec('components', 'badge', {
+        ...validSpec(),
+        guidelines: { styles: [{ ...rule, schemaGap: { path: 'a', need: 'b' } }] },
+      });
+      expect(errorsOf(runValidate({ specsPath: specsDir }).findings).length).toBeGreaterThan(0);
+    });
+
+    it('rejects a per-token table — a rules document holds rules', () => {
+      writeSpec('components', 'badge', {
+        ...validSpec(),
+        guidelines: { useWhen: [{ $token: 'DE Color/Text/Primary', $description: 'body text' }] },
+      });
+      const errors = errorsOf(runValidate({ specsPath: specsDir }).findings);
+      expect(errors.some(f => f.file === 'guidelines.yaml' && f.path.includes('useWhen'))).toBe(true);
+    });
+
+    // A foundation's sections are their own vocabulary (ADR-118, amended). The
+    // schema admits both key sets and rejects a document mixing them; the two
+    // shared keys discriminate neither, so the path is what says which scope.
+    it('accepts foundation concern keys', () => {
+      writeSpec('components', 'badge', {
+        ...validSpec(),
+        guidelines: { color: [rule], elevation: [{ statement: 'x', level: 'must' }] },
+      });
+      expect(runValidate({ specsPath: specsDir }).findings).toEqual([]);
+    });
+
+    it('rejects a document mixing the two vocabularies', () => {
+      writeSpec('components', 'badge', {
+        ...validSpec(),
+        guidelines: { accessibility: [rule], color: [rule] },
+      });
+      expect(errorsOf(runValidate({ specsPath: specsDir }).findings).length).toBeGreaterThan(0);
+    });
+
+    it('accepts a document using only the two shared keys', () => {
+      writeSpec('components', 'badge', {
+        ...validSpec(),
+        guidelines: { layout: [rule], motion: [rule] },
+      });
+      expect(runValidate({ specsPath: specsDir }).findings).toEqual([]);
     });
   });
 });

@@ -1,5 +1,8 @@
 # supplemental.yaml — what this component needs beyond what the spec can carry
-# (experimental contract: packages/cli validate/supplemental.schema.json)
+# Contract: @directededges/specs-schema/schema/supplemental (ADR-118)
+#
+# Audience: whoever BUILDS the component. What someone USING it must observe
+# goes in guidelines.yaml beside this file — never here.
 #
 # Overlay-only. Every entry names the schema path that cannot carry it; if the
 # schema CAN carry it, it belongs in the spec, and validation of this file does
@@ -7,22 +10,32 @@
 # transfers directly to a test-case criterion. No rationale prose.
 #
 # Sections (all optional, nothing else allowed): anatomy, props, styles,
-# slotComposition, events, accessibility, behavior, motion, layout, guidelines.
+# slotComposition, events, accessibility, behavior, motion, layout, overrides,
+# naming.
 #
 # Entry fields:
-#   intent            required — one testable sentence of what must be true
-#   schemaGap         required — the path that would carry it and why it cannot
-#   platforms         optional — platform → the file that platform LOADS, relative to
-#                     the component's folder in that platform tree; absent while pending.
-#                     LOAD-BEARING: the emitter redirects its stories to an authored
-#                     component.* only when an entry names it here — an undeclared
-#                     authored file sits beside the scaffold and never runs
-#   regenerationRisk  optional — what a re-emit could break and how to re-check;
-#                     update after every regeneration
+#   intent      required — one testable sentence of what must be true
+#   schemaGap   required — an object: { path, need }. `path` takes a JSON Schema
+#               pointer, or any workspace-relative target when the gap is in the
+#               library's own data (a motion token that does not exist is a gap
+#               in analysis/foundations.yaml, not in styles.schema.json)
+#   platforms   optional — a LIST of platforms this applies to: react,
+#               webcomponents, web (both web targets), ios, android. Absent
+#               means every platform. `web` may not sit beside either web leaf.
+#               It carries NO file path: an emitter finds an authored
+#               component.tsx / component.ts by NAME, beside the scaffold it
+#               generates, so nothing here declares it
+#   checkedBy   optional — automated | assisted | manual
+#   checks      optional — what does the checking, as { to } inside the
+#               workspace or { href } outside it. Required under `automated`
+#
+# An optional `meta` block takes concern, status (proposed | ratified |
+# deprecated), author, updated and sources.
 
 behavior:
   - intent: <one testable sentence, e.g. "Tooltip positions against its trigger and flips at viewport edges">
-    schemaGap: <e.g. "component-concern.schema.json#/definitions/ComponentVariantsDocument — no positioning-engine concept">
-    platforms:
-      react: <e.g. useTooltipPosition.ts>
-    regenerationRisk: <e.g. "low — custom hook beside the scaffold; re-check the scaffold import after re-emit">
+    schemaGap:
+      path: <e.g. component-concern.schema.json#/definitions/ComponentVariantsDocument>
+      need: <e.g. "no positioning-engine concept exists, so no authored surface can state it">
+    platforms: [react]
+    checkedBy: manual

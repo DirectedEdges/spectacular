@@ -76,3 +76,31 @@ export type { SlotContentRef } from './SlotContentRef.js';
 
 // Conditional types
 export type { Conditional, ConditionExpression, ConditionArgs } from './Conditional.js';
+
+// The two authored documents beside a spec (ADR-118). Siblings, with no parent
+// concept above them — each declares its own header, verification and
+// reference types rather than sharing one.
+export type {
+  SupplementalDocument,
+  FoundationSupplementalDocument,
+  SupplementalEntry,
+  SupplementalMeta,
+  SupplementalStatus,
+  SupplementalConcern,
+  SupplementalCheckedBy,
+  SupplementalCheck,
+  SchemaGap,
+  Platform,
+  FoundationConcern,
+} from './SupplementalDocument.js';
+export type {
+  GuidelinesDocument,
+  FoundationGuidelinesDocument,
+  GuidelineEntry,
+  GuidelinesMeta,
+  GuidelinesStatus,
+  GuidelinesConcern,
+  GuidelinesCheckedBy,
+  GuidelineReference,
+  ObligationLevel,
+} from './GuidelinesDocument.js';

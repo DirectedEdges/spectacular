@@ -133,7 +133,7 @@ Invoke the highest-level skill that covers the task; each one loads its own prer
 | Author a new component spec | `specs-cli.component.author` |
 | Author a composition spec | `specs-cli.authoring.primer` + its `references/slots-layout.md` §Compositions, with `component.author`'s validate loop — a dedicated `composition.author` skill is pending |
 | Author anything by hand — read this first | `specs-cli.authoring.primer` (rules and references ride it) |
-| Synthesize or revise a foundations guidance file (`specs/foundations/<concern>.yaml`) — only when explicitly asked | `specs-cli.guidelines.propose` |
+| Synthesize or revise a foundations guidance file (`specs/foundations/<concern>/guidelines.yaml`) — only when explicitly asked | `specs-cli.guidelines.propose` |
 | Propose / apply behavior roles | `specs-cli.roles.propose`, `specs-cli.roles.apply` |
 | Configure states or icon conventions | `specs-cli.states.setup`, `specs-cli.icons.setup` |
 | Pre-merge a library update | `specs-cli.premerge` |

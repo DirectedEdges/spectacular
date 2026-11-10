@@ -7,7 +7,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
 import { concernValidators, describeAjvError, isMissingSourceError, type ConcernName } from './schemas.js';
-import { supplementalValidator } from './supplemental.js';
+import {
+  authoredFilesIn,
+  authoredValidator,
+  workspaceAuthoredFiles,
+  type AuthoredFile,
+} from './authored.js';
 import { checkReferences, type ParsedSpec, type WorkspaceIndex } from './references.js';
 import { loadTokenIndex, type TokenIndex } from './tokens.js';
 import { resolveSpecsLayout, SPEC_KINDS, type SpecKind } from '../utilities/specsLayout.js';
@@ -180,40 +185,21 @@ export function runValidate(options: ValidateOptions): ValidateResult {
         collectResolvedTokens(parsed, name, options.tokenValues, resolved);
       }
 
-      // The supplemental sidecar, when present — shape only (experimental contract).
-      const suppEntry = fs.readdirSync(dir).sort().find(f => /^supplemental\.ya?ml$/.test(f));
+      // The two authored documents, when present (ADR-118). Both are hand-written,
+      // so neither is required and an absent one is ordinary.
       let supplementalDoc: unknown;
-      if (suppEntry) {
-        try {
-          const doc = yaml.parse(fs.readFileSync(path.join(dir, suppEntry), 'utf8'));
-          supplementalDoc = doc;
-          const validate = supplementalValidator();
-          if (!validate(doc) && validate.errors) {
-            const seen = new Set<string>();
-            for (const err of validate.errors) {
-              const { path: errPath, message } = describeAjvError(err);
-              const line = `${errPath}|${message}`;
-              if (seen.has(line)) continue;
-              seen.add(line);
-              findings.push({ kind, spec: name, file: suppEntry, path: errPath, message, level: 'error' });
-            }
-          }
-        } catch (e) {
-          findings.push({
-            kind, spec: name, file: suppEntry, path: '/',
-            message: `not parseable as YAML: ${(e as Error).message.split('\n')[0]}`,
-            level: 'error',
-          });
-        }
+      for (const location of authoredFilesIn({ dir, label: '' })) {
+        const doc = validateAuthored(location, findings, kind, name);
+        if (location.kind === 'supplemental') supplementalDoc = doc;
       }
 
-      // An authored platform file nothing loads: the emitters pick up an authored
-      // component.* only when a supplemental entry declares it under platforms.<tree>,
-      // so an undeclared file sits dead beside the scaffold while everything reports
-      // clean. Warn per undeclared authored file.
+      // An authored platform file nothing loads. The emitters pick up `component.tsx`
+      // / `component.ts` by convention, so those are never dead; anything else beside
+      // the scaffold is reached only if one of them imports it, and the sidecar's
+      // `checks` pointers are the only place that records such a dependency.
       if (kind === 'component') {
-        for (const w of undeclaredAuthoredFiles(name, supplementalDoc, options.workspaceDir ?? path.dirname(path.resolve(options.specsPath)))) {
-          findings.push({ kind, spec: name, file: suppEntry ?? 'supplemental.yaml', path: '/platforms', message: w, level: 'warning' });
+        for (const w of unreachableAuthoredFiles(name, supplementalDoc, options.workspaceDir ?? path.dirname(path.resolve(options.specsPath)))) {
+          findings.push({ kind, spec: name, file: 'supplemental.yaml', path: '/checks', message: w, level: 'warning' });
         }
       }
 
@@ -228,6 +214,14 @@ export function runValidate(options: ValidateOptions): ValidateResult {
         });
       }
     }
+  }
+
+  // The authored documents outside a spec folder: the catalogue scope
+  // (`components/`) and one per foundation concern. Validated on every run
+  // rather than per requested spec, because an entry at a broader scope applies
+  // to specs this run may not have been asked about (DSPEC-56).
+  for (const location of workspaceAuthoredFiles(path.resolve(options.specsPath))) {
+    validateAuthored(location, findings, 'component', location.label);
   }
 
   findings.sort((a, b) =>
@@ -274,12 +268,38 @@ const EMITTED_FILES: Record<string, ReadonlySet<string>> = {
   webcomponents: new Set(['api.ts', 'contract.ts', 'host.css', 'light.css', 'scaffold.ts', 'stories.ts']),
 };
 
-/** Authored files in the component's platform folders that no supplemental entry declares. */
-function undeclaredAuthoredFiles(componentKey: string, supplemental: unknown, workspaceDir: string): string[] {
-  // Accounted-for means mentioned anywhere in the sidecar: `platforms.<tree>`
-  // declarations are the loaders, and files those loaders import (a stylesheet)
-  // are noted in prose like `regenerationRisk` — both count. Only a file the
-  // sidecar never mentions is plausibly dead.
+/**
+ * The conventional authored entry point per platform tree. An emitter looks for
+ * this name beside the scaffold it generates and imports it in place of the
+ * scaffold when present, so a file under this name is never unreachable.
+ *
+ * These names are the transform packages' convention, declared in
+ * `from-specs`'s `naming.ts` as `REACT_FILES.authored` and
+ * `WEBCOMPONENT_FILES.authored`. Restated here because this repo cannot import
+ * them, and a disagreement would make the check warn about a file that loads
+ * perfectly well.
+ */
+const AUTHORED_ENTRY_POINTS: Record<string, ReadonlySet<string>> = {
+  react: new Set(['component.tsx']),
+  webcomponents: new Set(['component.ts']),
+};
+
+/**
+ * Authored platform files that nothing appears to reach.
+ *
+ * The premise changed with ADR-118. `platforms` used to map a platform to the
+ * authored file implementing an entry, and this check read those paths as the
+ * record of what loads what. It no longer carries paths — and the emitters never
+ * read them anyway, which is why D5 removed the field: an authored
+ * `component.tsx` wins over the scaffold because of its *name*, not because a
+ * sidecar entry declared it.
+ *
+ * So a conventional entry point is always reachable. Any other authored file is
+ * reached only if an entry point imports it, and the sidecar's `checks` pointers
+ * are the one place that records such a dependency — which makes this a weaker
+ * check than it was, and a warning rather than an error.
+ */
+function unreachableAuthoredFiles(componentKey: string, supplemental: unknown, workspaceDir: string): string[] {
   const mentioned: string[] = [];
   const collectStrings = (node: unknown): void => {
     if (typeof node === 'string') { mentioned.push(node); return; }
@@ -287,19 +307,55 @@ function undeclaredAuthoredFiles(componentKey: string, supplemental: unknown, wo
     if (node && typeof node === 'object') for (const value of Object.values(node)) collectStrings(value);
   };
   collectStrings(supplemental);
-  const accounted = (file: string): boolean => mentioned.some(s => s.includes(file));
+  const mentionedAnywhere = (file: string): boolean => mentioned.some(s => s.includes(file));
   const folder = componentKey.charAt(0).toUpperCase() + componentKey.slice(1);
   const warnings: string[] = [];
   for (const [tree, emitted] of Object.entries(EMITTED_FILES)) {
     const dir = path.join(workspaceDir, tree, 'src', 'components', folder);
     if (!fs.existsSync(dir)) continue;
+    const entryPoints = AUTHORED_ENTRY_POINTS[tree] ?? new Set<string>();
     for (const file of fs.readdirSync(dir).sort()) {
       if (emitted.has(file)) continue;
+      if (entryPoints.has(file)) continue;
       if (!fs.statSync(path.join(dir, file)).isFile()) continue;
-      if (!accounted(file)) {
-        warnings.push(`authored file ${tree}/src/components/${folder}/${file} is loaded by nothing — no supplemental entry declares it under platforms.${tree}`);
+      if (!mentionedAnywhere(file)) {
+        warnings.push(
+          `authored file ${tree}/src/components/${folder}/${file} may be unreachable — only ${[...entryPoints].join(' or ')} is loaded by convention, and no supplemental entry mentions this file`
+        );
       }
     }
   }
   return warnings;
+}
+
+/** Shape-check one authored document, recording any failure as a finding. */
+function validateAuthored(
+  location: AuthoredFile,
+  findings: Finding[],
+  kind: SpecKind,
+  spec: string,
+): unknown {
+  let doc: unknown;
+  try {
+    doc = yaml.parse(fs.readFileSync(location.file, 'utf8'));
+  } catch (e) {
+    findings.push({
+      kind, spec, file: location.fileLabel, path: '/',
+      message: `not parseable as YAML: ${(e as Error).message.split('\n')[0]}`,
+      level: 'error',
+    });
+    return undefined;
+  }
+  const validate = authoredValidator(location.kind);
+  if (!validate(doc) && validate.errors) {
+    const seen = new Set<string>();
+    for (const err of validate.errors) {
+      const { path: errPath, message } = describeAjvError(err);
+      const line = `${errPath}|${message}`;
+      if (seen.has(line)) continue;
+      seen.add(line);
+      findings.push({ kind, spec, file: location.fileLabel, path: errPath, message, level: 'error' });
+    }
+  }
+  return doc;
 }
