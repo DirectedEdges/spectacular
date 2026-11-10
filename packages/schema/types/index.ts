@@ -28,6 +28,7 @@ export type { InstanceExample, InstanceExamples, InstanceExampleConfigurationVal
 
 // Element and structure types
 export type { Element, Elements, ElementType, ElementExtensions, FigmaElementExtension } from './Element.js';
+export type { Overrides, Override, ElementOverrides, ElementOverride } from './Override.js';
 export type { Layout, LayoutNode, LayoutBranch } from './Layout.js';
 export type { Children, SlotBinding } from './Children.js';
 export type { SlotContent, SlotContentMap } from './SlotContent.js';

@@ -394,6 +394,7 @@ export default defineConfig({
                 { label: 'keys', slug: 'settings/keys' },
                 { label: 'layout', slug: 'settings/layout' },
                 { label: 'Output', slug: 'settings/output' },
+                { label: 'overrides', slug: 'settings/overrides' },
                 { label: 'promotePrimitives', slug: 'settings/promote-primitives' },
                 { label: 'sources', slug: 'settings/data-sources' },
                 { label: 'tokens', slug: 'settings/tokens', badge: pro },

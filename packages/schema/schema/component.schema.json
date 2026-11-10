@@ -989,9 +989,65 @@
         "propConfigurations": {
           "$ref": "#/definitions/PropConfigurations"
         },
+        "overrides": {
+          "$ref": "#/definitions/Overrides",
+          "description": "Style patches reaching inside the component this element instances, applied after that component resolves its own variants and state. Meaningful only alongside instanceOf; the two keys are uncoupled here because the names an entry may use come from the instanced component's own anatomy, which no schema can reach from this document. (ADR-119)"
+        },
         "$extensions": {
           "$ref": "#/definitions/ElementExtensions",
           "description": "Platform extensions; com.figma carries capture provenance."
+        }
+      },
+      "additionalProperties": false
+    },
+    "Overrides": {
+      "type": "array",
+      "description": "Ordered style patches an instance element applies inside the component it instances. Entries layer in order, the later winning per style key, the way variants layer over the default. (ADR-119)",
+      "examples": [[{ "elements": { "icon": { "styles": { "fillColor": "#1B1B1BFF" } } } }]],
+      "items": {
+        "$ref": "#/definitions/Override"
+      }
+    },
+    "Override": {
+      "type": "object",
+      "description": "One patch over the instanced component's own elements, applied after that component has resolved its variants and interaction state.",
+      "examples": [{ "configuration": { "state": "hover" }, "elements": { "icon": { "styles": { "fillColor": "#FFFFFFFF" } } } }],
+      "properties": {
+        "configuration": {
+          "$ref": "#/definitions/PropConfigurations",
+          "description": "Resolved prop values of the instanced component this entry applies under. Absent applies the entry at every configuration rather than at the base one, so an unscoped patch survives the instanced component's own state rules rather than being beaten by them."
+        },
+        "elements": {
+          "$ref": "#/definitions/ElementOverrides"
+        }
+      },
+      "required": ["elements"],
+      "additionalProperties": false
+    },
+    "ElementOverrides": {
+      "type": "object",
+      "description": "Per-element patches, keyed by the names the instanced component's own anatomy uses. That component's root is addressable here; which of its properties take effect as the instance's own placement instead is declared per platform, not in this contract.",
+      "examples": [{ "background": { "styles": { "backgroundColor": "#FFFFFFFF" } } }],
+      "additionalProperties": {
+        "$ref": "#/definitions/ElementOverride"
+      }
+    },
+    "ElementOverride": {
+      "type": "object",
+      "description": "What one element of the instanced component may have patched.",
+      "examples": [{ "styles": { "fillColor": "#1B1B1BFF" } }],
+      "properties": {
+        "styles": {
+          "$ref": "#/definitions/Styles",
+          "description": "Style values to apply over the element's resolved styles. Only a property styles.schema.json annotates overridable: true may be set; the annotation carries that bound rather than this definition."
+        },
+        "content": {
+          "type": "string",
+          "description": "Replacement content for a text or glyph element. Static only — a PropBinding is not accepted, because an override describes a documented instance rather than a live data flow."
+        },
+        "overrides": {
+          "$ref": "#/definitions/Overrides",
+          "description": "Patches for the component this element instances, where the element is itself an instance. Recursion follows instance boundaries only, matching the $nested path rule. (ADR-052)"
         }
       },
       "additionalProperties": false

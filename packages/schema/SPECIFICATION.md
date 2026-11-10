@@ -205,6 +205,24 @@ An `InstanceExample` configuration value is the deliberate subset without `PropB
 
 `default` is the base variant; each entry in `variants` layers over it. A variant's `elements` override the default's per element and per style key; absent means inherited (schema: `component.schema.json`). The `null`-unset rule (§4.2) is what makes an explicit removal expressible under layering.
 
+### 4.4a Override layering
+
+`Element.overrides` carries style patches over the elements of the component the element instances. An override layer sits **above** the whole of that component's own resolution: a consumer resolves the instanced component's variants (§4.4) and interaction state first, then applies the override (`consumer`, DSPEC-56).
+
+`overrides` is meaningful only on an element that also carries `instanceOf` — only an instance has internals to patch. The schema does not couple the keys, because the element names an entry may use come from the instanced component's own `anatomy`, which the document holding the override cannot reach (DSPEC-57).
+
+Entries layer in order, the later winning per style key. An entry whose `configuration` is absent applies at **every** resolved configuration of the instanced component, not at the base one; an entry carrying a `configuration` applies only where that component's resolved prop values match it (`consumer`, DSPEC-58). The two readings differ materially: an absent `configuration` means the patch outranks the instanced component's own state rules rather than being layered beneath them.
+
+An override key MAY name the instanced component's root. The instance's own `styles` and a root override can therefore describe one node, and which of that node's properties each carries is declared in the platform style mappings (§11) rather than here (DSPEC-59).
+
+Recursion follows instance boundaries only: an `ElementOverride` carries its own `overrides` where its element is itself an instance, and never descends a container or group — the same addressing rule `$nested` paths follow (§5.4, DSPEC-60).
+
+Which properties an entry may set is declared per property, as a positive grant: a `Styles` property an override may set carries `overridable: true`, and an override MUST NOT set a property where the annotation is absent (DSPEC-61). Absence is the default, so a property added to `Styles` is not overridable until it is granted.
+
+The annotation is declared on the top-level properties only. A member of a composite style value — `cornerRadius.topStart`, `typography.fontSize` — takes its parent property's grant, the same way §4.1b resolves a member's `default` (DSPEC-61).
+
+Whether a run deals in overrides at all is `Settings.spec.overrides`, defaulting to `true`. Under `false` a producer emits none and a consumer applies none (DSPEC-63). It governs behaviour, not validity: a document carrying `overrides` is valid under either value, and nothing in the JSON Schema changes with the setting. A producer MUST NOT emit an override property the element's resolved layout makes inert — `itemSpacing` on an absolutely positioned element changes nothing — so an entry's presence states that it matters (`producer`, DSPEC-62).
+
 ### 4.5 Closed value sets
 
 A value whose admitted values are a fixed, known list is a **closed value set**.
@@ -419,6 +437,14 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-53 | A required member of a `Styles` composite type declares no `default` | package | §4.1b, ADR-116 |
 | DSPEC-54 | A frame is an image asset only when its name matches `images.match` and it is a direct child of a page, or of a section that is itself a direct page child; a match at any other depth is not an asset | producer | conventions reference, ADR-117 |
 | DSPEC-55 | A declared `images.component` requires a non-empty `images.sourceProps`, whose first entry is that component's own source prop | validator | conventions reference, ADR-077/117 |
+| DSPEC-56 | An override layer applies after the instanced component has resolved its own variants and interaction state, never before | consumer | §4.4a, ADR-119 |
+| DSPEC-57 | `overrides` appears only on an element that also carries `instanceOf`, and its keys name elements in that component's `anatomy` | validator | §4.4a, ADR-119 |
+| DSPEC-58 | An override entry with no `configuration` applies at every resolved configuration; one carrying a `configuration` applies only where the instanced component's resolved props match it | consumer | §4.4a, ADR-119 |
+| DSPEC-59 | Where an instance's `styles` and a root override name the same property, the platform style mapping decides which carries it | consumer | §4.4a/§11, ADR-119 |
+| DSPEC-60 | An `ElementOverride` recurses only through an element that is itself an instance, never through a container or group | validator | §4.4a, ADR-119 |
+| DSPEC-61 | An override sets only a `Styles` property annotated `overridable: true`; a composite member inherits its parent property's grant | validator | §4.4a, ADR-119 |
+| DSPEC-62 | A producer omits an override property the element's resolved layout makes inert | producer | §4.4a, ADR-119 |
+| DSPEC-63 | Under `spec.overrides: false` a producer emits no `overrides` and a consumer applies none; a document carrying them stays valid either way | producer | §4.4a, ADR-119 |
 
 Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.
 

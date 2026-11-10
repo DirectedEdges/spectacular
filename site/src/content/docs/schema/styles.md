@@ -74,6 +74,24 @@ The Default column is the value a property is treated as having when absent — 
 
 Element-type applicability (`container`/`text`/`glyph`/`vectors`/`line`) moves to per-property pages once those exist.
 
+## Overridable
+
+A property a caller may patch through [`Element.overrides`](/schema/elements/#overrides) carries `overridable: true` in `styles.schema.json`. The annotation is a positive grant, so **absence means not overridable** — and a property added to `Styles` later is not patchable until it is granted. It is a fact about the contract rather than about any one transform, so both Figma directions, both code emitters and the shared resolution core read the same declaration.
+
+41 of the 46 properties are overridable. The five that are not are the declarations that constitute the element's own layout, where a caller changing them from outside is redesigning the component rather than patching it:
+
+| Not overridable | Why |
+|---|---|
+| `layoutMode` | Whether the element stacks its children, and along which axis |
+| `primaryAxisSizingMode` | Whether the stacking axis sizes to its contents or to a fixed value |
+| `position` | Whether the element is placed by its parent's layout or its own offsets |
+| `wrap` | Whether children continue onto another line |
+| `locked` | Canvas editing state, not presentation |
+
+A member of a composite value — `cornerRadius.topStart`, `typography.fontSize` — takes its parent property's grant, the way it takes its parent's `default`.
+
+The annotation declares the static half of the question. A property can be overridable in principle and inert in a given place — `itemSpacing` changes nothing on an absolutely positioned element — and that relevance is resolved against the element's own layout at generation, not declared here.
+
 ## ContentStyles
 
 A second style type, carried by [`Element.contentStyles`](/schema/elements/#styles-vs-content-styles). `Styles` describes an element's own appearance; `ContentStyles` describes the appearance of primitive content *filling* it.

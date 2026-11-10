@@ -183,6 +183,23 @@ export interface Settings {
     emptyVariants?: boolean;
     /** Include slot content examples in output (ADR-050). Optional; defaults to false. @since 0.21.0 */
     defaultSlotContent?: boolean;
+    /**
+     * Instance elements carry `overrides` — the style patches a placed instance applies
+     * inside the component it instances (ADR-119).
+     *
+     * One choice read at every boundary: generation emits them, render applies them, the
+     * code emitters honour them. A workspace that sets `false` states that it does not
+     * use overrides, and each direction skips them rather than each deciding separately.
+     *
+     * Distinct from the `overridable` annotation in `styles.schema.json`, which declares
+     * *which properties* an override may set. That is a fact about the contract and the
+     * same everywhere; this is a choice a run makes.
+     *
+     * Optional; defaults to true.
+     *
+     * @since 0.40.0
+     */
+    overrides?: boolean;
     /** Write one file per component rather than a single combined library file. Optional; defaults to true. */
     splitComponents?: boolean;
     /** Write one file per concern (api, styling, variants) rather than a single component file. Optional; defaults to true. */
@@ -258,6 +275,8 @@ export interface ResolvedSettings {
     emptyVariants: boolean;
     /** Include slot content examples in output. */
     defaultSlotContent: boolean;
+    /** Instance elements carry the style patches they apply inside the component they instance. */
+    overrides: boolean;
     /** Write one file per component rather than a single combined library file. */
     splitComponents: boolean;
     /** Write one file per concern (api, styling, variants) rather than a single component file. */
@@ -292,6 +311,8 @@ export interface ResolvedSettings {
  * - spec.invalidCombinations: true helps designers identify property conflicts
  * - spec.emptyVariants: false reduces output size by excluding semantically empty layered variants
  * - spec.defaultSlotContent: false — opt-in (ADR-050); off by default so unannotated components are unchanged
+ * - spec.overrides: true — the data was always in the Figma file and was being discarded;
+ *   a library that genuinely does not use overrides pays only an empty result (ADR-119)
  * - curation.defaultSelection: READY_FOR_DEV — a library that marks readiness is stating what it
  *   wants consumed; one that marks nothing falls back to every set and standalone component
  * - curation.preserveManualSelections: true — a selection is recorded so a human can correct it,
@@ -324,6 +345,7 @@ export const DEFAULT_SETTINGS: ResolvedSettings = {
     invalidCombinations: true,
     emptyVariants: false,
     defaultSlotContent: false,
+    overrides: true,
     splitComponents: true,
     splitConcerns: true,
     useSubfolders: true,

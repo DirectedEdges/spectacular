@@ -4,6 +4,7 @@ import { PropConfigurations } from "./PropConfigurations.js";
 import { PropBinding } from "./PropBinding.js";
 import { SubcomponentRef } from "./Anatomy.js";
 import { SlotContentRef } from "./SlotContentRef.js";
+import { Overrides } from "./Override.js";
 
 /**
  * Represents elements within a component.
@@ -41,6 +42,13 @@ export type Element = {
   instanceOf?: string | PropBinding | SubcomponentRef;
   /** The content for content-bearing elements: text string for text elements, glyph name for glyph elements, or a PropBinding reference. */
   content?: string | PropBinding;
+  /**
+   * Style patches reaching inside the component `instanceOf` names, applied after
+   * that component resolves its own variants and state. Meaningful only alongside
+   * `instanceOf` (ADR-119).
+   * @since 0.40.0
+   */
+  overrides?: Overrides;
   /** Platform extensions; `com.figma` carries capture provenance. @since 0.32.0 */
   $extensions?: ElementExtensions;
 };
