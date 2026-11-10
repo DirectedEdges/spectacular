@@ -35,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Authoring rules and `component.author` sharpened from the first eg marathon round: prop-shaped requirements (semantic tag, accessibility label) route to **code-only props**, never hand-authored platform files, with closed vocabularies as enums; code-only container and sub-layer names are config lookups (`figma.yaml` `codeOnlyProps.match` + `naming`), not judgment; `default` vs `examples` purposes stated (Figma renders `examples`; `default` is encoded in the component); FILL on a component root documented as consumer-context intent (captured via the `sizingHorizontal`/`sizingVertical` Dev Mode annotations); conventions lead the correlation step; a foundations-guideline-shaped guess may be drafted via `guidelines.propose` in the same pass
+
 ### Fixed
 
 - **Storybook shows components emitted after the server started.** The scaffold's story globs were guarded by `fs.existsSync` on the platform trees, so a server that booted before the first emit silently never registered any component — `storybook publish` reported current and validation passed while the sidebar stayed empty. The globs are now unconditional and `specs storybook init` creates the platform story directories so they are valid at boot. Re-run `specs storybook init --force` in an existing workspace to pick up the new `main.ts`

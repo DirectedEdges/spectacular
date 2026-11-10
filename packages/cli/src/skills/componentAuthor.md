@@ -30,13 +30,13 @@ Before writing anything, restate every requirement from the request as a table:
 | … | supplemental | the schema path that *would* carry it and why it cannot |
 | … | guidelines | the obligation level it binds a consumer at |
 
-Rules: a requirement goes supplemental only after naming the schema path that cannot carry it; forcing into the spec what the schema cannot express is the worse failure. Sort by **who acts on it** — a thing the component must do is supplemental, a thing its caller must do is guidelines. This table is the plan — keep it, you grade against it in step 7.
+Rules: a requirement goes supplemental only after naming the schema path that cannot carry it; forcing into the spec what the schema cannot express is the worse failure. And before marking anything supplemental, check it is not a prop: a behavior the consumer configures in code — a semantic element choice, an accessibility label, a heading level — is a **code-only prop** in api.yaml (`rules/props.yaml · codeOnly`), not a hand-authored platform file; routing a prop to supplemental is a wrong-surface failure even when the overlay works. Sort by **who acts on it** — a thing the component must do is supplemental, a thing its caller must do is guidelines. This table is the plan — keep it, you grade against it in step 7.
 
 ## 2. Correlate against the catalogue
 
 Read, in order:
 
-1. `config/conventions/*.yaml` — the workspace's declared vocabulary: component naming, prop naming, platform idioms. A convention that names your component or its props settles the naming before anything else gets a vote; in an empty catalogue the conventions are the *only* place the system's vocabulary lives.
+1. `config/conventions/*.yaml` — the workspace's declared vocabulary: component naming, prop naming, platform idioms. A convention that names your component or its props settles the naming before anything else gets a vote; in an empty catalogue the conventions are the *only* place the system's vocabulary lives. `figma.yaml` in particular answers questions that otherwise read as judgment calls: `naming` (layer-name casing), `codeOnlyProps.match` (the code-only container layer), `glyphs` (icon naming), `images`, `subcomponents`, `instanceExamples`.
 2. The component folder list (`specs/components/`) — what exists to nest or emulate. The new component's folder key must not collide.
 3. `analysis/props.yaml` — the system's prop vocabulary. Reuse a prop name and its value set when the concept matches; never coin a synonym for a prop the system already has.
 4. `analysis/styling.byToken.yaml` and `analysis/styling.byComponent.yaml` — which tokens the system uses for which properties. Your token choices come from here.
@@ -101,3 +101,5 @@ End every pass with this summary, in this order. Keep unstructured narrative to 
 - One stats line: validate attempts per file; requirements spec-carried vs supplemental vs guidelines
 
 The Suggestions section is also a scope rule: an unprompted improvement is proposed there, never implemented in the same pass.
+
+**Foundations guidelines are the exception to waiting.** A guess that only a foundations guideline could have settled — which colors a concept may use, what a type scale's default is — names a missing `guidelines/<area>/<topic>`. Propose the topic in Suggestions, and you may go further: run `specs-cli.guidelines.propose` for it in the same pass. Its output is a proposal for the ratifier, not shipped behavior, so drafting one expands no scope — and the next component inherits a ruling instead of re-guessing.
