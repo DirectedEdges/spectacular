@@ -16,29 +16,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `SupplementalDocument` — the `supplemental.yaml` contract: what a component needs beyond the spec, for whoever builds it (ADR-118)
 - `GuidelinesDocument` — the `guidelines.yaml` contract: the rules whoever uses a component or foundation must observe (ADR-118)
-- `TokensDocument` — the `foundations/<concern>/tokens.yaml` contract: what each token is for, as `useWhen` and `dontUseWhen` tables (ADR-118)
 - `SupplementalEntry` — carries `intent`, a required `SchemaGap`, optional `platforms`, `checkedBy` and `checks`
 - `GuidelineEntry` — a DSDS 0.23.1 guideline item: `statement`, `level`, `alternatives`, `instead`, `refines`, `evidence`, `checkedBy`, `checks`
-- `TokenSubject` — a token's `$token` path and required `$description`, plus optional `alternatives` and `refs`
 - `SchemaGap` — typed as `{ path, need }`; `path` takes a JSON Schema pointer or any workspace-relative target
 - `ObligationLevel` — `'must' | 'should' | 'should-not' | 'must-not' | 'may'`, RFC 2119 semantics, each option naming the colloquial word it stands for
 - `SupplementalConcern` and `GuidelinesConcern` — the eleven section keys each document admits, adding `overrides` and `naming`
-- `SupplementalMeta`, `GuidelinesMeta` and `TokensMeta` — each document's own `concern`, `status`, `author`, `updated` and `sources`
+- `SupplementalMeta` and `GuidelinesMeta` — each document's own `concern`, `status`, `author`, `updated` and `sources`
 - `FoundationConcern` — `'color' | 'typography' | 'layout' | 'space' | 'shape' | 'elevation' | 'motion' | 'brand'`
 - `Platform` — `'react' | 'webcomponents' | 'web' | 'ios' | 'android'`; `web` expands and may not sit beside either web leaf
 - `SupplementalCheckedBy` and `GuidelinesCheckedBy` — `'automated' | 'assisted' | 'manual'`; `checks` is required under `automated`
-- `SupplementalCheck`, `GuidelineReference`, `TokenPointer` and `TokenRef` — each document's own reference shape: `to` inside the workspace or `href` outside it, never both
-- `schema/supplemental`, `schema/guidelines` and `schema/tokens` export subpaths
+- `SupplementalCheck` and `GuidelineReference` — each document's own reference shape: `to` inside the workspace or `href` outside it, never both
+- `schema/supplemental` and `schema/guidelines` export subpaths
 - `DSPEC-54` — an image asset is a pattern-matching frame on a page or in one of its sections
 - `DSPEC-55` — a declared `images.component` requires a non-empty `images.sourceProps`
-- `DSPEC-56` — sidecar entries at the catalogue and component scopes are additive, not overriding
-- `DSPEC-57` — a `Pointer.to` resolves to something that exists in the workspace
+- `DSPEC-56` — authored-document entries at the catalogue and component scopes are additive, not overriding
+- `DSPEC-57` — a reference's `to` resolves to something that exists in the workspace
 - `DSPEC-58` — a `schemaGap.path` that is a JSON Schema pointer resolves against the file it names
 - `DSPEC-59` — a DSDS exporter appends a guideline's `instead` to its `statement` rather than dropping it
 - `DSPEC-60` — a DSDS exporter derives a token's `id` from the workspace's `spec.tokens` profile
 - `DSPEC-61` — a DSDS exporter emits a token's original path as `name`, unmodified
 - `DSPEC-62` — a directory under `foundations/` is named from the foundation concern vocabulary
-- `DSPEC-63` — a `tokens.yaml` is written at the foundation scope only
+- `DSPEC-63` — a guidelines document carries rules only, and no per-token description table
 - `mappings/bindings/` is published. The binding data states which platform realises each style key and how, which is a fact about the contract and belongs with it. A consumer can now read it from the package rather than the repo (#837)
 - Every option of all 31 closed value sets — a description of what choosing it does (ADR-114)
 - `Styles` — `examples` on all 46 properties, each valid against its own property

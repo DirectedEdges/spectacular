@@ -5,9 +5,9 @@ description: "The supplemental.yaml file contract for what a component needs bey
 
 `supplemental.yaml` records what a component needs that the spec cannot carry — a press-scale transform, an `IntersectionObserver`, a conditional `aria-hidden`. Its audience is whoever builds the component.
 
-Every entry names the schema path that cannot carry it. That is what keeps the file small: anything the schema *can* carry belongs in the spec, and an entry that cannot name its gap is an entry in the wrong place. What a component's *user* must observe is [Guidelines](/schema/documents/guidelines/)'s subject, and what each token in a foundation is for is [Tokens](/schema/documents/tokens/)'s.
+Every entry names the schema path that cannot carry it. That is what keeps the file small: anything the schema *can* carry belongs in the spec, and an entry that cannot name its gap is an entry in the wrong place. What a component's *user* must observe is [Guidelines](/schema/documents/guidelines/)'s subject.
 
-All three are authored by hand. No run writes any of them, so none carries `metadata.source`; they carry `meta` instead, which records authorship and review status rather than Figma provenance. They are siblings with no parent kind above them, so each schema is self-contained and repeats the definitions the others declare.
+Both are authored by hand. No run writes either, so neither carries `metadata.source`; they carry `meta` instead, which records authorship and review status rather than Figma provenance. They are siblings with no parent kind above them, so each schema is self-contained and repeats the definitions the other declares.
 
 ## Scopes
 
@@ -85,6 +85,5 @@ motion:
 ## See Also
 
 - [Guidelines](/schema/documents/guidelines/) — the rules whoever uses a component or foundation must observe
-- [Tokens](/schema/documents/tokens/) — what each token in a foundation is for
 - [Component](/schema/component/) — the spec these sit beside
 - [Specification](/schema/specification/) — document kinds, and the rules a validator applies

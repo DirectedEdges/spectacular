@@ -7,10 +7,10 @@
  * the schema *can* carry belongs in the spec, and an entry that cannot name its
  * gap is an entry in the wrong file.
  *
- * This file is self-contained. `GuidelinesDocument` and `TokensDocument` declare
- * their own header, verification and reference types rather than sharing one
- * with this file: the three are siblings with no parent concept above them, and
- * a little duplication is the price of not inventing one.
+ * This file is self-contained. `GuidelinesDocument` declares its own header,
+ * verification and reference types rather than sharing one with this file: the
+ * two are siblings with no parent concept above them, and a little duplication
+ * is the price of not inventing one.
  *
  * Three scopes write this document, all with the same shape: one component
  * (`components/<component>/supplemental.yaml`), every component

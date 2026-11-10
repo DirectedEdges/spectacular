@@ -7,7 +7,9 @@ description: "The guidelines.yaml file contract for what a component's user must
 
 An entry carries an obligation level and no schema gap, which is the reverse of a supplemental entry. That is why the two are separate documents rather than one shape with everything optional.
 
-**Rules only.** At a foundation's scope that means how tokens, themes and raw values are applied across the catalogue. What any one token is *for* belongs in [Tokens](/schema/documents/tokens/), because a description is not a rule: it binds nobody. The two lived in one document and were separated when thirty-six token descriptions were found sitting above eleven rules, which is the order nobody reads them in.
+**Rules only.** At a foundation's scope that means how tokens, themes and raw values are applied across the catalogue — never a table of what each individual token is for. A description is not a rule: it binds nobody, and thirty-six token descriptions sitting above eleven rules is the order nobody reads them in.
+
+Where that per-token description belongs is not settled. No document kind carries it today, and the schema's position is only that this one does not.
 
 ## Relationship to DSDS
 
@@ -37,7 +39,7 @@ As with the supplemental document, the same shape is written at three scopes, an
 | `meta` | `GuidelinesMeta` | No | Authorship and review status for the document |
 | *concern key* | `GuidelineEntry[]` | No | One list of rules per concern — the same eleven concerns the supplemental document uses |
 
-Nothing else. `useWhen` and `dontUseWhen` are [Tokens](/schema/documents/tokens/)'s, and the schema rejects them here.
+Nothing else. `useWhen` and `dontUseWhen` are rejected — see **Rules only** above.
 
 ### GuidelineEntry
 
@@ -112,7 +114,6 @@ accessibility:
 
 ## See Also
 
-- [Tokens](/schema/documents/tokens/) — what each token in a foundation is for, which this document does not carry
 - [Supplemental](/schema/documents/supplemental/) — the requirements whoever builds a component must implement
 - [Component](/schema/component/) — the spec these sit beside
 - [Specification](/schema/specification/) — document kinds, and the rules a validator applies

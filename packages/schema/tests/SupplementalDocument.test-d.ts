@@ -95,7 +95,7 @@ const renamedConcern: SupplementalDocument = { configurations: [{ intent: 'x', s
 // @ts-expect-error — `swiftui` names a framework; the enum names emission targets.
 const framework: Platform = 'swiftui';
 
-// @ts-expect-error — selection guidance lives in the tokens document, never here.
+// @ts-expect-error — a per-token table is not a supplemental member either.
 const selection: SupplementalDocument = { useWhen: [] };
 
 export {

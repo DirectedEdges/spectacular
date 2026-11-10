@@ -53,7 +53,7 @@ const meta: GuidelinesMeta = {
 
 /**
  * A foundation's rules are about how values are applied across the catalogue —
- * not about what any one token is for, which is the tokens document's subject.
+ * not about what any one token is for, which no document kind carries yet.
  */
 const foundation: GuidelinesDocument = {
   meta,
@@ -93,7 +93,7 @@ const wrongField: GuidelineEntry = { intent: 'Keep a badge label short.', level:
 // @ts-expect-error — guidelines carry no `schemaGap`; the overlay-only gate is the other document's.
 const gated: GuidelineEntry = { statement: 'x', level: 'must', schemaGap: { path: 'a', need: 'b' } };
 
-// @ts-expect-error — per-token tables are the tokens document's, never a guidelines section.
+// @ts-expect-error — a per-token table is not a guidelines section; a rules document holds rules.
 const tokenTable: GuidelinesDocument = { useWhen: [{ $token: 'a', $description: 'b' }] };
 
 // @ts-expect-error — and neither is the off-limits table.

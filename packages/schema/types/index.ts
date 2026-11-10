@@ -77,8 +77,8 @@ export type { SlotContentRef } from './SlotContentRef.js';
 // Conditional types
 export type { Conditional, ConditionExpression, ConditionArgs } from './Conditional.js';
 
-// The three authored documents beside a spec (ADR-118). Siblings, with no
-// parent concept above them — each declares its own header, verification and
+// The two authored documents beside a spec (ADR-118). Siblings, with no parent
+// concept above them — each declares its own header, verification and
 // reference types rather than sharing one.
 export type {
   SupplementalDocument,
@@ -102,12 +102,3 @@ export type {
   GuidelineReference,
   ObligationLevel,
 } from './GuidelinesDocument.js';
-export type {
-  TokensDocument,
-  TokensMeta,
-  TokensStatus,
-  TokenSubject,
-  TokenPointer,
-  TokenRef,
-  TokenRefRelationship,
-} from './TokensDocument.js';

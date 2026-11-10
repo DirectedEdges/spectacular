@@ -9,9 +9,11 @@
  *
  * This document carries **rules only**. At a foundation's scope that means how
  * tokens, themes and raw values are applied across the catalogue — never a
- * per-token registry of what each token is for, which is `TokensDocument`'s
- * subject. A rule binds a reader; a token's purpose merely describes a thing,
- * and the two were conflated while this was one document.
+ * per-token registry of what each token is for. A rule binds a reader; a
+ * token's purpose merely describes a thing, and the two were conflated while
+ * they shared one document. Where that description belongs is not settled: no
+ * document kind carries it, and this schema's position is only that this one
+ * does not (ADR-118, D11).
  *
  * An entry is a guideline item as the Design System Documentation Specification
  * (DSDS) 0.23.1 defines one: `statement`, `level`, `checkedBy`, `checks`,

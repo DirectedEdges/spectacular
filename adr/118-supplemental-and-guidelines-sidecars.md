@@ -1,9 +1,9 @@
-# ADR: Three Authored Documents Beside a Spec — `supplemental.yaml`, `guidelines.yaml` and `tokens.yaml`
+# ADR: Two Authored Documents Beside a Spec — `supplemental.yaml` for Builders, `guidelines.yaml` for Consumers
 
 **Branch**: `118-supplemental-and-guidelines-sidecars`
 **Created**: 2026-11-09
 **Status**: DRAFT
-**Summary**: `SupplementalDocument`, `GuidelinesDocument` and `TokensDocument` join the concern documents as authored siblings, divided by what each states.
+**Summary**: `SupplementalDocument` and `GuidelinesDocument` join the concern documents as authored siblings, divided by who reads them.
 **Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none; promotes and splits the experimental CLI-defined `supplemental.schema.json`)*
@@ -450,13 +450,9 @@ specs/
 ├── foundations/
 │   ├── color/
 │   │   ├── guidelines.yaml         # authored — how colour is applied
-│   │   ├── tokens.yaml             # authored — what each colour token is for
 │   │   └── supplemental.yaml       # authored — e.g. no motion token exists
-│   ├── typography/
-│   │   ├── guidelines.yaml         # authored
-│   │   └── tokens.yaml             # authored
-│   └── space/
-│       └── tokens.yaml             # authored — a scale needs no rules yet
+│   └── typography/
+│       └── guidelines.yaml         # authored
 └── components/
     ├── guidelines.yaml             # authored — every component
     ├── supplemental.yaml           # authored — every component
@@ -471,9 +467,9 @@ specs/
         └── …
 ```
 
-A foundation directory holds the same filenames a component directory does, plus `tokens.yaml`, which is foundation-only (DSPEC-63). That is the symmetry the suffixed form in Option B gave up.
+A foundation directory holds exactly the same two filenames a component directory does, which is the symmetry the suffixed form in Option B gave up.
 
-Two things the tree is meant to show. Only concerns a system has something to say about get a directory — eight are available and three exist here, because nothing has been written about shape, elevation, brand, motion or layout yet, and an absent directory is not a gap to fill. And within a directory, each file is independent: `space/` has token descriptions and no rules because the scale needs none yet, while `color/` has all three.
+Two things the tree is meant to show. Only concerns a system has something to say about get a directory — eight are available and two exist here, because nothing has been written about space, shape, elevation, brand, motion or layout yet, and an absent directory is not a gap to fill. And within a directory each file is independent: `typography/` carries rules and no builder requirements, while `color/` carries both.
 
 **Pros**:
 - A rule true of every component is stated once. `image`'s and `icon`'s `accessibilityLabel` accessibility entries are nearly identical and belong at the catalogue scope.
@@ -521,26 +517,9 @@ dontUseWhen:
 
 The rules in that file are about **how colour is applied across the catalogue** — style from the semantic layer rather than a ramp, pair an `Alert` family's background with its own element, take an interaction colour from the `Action` family. Those generalise over themes, raw values, and experiments. None of them is about one token.
 
-#### Option A: Per-token tables become their own document *(Selected)*
+#### Option A: `guidelines.yaml` carries rules only; where description lives is not decided here *(Selected)*
 
-A foundation's `guidelines.yaml` carries rules only. The tables move to `foundations/<concern>/tokens.yaml`, whose shape is two flat lists of tokens — no concern keys, no obligation levels, nothing that pretends to bind.
-
-```yaml
-# foundations/color/tokens.yaml — description, no obligation
-meta:
-  concern: color
-  status: proposed
-useWhen:
-  - $token: "DE Color/Text/Primary"
-    $description: "default body and label text on any light surface"
-dontUseWhen:
-  - $token: "DE Palette/*"
-    $description: "a raw ramp step — styling from a ramp bypasses the layer that carries intent and theming"
-    alternatives: [{ to: "DE Color/Alert/Error/Background" }]
-  - $token: "DE Color/Utility/Figma/*"
-    $description: "Figma plugin and panel chrome, not product surfaces"
-    # no alternatives — nothing replaces it; it is simply not for product
-```
+`useWhen` and `dontUseWhen` are not members of `guidelines.yaml`, and the schema rejects them (DSPEC-63). A foundation's guidelines document carries rules and nothing else:
 
 ```yaml
 # foundations/color/guidelines.yaml — rules only, and they generalise
@@ -555,18 +534,18 @@ styles:
     instead: "The family is a state axis, not a property axis — never reach into `Text/*` or `Surface/*` for a lighter step."
 ```
 
-The `dontUseWhen` table keeps `alternatives`, and that is where the DSDS pointer earns the most: an off-limits token almost always has a nameable replacement, and absence then says something true — nothing replaces it.
+**This ADR does not say where the per-token tables go.** It says only that they do not go here. Deciding their home is a separate question about reference material — what a token is for, how a theme maps, what a raw value is doing in an experiment — and that question is broader than the two documents this ADR defines. No document kind is added for it, and `foundations/color.yaml`'s tables stay where they are until something decides.
 
 **Pros**:
 - Each document makes one kind of statement, so a reader knows what they are holding before they start.
 - A foundation's rules become readable. Eleven rules in a file of eleven rules is a document someone finishes.
-- Thirty-six descriptions stay a scannable table rather than becoming thirty-six weak `should` entries, which was the other way to lose them.
-- The tables and the rules are reviewed on different cycles — a token list changes when the library does, a rule changes when the system's position does — and separate files make that visible in the diff.
+- No speculative shape. An earlier draft invented a `tokens.yaml`, and before that a `SelectionGuidance` keyed by `tokens`, `props`, `variants` and `slotFills` where only `tokens` had an authored instance. Both were designed ahead of the need, which is what this ADR's own "evidence before generality" driver forbids.
+- The schema takes the position it can defend — a rules document holds rules — and declines the one it cannot.
 
 **Cons / Trade-offs**:
-- A third authored document kind, where this ADR previously had two. Three schemas, three type files, three docs pages.
-- `tokens.yaml` is foundation-scope only (DSPEC-63), so `badge`'s "choose colour for the status reported, not decoration — the options are the Alert families" has no table to go in. It stays a `should` rule, which is where the authored file already has it.
-- The boundary is still a judgment with no mechanical test. "Never style from a ramp step" exists in `color.yaml` both as a `dontUseWhen` token and as a rule, and that duplication is now across two files rather than two sections of one.
+- Thirty-six authored token descriptions in `foundations/color.yaml` have nowhere to go. They are not lost, because nothing is being deleted, but the file cannot become a conforming `guidelines.yaml` until they move, and this ADR does not say where.
+- `badge`'s "choose colour for the status reported, not decoration — the options are the Alert families" is selection guidance wearing a rule's clothes. It stays a `should` rule, which is where the authored file already has it and is the best available home.
+- The boundary between a rule and a description is a judgment with no mechanical test. "Never style from a ramp step" exists in `color.yaml` both as a `dontUseWhen` token and as a rule; only the rule half has a home now.
 
 #### Option B: First-class sections on `guidelines.yaml` *(Rejected)*
 
@@ -574,7 +553,13 @@ The `dontUseWhen` table keeps `alternatives`, and that is where the DSDS pointer
 
 **Rejected because**: it keeps a rule and a description in one document, and the authored file already shows what that costs — the rules are outnumbered three to one and read last. The speculative component-scope kinds made it worse: `props`, `variants` and `slotFills` had no authored instance, so three quarters of the shape was invented.
 
-#### Option C: Convert each token to a rule *(Rejected)*
+#### Option C: A third document kind for the tables *(Rejected)*
+
+A `foundations/<concern>/tokens.yaml` with two flat lists, its own schema, its own type file and its own docs page.
+
+**Rejected because**: it decides a question this ADR has no evidence to decide. One authored file has these tables; nothing says a per-concern YAML document is the right home for reference material rather than, say, generated analysis or a documentation surface. Adding a document kind is cheap to do and expensive to undo, and a kind with one hypothetical instance is exactly the speculative shape Option A's third pro rules out.
+
+#### Option D: Convert each token to a rule *(Rejected)*
 
 **Rejected because**: it trades the one table a reader scans first for thirty-six rules nobody reads to the end of, and it asserts an obligation where the source only described a purpose.
 
@@ -711,14 +696,13 @@ The transform folds case and collapses every run of non-alphanumeric characters 
 |------|--------|------|
 | `SupplementalDocument.ts` *(new)* | Add `SupplementalDocument`, `SupplementalEntry`, `SupplementalMeta`, `SupplementalStatus`, `SupplementalConcern` (D3), `SupplementalCheckedBy` (D8), `SupplementalCheck`, `SchemaGap` (D9), `Platform` (D6), `FoundationConcern` (D10) | MINOR |
 | `GuidelinesDocument.ts` *(new)* | Add `GuidelinesDocument`, `GuidelineEntry`, `GuidelinesMeta`, `GuidelinesStatus`, `GuidelinesConcern`, `GuidelinesCheckedBy`, `GuidelineReference`, `ObligationLevel` (D7) | MINOR |
-| `TokensDocument.ts` *(new)* | Add `TokensDocument`, `TokensMeta`, `TokensStatus`, `TokenSubject`, `TokenPointer`, `TokenRef`, `TokenRefRelationship` (D11) | MINOR |
 | `index.ts` | Re-export every type above | MINOR |
 
-**On the file layout: three siblings, no parent.** An earlier draft put the vocabulary the documents share into a `Sidecar.ts`, with a `sidecar.schema.json` beside it. That is gone. "Sidecar" named a position rather than a kind — plenty of things sit beside other things — and a shared parent is exactly the wrong shape for three documents that are peers.
+**On the file layout: two siblings, no parent.** An earlier draft put the vocabulary the documents share into a `Sidecar.ts`, with a `sidecar.schema.json` beside it. That is gone. "Sidecar" named a position rather than a kind — plenty of things sit beside other things — and a shared parent is the wrong shape for two documents that are peers.
 
-So each document file is self-contained, and the repetition is deliberate. `SupplementalMeta`, `GuidelinesMeta` and `TokensMeta` are three structurally identical headers. `SupplementalCheckedBy` and `GuidelinesCheckedBy` are the same three values twice. `SupplementalCheck`, `GuidelineReference` and `TokenPointer` are the same `to`/`href` pair three times.
+So each document file is self-contained, and the repetition is deliberate. `SupplementalMeta` and `GuidelinesMeta` are structurally identical headers. `SupplementalCheckedBy` and `GuidelinesCheckedBy` are the same three values twice. `SupplementalCheck` and `GuidelineReference` are the same `to`/`href` pair twice.
 
-The gain is that each schema validates standalone, with no `$ref` reaching across files, and each type file reads start to finish without opening another. The cost is that a change to the shared idea — a fourth `CheckedBy` value, say — has to be made in three places, and nothing enforces that it is. That is a real maintenance hazard and it is accepted knowingly.
+The gain is that each schema validates standalone, with no `$ref` reaching across files, and each type file reads start to finish without opening another. The cost is that a change to the shared idea — a fourth `CheckedBy` value, say — has to be made in both places, and nothing enforces that it is. That is a real maintenance hazard and it is accepted knowingly.
 
 This also satisfies the constitution digest's rule that enums have no separate file: every closed set now lives in the one document file that uses it.
 
@@ -761,7 +745,7 @@ SupplementalCheckedBy: 'automated' | 'assisted' | 'manual'
 ```yaml
 GuidelinesDocument:
   meta?: GuidelinesMeta
-  # Rules only. Per-token tables are TokensDocument's — see D11.
+  # Rules only. No per-token tables — see D11.
   "[concern: GuidelinesConcern]"?: GuidelineEntry[]
 
 GuidelineEntry:
@@ -778,40 +762,15 @@ GuidelineEntry:
 ObligationLevel: 'must' | 'should' | 'should-not' | 'must-not' | 'may'
 ```
 
-**Example — new shape** (`types/TokensDocument.ts`):
-```yaml
-TokensDocument:
-  meta?: TokensMeta
-  useWhen?: TokenSubject[]        # what each token is for
-  dontUseWhen?: TokenSubject[]    # which are off-limits, why, and what replaces them
-
-TokenSubject:
-  $token: string                  # required — the library's own path, spaces and capitals included
-  $description: string            # required — what it is for, or why it is off-limits
-  alternatives?: TokenPointer[]   # dontUseWhen: what to use instead; absence means nothing replaces it
-  refs?: TokenRef[]               # DSDS `same-as` when this restates a token at another scope
-
-TokenPointer:
-  to?: string
-  href?: string
-
-# A pointer carrying an explicit relationship, as DSDS's `refs` array requires
-TokenRef:
-  to?: string
-  href?: string
-  rel: 'same-as' | 'relates-to' | 'source' | 'design' | 'demo'
-```
-
 ### Schema changes (`schema/`)
 
 | File | Change | Bump |
 |------|--------|------|
 | `supplemental.schema.json` *(new)* | The `SupplementalDocument` contract; `additionalProperties: false` closes the key set to `SupplementalConcern` plus `meta` | MINOR |
-| `guidelines.schema.json` *(new)* | The `GuidelinesDocument` contract; the same closed concern set plus `meta`, and nothing else | MINOR |
-| `tokens.schema.json` *(new)* | The `TokensDocument` contract: `meta`, `useWhen`, `dontUseWhen` | MINOR |
-| `package.json` | Add `./schema/supplemental`, `./schema/guidelines` and `./schema/tokens` to the `exports` map | MINOR |
+| `guidelines.schema.json` *(new)* | The `GuidelinesDocument` contract; the same closed concern set plus `meta`, and nothing else — `useWhen` and `dontUseWhen` are rejected (D11, DSPEC-63) | MINOR |
+| `package.json` | Add `./schema/supplemental` and `./schema/guidelines` to the `exports` map | MINOR |
 
-Each of the three is self-contained: no `$ref` crosses a file, so each validates on its own and each repeats the header, verification and reference definitions. See the file-layout note above for why that repetition is deliberate and what it costs.
+Both are self-contained: no `$ref` crosses a file, so each validates on its own and each repeats the header, verification and reference definitions. See the file-layout note above for why that repetition is deliberate and what it costs.
 
 **Example — new shape** (`schema/supplemental.schema.json`):
 ```yaml
@@ -889,38 +848,18 @@ GuidelineReference:
     - required: [href]
 ```
 
-**Example — new shape** (`schema/tokens.schema.json`):
-```yaml
-# Flat lists, not keyed by subject kind: this document is tokens only
-TokensDocument:
-  additionalProperties: false
-  properties:
-    meta:        { $ref: "#/definitions/TokensMeta" }
-    useWhen:     { type: array, items: { $ref: "#/definitions/TokenSubject" } }
-    dontUseWhen: { type: array, items: { $ref: "#/definitions/TokenSubject" } }
-
-TokenSubject:
-  required: [$token, $description]
-  additionalProperties: false
-  properties:
-    $token:       { minLength: 1 }
-    $description: { minLength: 1 }
-    alternatives: { type: array, items: { $ref: "#/definitions/TokenPointer" } }
-    refs:         { type: array, items: { $ref: "#/definitions/TokenRef" } }
-```
-
 ### Specification changes (`packages/schema/SPECIFICATION.md`)
 
-§1.5 declares document kinds and identity fully specified in the specification, so three new document kinds land there rather than in the reference pages alone.
+§1.5 declares document kinds and identity fully specified in the specification, so two new document kinds land there rather than in the reference pages alone.
 
 | Section | Change |
 |---|---|
-| §2.1 Document kinds | Three rows: Supplemental, Guidelines and Tokens, each naming its schema file |
+| §2.1 Document kinds | Two rows: Supplemental and Guidelines, each naming its schema file |
 | §2.1 Document kinds | A paragraph distinguishing generated documents from authored ones, since the existing six are all generated |
-| §2.1 Document kinds | A paragraph stating that the three authored kinds are siblings with no parent kind, that each schema is self-contained, and that the repetition is deliberate |
-| §2.1 Document kinds | A list dividing the three by *what kind of statement* each makes — a requirement on a builder, a rule binding a user, a description of a thing — since that is the division, not what they are about |
+| §2.1 Document kinds | A paragraph stating that the two authored kinds are siblings with no parent kind, that each schema is self-contained, and that the repetition is deliberate |
+| §2.1 Document kinds | A list dividing the two by audience and by what kind of statement each makes, noting that a token's purpose is a description rather than a rule and has no home in either |
 | §2.3 Required members | A carve-out: an authored document carries no `metadata.source`, because it was never generated from a Figma node. It carries `meta` instead, which records authorship and review status rather than provenance |
-| §2.3 Required members | The prohibition that keeps D11 honest: a guidelines document carries no per-token tables, and a tokens document carries no rules |
+| §2.3 Required members | The prohibition that keeps D11 honest: a guidelines document carries rules only, with the explicit note that where per-token description belongs is not settled |
 | §9 Rule catalogue | Eight rows, `DSPEC-56` through `DSPEC-63`, below |
 
 The rules JSON Schema cannot express, each stated in the specification rather than left in this ADR, since §1.6 binds no consumer to an ADR:
@@ -934,7 +873,7 @@ The rules JSON Schema cannot express, each stated in the specification rather th
 | `DSPEC-60` | An exporter derives a token's DSDS `id` from the workspace's `spec.tokens` profile, normalizing per path segment only when that output is not a legal id | producer |
 | `DSPEC-61` | An exporter emits a token's original path as `name`, unmodified, so the derived `id` never has to be reversed | producer |
 | `DSPEC-62` | A directory under `foundations/` is named from the `FoundationConcern` vocabulary. This is the rule that gives `FoundationConcern` an enforcement home: it governs a path, and a document schema validates contents rather than the path that selected it | validator |
-| `DSPEC-63` | A `tokens.yaml` is written at the foundation scope only, because a token belongs to a foundation rather than to any component | validator |
+| `DSPEC-63` | A guidelines document carries rules only, and no table describing what each token is for | validator |
 
 The authored-override naming rule from D5 — `component.tsx` or `component.ts` beside the scaffold — gets no rule id here. It binds the transform packages' emitters, not a Specs document, so it belongs in those packages' own documentation. The preference for `alternatives` over `instead` likewise stays in the authoring skill: it is guidance to an author, not a requirement on a document.
 
@@ -944,7 +883,7 @@ The authored-override naming rule from D5 — `component.tsx` or `component.ts` 
 |------|--------|
 | `src/validate/supplemental.schema.json` | Deleted — superseded by the published schema |
 | `src/validate/supplemental.ts` | Compile the published `supplemental.schema.json` and a new `guidelines.schema.json` instead of the local copy |
-| `src/validate/run.ts` | Validate `guidelines.yaml` wherever it validates `supplemental.yaml`, at all three scopes from D10, and `tokens.yaml` at the foundation scope only (DSPEC-63) |
+| `src/validate/run.ts` | Validate `guidelines.yaml` wherever it validates `supplemental.yaml`, at all three scopes from D10 |
 | `src/validate/references.ts` | Resolve a `schemaGap.path` that is a JSON Schema pointer; check a `useWhen` / `dontUseWhen` `$token` against the library the way `$token` is already checked in specs; resolve every `Pointer.to` in `alternatives`, `refines`, `evidence`, and `checks`, matching a token pointer against `analysis/foundations.yaml` by its authored path rather than any derived id |
 | `src/skills/*.md` | Update the authoring skills that describe the sidecar's shape |
 
@@ -973,7 +912,7 @@ The reference-level checks issue #870 asks for land here, against the closed enu
 ## Type ↔ Schema Impact
 
 - **Symmetric**: Yes, and one-to-one. Each of the three type files has exactly one schema file, and neither side shares a definition across files — the parity is checkable per pair rather than through a common dependency.
-- **Parity check**: `SupplementalDocument` ↔ `supplemental.schema.json` root; `SupplementalConcern` ↔ its closed `properties` key set; `SupplementalMeta` ↔ its `meta`; `Platform` ↔ the `platforms` array's branches; `SupplementalCheckedBy` ↔ its `checkedBy`; `SupplementalCheck` ↔ its reference definition; `SchemaGap` ↔ its `schemaGap`. `GuidelinesDocument` ↔ `guidelines.schema.json` root; `GuidelinesConcern`, `GuidelinesMeta`, `ObligationLevel`, `GuidelinesCheckedBy` and `GuidelineReference` ↔ their counterparts there. `TokensDocument` ↔ `tokens.schema.json` root; `TokensMeta`, `TokenSubject`, `TokenPointer` and `TokenRef` ↔ theirs.
+- **Parity check**: `SupplementalDocument` ↔ `supplemental.schema.json` root; `SupplementalConcern` ↔ its closed `properties` key set; `SupplementalMeta` ↔ its `meta`; `Platform` ↔ the `platforms` array's branches; `SupplementalCheckedBy` ↔ its `checkedBy`; `SupplementalCheck` ↔ its reference definition; `SchemaGap` ↔ its `schemaGap`. `GuidelinesDocument` ↔ `guidelines.schema.json` root; `GuidelinesConcern`, `GuidelinesMeta`, `ObligationLevel`, `GuidelinesCheckedBy` and `GuidelineReference` ↔ their counterparts there.
 - **Asymmetries, all deliberate**: three constraints are expressible in JSON Schema and not in TypeScript — `checks` required when `checkedBy` is `automated`; the ban on `web` appearing beside a web leaf; and exactly one of `to` or `href` on a reference, which is DSDS's own MUST NOT. Each is documented on its type as a constraint the schema enforces, so a reader of the types learns the rule even though the compiler will not apply it.
 - **`FoundationConcern` has no schema counterpart**, deliberately. It governs a directory name under `foundations/`, and a document schema validates contents rather than the path that selected the document. DSPEC-62 is its enforcement home.
 
@@ -983,7 +922,7 @@ The reference-level checks issue #870 asks for land here, against the closed enu
 
 | Consumer | Impact | Highlights |
 |----------|--------|------------|
-| `specs-cli` | Update usage | Deletes its private schema copy, imports the three published schemas, validates `guidelines.yaml` at three scopes and `tokens.yaml` at the foundation scope, and gains #870's reference checks. The authoring skills' descriptions need rewriting. |
+| `specs-cli` | Update usage | Deletes its private schema copy, imports the two published schemas, validates `guidelines.yaml` at three scopes, and gains #870's reference checks. The authoring skills' descriptions need rewriting. |
 | `specs-from-figma` | None | Generate writes none of the three; all are authored. |
 | `react-from-specs`, `webcomponents-from-specs` | None | `platforms` no longer carries a file path (D5), and neither emitter ever read it — no source file in `specs-transforms` mentions `supplemental`. The naming rule they do use is already implemented in `from-specs`'s `naming.ts` and already documented on the docs site and in the `component.author` skill. Verified, not assumed. |
 | `figma-from-specs` | None | None of the three renders to canvas. |
@@ -1003,7 +942,7 @@ The reference-level checks issue #870 asks for land here, against the closed enu
 
 ## Consequences
 
-- The content divides by what it states: builders read `supplemental.yaml`, consumers read `guidelines.yaml`, and a reader after a token's purpose reads `tokens.yaml`. None wades through another's entries.
+- The content divides by reader: builders read `supplemental.yaml`, consumers read `guidelines.yaml`, and neither wades through the other's entries.
 - A `guidelines.yaml` entry is a DSDS 0.23.1 guideline item in field names and in four of five level values. The document around it is a source format that maps to DSDS section-by-section, not a DSDS document — an exporter supplies the `kind` and `for` that DSDS requires and this schema does not carry.
 - A prohibition and its remedy are one entry, so neither can be deleted without the other and a reader cannot act on the first without seeing the second.
 - Most remedies are now resolvable data rather than prose, because `alternatives` holds a pointer and most off-limits things have a nameable replacement. A validator can check that the replacement exists; it could never check a sentence.
@@ -1019,8 +958,8 @@ The reference-level checks issue #870 asks for land here, against the closed enu
 - The id transform is lossy and irreversible, and `name` carrying the original path is the only thing that makes it safe. An exporter that omits `name` produces a document whose tokens cannot be traced back to the library.
 - Obligation is a sortable, filterable, renderable field instead of the first word of a sentence, which is what a documentation pipeline needs to group `must` rules apart from `should` ones.
 - `SupplementalConcern`, `GuidelinesConcern`, `Platform`, and `FoundationConcern` close, so #870's reference checks run against known value sets and a misspelled concern fails validation rather than creating a silent section.
-- Three structurally identical headers, two identical verification sets and three identical reference shapes now exist under different names. Changing the shared idea means changing it three times, and nothing checks that all three moved.
-- A foundation's rules and its token descriptions are separate files, reviewed on separate cycles: a token list changes when the library does, a rule changes when the system's position does.
+- Two structurally identical headers, two identical verification sets and two identical reference shapes now exist under different names. Changing the shared idea means changing it twice, and nothing checks that both moved.
+- Thirty-six token descriptions in `foundations/color.yaml` have no conforming home. Nothing deletes them, but that file cannot become a valid `guidelines.yaml` until they move somewhere this ADR does not name.
 - Guidance gains a verification story through `checkedBy` and `checks`, and an `automated` guideline cannot be authored without naming what automates it.
 - The overlay-only discipline now applies to half the sidecar. `guidelines.yaml` has no `schemaGap`, so nothing mechanical stops a guideline that should have been a spec field — that judgment moves to review.
 - Where a hand-written override lives is recorded as a convention — `component.tsx` or `component.ts` beside the scaffold — and no longer also as a field that looked like an input but was not one. A file under any other name is invisible to the emitter and fails silently, with the scaffold used in its place; that was already the case and this ADR neither causes nor fixes it.
