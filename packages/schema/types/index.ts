@@ -82,6 +82,7 @@ export type { Conditional, ConditionExpression, ConditionArgs } from './Conditio
 // reference types rather than sharing one.
 export type {
   SupplementalDocument,
+  FoundationSupplementalDocument,
   SupplementalEntry,
   SupplementalMeta,
   SupplementalStatus,
@@ -94,6 +95,7 @@ export type {
 } from './SupplementalDocument.js';
 export type {
   GuidelinesDocument,
+  FoundationGuidelinesDocument,
   GuidelineEntry,
   GuidelinesMeta,
   GuidelinesStatus,

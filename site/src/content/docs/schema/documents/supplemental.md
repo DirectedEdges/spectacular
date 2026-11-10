@@ -24,7 +24,9 @@ The same shape is written at three scopes. An entry at a broader scope and one a
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | `meta` | `SupplementalMeta` | No | Authorship and review status for the document |
-| *concern key* | `SupplementalEntry[]` | No | One list per concern — `anatomy`, `props`, `styles`, `slotComposition`, `events`, `accessibility`, `behavior`, `motion`, `layout`, `overrides`, `naming` |
+| *concern key* | `SupplementalEntry[]` | No | One list per concern. At the component scopes: `anatomy`, `props`, `styles`, `slotComposition`, `events`, `accessibility`, `behavior`, `motion`, `layout`, `overrides`, `naming`. At the foundation scope: `color`, `typography`, `layout`, `space`, `shape`, `elevation`, `motion`, `brand` |
+
+A document uses one vocabulary or the other, never both. Only `layout` and `motion` are in each. See [Guidelines](/schema/documents/guidelines/#the-section-keys-differ-by-scope) for why they are different vocabularies rather than one with a subset.
 
 A document carrying only a `meta` block is valid, and so is an empty one.
 

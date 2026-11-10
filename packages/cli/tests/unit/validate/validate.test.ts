@@ -399,5 +399,32 @@ describe('specs validate', () => {
       const errors = errorsOf(runValidate({ specsPath: specsDir }).findings);
       expect(errors.some(f => f.file === 'guidelines.yaml' && f.path.includes('useWhen'))).toBe(true);
     });
+
+    // A foundation's sections are their own vocabulary (ADR-118, amended). The
+    // schema admits both key sets and rejects a document mixing them; the two
+    // shared keys discriminate neither, so the path is what says which scope.
+    it('accepts foundation concern keys', () => {
+      writeSpec('components', 'badge', {
+        ...validSpec(),
+        guidelines: { color: [rule], elevation: [{ statement: 'x', level: 'must' }] },
+      });
+      expect(runValidate({ specsPath: specsDir }).findings).toEqual([]);
+    });
+
+    it('rejects a document mixing the two vocabularies', () => {
+      writeSpec('components', 'badge', {
+        ...validSpec(),
+        guidelines: { accessibility: [rule], color: [rule] },
+      });
+      expect(errorsOf(runValidate({ specsPath: specsDir }).findings).length).toBeGreaterThan(0);
+    });
+
+    it('accepts a document using only the two shared keys', () => {
+      writeSpec('components', 'badge', {
+        ...validSpec(),
+        guidelines: { layout: [rule], motion: [rule] },
+      });
+      expect(runValidate({ specsPath: specsDir }).findings).toEqual([]);
+    });
   });
 });

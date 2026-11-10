@@ -37,9 +37,20 @@ As with the supplemental document, the same shape is written at three scopes, an
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | `meta` | `GuidelinesMeta` | No | Authorship and review status for the document |
-| *concern key* | `GuidelineEntry[]` | No | One list of rules per concern — the same eleven concerns the supplemental document uses |
+| *concern key* | `GuidelineEntry[]` | No | One list of rules per concern — see the two vocabularies below |
 
 Nothing else. `useWhen` and `dontUseWhen` are rejected — see **Rules only** above.
+
+### The section keys differ by scope
+
+A foundation's sections are a different vocabulary, not a subset of the component one. Six foundation concerns have no component counterpart, and nine component concerns say nothing about a value set — `anatomy` and `slotComposition` describe a thing with parts, which a foundation does not have.
+
+| Scope | Section keys |
+|---|---|
+| One component, every component | `anatomy`, `props`, `styles`, `slotComposition`, `events`, `accessibility`, `behavior`, `motion`, `layout`, `overrides`, `naming` |
+| One foundation | `color`, `typography`, `layout`, `space`, `shape`, `elevation`, `motion`, `brand` |
+
+A document uses one vocabulary or the other, never both, and the schema rejects a mix. Only `layout` and `motion` are in each — so they discriminate neither, and a document using only those two validates at either scope. The path is what finally says which scope a document is at.
 
 ### GuidelineEntry
 
@@ -77,14 +88,14 @@ The right-hand column is why the five values are worth learning: the words an au
 A foundation's rules, which generalise over the whole catalogue rather than naming one token:
 
 ```yaml
-# foundations/color/guidelines.yaml
+# foundations/color/guidelines.yaml — foundation concern keys
 meta:
   concern: color
   status: proposed
   updated: 2026-11-06
   sources:
     - analysis/foundations.yaml
-styles:
+color:
   - statement: "Style any property from a `DE Palette/*` ramp step."
     level: must-not
     instead: "Style from the semantic token that aliases the ramp step."
@@ -92,6 +103,9 @@ styles:
     level: must
   - statement: "Use `Text/Primary Inverse`, `Icon/Primary inverse` and `Line/Primary inverse` together on a dark or saturated surface."
     level: may
+elevation:
+  - statement: "Assemble an elevation shadow inline from the four shadow tokens — the library publishes no named effect style."
+    level: must
 ```
 
 And a component's, where a prohibition points at what to use instead:

@@ -1,3 +1,5 @@
+import type { FoundationConcern } from './SupplementalDocument.js';
+
 /**
  * What whoever uses a component or a foundation must observe, authored beside
  * the spec as `guidelines.yaml` (ADR-118).
@@ -173,7 +175,8 @@ export type GuidelineEntry = {
 };
 
 /**
- * A `guidelines.yaml` document: a header, and one list of rules per concern.
+ * A `guidelines.yaml` document beside a component or composition: a header, and
+ * one list of rules per component concern.
  *
  * No concern key is required, and a document carrying only a header is valid.
  * @since 0.40.0
@@ -183,4 +186,32 @@ export type GuidelinesDocument = {
   meta?: GuidelinesMeta;
 } & {
   [concern in GuidelinesConcern]?: GuidelineEntry[];
+};
+
+/**
+ * A `guidelines.yaml` document in a foundation's directory, keyed by the
+ * foundation concerns rather than the component ones.
+ *
+ * A foundation's sections are a different shape, not a subset. `color`,
+ * `typography`, `space`, `shape`, `elevation` and `brand` have no component
+ * counterpart, and `anatomy`, `props`, `slotComposition`, `events`, `overrides`
+ * and `naming` are meaningless about a foundation. Only `layout` and `motion`
+ * appear in both vocabularies.
+ *
+ * The two were one shape until a migration proved it wrong: a rule about
+ * assembling an elevation shadow had no section to go in, because
+ * `GuidelinesConcern` has no `elevation` — so it was filed under `styles`,
+ * where nobody looking for elevation guidance would find it (ADR-118, amended).
+ *
+ * The entry shape is identical. Only the key set differs, which is why these
+ * are two document types rather than one with a widened key set: a component
+ * document carrying `color:` and a foundation document carrying `props:` are
+ * both errors, and a union would accept both.
+ * @since 0.40.0
+ */
+export type FoundationGuidelinesDocument = {
+  /** Authorship and review status for the document as a whole. */
+  meta?: GuidelinesMeta;
+} & {
+  [concern in FoundationConcern]?: GuidelineEntry[];
 };

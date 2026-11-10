@@ -50,8 +50,64 @@
     "naming": {
       "$ref": "#/definitions/Section",
       "description": "Requirements about why a component, prop, or part carries the name it does."
+    },
+    "color": {
+      "$ref": "#/definitions/Section",
+      "description": "Foundation scope. Requirements about colour: which token belongs on which property, and which families pair."
+    },
+    "typography": {
+      "$ref": "#/definitions/Section",
+      "description": "Foundation scope. Requirements about type: families, ramps, and what each step is for."
+    },
+    "space": {
+      "$ref": "#/definitions/Section",
+      "description": "Foundation scope. Requirements about spacing: the scale, and which step fits which density."
+    },
+    "shape": {
+      "$ref": "#/definitions/Section",
+      "description": "Foundation scope. Requirements about shape, which in practice is mostly corner radius."
+    },
+    "elevation": {
+      "$ref": "#/definitions/Section",
+      "description": "Foundation scope. Requirements about elevation, covering shadow, z-ordering and anything else that stacks."
+    },
+    "brand": {
+      "$ref": "#/definitions/Section",
+      "description": "Foundation scope. Requirements about the expression a system reserves for identity rather than function."
     }
   },
+  "allOf": [
+    {
+      "description": "A document is keyed for one scope or the other, never both. The component vocabulary describes a thing with parts, props and slots; the foundation vocabulary describes a system-wide value set. `layout` and `motion` are in both and so discriminate neither — which is why the scope is ultimately the path, and a document using only those two is accepted at either (DSPEC-64).",
+      "not": {
+        "allOf": [
+          {
+            "anyOf": [
+              { "required": ["anatomy"] },
+              { "required": ["props"] },
+              { "required": ["styles"] },
+              { "required": ["slotComposition"] },
+              { "required": ["events"] },
+              { "required": ["accessibility"] },
+              { "required": ["behavior"] },
+              { "required": ["overrides"] },
+              { "required": ["naming"] }
+            ]
+          },
+          {
+            "anyOf": [
+              { "required": ["color"] },
+              { "required": ["typography"] },
+              { "required": ["space"] },
+              { "required": ["shape"] },
+              { "required": ["elevation"] },
+              { "required": ["brand"] }
+            ]
+          }
+        ]
+      }
+    }
+  ],
   "definitions": {
     "SupplementalMeta": {
       "type": "object",

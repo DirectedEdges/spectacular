@@ -3,6 +3,7 @@
 **Branch**: `118-supplemental-and-guidelines-sidecars`
 **Created**: 2026-11-09
 **Status**: ACCEPTED
+**Amended**: 2026-11-10 — see *Amendments* at the end
 **Summary**: `SupplementalDocument` and `GuidelinesDocument` join the concern documents as authored siblings, divided by who reads them.
 **Decides**: none
 **Deciders**: Nathan Curtis (author)
@@ -981,3 +982,34 @@ The reference-level checks issue #870 asks for land here, against the closed enu
 - **`packages/cli/src/validate/supplemental.schema.json`** — the experimental CLI-defined contract this ADR promotes, splits, and deletes.
 - **`DirectedEdges/spectacular#870`** — the validation work this ADR unblocks.
 - **component-marathon workspace, `specs/components/{badge,button,icon,image}/supplemental.yaml` and `specs/foundations/color.yaml`** — the authored evidence the shape is drawn from.
+
+---
+
+## Amendments
+
+### 2026-11-10 — A foundation's sections are their own vocabulary
+
+**What the migration found.** Migrating the component-marathon workspace onto this contract validated 8 of 8 files, but only after one rule was filed somewhere false. `foundations/color.yaml` carried a rule about assembling an elevation shadow from four tokens, and there was no section for it: D3's vocabulary is the eleven *component* concerns, and `elevation` is not among them. The rule went under `styles`, where nobody looking for elevation guidance would find it.
+
+That was not an authoring mistake. `FoundationConcern` existed in this ADR already — D10 uses it for the directory name, and DSPEC-62 enforces that — but nothing let a foundation's document use its own concerns as section keys. The type was half-wired: it named the folder and then had no say in what went inside it.
+
+**The amendment.** A document at the foundation scope is keyed by `FoundationConcern`; a document at the component scopes is keyed by the component concerns. These are different vocabularies, not one with a subset:
+
+| Scope | Section keys |
+|---|---|
+| Component, catalogue | `anatomy`, `props`, `styles`, `slotComposition`, `events`, `accessibility`, `behavior`, `motion`, `layout`, `overrides`, `naming` |
+| Foundation | `color`, `typography`, `layout`, `space`, `shape`, `elevation`, `motion`, `brand` |
+
+Only `layout` and `motion` are in both. Six foundation concerns have no component counterpart, and nine component concerns are meaningless about a foundation — `anatomy` and `slotComposition` describe a thing with parts, which a value set does not have.
+
+**How it is enforced.** `FoundationSupplementalDocument` and `FoundationGuidelinesDocument` join their component counterparts as types. Each schema admits both key sets and rejects a document mixing them (DSPEC-64), expressed as a `not`/`allOf` over the two discriminating key groups. Because the two shared keys discriminate neither vocabulary, the scope is ultimately the path, and a document using only `layout` and `motion` validates at either — stated rather than papered over.
+
+**Why an amendment and not a new ADR.** The gap is in a decision this ADR already made. D10 introduced the foundation scope and `FoundationConcern`; D3 fixed the section vocabulary without noticing the two could not coexist. A second record would describe half of one decision.
+
+### 2026-11-10 — Reference resolution is deferred, and a file is a legitimate target
+
+**`DSPEC-57` moves to `unenforced`.** The rule still states that a reference's `to` names something that exists, but nothing checks it and this ADR no longer implies anything will soon. The reason is this ADR's own underspecification: `to` is used for four kinds of target — a token path, a component key, a document-and-anchor, and a workspace file — with no stated way to tell them apart. A resolver would either accept almost anything, checking nothing, or reject legitimate targets. Settling that target grammar is its own decision.
+
+**A `checks` reference naming a source file is correct, not a misuse.** DSDS describes `checks` as the test or lint rule verifying compliance, which would make a stylesheet out of scope. The authored evidence disagrees: every `checks` entry in the migrated workspace names a file — `motion.css`, `styles.css`, `stories.tsx` — because that is what an author knows and what re-verification after a re-emit needs. This is the one surviving home for the dependency `regenerationRisk` used to record, and narrowing it would lose that a second time.
+
+**An unresolved target is a warning, never an error.** Whenever resolution does arrive. An authored document legitimately references work not yet emitted — a test before the test exists, a component before it is specced — and a hard error would fail validation on ordinary in-progress authoring.

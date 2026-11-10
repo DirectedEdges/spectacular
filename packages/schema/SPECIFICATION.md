@@ -96,6 +96,10 @@ They divide by audience, and by what kind of statement each makes:
 
 Each is written at three scopes — one component, every component, one foundation — and the scopes are additive (DSPEC-56).
 
+**A foundation's sections are a different vocabulary, not a subset.** At the component scopes the section keys are `anatomy`, `props`, `styles`, `slotComposition`, `events`, `accessibility`, `behavior`, `motion`, `layout`, `overrides` and `naming`. At the foundation scope they are `color`, `typography`, `layout`, `space`, `shape`, `elevation`, `motion` and `brand`. Only `layout` and `motion` are in both. A document uses one vocabulary or the other and never both (DSPEC-64); because the two shared keys discriminate neither, the scope is ultimately the path, and a document using only those two is accepted at either.
+
+A reference's `to` names a token, a component, an item within one, or a workspace file. A `checks` reference naming a source file is legitimate and not a misuse — it is what an author knows and what re-verification after a regeneration needs. Resolution is **not** currently checked by anything (DSPEC-57 is `unenforced`): the target vocabulary admits four kinds with no stated way to tell them apart, so a resolver would either accept almost anything or reject legitimate targets. When one arrives, an unresolved target is a warning rather than an error, because an authored document legitimately references work not yet emitted.
+
 ### 2.2 Document identity
 
 A whole-component document MUST NOT carry `metadata.concern` (schema: `component.schema.json`).
@@ -439,13 +443,14 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-54 | A frame is an image asset only when its name matches `images.match` and it is a direct child of a page, or of a section that is itself a direct page child; a match at any other depth is not an asset | producer | conventions reference, ADR-117 |
 | DSPEC-55 | A declared `images.component` requires a non-empty `images.sourceProps`, whose first entry is that component's own source prop | validator | conventions reference, ADR-077/117 |
 | DSPEC-56 | A supplemental or guidelines entry at the catalogue scope and one at the component scope both apply; neither overrides the other, because an entry is a statement about a subject rather than a value at a key | consumer | §2.1, ADR-118 |
-| DSPEC-57 | A `Pointer.to` resolves to something that exists in the workspace — a token in `analysis/foundations.yaml`, a component, or an item within one | validator | §2.3, ADR-118 |
+| DSPEC-57 | A reference's `to` names something that exists — a token, a component, an item within one, or a workspace file. A consumer that cannot resolve it reports a warning and continues, never an error | unenforced | §2.3, ADR-118 |
 | DSPEC-58 | A `schemaGap.path` that is a JSON Schema pointer resolves against the schema file it names | validator | §2.3, ADR-118 |
 | DSPEC-59 | An exporter emitting DSDS appends a guideline's `instead` to its `statement` and never drops it, so no consumer receives a prohibition without its remedy | producer | §2.1, ADR-118 |
 | DSPEC-60 | An exporter derives a token's DSDS `id` from the workspace's `spec.tokens` profile, normalizing per path segment only where that output is not a legal identifier | producer | §2.1, ADR-118 |
 | DSPEC-61 | An exporter emits a token's original path as `name`, unmodified, because the derived `id` folds case and punctuation and cannot be reversed | producer | §2.1, ADR-118 |
 | DSPEC-62 | A directory under `foundations/` is named from the foundation concern vocabulary; a document schema validates contents and cannot validate the path that selects it | validator | §2.1, ADR-118 |
 | DSPEC-63 | A guidelines document carries rules only, and no table describing what each token is for | validator | §2.3, ADR-118 |
+| DSPEC-64 | An authored document is keyed for one concern vocabulary or the other, never both; `layout` and `motion` are in each and discriminate neither, so the scope is the path | schema: `supplemental.schema.json`, `guidelines.schema.json` | §2.1, ADR-118 |
 
 Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.
 

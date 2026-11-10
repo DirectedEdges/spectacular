@@ -29,9 +29,19 @@ import { readAuthored, unique, writeReport } from './Supplemental.js';
  * to say about its own use as a component does.
  */
 
+/**
+ * Every concern key a guidelines document may carry, across both scopes. Read
+ * together for the same reason the supplemental analysis does: scoping to one
+ * vocabulary would silently drop the other scope's rules.
+ */
 const CONCERNS = [
+  // Component scope.
   'anatomy', 'props', 'styles', 'slotComposition', 'events', 'accessibility',
-  'behavior', 'motion', 'layout', 'overrides', 'naming',
+  'behavior', 'overrides', 'naming',
+  // Foundation scope.
+  'color', 'typography', 'space', 'shape', 'elevation', 'brand',
+  // In both vocabularies.
+  'motion', 'layout',
 ] as const;
 
 const LEVELS = ['must', 'must-not', 'should', 'should-not', 'may'] as const;

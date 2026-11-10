@@ -29,10 +29,22 @@ import { ANALYSIS_DIR } from '../utilities/specsLayout.js';
  * empty by construction.
  */
 
-/** The eleven concern keys a supplemental document may carry. */
+/**
+ * Every concern key a supplemental document may carry, across both scopes.
+ *
+ * A document is keyed for one vocabulary or the other and never both, but this
+ * analyzer reads whatever it finds: scoping it to the component set alone would
+ * silently drop every foundation entry, and a report that under-counts is worse
+ * than one that spans two vocabularies.
+ */
 const CONCERNS = [
+  // Component scope.
   'anatomy', 'props', 'styles', 'slotComposition', 'events', 'accessibility',
-  'behavior', 'motion', 'layout', 'overrides', 'naming',
+  'behavior', 'overrides', 'naming',
+  // Foundation scope.
+  'color', 'typography', 'space', 'shape', 'elevation', 'brand',
+  // In both vocabularies.
+  'motion', 'layout',
 ] as const;
 
 const PLATFORMS = ['react', 'webcomponents', 'web', 'ios', 'android'] as const;

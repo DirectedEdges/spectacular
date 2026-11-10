@@ -4,6 +4,7 @@
  * to assert that the type shape is correct.
  */
 import type {
+  FoundationGuidelinesDocument,
   GuidelineEntry,
   GuidelineReference,
   GuidelinesCheckedBy,
@@ -53,12 +54,23 @@ const meta: GuidelinesMeta = {
 
 /**
  * A foundation's rules are about how values are applied across the catalogue —
- * not about what any one token is for, which no document kind carries yet.
+ * not about what any one token is for, which no document kind carries yet. Its
+ * section keys are the foundation concerns, a different vocabulary from the
+ * component one (ADR-118, amended).
  */
-const foundation: GuidelinesDocument = {
+const foundation: FoundationGuidelinesDocument = {
   meta,
-  styles: [prose, permission],
+  color: [prose, permission],
+  elevation: [{ statement: 'Assemble an elevation shadow inline from the four shadow tokens.', level: 'must' }],
+  // In both vocabularies, so valid at either scope.
+  motion: [{ statement: 'Respect prefers-reduced-motion.', level: 'must' }],
 };
+
+// @ts-expect-error — `styles` is a component concern; a foundation document has no such key.
+const foundationWithComponentKey: FoundationGuidelinesDocument = { styles: [prose] };
+
+// @ts-expect-error — and the reverse: `color` is a foundation concern.
+const componentWithFoundationKey: GuidelinesDocument = { color: [prose] };
 
 const component: GuidelinesDocument = {
   meta: { concern: 'badge', status: 'ratified' },
@@ -101,6 +113,8 @@ const dontTable: GuidelinesDocument = { dontUseWhen: [{ $token: 'a', $descriptio
 
 export {
   foundation,
+  foundationWithComponentKey,
+  componentWithFoundationKey,
   component,
   headerOnly,
   levels,

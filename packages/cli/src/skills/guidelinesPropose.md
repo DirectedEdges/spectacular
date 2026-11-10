@@ -22,7 +22,9 @@ Per-system rules are the second rules layer. The shipped `rules/*.yaml` beside t
 
 ## File format
 
-Copy `templates/guidelines.yaml` from the component-author skill's templates — the contract is the same at every scope. An optional `meta` header (concern, status, author, updated, sources), then one list of rules per concern key.
+Copy `templates/guidelines.yaml` from the component-author skill's templates. An optional `meta` header (concern, status, author, updated, sources), then one list of rules per concern key.
+
+**At this scope the section keys are the foundation concerns**, not the component ones: `color`, `typography`, `layout`, `space`, `shape`, `elevation`, `motion`, `brand`. A rule about applying colour goes under `color`, not `styles` — `styles` belongs to the component vocabulary and the schema rejects it here. Only `layout` and `motion` are in both vocabularies. A document mixing the two is rejected.
 
 Each rule is a DSDS 0.23.1 guideline item: a `statement` and a `level`.
 
@@ -39,15 +41,17 @@ The right-hand column is the translation step: the words you reach for naturally
 A prohibition carries its remedy in the same entry. Use `alternatives` when the remedy is a *thing* you can point at, and `instead` only when it is a rule:
 
 ```yaml
-props:
-  - statement: "Prefix `is`, `has`, `show`, `can`, or another verb before a state name (`isSelected`)."
-    level: must-not
-    instead: "Name boolean states bare (`selected`, `disabled`)."
-styles:
+# foundations/color/guidelines.yaml — foundation concern keys
+color:
   - statement: "Style any property from a `DE Palette/*` ramp step."
     level: must-not
     alternatives: [{ to: "DE Color/Alert/Error/Background" }]
+elevation:
+  - statement: "Assemble an elevation shadow inline from the four shadow tokens."
+    level: must
 ```
+
+A reference's `to` may name a token, a component, or a workspace file. Nothing resolves it today, so a wrong target is not caught — write it carefully.
 
 Statement style: one line; terms, tokens, and props in backticks; a very brief example in parentheses at the end. **No computed data** — never counts, totals, or percentages; they go stale the day the library changes. Compute numbers to *decide* a rule, then publish only the rule.
 

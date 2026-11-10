@@ -207,3 +207,19 @@ export type SupplementalDocument = {
 } & {
   [concern in SupplementalConcern]?: SupplementalEntry[];
 };
+
+/**
+ * A `supplemental.yaml` document in a foundation's directory, keyed by the
+ * foundation concerns rather than the component ones.
+ *
+ * A foundation's sections are a different shape, not a subset — see
+ * `FoundationGuidelinesDocument` for the migration that proved it. The entry
+ * shape is identical; only the key set differs.
+ * @since 0.40.0
+ */
+export type FoundationSupplementalDocument = {
+  /** Authorship and review status for the document as a whole. */
+  meta?: SupplementalMeta;
+} & {
+  [concern in FoundationConcern]?: SupplementalEntry[];
+};
