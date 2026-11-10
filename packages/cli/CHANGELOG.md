@@ -39,6 +39,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The stylesheet now states a slot's `contentStyles` for component-admitting slots too — glyph rules included.** The emitters stamp primitive fills with `data-content="text"` / `data-content="glyph"` markers a composed component's root never carries, so the CSS transform's withholding gates are gone: glyph box/tint rules emit for every slot, and a mixed slot's box-level text properties (truncation, line-clamp) land on the text fill's own marker instead of being dropped. Pairs with the emitters ceasing to inline any governed formatting — the badge's label and icon now recolor per variant from the sheet, for stories and consumer fills alike
+
+- **The posture no longer includes a render watch.** A render per save on a many-variant component cannot finish before the next save triggers the next render, and the loop breaks Figma. `specs-cli.posture` brings up `specs run` alone; `component.author` renders once per component (`specs render specs/components/<key> --overwrite`) after `api`, `variants`, and `examples` validate
+
 - `specs skills install` now ships `templates/guidelines.yaml` with the component-author skill — the skill's step 8 referenced it, the file existed in source, and the installer never emitted it
 - The images-convention migration warning (`images.match` without `{i}`, ADR-117) no longer prints on every command — it is deferred at config load and surfaces where the convention is consumed (`specs fetch`), so a declared-but-unused convention stays quiet on validate and analyze
 - **Storybook shows components emitted after the server started.** The scaffold's story globs were guarded by `fs.existsSync` on the platform trees, so a server that booted before the first emit silently never registered any component — `storybook publish` reported current and validation passed while the sidebar stayed empty. The globs are now unconditional and `specs storybook init` creates the platform story directories so they are valid at boot. Re-run `specs storybook init --force` in an existing workspace to pick up the new `main.ts`

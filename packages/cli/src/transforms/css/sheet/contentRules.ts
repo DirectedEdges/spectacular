@@ -17,31 +17,23 @@
 //   everything it declares. It is documented here rather than pretended away.
 //
 // - **Box-level text properties** (truncation, vertical alignment, gradient
-//   text paint) change the element's box, which would distort a component fill
-//   — so they are emitted only for a slot the spec identified no component
-//   content for (`slotAdmitsComponents` below, which reads the `anyOf` when the
-//   slot declares one and the element's `contentStyles` when it does not).
+//   text paint) change the element's box, which would distort a component fill.
+//   For a slot the spec identified no component content for
+//   (`slotAdmitsComponents` below) they sit on the slot element itself, as they
+//   always have. For a mixed slot they target the text fill's own
+//   `data-content="text"` marker — a span the emitters stamp on a primitive
+//   text fill and a composed component's root never carries — so the rules
+//   reach the primitive fill alone.
 //
 // - **Glyph properties** (fill color, width, height) are non-inherited and must
-//   never reach a component fill. They target the masked-span vocabulary the
-//   emitters write for a glyph fill — `<span data-element aria-hidden="true">`,
-//   a direct child of the slot element (react-from-specs `Spec/elements.ts`
-//   `glyphSpanExpr`, both emitters' `Emit/compose.ts` `glyphSpan`; the
-//   `aria-hidden` qualifier is what separates a glyph span from a composed text
-//   leaf, which carries `data-element` alone). The selector does NOT discriminate
-//   a component fill from a glyph fill: a component's own ROOT is emitted with
-//   that exact shape — `<span {...rootAttrs} aria-hidden="true" data-element="root">`
-//   (react-from-specs `Emit/Elements/glyph.ts`, `rootAttrs.ts`) — so on a mixed
-//   slot (`anyOf` naming `$glyph` alongside one or more components) a slotted
-//   icon component matches the glyph selector too. These rules are therefore
-//   gated on `!admitsComponents`: a mixed slot keeps its correct inlined default
-//   from the emitters and loses only the variant deltas a glyph-admitting,
-//   component-admitting slot could otherwise carry — the same honest residual
-//   the text path above accepts for inherited properties. Reaching a mixed
-//   slot's variant deltas without that residual needs a marker the glyph span
-//   carries and a component root never does (e.g. a `data-content` attribute) —
-//   a possible future enhancement, not made here since it is a cross-package
-//   change (the emitters would have to write the marker).
+//   never reach a component fill. They target `data-content="glyph"` — the
+//   marker both emitters stamp on every masked glyph span (`glyphSpan` in each
+//   `Emit/compose.ts`, react's `Spec/elements.ts` `glyphSpanExpr`) and on
+//   nothing else; a composed component's root (`data-element="root"`,
+//   `aria-hidden`) never matches. Ungated: a mixed slot's glyph deltas emit
+//   exactly as a primitive-only slot's do (system-owner ruling, Badge round —
+//   the emitters stopped inlining ALL contentStyles formatting the same day;
+//   see `governedContentKeys` in the shared core).
 //
 // **Nothing here is `!important`.** `contentStyles` formats a slot's UNSTYLED
 // primitive content; it is not a way to trump styling a consumer supplied, and
@@ -53,11 +45,10 @@
 // An inline style outranks every normal author declaration, so while the
 // scaffolds inlined the default block's resolved contentStyles on the primitive
 // fill, a variant delta could reach it only by being important — and being
-// important it also outranked the consumer. The emitters now inline it for ONE
-// case: a slot whose `anyOf` admits a component, where (as above) the rules
-// that could reach a primitive fill are withheld anyway. Everywhere else the
-// stylesheet is the only thing formatting the fill, which is why no selector
-// here targets an inline-styled wrapper span any more — there is none to beat.
+// important it also outranked the consumer. The emitters inline NOTHING the
+// sheet governs any more — not even for a component-admitting slot, and not
+// even a fallback for a governed key (a fallback is still an inline
+// declaration). The stylesheet is the only thing formatting a primitive fill.
 //
 // For the custom element, `::slotted()` reaches only the slotted node itself,
 // never its descendants (see the overlap note in ./elementRules.ts) — and a
@@ -138,14 +129,20 @@ export function slotAdmitsComponents(
   return primitiveKindsInContentStyles(content).length === 0;
 }
 
-/** The masked glyph span the emitters write for a `$glyph` fill — see the header. */
-const GLYPH_FILL = '[data-element][aria-hidden="true"]';
+/** The marker both emitters stamp on a masked glyph fill — see the header. */
+const GLYPH_FILL = '[data-content="glyph"]';
+/** The marker both emitters stamp on a primitive text fill in a mixed slot. */
+const TEXT_FILL = '[data-content="text"]';
 
-/** The glyph span's selector: a direct child for the class form, `::slotted()` for the host. */
-function glyphFillSelector(slotSel: string, rootAs: RootForm): string {
+/** A fill's selector: a direct child for the class form, `::slotted()` for the host. */
+function fillSelector(slotSel: string, rootAs: RootForm, marker: string): string {
   return rootAs === 'host'
-    ? `${slotSel} > slot::slotted(${GLYPH_FILL})`
-    : `${slotSel} > ${GLYPH_FILL}`;
+    ? `${slotSel} > slot::slotted(${marker})`
+    : `${slotSel} > ${marker}`;
+}
+
+function glyphFillSelector(slotSel: string, rootAs: RootForm): string {
+  return fillSelector(slotSel, rootAs, GLYPH_FILL);
 }
 
 /**
@@ -230,12 +227,15 @@ export function defaultContentStylesLines(input: DefaultContentStylesInput): str
 
   if (resolved.$text) {
     const { onParent, onBox } = textContentDecls(resolved.$text, fmt, ownHasFlexDirection);
+    // Inherited properties ride the slot element either way. Box-level ones sit
+    // there too for a primitive-only slot (as always); a mixed slot's land on
+    // the text fill's own marker, where no component fill can match.
     lines.push(...rule(slotSel, admitsComponents ? onParent : [...onParent, ...onBox]));
+    if (admitsComponents) {
+      lines.push(...rule(fillSelector(slotSel, rootAs, TEXT_FILL), onBox));
+    }
   }
-  // Non-inherited: gated on `!admitsComponents` — see the header's BLOCKER note.
-  // A mixed slot keeps its correct inlined default and loses only this variant
-  // delta, pending the cross-package `data-content` marker noted there.
-  if (resolved.$glyph && !admitsComponents) {
+  if (resolved.$glyph) {
     lines.push(...rule(glyphFillSelector(slotSel, rootAs), glyphContentDecls(resolved.$glyph, fmt)));
   }
   return lines;
@@ -262,13 +262,9 @@ export interface VariantContentStylesInput {
  * no inline default stands in the way any more (see the header), so nothing here
  * needs to reach past one, and a consumer's own rules still win over both.
  *
- * Text, for a mixed slot: only the inherited properties are emitted, on the slot
- * element. The box-level half is withheld because it would distort a component
- * fill, and the emitter's inline style carries the DEFAULT block's box values
- * there — so a mixed slot's box-level variant delta is the honest residual, the
- * same one the default block's glyph rules accept. Reaching it needs a marker
- * the primitive fill carries and a component root does not, which is a
- * cross-package change (see the header's note).
+ * Text, for a mixed slot: inherited properties on the slot element, box-level
+ * ones against the text fill's `data-content="text"` marker — a component fill
+ * matches neither as a box target, so nothing distorts it.
  */
 export function variantContentStylesLines(input: VariantContentStylesInput): string[] {
   const { slotSelectors, delta, admitsComponents, rootAs, label } = input;
@@ -283,10 +279,13 @@ export function variantContentStylesLines(input: VariantContentStylesInput): str
   if (delta.$text) {
     const { onParent, onBox } = textContentDecls(delta.$text, fmt);
     push(rule(sel, admitsComponents ? onParent : [...onParent, ...onBox]));
+    if (admitsComponents) {
+      const tsel = slotSelectors.map(s => fillSelector(s, rootAs, TEXT_FILL)).join(',\n');
+      push(rule(tsel, onBox));
+    }
   }
 
-  // Non-inherited: gated on `!admitsComponents` — see the header's BLOCKER note.
-  if (delta.$glyph && !admitsComponents) {
+  if (delta.$glyph) {
     const gsel = slotSelectors.map(s => glyphFillSelector(s, rootAs)).join(',\n');
     push(rule(gsel, glyphContentDecls(delta.$glyph, fmt)));
   }

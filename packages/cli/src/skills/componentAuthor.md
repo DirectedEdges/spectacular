@@ -68,17 +68,23 @@ At least one `instanceExamples` entry showing a realistic configuration. `slotCo
 
 ## 7. Compile and observe
 
-The dev posture is live — `specs run` re-emits the platform trees on save and `specs render specs/components/<key> --watch` re-renders onto the canvas (render takes a spec *path*, not a key). Save, then check. **Observe means the running surfaces — Storybook and the canvas — never the emitted source.** An agent that cannot see those surfaces (no browser, no canvas access) reports the render log's result and node id with an explicit "not visually verified" — that substitute is sanctioned; scraping the Storybook server, curling story HTML, or driving a browser to compensate is not. Visual verification belongs to the human. When a surface disagrees with what the spec declares, consult the platform's binding dispositions (`mappings/bindings/` in the schema package), and a disagreement the bindings call `bound` is a platform defect for your report — not a reason to rework the spec or to read the emitter. Check:
+The dev posture is live — `specs run` re-emits the platform trees on save. The canvas is NOT watched: render it yourself, **once, after `api.yaml`, `variants.yaml`, and `examples.yaml` all validate clean** — a render per save on a many-variant component cannot finish before the next save, and the loop breaks Figma:
+
+```bash
+node_modules/.bin/specs render specs/components/<key> --overwrite
+```
+
+(render takes a spec *path*, not a key). Re-run the same command after any later change to those files that should reach the canvas. **Observe means the running surfaces — Storybook and the canvas — never the emitted source.** An agent that cannot see those surfaces (no browser, no canvas access) reports the render log's result and node id with an explicit "not visually verified" — that substitute is sanctioned; scraping the Storybook server, curling story HTML, or driving a browser to compensate is not. Visual verification belongs to the human. When a surface disagrees with what the spec declares, consult the platform's binding dispositions (`mappings/bindings/` in the schema package), and a disagreement the bindings call `bound` is a platform defect for your report — not a reason to rework the spec or to read the emitter. Check:
 
 1. The emitted component in Storybook — renders, variants switch.
 2. The rendered component on the Figma canvas — structure matches the authored anatomy.
 
-If the posture is not running, start it; do not fall back to one-shot `specs react` / `specs render` invocations per iteration. If render reports a stale or unusable cache, run `specs cache` once and retry.
+If the posture is not running, start it; do not fall back to one-shot `specs react` invocations per iteration — emit stays the posture's job. If render reports a stale or unusable cache, run `specs cache` once and retry.
 
 Two situations with sanctioned answers, so they cost no deliberation:
 
-- **The bridge plugin is not connected** — that is a human-side control in the Figma app. Report it as a pending human action, keep authoring; the watch renders when the plugin reconnects.
-- **You need a re-render without a real change** (the plugin just reconnected, the canvas was cleared) — a no-op save of the spec file (`touch`, or add-and-remove a space) is the sanctioned trigger; the watch renders on change, and a contentless change is a legitimate one.
+- **The bridge plugin is not connected** — that is a human-side control in the Figma app. Report it as a pending human action, keep authoring; run the render once the plugin reconnects.
+- **The canvas needs refreshing** (the plugin just reconnected, the canvas was cleared) — run the same one-shot render command again; `--overwrite` replaces the previous result.
 
 ## 8. The two authored documents
 
