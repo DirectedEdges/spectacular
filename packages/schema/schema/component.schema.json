@@ -1039,7 +1039,7 @@
       "properties": {
         "styles": {
           "$ref": "#/definitions/Styles",
-          "description": "Style values to apply over the element's resolved styles. A property styles.schema.json annotates overridable: false is not patchable here, which the annotation carries rather than this definition."
+          "description": "Style values to apply over the element's resolved styles. Only a property styles.schema.json annotates overridable: true may be set; the annotation carries that bound rather than this definition."
         },
         "content": {
           "type": "string",

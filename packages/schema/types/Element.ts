@@ -43,17 +43,9 @@ export type Element = {
   /** The content for content-bearing elements: text string for text elements, glyph name for glyph elements, or a PropBinding reference. */
   content?: string | PropBinding;
   /**
-   * Style patches reaching inside the component this element instances, applied
-   * after that component resolves its own variants and state (ADR-119).
-   *
-   * Meaningful only where `instanceOf` is present — only an instance has internals
-   * to patch. The two keys are deliberately uncoupled in the schema, the same stance
-   * `$nested` takes (ADR-052), because the names an entry may use come from the
-   * instanced component's `anatomy`, which no schema can reach from here.
-   *
-   * Distinct from `styles`, which describes this element itself. Where the element
-   * is an instance those two can name the same node, and which of its properties
-   * each carries is declared per platform rather than here.
+   * Style patches reaching inside the component `instanceOf` names, applied after
+   * that component resolves its own variants and state. Meaningful only alongside
+   * `instanceOf` (ADR-119).
    * @since 0.40.0
    */
   overrides?: Overrides;

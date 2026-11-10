@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Element.overrides` — typed as `Overrides` (`Override[]`); style patches reaching inside the component an element instances (ADR-119)
 - `Override` — an optional `configuration` matcher and a required `elements` map of per-element patches
 - `ElementOverride` — `styles`, static `content`, and nested `overrides` for an element that is itself an instance
-- `Styles` — `overridable` on all 46 properties, declaring which an override may set (ADR-119)
+- `Styles` — `overridable: true` on the 41 properties an override may set; absence means not overridable (ADR-119)
 - `DSPEC-56` through `DSPEC-62` — override layering, addressing, recursion, the overridable bound, and inert-property omission
 - `DSPEC-54` — an image asset is a pattern-matching frame on a page or in one of its sections
 - `DSPEC-55` — a declared `images.component` requires a non-empty `images.sourceProps`

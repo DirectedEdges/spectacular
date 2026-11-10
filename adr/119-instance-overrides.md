@@ -283,7 +283,7 @@ Allow a root entry and add a second per-property annotation beside `overridable`
 
 #### Option A: An `overridable` annotation on each `Styles` property *(Selected)*
 
-Each of the 46 `Styles` properties gains an `overridable` boolean in `styles.schema.json`, alongside the `description`, `default` and `examples` it already carries. Nested members of the composite style types inherit their parent property's value.
+A `Styles` property an override may set gains `overridable: true` in `styles.schema.json`, alongside the `description`, `default` and `examples` it already carries. The annotation is a **positive grant**: absence means not overridable, so a property added to `Styles` later is not patchable until it is granted. Nested members of the composite style types inherit their parent property's grant.
 
 ```yaml
 # schema/styles.schema.json — #/definitions/Styles/properties
@@ -293,12 +293,13 @@ fillColor:
   default: null
   overridable: true
 
-layoutMode:
+layoutMode:                 # no annotation — not overridable
   $ref: '#/definitions/LayoutModeStyleValue'
   description: Whether the element stacks its children, and along which axis.
   default: 'NONE'
-  overridable: false
 ```
+
+An explicit `overridable: false` is never written. A grant and a denial would be two spellings of a question with one default answer, and the denial is the one a reader can infer.
 
 **Pros**:
 - Exactly the precedent ADR-113 set. That ADR moved "what an absent style key means" out of a transform and into a per-property schema annotation, for the same reason: a fact about the contract held in one consumer is drift waiting to happen. `overridable` is the same class of fact about the same properties.
@@ -308,7 +309,7 @@ layoutMode:
 
 **Cons / Trade-offs**:
 - It declares the static half of the question and not the contextual half. `itemSpacing` can be overridable in principle and inert in a given place, which is Decision 6's problem and stays there.
-- 46 values to assign, and each is a judgment. The annotation and its meaning are decided here; the values are settled at implementation against the principle in Notes, because inventing an allowlist is a separate act from establishing where the allowlist lives.
+- 46 properties to judge, and the judgments are not all obvious. 41 are granted; the five withheld are the declarations that constitute the element's own layout.
 - A custom annotation keyword is inert to validators, so nothing mechanically enforces it. The same is true of `default` today.
 
 ---
@@ -414,7 +415,7 @@ Element:
 |------|--------|------|
 | `component.schema.json` | Added definitions `Overrides`, `Override`, `ElementOverrides`, `ElementOverride` | MINOR |
 | `component.schema.json` | Added property `overrides` to `#/definitions/Element/properties` | MINOR |
-| `styles.schema.json` | Added `overridable` annotation to each of the 46 `Styles` properties | PATCH |
+| `styles.schema.json` | Added `overridable: true` to the 41 `Styles` properties an override may set | PATCH |
 
 **Example — new definitions** (`schema/component.schema.json`):
 
@@ -470,7 +471,7 @@ overrides:
 
 **Which element names are valid is resolved by tooling.** `ElementOverrides` is keyed by `additionalProperties`, so any name validates; whether the name exists comes from the instanced component's own `anatomy`, which the schema has no way to reach. This is the same boundary `$nested` paths already sit on. The property half of the check is no longer in that position — `overridable` declares it.
 
-**The principle behind an `overridable` value.** A property is overridable when a caller changing it on a placed instance adjusts that instance's presentation without restating the instanced component's own structure. Fills, strokes, corners, typography, colors and the sizing of inner elements qualify. The declarations that constitute the component's layout — whether it stacks its children and along which axis, how it sizes itself against its parent, whether an element exists at all — do not: a caller changing those is redesigning the component, and the answer is a variant in that component or a different component. The per-property values are assigned against this principle at implementation.
+**The principle behind a grant.** A property is granted when a caller changing it on a placed instance adjusts that instance's presentation without restating the instanced component's own structure. Fills, strokes, corners, typography, colors, spacing, visibility, clipping and the sizing of elements all qualify. What does not is the small set of declarations that *constitute* the element's layout — whether it stacks its children and along which axis, whether that axis sizes to its contents, whether it is placed by its parent or its own offsets, whether children wrap. A caller changing one of those is redesigning the component, and the answer is a variant in that component or a different component. `locked` is withheld on separate grounds: it is canvas editing state, not presentation.
 
 **Nested style members inherit.** `overridable` is declared on the 46 top-level `Styles` properties only. A member of a composite value — `cornerRadius.topStart`, `typography.fontSize` — takes its parent property's value, so ADR-116's nested members need no annotation of their own.
 
@@ -516,7 +517,7 @@ The capture side has four problems to solve that the shape above does not solve 
 | Evaluate the value in its own kind | A field's value may be a raw value or a bound style, and the two produce different spec values — a literal, or a `$token` reference. Fields such as `fillStyleId` report the binding rather than the paint, so a field and its binding sibling describe one adjustment and must resolve to one spec value, taking the token form where one exists |
 | Collapse aggregate and part | `cornerRadius` arriving with all four per-corner fields is one adjustment reported twice. The spec carries one — the form that matches the resolved values, per ADR-010's sides-and-corners model |
 | Drop what the context makes inert | Relevance filtering runs as it does for the element's own styles (Decision 6) |
-| Drop what is not overridable | A field mapping to a property annotated `overridable: false` is not emitted, whatever the file says (Decision 5) |
+| Drop what is not overridable | A field mapping to a property without an `overridable: true` grant is not emitted, whatever the file says (Decision 5) |
 
 ### Spec → Figma
 
@@ -589,8 +590,7 @@ Two things the prop cannot do, both of which follow from it being a value rather
 
 ## Open Questions
 
-- **The `overridable` values.** The annotation and the principle are decided here; assigning all 46 is an implementation step needing review, and a handful are genuinely arguable — `opacity`, `visible`, `rotation`, and the min/max sizing pairs.
-- **`visible` has no override path.** Hiding an element inside an instance is a thing Figma records and a thing authors do, and `styles.visible` exists — but hiding an element the component declares is close to the structural line the principle draws. Whether it is overridable is the sharpest case the annotation pass has to settle.
+- **The five withheld grants.** `layoutMode`, `primaryAxisSizingMode`, `position`, `wrap` and `locked` carry no grant. The first four are the element's own layout declarations and the fifth is canvas editing state; each becomes arguable the moment a platform finds a way to honour it without restating the component's structure.
 - **The prop's node shape.** The spec's per-element node is `{ styles, content, overrides }`. A runtime caller would more likely want to write `{ icon: { fillColor: … } }` than `{ icon: { styles: { fillColor: … } } }`. Passing the spec object through unchanged argues for the node shape; hand-authoring argues for the flat one. A decision for the transform packages, noted here because it determines whether the composition emitter forwards or projects.
 - **Whether `overriddenFields` is formally `NodeChangeProperty`.** The Plugin API page read for this ADR documents that type for property-change events. The observed field names are drawn from the same vocabulary; the formal typing is to be confirmed before the field-routing table is implemented.
 - **Resolution depth limits.** Unbounded recursion is legal. Whether the transforms cap it, and what they do at the cap, is a transform decision taken when the recursive form is implemented.

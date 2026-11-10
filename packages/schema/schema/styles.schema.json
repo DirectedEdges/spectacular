@@ -19,7 +19,7 @@
         },
         "visible": {
           "$ref": "#/definitions/BooleanBindableStyleValue",
-          "overridable": false,
+          "overridable": true,
           "description": "Whether the element renders.",
           "default": true
         },
@@ -32,7 +32,6 @@
         },
         "locked": {
           "$ref": "#/definitions/BooleanStyleValue",
-          "overridable": false,
           "description": "Whether the element is protected from selection and editing on the canvas.",
           "default": false
         },
@@ -101,7 +100,7 @@
         },
         "clipsContent": {
           "$ref": "#/definitions/BooleanStyleValue",
-          "overridable": false,
+          "overridable": true,
           "description": "Whether content extending past the element's bounds is cut off at them.",
           "default": false
         },
@@ -153,7 +152,6 @@
         },
         "position": {
           "$ref": "#/definitions/PositionStyleValue",
-          "overridable": false,
           "description": "Whether the element is placed by its parent's layout or by its own offsets. Present whenever any positioning offset is.",
           "default": "AUTO",
           "examples": ["ABSOLUTE"]
@@ -202,14 +200,14 @@
         },
         "layoutSizingHorizontal": {
           "$ref": "#/definitions/LayoutSizingStyleValue",
-          "overridable": false,
+          "overridable": true,
           "description": "What determines the element's width — a fixed value, its contents, or the space its parent offers.",
           "default": "FIXED",
           "examples": ["HUG", "FILL"]
         },
         "layoutSizingVertical": {
           "$ref": "#/definitions/LayoutSizingStyleValue",
-          "overridable": false,
+          "overridable": true,
           "description": "What determines the element's height — a fixed value, its contents, or the space its parent offers.",
           "default": "FIXED",
           "examples": ["HUG", "FILL"]
@@ -295,7 +293,6 @@
         },
         "primaryAxisSizingMode": {
           "$ref": "#/definitions/PrimaryAxisSizingModeStyleValue",
-          "overridable": false,
           "description": "Whether the stacking axis sizes to its contents or to a fixed value.",
           "default": "AUTO",
           "examples": ["FIXED"]
@@ -309,14 +306,12 @@
         },
         "layoutMode": {
           "$ref": "#/definitions/LayoutModeStyleValue",
-          "overridable": false,
           "description": "Whether the element stacks its children, and along which axis.",
           "default": "NONE",
           "examples": ["HORIZONTAL", "VERTICAL"]
         },
         "wrap": {
           "$ref": "#/definitions/BooleanStyleValue",
-          "overridable": false,
           "description": "Whether children that overflow the stacking axis continue onto another line.",
           "default": false
         },
@@ -329,7 +324,7 @@
         },
         "itemReverseZIndex": {
           "$ref": "#/definitions/BooleanStyleValue",
-          "overridable": false,
+          "overridable": true,
           "description": "Whether later children paint behind earlier ones rather than in front.",
           "default": false
         },

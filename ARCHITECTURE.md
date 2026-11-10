@@ -53,7 +53,7 @@ There is no `Config.ts` anymore — older links to "Config" mean these three.
 | `packages/schema/types/Settings.ts` | Run choices + `DEFAULT_SETTINGS` |
 | `packages/schema/types/Anatomy.ts` | Element tree; `role`/`action` concepts (open string sets, docs-governed) |
 | `packages/schema/types/Props.ts` | `AnyProp` union |
-| `packages/schema/types/Override.ts` | Style patches an instance element applies inside the component it instances, bounded by the `overridable` annotation on each `Styles` property (ADR-119) |
+| `packages/schema/types/Override.ts` | Style patches an instance element applies inside the component it instances, bounded by the `overridable: true` grant on a `Styles` property (ADR-119) |
 | `packages/schema/schema/component.schema.json` | Primary JSON Schema — must mirror the `Component` tree |
 | `packages/schema/schema/component-concern.schema.json` | The three component per-concern documents; references `component.schema.json` for shared definitions (renamed from `concern.schema.json`, ADR-110) |
 | `packages/schema/schema/composition-concern.schema.json` | The three composition per-concern documents (ADR-109) |

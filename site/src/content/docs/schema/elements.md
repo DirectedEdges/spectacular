@@ -113,7 +113,7 @@ Entries layer in order, the later winning per style key, the way [variants](/sch
 
 Keys are the names the instanced component's own [anatomy](/schema/anatomy/) uses, and recursion follows **instance** boundaries only — an entry whose element is itself an instance nests its own `overrides`, so one block reaches through a chain of composed instances. Containers and groups are not recursion targets, the same rule [`$nested`](/schema/prop-configurations/) paths follow.
 
-Which style properties an entry may set is declared per property: each `Styles` property carries an [`overridable`](/schema/styles/#overridable) annotation, and a property annotated `false` is not patchable.
+Which style properties an entry may set is declared per property: a property an override may set carries [`overridable: true`](/schema/styles/#overridable), and a property without the annotation is not patchable.
 
 The instanced component's **root** is addressable like any other element. An instance's own `styles` carries only the properties that place it in its parent, so the root's own presentation — its fill, its corners — is reachable only here. Which of the root's properties take effect as placement instead is declared in each platform's style mapping, not in the schema.
 
