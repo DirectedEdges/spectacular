@@ -12,7 +12,7 @@ description: Author a new component spec from a request — requirements split, 
 
 **Prerequisites:** `specs-cli.primer`, then `specs-cli.authoring.primer`. Load its `references/styles.md` before authoring `variants.yaml`, and its `references/slots-layout.md` before authoring any layout tree or slot.
 
-Templates ship beside this skill in `templates/` — `api.yaml`, `variants.yaml`, `examples.yaml`, `supplemental.yaml`. Copy them; never author a file from a blank page or from another spec's structure.
+Templates ship beside this skill in `templates/` — `api.yaml`, `variants.yaml`, `examples.yaml`, `supplemental.yaml`, `guidelines.yaml`. Copy them; never author a file from a blank page or from another spec's structure.
 
 ## 0. Ensure the posture
 
@@ -28,8 +28,9 @@ Before writing anything, restate every requirement from the request as a table:
 |---|---|---|
 | … | spec | the schema path that carries it |
 | … | supplemental | the schema path that *would* carry it and why it cannot |
+| … | guidelines | the obligation level it binds a consumer at |
 
-Rules: a requirement goes supplemental only after naming the schema path that cannot carry it; forcing into the spec what the schema cannot express is the worse failure. This table is the plan — keep it, you grade against it in step 7.
+Rules: a requirement goes supplemental only after naming the schema path that cannot carry it; forcing into the spec what the schema cannot express is the worse failure. Sort by **who acts on it** — a thing the component must do is supplemental, a thing its caller must do is guidelines. This table is the plan — keep it, you grade against it in step 7.
 
 ## 2. Correlate against the catalogue
 
@@ -73,16 +74,18 @@ The dev posture is live — `specs run` re-emits the platform trees on save and 
 
 If the posture is not running, start it; do not fall back to one-shot `specs react` / `specs render` invocations per iteration. If render reports a stale or unusable cache, run `specs cache` once and retry.
 
-## 8. Supplemental platform files
+## 8. The two authored documents
 
 For every requirement the table in step 1 marked supplemental:
 
-- Implement it in hand-authored files **beside** the emitted output (e.g. `component.tsx`, a hook, a stylesheet) in the platform tree. Never edit emitted files — a re-emit overwrites them. Files you add are safe: emit overwrites only its own filenames, and prune removes only whole directories whose spec is gone.
-- Copy `templates/supplemental.yaml` to the spec folder as `supplemental.yaml` and fill it, section by section (`anatomy`, `props`, `styles`, `slotComposition`, `events`, `accessibility`, `behavior`, `motion`, `layout`, `guidelines`): each entry a testable `intent`, the `schemaGap` that cannot carry it, the implementing file per platform under `platforms`, and its `regenerationRisk`. No rationale prose. `specs validate` checks the file's shape — run it after writing, like any concern file.
-- **The `platforms:` declaration is load-bearing, not bookkeeping.** The emitters redirect their generated stories from `./scaffold` to an authored `component.*` **only when a supplemental entry names that file under `platforms.<platform>`** — an authored file nothing declares sits beside the scaffold and never runs, while validation reports all clear. Name the file each platform *loads*; files it merely imports (a stylesheet) are noted in `regenerationRisk`.
+- Implement it in hand-authored files **beside** the emitted output in the platform tree. Never edit emitted files — a re-emit overwrites them. Files you add are safe: emit overwrites only its own filenames, and prune removes only whole directories whose spec is gone.
+- **Name the entry point by convention.** An emitter imports an authored `component.tsx` (React) or `component.ts` (Web Components) in place of the scaffold when it finds one beside it, and points the generated stories at it. It finds the file by that **name** — nothing in the spec or either document declares it. A file under any other name is reached only if one of those imports it, so put the implementation in `component.*` and let it import whatever else it needs.
+- Copy `templates/supplemental.yaml` to the spec folder and fill it, section by section (`anatomy`, `props`, `styles`, `slotComposition`, `events`, `accessibility`, `behavior`, `motion`, `layout`, `overrides`, `naming`): each entry a testable `intent` and the `schemaGap` object — `{ path, need }` — naming the surface that cannot carry it. Add `platforms` as a *list* when the entry is scoped (`[react]`, `[web]`), `checkedBy` for how it is verified, and `checks` pointing at what verifies it. No rationale prose.
+- For anything a *consumer* must observe, copy `templates/guidelines.yaml` as `guidelines.yaml`: each entry a `statement` with a `level` of `must` / `should` / `should-not` / `must-not` / `may`. Prefer `alternatives` over `instead` whenever the remedy is a thing you can point at. A consumer rule never belongs in `supplemental.yaml`, and never carries a `schemaGap`.
+- `specs validate` checks both documents' shape against their published contracts — run it after writing, like any concern file.
 - **Rename procedure:** renaming the component orphans its old emitted directory — prune removes it, custom files included. Move custom files first.
 
-After every later re-emit, diff the fresh scaffold against your custom files and update each entry's `regenerationRisk`.
+After every later re-emit, diff the fresh scaffold against your custom files. Where an overlay depends on something the emitter produces — a BEM class, a selector the states convention generates — record that dependency in the entry's `checks` so the next re-emit has something to re-verify against.
 
 ## 9. Report
 
@@ -93,7 +96,7 @@ End every pass with this summary, in this order. Keep unstructured narrative to 
 - **Tokens applied:** one per line, by name only — no narrative about how or why each was chosen
 - **Decisions to confirm:** a numbered list (1., 2., …) so a reply can reference them by number; each item a **bolded term** followed by two or three sentences. A formatted list, never a table
 - **Gaps:** same numbered format — requirements the schema could not carry, what went supplemental, and anything the skills did not predict
-- **Suggestions:** same numbered format — opportunities you noticed but were **not asked to build**: events, accessibility, interactions, refinements. Never build these on your own; surface them here and wait. One that would land as a supplemental entry is listed literally, grouped under its sidecar section name (`events:`, `accessibility:`, …), so the user can approve some, all, or none
-- One stats line: validate attempts per file; requirements spec-carried vs supplemental
+- **Suggestions:** same numbered format — opportunities you noticed but were **not asked to build**: events, accessibility, interactions, refinements. Never build these on your own; surface them here and wait. One that would land as an authored entry is listed literally, naming its document and section (`supplemental: events:`, `guidelines: accessibility:`), so the user can approve some, all, or none
+- One stats line: validate attempts per file; requirements spec-carried vs supplemental vs guidelines
 
 The Suggestions section is also a scope rule: an unprompted improvement is proposed there, never implemented in the same pass.

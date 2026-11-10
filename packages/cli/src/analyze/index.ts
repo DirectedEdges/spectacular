@@ -1,10 +1,12 @@
 import type { Transformer } from '../transforms/transformer.js';
 import { DependenciesAnalyzer } from './Dependencies.js';
 import { FoundationsAnalyzer } from './Foundations.js';
+import { GuidelinesAnalyzer } from './Guidelines.js';
 import { KeysAnalyzer } from './Keys.js';
 import { PropsAnalyzer } from './Props.js';
 import { RolesAnalyzer } from './Roles.js';
 import { StylingAnalyzer } from './Styling.js';
+import { SupplementalAnalyzer } from './Supplemental.js';
 
 /**
  * An analyzer accumulates across the specs it visits and writes the total in
@@ -31,6 +33,11 @@ const ANALYZERS: Array<new () => Transformer> = [
   DependenciesAnalyzer,
   KeysAnalyzer,
   RolesAnalyzer,
+  // Last, and the only two reading authored rather than generated input: they
+  // measure a judgment someone made by hand, so their reports are coverage and
+  // concentration rather than a census (ADR-118).
+  SupplementalAnalyzer,
+  GuidelinesAnalyzer,
 ];
 
 /** Names only — safe to read without constructing anything. */

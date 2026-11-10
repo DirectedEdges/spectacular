@@ -58,11 +58,16 @@ describe('runAnalyze with an empty catalogue', () => {
     expect(fs.readdirSync(analysisDir()).sort()).toEqual([
       'dependencies.byComponent.yaml',
       'dependencies.graph.yaml',
+      // The two authored-input analyses (ADR-118). They write an empty report
+      // over an empty catalogue for the same reason the rest do: a reader can
+      // tell nothing was authored from zeroes, and cannot from a missing file.
+      'guidelines.yaml',
       'keys.yaml',
       'props.yaml',
       'roles.yaml',
       'styling.byComponent.yaml',
       'styling.byToken.yaml',
+      'supplemental.yaml',
     ]);
   });
 
