@@ -39,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `specs skills install` now ships `templates/guidelines.yaml` with the component-author skill — the skill's step 8 referenced it, the file existed in source, and the installer never emitted it
+- The images-convention migration warning (`images.match` without `{i}`, ADR-117) no longer prints on every command — it is deferred at config load and surfaces where the convention is consumed (`specs fetch`), so a declared-but-unused convention stays quiet on validate and analyze
 - **Storybook shows components emitted after the server started.** The scaffold's story globs were guarded by `fs.existsSync` on the platform trees, so a server that booted before the first emit silently never registered any component — `storybook publish` reported current and validation passed while the sidebar stayed empty. The globs are now unconditional and `specs storybook init` creates the platform story directories so they are valid at boot. Re-run `specs storybook init --force` in an existing workspace to pick up the new `main.ts`
 
 - `specs validate` no longer prints "unknown format" lines — the schemas' standard formats (`date-time`, `uri`) are now registered via `ajv-formats` and actually validate, instead of being ignored with a warning on every compile (~30 lines per run)

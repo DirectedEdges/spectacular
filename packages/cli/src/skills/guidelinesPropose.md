@@ -24,7 +24,7 @@ Per-system rules are the second rules layer. The shipped `rules/*.yaml` beside t
 
 Copy `templates/guidelines.yaml` from the component-author skill's templates. An optional `meta` header (concern, status, author, updated, sources), then one list of rules per concern key.
 
-**At this scope the section keys are the foundation concerns**, not the component ones: `color`, `typography`, `layout`, `space`, `shape`, `elevation`, `motion`, `brand`. A rule about applying colour goes under `color`, not `styles` — `styles` belongs to the component vocabulary and the schema rejects it here. Only `layout` and `motion` are in both vocabularies. A document mixing the two is rejected.
+**At this scope the section keys are what `guidelines.schema.json` accepts**, not the component ones: the foundation concerns (`color`, `typography`, `layout`, `space`, `shape`, `elevation`, `motion`, `brand`) plus the cross-cutting keys the schema also allows (`behavior`, `accessibility`, `events`, and the rest it lists — the schema is the authority). A rule about applying colour goes under `color`, not `styles` — `styles` belongs to the component vocabulary and the schema rejects it here. A document mixing the two vocabularies is rejected.
 
 Each rule is a DSDS 0.23.1 guideline item: a `statement` and a `level`.
 

@@ -139,6 +139,8 @@ export type GlyphContentStyles = Partial<{
  *
  * Captured per variant from the first top-level primitive of each kind in the default
  * fill, and overridden per variant through `variants[].elements` exactly as `styles` is.
+ * Authoring direction, same contract: a primitive must sit top-level in the fill for
+ * `contentStyles` to reach it.
  *
  * Applies to primitive content only: a component fill is formatted by the component it
  * instantiates, so a consumer applies its `styles` and discards `contentStyles`.

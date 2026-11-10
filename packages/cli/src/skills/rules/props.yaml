@@ -25,6 +25,9 @@ default:
     - should: "put demo content in `examples` and reserve `default` for a genuine contractual fallback (a Figma-authored `Label` value is an example, not a default)"
       adr: [14, 88]
       note: "the two fields serve different consumers — `examples` is what Figma renders as the prop's shown value (demo content); `default` is encoded into the component itself (what it does when the consumer passes nothing). A request stating default content in passing (\"make the default text X\") is naming demo content for `examples`; only an explicitly stated fallback behavior earns `default`"
+stateProps:
+  guidelines:
+    - should: "name a `state` enum's resting value `Rest` and list it first (`enum: [Rest, Hover, Pressed]`) — the states convention fixes only the `Hover` and `Pressed` spellings, and an unnamed resting concept invites a new synonym per component"
 variantProps:
   guidelines:
     - must: "declare a boolean prop whose value drives variant deltas — it appears in any `variants[].configuration` — with `$extensions: {com.figma: {type: VARIANT}}`; the renderer otherwise models it as a Figma BOOLEAN property, which can only toggle visibility, and the styling deltas never land on the canvas"

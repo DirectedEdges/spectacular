@@ -51,6 +51,7 @@ import TEMPLATE_API from './templates/api.yaml';
 import TEMPLATE_VARIANTS from './templates/variants.yaml';
 import TEMPLATE_EXAMPLES from './templates/examples.yaml';
 import TEMPLATE_SUPPLEMENTAL from './templates/supplemental.yaml';
+import TEMPLATE_GUIDELINES from './templates/guidelines.yaml';
 import TEMPLATE_GUIDELINES_RULES from './templates/guidelinesRules.yaml';
 import POSTURE from './posture.md';
 import RULES_ANATOMY from './rules/anatomy.yaml';
@@ -112,6 +113,7 @@ export const SKILL_ASSETS: SkillAsset[] = [
       { path: 'templates/variants.yaml', content: TEMPLATE_VARIANTS },
       { path: 'templates/examples.yaml', content: TEMPLATE_EXAMPLES },
       { path: 'templates/supplemental.yaml', content: TEMPLATE_SUPPLEMENTAL },
+      { path: 'templates/guidelines.yaml', content: TEMPLATE_GUIDELINES },
     ],
   },
 ];

@@ -43,3 +43,4 @@ elements:
       adr: 58
     - never: "author a container whose only child is a slot — the slot is the content area"
       adr: 83
+      note: "the sanctioned shape: the root *is* the collapsed primitive — `root: {type: slot}` for a slot-only component, exactly as a text- or glyph-only component's root is the text or glyph element"
