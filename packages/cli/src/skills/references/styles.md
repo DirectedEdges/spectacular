@@ -18,7 +18,7 @@ Properties group by the shape of their value. A property not in this table does 
 | Numbers | `width`, `height`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `opacity`, `rotation`, `cornerSmoothing`, `maxLines` | number, `$token`, or null (`NumberStyleValue`) |
 | Colors | `backgroundColor`, `textColor`, `fillColor`, `strokes` | `{r,g,b,a}` object, gradient, `$token`, or null (`ColorStyleValue`) |
 | Sides | `padding`, `strokeWeight` | single value or `{top, end, bottom, start}`, each number or `$token` (`SidesStyleValue`) |
-| Corners | `cornerRadius` | single value or `{topLeft, topRight, bottomRight, bottomLeft}`, each number or `$token` (`CornersStyleValue`) |
+| Corners | `cornerRadius` | single value or `{topStart, topEnd, bottomEnd, bottomStart}` — logical inline-axis keys, never physical left/right — each number or `$token` (`CornersStyleValue`) |
 | Deep: typography | `typography` | `$token` (a named text style) **or** an inline `Typography` object — members, their defaults, and which accept `$token` are declared on the `Typography` definition |
 | Deep: effects | `effects` | `$token` (a named effect style) or an effects array (`EffectsStyleValue`) — shadows, blurs |
 | Deep: image | `backgroundImage` | `ImageValue` or `$token` (`ImageStyleValue`) |
