@@ -57,6 +57,8 @@ The emitted React and Web Components surface is expected to carry a runtime `ove
 
 This ADR adds `overrides` to `Element` and an `overridable` annotation to the `Styles` properties that bounds what an override may set.
 
+**One decision is deliberately not taken here.** An instance's own `Element.styles` carries only part of the root's surface — the properties that place it in its parent — so the root is addressable as an override, and the two can name the same node. Which of the root's properties are evaluated as placement and which are patched as internals is decided in the platform mapping rules and each platform's spec, because the same node divides differently on each. This ADR makes the root reachable and declines the split; Decision 4 records why.
+
 ---
 
 ## Decision Drivers
@@ -68,7 +70,7 @@ This ADR adds `overrides` to `Element` and an `overridable` annotation to the `S
 - **Two consumers want different amounts of it.** The spec ↔ Figma transform round-trips a per-node delta that has no state dimension at all. The spec ↔ code transforms emit stylesheets and accept a runtime prop, where per-state selectors are the native idiom. The contract must be shaped for the wider of the two and is free to leave the narrower one a subset — not shaped for whichever one is implemented first.
 - **The override surface belongs in the contract.** Which style properties may be overridden is a fact about the schema, not about any one transform. Four consumers would otherwise each keep their own allowlist, and ADR-113 already settled that this class of fact — what a `Styles` property means when it is absent — is declared per property in the schema rather than held in a transform.
 - **A static flag cannot express contextual relevance.** Whether `itemSpacing` matters depends on the resolved layout of the element it sits on: under absolute positioning it changes nothing. That is a resolution-time question, and the contract must not pretend to answer it.
-- **One node, one property.** The instance node *is* the root of the instanced component. If both `Element.styles` and an `overrides` entry for the root could describe it, every reader and every transform would need a precedence rule for a situation that need not exist.
+- **The root is reachable, and the contract does not divide it.** The instance node is the root of the instanced component, and only part of its surface arrives as the instance's own `Element.styles` — the properties that place it in its parent, not the ones that paint it. So the root needs overrides. Which of its properties are evaluated as placement and which are patched as internals differs by platform, which makes that division a platform mapping fact rather than a contract one.
 - **Values are static in the spec.** An override on a documented instance is not a live data flow, the same rule `InstanceExample` already carries: no `PropBinding`.
 - **Existing specs must keep validating.** The property is optional and additive — MINOR class (Constitution: Versioning).
 - **Minimal, stable API** (Constitution III). New exported types must name genuine shared concepts, and no consumer's internals may drive the shape.
@@ -224,52 +226,56 @@ Define `OverrideConfigurationValue` as scalars and `null` only, the way `Instanc
 
 ### Decision 4 — The instanced component's root
 
-#### Option A: The root is not an override key *(Selected)*
+#### Option A: The root is a key, and the contract does not divide it *(Selected)*
 
-An `elements` map may key any element of the instanced component **except its root**. Everything about the instance node itself — its box, its fill, its corners — is `Element.styles` on the instance, as it is today.
+An `elements` map may key any element of the instanced component, its root included — keyed like any other element, with no special case in the schema.
+
+Only part of the root's surface arrives as the instance's own `Element.styles`: the properties that place it in its parent. The rest of what the root shows is reachable only as an override.
 
 ```yaml
 navigation:
   instanceOf:
     $ref: '#/subcomponents/action'
-  styles:                  # the instance node = the instanced component's root
+  styles:                  # how the instance sits in its parent
     width: 48
-    cornerRadius: 8
-    backgroundColor:
-      $token: 'color/surface'
   overrides:
     - elements:
-        icon:              # inner elements only
+        root:              # what the instanced component's root shows
+          styles:
+            backgroundColor:
+              $token: 'color/surface'
+        icon:
           styles:
             fillColor:
               $token: 'color/onSurface'
 ```
 
+**Which properties fall on each side is out of scope for this ADR.** It is taken in the platform mapping rules and each platform's spec, because the division is not a fact about the property: the web sizes an instance from its parent's layout while the root's background sits inside the component, and Figma, SwiftUI and Compose divide the same node differently.
+
 **Pros**:
-- The instance node and the instanced component's root are one node. Giving them one property removes a precedence question instead of answering it.
-- It matches what Figma reports. The first entry in the sample payload is the instance node's own id, with no instance prefix — the transform sends those fields to `styles`, and only prefixed ids to `overrides`, so routing is structural rather than a lookup.
-- Nothing becomes inexpressible. `Element.styles` is the full `Styles` type, so any adjustment the root needs is already sayable there.
-- It keeps `width` and `height` in one place. Those are read as the instance's own layout today; a root override entry would make them readable from two.
+- The root needs the key. An instance's `styles` carries placement, so without a root entry a repainted root — the first and commonest thing a composition does to a placed component — is inexpressible.
+- Nothing in the contract has to stay true across four consumers whose answers legitimately differ. The schema says the root is addressable and stops.
+- No special case. The recursion rule, the matcher and `overridable` all apply to a root entry exactly as they apply to any other.
 
 **Cons / Trade-offs**:
-- The exclusion is not structural in JSON Schema. `ElementOverrides` is keyed by `additionalProperties`, and which key is the root comes from the instanced component's anatomy — so a root entry validates and is rejected at resolution, with the element-name check that is already happening there.
-- An author moving a block of adjustments between an instance and its component has to split them across two properties.
+- Two properties can name the same node, so each platform's mapping has to say which wins where they meet, and a document can carry a contradiction the schema will not catch.
+- A reader consults a platform's mapping to know where a root property takes effect, rather than reading it off the spec alone.
 
 ---
 
-#### Option B: The root is a key, with the overlapping properties excluded *(Rejected)*
+#### Option B: The root is not a key *(Rejected)*
 
-Allow a `root` entry but forbid it the properties `Element.styles` already carries for an instance — sizing and layout.
+Reserve the root: everything about the instance node is `Element.styles`, and `overrides` reaches only the elements inside it.
 
-**Rejected because**: it needs a second allowlist whose only job is to name the overlap, and that list is a worse version of the `overridable` annotation Decision 5 introduces, scoped to one key. It also leaves the same node described by two properties, so a reader still has to merge them to know what the instance looks like.
+**Rejected because**: it assumes the instance's `styles` already carries the whole root, and it does not — `styles` carries placement. Repainting a placed component's root would be unsayable, which is the case the property exists for. The attraction was removing a precedence question; the cost is removing the capability with it.
 
 ---
 
-#### Option C: Both allowed, with declared precedence *(Rejected)*
+#### Option C: The root is a key, and the schema declares the split *(Rejected)*
 
-Permit a root entry and declare that `overrides` wins over `styles`.
+Allow a root entry and add a second per-property annotation beside `overridable`, naming the properties that belong to the instance's placement rather than to a root override.
 
-**Rejected because**: precedence is only worth paying for when both forms carry information the other cannot. Here they are the same node and the same `Styles` type, so the rule buys nothing and costs every consumer a merge step — and every author a reason to wonder which one to write.
+**Rejected because**: the split is platform-specific, so a contract annotation would impose one platform's division on the rest or be ignored by them. `overridable` is different in kind — whether a caller may patch a property at all has the same answer everywhere, which is what makes it a contract fact and this not one.
 
 ---
 
@@ -458,11 +464,11 @@ overrides:
 
 **`overrides` is meaningful only on an instance element.** Only an element with `instanceOf` has internals to patch. The schema does not couple the two keys — the same stance ADR-052 took for `$nested` — because coupling them in JSON Schema buys a constraint tooling has to re-check anyway, against the instanced component's anatomy, which the schema cannot see.
 
-**The root element is not a key** (Decision 4). The instance node is the instanced component's root, and its own appearance is `Element.styles`. A root entry validates structurally and is rejected at resolution.
+**The root element is a key, and this ADR does not divide it** (Decision 4). The instance node is the instanced component's root, and the instance's own `Element.styles` carries only its placement — so the root is addressable as an override like any other element. Which of its properties are evaluated as placement and which are patched as internals is taken in the platform mapping rules and each platform's spec, not here.
 
 **What an entry may not set.** `layout`, because an override patches presentation and does not restructure. `propConfigurations`, because configuring a nested instance is `$nested` (ADR-052) and this ADR must not offer a second route to it. `instanceOf`, because swapping the component is a structural change, not a patch. `contentStyles`, because how primitive content filling a slot is formatted is a property of the component that owns the slot (ADR-102), not of a caller patching its appearance.
 
-**Which element names are valid is resolved by tooling.** `ElementOverrides` is keyed by `additionalProperties`, so any name validates; whether the name exists, and whether it is the root, comes from the instanced component's own `anatomy`, which the schema has no way to reach. This is the same boundary `$nested` paths already sit on. The property half of the check is no longer in that position — `overridable` declares it.
+**Which element names are valid is resolved by tooling.** `ElementOverrides` is keyed by `additionalProperties`, so any name validates; whether the name exists comes from the instanced component's own `anatomy`, which the schema has no way to reach. This is the same boundary `$nested` paths already sit on. The property half of the check is no longer in that position — `overridable` declares it.
 
 **The principle behind an `overridable` value.** A property is overridable when a caller changing it on a placed instance adjusts that instance's presentation without restating the instanced component's own structure. Fills, strokes, corners, typography, colors and the sizing of inner elements qualify. The declarations that constitute the component's layout — whether it stacks its children and along which axis, how it sizes itself against its parent, whether an element exists at all — do not: a caller changing those is redesigning the component, and the answer is a variant in that component or a different component. The per-property values are assigned against this principle at implementation.
 
@@ -503,7 +509,7 @@ The capture side has four problems to solve that the shape above does not solve 
 
 | Step | What it owes |
 |---|---|
-| Resolve the id to an element key | An id resolves against the placed instance to a layer, and the layer's name maps to a spec element key through the same naming convention the rest of generation uses. An unprefixed id is the instance node itself and routes to `Element.styles`, not to `overrides` (Decision 4) |
+| Resolve the id to an element key | An id resolves against the placed instance to a layer, and the layer's name maps to a spec element key through the same naming convention the rest of generation uses. The unprefixed id is the instance node — the instanced component's root — and which of its fields become the instance's `styles` and which become a root override is the Figma mapping's own rule (Decision 4), as the rest of this section is |
 | Place the entry at the right depth | An id carrying more than one instance segment is an override below the first boundary, and nests under the entry for the instance it sits in (Decision 2) |
 | Route the field, not just read it | `overriddenFields` mixes categories. Presentation fields become `styles`; `characters` becomes `content`; `componentProperties` and `componentPropertyReferences` are configuration and belong to `propConfigurations` / `$nested` (ADR-052), never to `overrides`; identity and structure fields — `name`, `parent`, `locked`, `expanded`, `autoRename`, `pluginData`, `exportSettings`, `reactions`, prototype and connector fields — are not presentation and are dropped |
 | Diff, do not transcribe | A listed field may hold the component's default value. The field list is a candidate filter; the entry is emitted only where the resolved value differs from the instanced component's resolved default |
@@ -571,12 +577,12 @@ Two things the prop cannot do, both of which follow from it being a value rather
 - A composition or a slot-content example can state the appearance it actually documents, instead of naming a component and losing every adjustment made to it in place.
 - The surface ADR-052 deferred by name is supplied, and the boundary it drew holds: configuration stays on `propConfigurations` and `$nested`, presentation moves to `overrides`, and Figma's habit of reporting both through one channel is resolved by routing rather than by blurring them.
 - The published contract answers "may I override this property?" for the first time. Four consumers read one annotation instead of keeping four allowlists, and an author gets the answer before writing the override rather than after a transform drops it.
-- `Element.styles` keeps its meaning and gains a boundary. The instance node has exactly one property describing it, so "how the instance sits and looks in its parent" and "how its internals look" never contend for the same node.
+- `Element.styles` keeps its meaning, and the root becomes addressable without the contract taking a position on it. A placed component's root can be repainted, and where each of its properties takes effect is settled once per platform instead of once per consumer.
 - An override's relationship to interaction state is answered in the contract rather than per emitter: unscoped holds at every state, and a matched entry names the state it applies to.
 - The emitted components can offer the same capability to application authors as a prop whose value is the spec's own object, so a composition's patch and a caller's patch are one mechanism rather than two.
 - The Figma transform implements a subset. Unscoped entries round-trip; matched entries are authored or code-emitted only, and a spec carrying them loses them on a round trip through Figma. This is a declared asymmetry, not a defect to be closed.
 - A spec is a statement about what matters, not a transcript. Inert and non-overridable fields the file reports do not reach it, which also means a round trip does not restore them.
-- Element-name validity remains a resolution-time check. A name absent from the instanced component's anatomy, or naming its root, passes JSON Schema and is caught when tooling resolves the reference.
+- Element-name validity remains a resolution-time check. A name absent from the instanced component's anatomy passes JSON Schema and is caught when tooling resolves the reference.
 - Overrides inside component definitions are permitted and discouraged. A component that needs an instance of another component to look different should usually say so in that component's own variants; guidance steers this, not validation.
 
 ---
