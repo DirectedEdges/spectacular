@@ -3,7 +3,7 @@
 **Branch**: `119-instance-overrides`
 **Created**: 2026-11-09
 **Status**: DRAFT
-**Summary**: *(written at implementation — see `/specs.adr.implement`)*
+**Summary**: An `overrides` property joins `styles` and `propConfigurations` on an instance element, patching inside the component it instances.
 **Decides**: `Element.overrides`; the `overridable` annotation on `Styles` properties (the annotation and its semantics here, the per-property values at implementation)
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*

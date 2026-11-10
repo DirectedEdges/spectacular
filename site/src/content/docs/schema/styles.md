@@ -74,6 +74,26 @@ The Default column is the value a property is treated as having when absent — 
 
 Element-type applicability (`container`/`text`/`glyph`/`vectors`/`line`) moves to per-property pages once those exist.
 
+## Overridable
+
+Every `Styles` property declares an `overridable` annotation in `styles.schema.json`, stating whether a caller placing an instance may patch it through [`Element.overrides`](/schema/elements/#overrides). It is a fact about the contract rather than about any one transform, so both Figma directions, both code emitters and the shared resolution core read the same declaration.
+
+A property is overridable when changing it on a placed instance adjusts that instance's presentation without restating the instanced component's own structure. Fills, strokes, corners, typography, colours, spacing and the sizing of inner elements qualify. Ten properties do not:
+
+| Not overridable | Why |
+|---|---|
+| `layoutMode` | Whether the element stacks its children, and along which axis |
+| `layoutSizingHorizontal`, `layoutSizingVertical` | How the element sizes itself against its parent |
+| `primaryAxisSizingMode` | Whether the stacking axis sizes to its contents |
+| `position` | Whether the element is placed by its parent's layout or its own offsets |
+| `wrap` | Whether children continue onto another line |
+| `itemReverseZIndex` | The order children paint in |
+| `clipsContent` | Where the component cuts its own content off |
+| `visible` | Whether an element the component declares exists at all |
+| `locked` | Canvas editing state, not presentation |
+
+The annotation declares the static half of the question. A property can be overridable in principle and inert in a given place — `itemSpacing` changes nothing on an absolutely positioned element — and that relevance is resolved against the element's own layout at generation, not declared here.
+
 ## ContentStyles
 
 A second style type, carried by [`Element.contentStyles`](/schema/elements/#styles-vs-content-styles). `Styles` describes an element's own appearance; `ContentStyles` describes the appearance of primitive content *filling* it.

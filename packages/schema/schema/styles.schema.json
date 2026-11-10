@@ -12,28 +12,33 @@
       "properties": {
         "rotation": {
           "$ref": "#/definitions/NumberStyleValue",
+          "overridable": true,
           "description": "Clockwise rotation about the element's centre, in degrees.",
           "default": 0,
           "examples": [45, -90, { "$token": "Rotation/Quarter turn", "$type": "number" }]
         },
         "visible": {
           "$ref": "#/definitions/BooleanBindableStyleValue",
+          "overridable": false,
           "description": "Whether the element renders.",
           "default": true
         },
         "opacity": {
           "$ref": "#/definitions/NumberStyleValue",
+          "overridable": true,
           "description": "How opaque the element and its contents are, from fully transparent to fully opaque.",
           "default": 1,
           "examples": [0.5, 0]
         },
         "locked": {
           "$ref": "#/definitions/BooleanStyleValue",
+          "overridable": false,
           "description": "Whether the element is protected from selection and editing on the canvas.",
           "default": false
         },
         "backgroundColor": {
           "$ref": "#/definitions/ColorStyleValue",
+          "overridable": true,
           "description": "The fill painted behind an element's contents.",
           "default": null,
           "examples": [
@@ -59,24 +64,28 @@
         },
         "backgroundImage": {
           "$ref": "#/definitions/ImageStyleValue",
+          "overridable": true,
           "description": "An image painted as a layer's fill, used where the library has no image component to bind instead.",
           "default": null,
           "examples": [{ "$image": "#/images/hero", "objectFit": "COVER" }]
         },
         "fillColor": {
           "$ref": "#/definitions/ColorStyleValue",
+          "overridable": true,
           "description": "The fill of a glyph or vector shape.",
           "default": null,
           "examples": ["#1B1B1BFF", { "$token": "Color/On surface", "$type": "color" }]
         },
         "textColor": {
           "$ref": "#/definitions/ColorStyleValue",
+          "overridable": true,
           "description": "The fill of a text element's glyphs.",
           "default": null,
           "examples": ["#1B1B1BFF", { "$token": "Color/On surface", "$type": "color" }]
         },
         "effects": {
           "$ref": "#/definitions/EffectsStyleValue",
+          "overridable": true,
           "description": "Shadows and blurs applied to the element.",
           "default": null,
           "examples": [
@@ -92,11 +101,13 @@
         },
         "clipsContent": {
           "$ref": "#/definitions/BooleanStyleValue",
+          "overridable": false,
           "description": "Whether content extending past the element's bounds is cut off at them.",
           "default": false
         },
         "cornerRadius": {
           "$ref": "#/definitions/CornersStyleValue",
+          "overridable": true,
           "description": "How much each corner is rounded.",
           "default": 0,
           "examples": [
@@ -106,114 +117,134 @@
         },
         "width": {
           "$ref": "#/definitions/NumberStyleValue",
+          "overridable": true,
           "description": "The element's width in pixels when horizontal sizing is FIXED.",
           "default": 0
         },
         "height": {
           "$ref": "#/definitions/NumberStyleValue",
+          "overridable": true,
           "description": "The element's height in pixels when vertical sizing is FIXED.",
           "default": 0
         },
         "minWidth": {
           "$ref": "#/definitions/NumberStyleValue",
+          "overridable": true,
           "description": "The smallest width the element may take when its width is otherwise flexible.",
           "default": 0
         },
         "minHeight": {
           "$ref": "#/definitions/NumberStyleValue",
+          "overridable": true,
           "description": "The smallest height the element may take when its height is otherwise flexible.",
           "default": 0
         },
         "maxWidth": {
           "$ref": "#/definitions/NumberStyleValue",
+          "overridable": true,
           "description": "The largest width the element may take when its width is otherwise flexible.",
           "default": null
         },
         "maxHeight": {
           "$ref": "#/definitions/NumberStyleValue",
+          "overridable": true,
           "description": "The largest height the element may take when its height is otherwise flexible.",
           "default": null
         },
         "position": {
           "$ref": "#/definitions/PositionStyleValue",
+          "overridable": false,
           "description": "Whether the element is placed by its parent's layout or by its own offsets. Present whenever any positioning offset is.",
           "default": "AUTO",
           "examples": ["ABSOLUTE"]
         },
         "top": {
           "$ref": "#/definitions/PositionOffset",
+          "overridable": true,
           "description": "Distance from the parent's top edge, when the element is positioned against it.",
           "default": null,
           "examples": ["10%"]
         },
         "bottom": {
           "$ref": "#/definitions/PositionOffset",
+          "overridable": true,
           "description": "Distance from the parent's bottom edge, when the element is positioned against it.",
           "default": null,
           "examples": ["10%"]
         },
         "start": {
           "$ref": "#/definitions/PositionOffset",
+          "overridable": true,
           "description": "Distance from the parent's start edge, when the element is positioned against it (ADR-041).",
           "default": null,
           "examples": ["5%"]
         },
         "end": {
           "$ref": "#/definitions/PositionOffset",
+          "overridable": true,
           "description": "Distance from the parent's end edge, when the element is positioned against it (ADR-041).",
           "default": null,
           "examples": ["5%"]
         },
         "centerHorizontalOffset": {
           "$ref": "#/definitions/PositionOffset",
+          "overridable": true,
           "description": "Horizontal distance from the parent's centre, when the element is centred on that axis.",
           "default": null,
           "examples": [-12]
         },
         "centerVerticalOffset": {
           "$ref": "#/definitions/PositionOffset",
+          "overridable": true,
           "description": "Vertical distance from the parent's centre, when the element is centred on that axis.",
           "default": null,
           "examples": [-8]
         },
         "layoutSizingHorizontal": {
           "$ref": "#/definitions/LayoutSizingStyleValue",
+          "overridable": false,
           "description": "What determines the element's width — a fixed value, its contents, or the space its parent offers.",
           "default": "FIXED",
           "examples": ["HUG", "FILL"]
         },
         "layoutSizingVertical": {
           "$ref": "#/definitions/LayoutSizingStyleValue",
+          "overridable": false,
           "description": "What determines the element's height — a fixed value, its contents, or the space its parent offers.",
           "default": "FIXED",
           "examples": ["HUG", "FILL"]
         },
         "strokes": {
           "$ref": "#/definitions/ColorStyleValue",
+          "overridable": true,
           "description": "The colour of the element's stroke.",
           "default": null,
           "examples": ["#1B1B1BFF", { "$token": "Color/Outline", "$type": "color" }]
         },
         "strokeAlign": {
           "$ref": "#/definitions/StrokeAlignStyleValue",
+          "overridable": true,
           "description": "Where the stroke sits relative to the element's boundary.",
           "default": "INSIDE",
           "examples": ["OUTSIDE", "CENTER"]
         },
         "strokeWeight": {
           "$ref": "#/definitions/SidesStyleValue",
+          "overridable": true,
           "description": "How thick the stroke is.",
           "default": 0,
           "examples": [{ "top": 0, "end": 0, "bottom": 1, "start": 0 }]
         },
         "strokeDashPattern": {
           "$ref": "#/definitions/StrokeDashPatternStyleValue",
+          "overridable": true,
           "description": "The dash and gap lengths that make a stroke dashed rather than solid.",
           "default": null,
           "examples": [{ "dash": 8, "gap": 4 }]
         },
         "typography": {
           "$ref": "#/definitions/TypographyStyleValue",
+          "overridable": true,
           "description": "The type treatment of a text element — family, size, spacing and case.",
           "default": null,
           "examples": [
@@ -230,87 +261,102 @@
         },
         "textAlignHorizontal": {
           "$ref": "#/definitions/TextAlignHorizontalStyleValue",
+          "overridable": true,
           "description": "Where text sits along the writing direction (ADR-064).",
           "default": "START",
           "examples": ["CENTER", "JUSTIFY"]
         },
         "textAlignVertical": {
           "$ref": "#/definitions/TextAlignVerticalStyleValue",
+          "overridable": true,
           "description": "Where text sits within the height available to it.",
           "default": "TOP",
           "examples": ["CENTER", "BOTTOM"]
         },
         "textOverflow": {
           "$ref": "#/definitions/TextOverflowStyleValue",
+          "overridable": true,
           "description": "What happens to text that does not fit the space available to it.",
           "default": "CLIP",
           "examples": ["ELLIPSIS"]
         },
         "maxLines": {
           "$ref": "#/definitions/NumberStyleValue",
+          "overridable": true,
           "description": "The most lines the text may occupy before it is truncated, usually declared with `textOverflow`.",
           "default": null
         },
         "mainAxisAlignment": {
           "$ref": "#/definitions/MainAxisAlignmentStyleValue",
+          "overridable": true,
           "description": "Where children sit along the axis their parent stacks them on.",
           "default": "START",
           "examples": ["CENTER", "SPACE_BETWEEN"]
         },
         "primaryAxisSizingMode": {
           "$ref": "#/definitions/PrimaryAxisSizingModeStyleValue",
+          "overridable": false,
           "description": "Whether the stacking axis sizes to its contents or to a fixed value.",
           "default": "AUTO",
           "examples": ["FIXED"]
         },
         "crossAxisAlignment": {
           "$ref": "#/definitions/CrossAxisAlignmentStyleValue",
+          "overridable": true,
           "description": "Where children sit across the axis their parent stacks them on.",
           "default": "START",
           "examples": ["CENTER", "STRETCH", "BASELINE"]
         },
         "layoutMode": {
           "$ref": "#/definitions/LayoutModeStyleValue",
+          "overridable": false,
           "description": "Whether the element stacks its children, and along which axis.",
           "default": "NONE",
           "examples": ["HORIZONTAL", "VERTICAL"]
         },
         "wrap": {
           "$ref": "#/definitions/BooleanStyleValue",
+          "overridable": false,
           "description": "Whether children that overflow the stacking axis continue onto another line.",
           "default": false
         },
         "wrapAlignment": {
           "$ref": "#/definitions/WrapAlignmentStyleValue",
+          "overridable": true,
           "description": "How wrapped lines are distributed across the axis they stack on, when the element wraps.",
           "default": "START",
           "examples": ["SPACE_BETWEEN"]
         },
         "itemReverseZIndex": {
           "$ref": "#/definitions/BooleanStyleValue",
+          "overridable": false,
           "description": "Whether later children paint behind earlier ones rather than in front.",
           "default": false
         },
         "itemSpacing": {
           "$ref": "#/definitions/ItemSpacingStyleValue",
+          "overridable": true,
           "description": "The gap held between stacked children.",
           "default": 0,
           "examples": [{ "horizontal": 16, "vertical": 8 }]
         },
         "padding": {
           "$ref": "#/definitions/SidesStyleValue",
+          "overridable": true,
           "description": "The space held between the element's bounds and its contents.",
           "default": 0,
           "examples": [{ "top": 8, "end": 16, "bottom": 8, "start": 16 }]
         },
         "cornerSmoothing": {
           "$ref": "#/definitions/NumberStyleValue",
+          "overridable": true,
           "description": "How far a rounded corner departs from a circular arc toward a squircle.",
           "default": 0,
           "examples": [0.6, 1]
         },
         "aspectRatio": {
           "$ref": "#/definitions/AspectRatioStyleValue",
+          "overridable": true,
           "description": "The ratio the element's width and height are locked to.",
           "default": null,
           "examples": [{ "x": 16, "y": 9 }, { "x": 1, "y": 1 }]

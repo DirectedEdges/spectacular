@@ -4,6 +4,7 @@ import { PropConfigurations } from "./PropConfigurations.js";
 import { PropBinding } from "./PropBinding.js";
 import { SubcomponentRef } from "./Anatomy.js";
 import { SlotContentRef } from "./SlotContentRef.js";
+import { Overrides } from "./Override.js";
 
 /**
  * Represents elements within a component.
@@ -41,6 +42,21 @@ export type Element = {
   instanceOf?: string | PropBinding | SubcomponentRef;
   /** The content for content-bearing elements: text string for text elements, glyph name for glyph elements, or a PropBinding reference. */
   content?: string | PropBinding;
+  /**
+   * Style patches reaching inside the component this element instances, applied
+   * after that component resolves its own variants and state (ADR-119).
+   *
+   * Meaningful only where `instanceOf` is present — only an instance has internals
+   * to patch. The two keys are deliberately uncoupled in the schema, the same stance
+   * `$nested` takes (ADR-052), because the names an entry may use come from the
+   * instanced component's `anatomy`, which no schema can reach from here.
+   *
+   * Distinct from `styles`, which describes this element itself. Where the element
+   * is an instance those two can name the same node, and which of its properties
+   * each carries is declared per platform rather than here.
+   * @since 0.40.0
+   */
+  overrides?: Overrides;
   /** Platform extensions; `com.figma` carries capture provenance. @since 0.32.0 */
   $extensions?: ElementExtensions;
 };
