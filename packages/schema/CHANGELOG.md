@@ -18,7 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Override` — an optional `configuration` matcher and a required `elements` map of per-element patches
 - `ElementOverride` — `styles`, static `content`, and nested `overrides` for an element that is itself an instance
 - `Styles` — `overridable: true` on the 41 properties an override may set; absence means not overridable (ADR-119)
-- `DSPEC-56` through `DSPEC-62` — override layering, addressing, recursion, the overridable bound, and inert-property omission
+- `Settings.spec.overrides` — whether a run produces and honours overrides; defaults to `true` (ADR-119)
+- `DSPEC-56` through `DSPEC-63` — override layering, addressing, recursion, the overridable bound, inert-property omission, and the `spec.overrides` switch
 - `DSPEC-54` — an image asset is a pattern-matching frame on a page or in one of its sections
 - `DSPEC-55` — a declared `images.component` requires a non-empty `images.sourceProps`
 - `mappings/bindings/` is published. The binding data states which platform realises each style key and how, which is a fact about the contract and belongs with it. A consumer can now read it from the package rather than the repo (#837)

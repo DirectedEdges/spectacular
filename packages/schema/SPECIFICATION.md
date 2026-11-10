@@ -219,7 +219,9 @@ Recursion follows instance boundaries only: an `ElementOverride` carries its own
 
 Which properties an entry may set is declared per property, as a positive grant: a `Styles` property an override may set carries `overridable: true`, and an override MUST NOT set a property where the annotation is absent (DSPEC-61). Absence is the default, so a property added to `Styles` is not overridable until it is granted.
 
-The annotation is declared on the top-level properties only. A member of a composite style value — `cornerRadius.topStart`, `typography.fontSize` — takes its parent property's grant, the same way §4.1b resolves a member's `default` (DSPEC-61). A producer MUST NOT emit an override property the element's resolved layout makes inert — `itemSpacing` on an absolutely positioned element changes nothing — so an entry's presence states that it matters (`producer`, DSPEC-62).
+The annotation is declared on the top-level properties only. A member of a composite style value — `cornerRadius.topStart`, `typography.fontSize` — takes its parent property's grant, the same way §4.1b resolves a member's `default` (DSPEC-61).
+
+Whether a run deals in overrides at all is `Settings.spec.overrides`, defaulting to `true`. Under `false` a producer emits none and a consumer applies none (DSPEC-63). It governs behaviour, not validity: a document carrying `overrides` is valid under either value, and nothing in the JSON Schema changes with the setting. A producer MUST NOT emit an override property the element's resolved layout makes inert — `itemSpacing` on an absolutely positioned element changes nothing — so an entry's presence states that it matters (`producer`, DSPEC-62).
 
 ### 4.5 Closed value sets
 
@@ -442,6 +444,7 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-60 | An `ElementOverride` recurses only through an element that is itself an instance, never through a container or group | validator | §4.4a, ADR-119 |
 | DSPEC-61 | An override sets only a `Styles` property annotated `overridable: true`; a composite member inherits its parent property's grant | validator | §4.4a, ADR-119 |
 | DSPEC-62 | A producer omits an override property the element's resolved layout makes inert | producer | §4.4a, ADR-119 |
+| DSPEC-63 | Under `spec.overrides: false` a producer emits no `overrides` and a consumer applies none; a document carrying them stays valid either way | producer | §4.4a, ADR-119 |
 
 Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.
 

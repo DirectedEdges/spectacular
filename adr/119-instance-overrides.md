@@ -79,7 +79,7 @@ This ADR adds `overrides` to `Element` and an `overridable` annotation to the `S
 
 ## Options Considered
 
-Six independent decisions: the **shape** of the override surface, its **depth reach**, the **type of its matcher**, the treatment of the **root element**, where the **overridable surface is declared**, and whether **contextually inert properties** are filtered at generation. Each is resolved on its own below; the Decision section records only what these resolve.
+Seven independent decisions: the **shape** of the override surface, its **depth reach**, the **type of its matcher**, the treatment of the **root element**, where the **overridable surface is declared**, whether **contextually inert properties** are filtered at generation, and how a workspace **turns the feature off**. Each is resolved on its own below; the Decision section records only what these resolve.
 
 ### Decision 1 — Shape
 
@@ -354,6 +354,56 @@ Emit every overridden field the file reports and leave relevance to whoever rend
 
 ---
 
+### Decision 7 — Turning the feature off
+
+#### Option A: One `spec.overrides` setting, defaulting to true *(Selected)*
+
+`Settings.spec.overrides` is a boolean defaulting to `true`, read at every boundary: generation emits overrides, render applies them, the code emitters honour them. A workspace setting `false` states that it does not use overrides, and each direction skips them.
+
+```yaml
+# config/settings.yaml
+spec:
+  overrides: false      # this workspace does not use overrides
+```
+
+It is a **Setting**, not a Convention, by ADR-071's test: a different value produces *different* output, not incorrect output. Nor is it Pipeline, which declares what work a run does; this shapes what the spec contains, alongside `spec.details` and `spec.variantDepth`.
+
+**Pros**:
+- One fact honoured at four boundaries, rather than four packages each deciding whether to bother. The alternative is the drift Decision 5 exists to prevent, one level up.
+- `Metadata.create()` already records the spec-shaping half of settings, so a spec generated with `overrides: false` carries that fact. A reader seeing no override blocks can tell whether the library had none or the run was told not to look — no new plumbing.
+- It composes with `overridable` without overlapping it: per-property contract fact versus per-run choice.
+- Defaulting to `true` matches where the data lives. The overrides were always in the Figma file and were being discarded; a library that genuinely has none pays only an empty result.
+
+**Cons / Trade-offs**:
+- `overrides` and `overridable` are one letter apart and name different kinds of thing. The docs have to separate them explicitly or the setting reads as the allowlist.
+- Defaulting to `true` changes output for existing workspaces on upgrade — a regenerate starts emitting blocks that were not there. Stated in Consequences rather than left to be discovered.
+
+---
+
+#### Option B: No setting — the feature is always on *(Rejected)*
+
+Overrides are additive, so a workspace that does not want them can ignore the key.
+
+**Rejected because**: "ignore it" is not available to every consumer. A workspace that deliberately keeps its specs free of per-instance patches has no way to say so, and no way to keep a regenerate from reintroducing them. It also leaves a spec with no override blocks ambiguous between a library that has none and a run that did not look.
+
+---
+
+#### Option C: A setting per direction *(Rejected)*
+
+Separate flags for generation, render and emission.
+
+**Rejected because**: three flags describe one decision, and the combinations that differ are all incoherent — generating overrides a renderer refuses to apply, or emitting code for patches generation never produces. It is also the per-consumer fragmentation Decision 5 rejected, re-created at the run level.
+
+---
+
+#### Option D: A Convention rather than a Setting *(Rejected)*
+
+Declare it under `conventions.specs` as a fact about the library.
+
+**Rejected because**: ADR-071's test puts it on the other side. A wrong Convention produces *incorrect* output — a misdeclared glyph pattern yields a wrong spec. Setting `overrides: false` yields a correct spec with less in it, which is the definition of a Setting.
+
+---
+
 ## Decision
 
 ### Type changes (`types/`)
@@ -362,6 +412,7 @@ Emit every overridden field the file reports and leave relevance to whoever rend
 |------|--------|------|
 | `Override.ts` | **New file** — adds `Overrides`, `Override`, `ElementOverrides`, `ElementOverride` | MINOR |
 | `Element.ts` | Added optional field `overrides` | MINOR |
+| `Settings.ts` | Added `spec.overrides` to `Settings` and `ResolvedSettings`, and `overrides: true` to `DEFAULT_SETTINGS` | MINOR |
 | `index.ts` | Export the four new types | MINOR |
 
 **Example — new shape** (`types/Override.ts`):
@@ -416,6 +467,7 @@ Element:
 | `component.schema.json` | Added definitions `Overrides`, `Override`, `ElementOverrides`, `ElementOverride` | MINOR |
 | `component.schema.json` | Added property `overrides` to `#/definitions/Element/properties` | MINOR |
 | `styles.schema.json` | Added `overridable: true` to the 41 `Styles` properties an override may set | PATCH |
+| `settings.schema.json` | Added `spec.overrides`, `default: true` | MINOR |
 
 **Example — new definitions** (`schema/component.schema.json`):
 
@@ -481,6 +533,8 @@ overrides:
 
 **No depth bound.** Recursion through composed instances is unbounded in the schema. A resolution limit, if one is needed, is a transform concern.
 
+**`spec.overrides` is not a validation switch.** It governs whether a run produces and honours overrides, not whether a document carrying them is valid. A spec authored with overrides stays valid under `overrides: false`; the run simply does not act on them. Nothing in the JSON Schema changes with the setting.
+
 ---
 
 ## Type ↔ Schema Impact
@@ -495,6 +549,7 @@ overrides:
 | `ElementOverrides` | `#/definitions/ElementOverrides` |
 | `ElementOverride` | `#/definitions/ElementOverride` |
 | `Element.overrides` | `#/definitions/Element/properties/overrides` |
+| `Settings.spec.overrides` | `settings.schema.json#/definitions/Settings/properties/spec/properties/overrides` |
 
 Four named definitions, four named exported types — Constitution I parity in both directions. `Styles` and `PropConfigurations` are referenced, not redefined.
 
@@ -531,13 +586,15 @@ The capture side has four problems to solve that the shape above does not solve 
 
 | Consumer | Impact | Highlights |
 |----------|--------|------------|
-| `specs-cli` | Recompile | Carries the new field through read, write and validation; no command surface changes |
+| `specs-cli` | Update usage | Carries the new field through read, write and validation, and surfaces `spec.overrides` wherever the other `spec.*` settings are surfaced |
 | `specs-from-figma` | Update usage | Net-new: nothing reads an instance's overridden fields today. Owes the whole Figma → spec column above |
 | `figma-from-specs` | Update usage | Applies each unscoped entry's patches as layer overrides on the placed instance, after prop configurations; warns and skips matched entries |
 | `react-from-specs` | Update usage | Accepts an `overrides` prop and applies each element's patch to the part it names. An unscoped entry must hold at every state, so it has to outrank the component's own state rules. A composition instance passes the spec's `elements` object as that prop; matched entries are emitted as rules instead, because a value cannot carry a selector |
 | `webcomponents-from-specs` | Update usage | The same, inside its own shadow root. Reaching a second boundary from outside needs part forwarding, which is what the recursive form will require of any CSS-side implementation |
 | `from-specs` | Update usage | Shared resolution: layering entries in order, matching `configuration` against resolved props, descending the recursion, and reading `overridable` |
-| `specs-plugin-2` | Recompile | Reads and writes the field through the shared engine |
+| `specs-plugin-2` | Update usage | Reads and writes the field through the shared engine, and gains a settings control for `spec.overrides` alongside the other spec settings |
+
+Every row above also honours `spec.overrides`: a run with the setting `false` produces, applies and emits nothing for overrides.
 
 ### Non-normative: the runtime `overrides` prop
 
@@ -583,6 +640,8 @@ Two things the prop cannot do, both of which follow from it being a value rather
 - The emitted components can offer the same capability to application authors as a prop whose value is the spec's own object, so a composition's patch and a caller's patch are one mechanism rather than two.
 - The Figma transform implements a subset. Unscoped entries round-trip; matched entries are authored or code-emitted only, and a spec carrying them loses them on a round trip through Figma. This is a declared asymmetry, not a defect to be closed.
 - A spec is a statement about what matters, not a transcript. Inert and non-overridable fields the file reports do not reach it, which also means a round trip does not restore them.
+- A workspace can decline the feature in one place and have every direction honour it, and a spec records which choice produced it.
+- **Existing workspaces see new output on upgrade.** `spec.overrides` defaults to `true`, so the first regenerate after adopting this release emits override blocks that were not there before. The data was always in the Figma file and was being discarded, so this is the feature arriving rather than a change in what the file means — but it is a diff on specs nobody edited, and a workspace that wants the old output sets `overrides: false`.
 - Element-name validity remains a resolution-time check. A name absent from the instanced component's anatomy passes JSON Schema and is caught when tooling resolves the reference.
 - Overrides inside component definitions are permitted and discouraged. A component that needs an instance of another component to look different should usually say so in that component's own variants; guidance steers this, not validation.
 

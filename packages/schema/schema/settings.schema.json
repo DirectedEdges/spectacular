@@ -302,6 +302,11 @@
               "default": false,
               "description": "Include slot content examples in output (ADR-050)."
             },
+            "overrides": {
+              "type": "boolean",
+              "default": true,
+              "description": "Instance elements carry the style patches a placed instance applies inside the component it instances. One choice read at every boundary: generation emits them, render applies them, the code emitters honour them. Distinct from the overridable annotation in styles.schema.json, which declares which properties an override may set. (ADR-119)"
+            },
             "splitComponents": {
               "type": "boolean",
               "default": true,
