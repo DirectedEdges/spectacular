@@ -4,7 +4,7 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
-| 118 | Split the Spec Sidecar into `supplemental.yaml` for Builders and `guidelines.yaml` for Consumers | (reserved, draft on `118-supplemental-and-guidelines-sidecars`) |
+| 118 | Three Authored Documents Beside a Spec — `supplemental.yaml`, `guidelines.yaml` and `tokens.yaml` | (reserved, draft on `118-supplemental-and-guidelines-sidecars`) |
 | 117 | A Library's Images Are Assets It Lays Out, Named by a Pattern | (reserved, draft on `117-library-image-assets`) |
 | 115 | Closed Style Value Sets | |
 | 114 | Describe Enum Options Where They Are Declared | (reserved, draft in PR #799) |

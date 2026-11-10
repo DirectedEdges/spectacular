@@ -81,13 +81,22 @@ A Specs document is exactly one of:
 | Conventions | `conventions.schema.json` | A library's naming and structural conventions |
 | Settings | `settings.schema.json` | A workspace's run settings |
 | Supplemental | `supplemental.schema.json` | What a component needs beyond what the spec can carry |
-| Guidelines | `guidelines.schema.json` | What whoever uses a component must observe |
+| Guidelines | `guidelines.schema.json` | The rules whoever uses a component or a foundation must observe |
+| Tokens | `tokens.schema.json` | What each token in a foundation is for |
 
 A component MAY be written whole or split into concern documents; the two forms carry the same information (ADR-091, ADR-110).
 
-The first six kinds are **generated**: a run writes them, and each records the Figma node it came from. The last two are **authored sidecars** — written by hand beside a spec, never by a run — and the distinction governs what they carry. A sidecar has no Figma origin to record, so it carries `meta` (authorship and review status) where a generated document carries `metadata` (run and source provenance). The two member names are deliberately different, because the two blocks answer different questions (ADR-118).
+The first six kinds are **generated**: a run writes them, and each records the Figma node it came from. The last three are **authored**: written by hand beside a spec, never by a run, and the distinction governs what they carry. An authored document has no Figma origin to record, so it carries `meta` (authorship and review status) where a generated document carries `metadata` (run and source provenance). The two member names are deliberately different, because the two blocks answer different questions (ADR-118).
 
-The two sidecars are split by audience, not by subject: `supplemental.yaml` addresses whoever builds a component, `guidelines.yaml` whoever uses one. Each is written at three scopes — one component, every component, one foundation — and the scopes are additive (DSPEC-56).
+The three authored kinds are siblings with no parent kind above them. Each declares its own header, verification and reference definitions rather than referencing a shared file, so each schema is readable and validatable on its own; the repetition between them is accepted deliberately (ADR-118).
+
+They divide by what kind of statement they make, which is not the same as what they are about:
+
+- **Supplemental** states a requirement on whoever *builds* the thing, and every entry names the schema surface that cannot carry it.
+- **Guidelines** states a rule binding whoever *uses* it. At a foundation's scope that means how tokens, themes and raw values are applied across the catalogue.
+- **Tokens** describes what each token *is for*. A description is not a rule: it constrains nobody, which is why it is a separate kind rather than a section of guidelines.
+
+Supplemental and guidelines are each written at three scopes — one component, every component, one foundation — and the scopes are additive (DSPEC-56). A tokens document is written at the foundation scope only, because a token belongs to a foundation rather than to any component.
 
 ### 2.2 Document identity
 
@@ -111,9 +120,11 @@ A component document MUST carry `title`, `anatomy` and `default` (schema: `compo
 
 Every generated document MUST carry `metadata.source` — the Figma page, node and node type it was generated from (schema: `metadata.schema.json`). A document without provenance cannot be regenerated or diffed against its origin.
 
-An authored sidecar (§2.1) MUST NOT carry `metadata` at all, and carries no provenance, because nothing generated it (schema: `supplemental.schema.json`, `guidelines.schema.json`). It MAY carry `meta`, whose `status` member is what distinguishes proposed guidance from ratified. A sidecar requires no member: a document carrying only a `meta` block, or nothing, is valid, because the scope path already names its subject (ADR-118).
+An authored document (§2.1) MUST NOT carry `metadata` at all, and carries no provenance, because nothing generated it (schema: `supplemental.schema.json`, `guidelines.schema.json`, `tokens.schema.json`). It MAY carry `meta`, whose `status` member is what distinguishes proposed content from ratified. None of the three requires any member: a document carrying only a `meta` block, or nothing, is valid, because the scope path already names its subject (ADR-118).
 
-An entry in a supplemental document MUST name the surface that cannot carry it, in `schemaGap` (schema: `supplemental.schema.json`). This is what bounds the document: a requirement the schema can express belongs in the spec, and an entry unable to name its gap is in the wrong file. A guidelines entry carries no `schemaGap` — a consumer rule is not an overlay on a schema surface — so that bound applies to one of the two sidecars and the other relies on review.
+An entry in a supplemental document MUST name the surface that cannot carry it, in `schemaGap` (schema: `supplemental.schema.json`). This is what bounds the document: a requirement the schema can express belongs in the spec, and an entry unable to name its gap is in the wrong file. Neither a guidelines entry nor a tokens subject carries `schemaGap` — a consumer rule is not an overlay on a schema surface, and nor is a token's description — so that bound applies to one of the three authored kinds and the other two rely on review.
+
+A guidelines document MUST NOT carry per-token tables, and a tokens document MUST NOT carry rules (schema: `guidelines.schema.json`, `tokens.schema.json`). The two were one document and were separated because a rule and a description are different kinds of statement: a rule binds a reader, a description does not, and thirty token descriptions in a rules document bury the rules (ADR-118).
 
 ### 2.4 Run metadata
 
@@ -429,13 +440,14 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-53 | A required member of a `Styles` composite type declares no `default` | package | §4.1b, ADR-116 |
 | DSPEC-54 | A frame is an image asset only when its name matches `images.match` and it is a direct child of a page, or of a section that is itself a direct page child; a match at any other depth is not an asset | producer | conventions reference, ADR-117 |
 | DSPEC-55 | A declared `images.component` requires a non-empty `images.sourceProps`, whose first entry is that component's own source prop | validator | conventions reference, ADR-077/117 |
-| DSPEC-56 | A sidecar entry at the catalogue scope and one at the component scope both apply; neither overrides the other, because an entry is a statement about a subject rather than a value at a key | consumer | §2.1, ADR-118 |
+| DSPEC-56 | A supplemental or guidelines entry at the catalogue scope and one at the component scope both apply; neither overrides the other, because an entry is a statement about a subject rather than a value at a key | consumer | §2.1, ADR-118 |
 | DSPEC-57 | A `Pointer.to` resolves to something that exists in the workspace — a token in `analysis/foundations.yaml`, a component, or an item within one | validator | §2.3, ADR-118 |
 | DSPEC-58 | A `schemaGap.path` that is a JSON Schema pointer resolves against the schema file it names | validator | §2.3, ADR-118 |
 | DSPEC-59 | An exporter emitting DSDS appends a guideline's `instead` to its `statement` and never drops it, so no consumer receives a prohibition without its remedy | producer | §2.1, ADR-118 |
 | DSPEC-60 | An exporter derives a token's DSDS `id` from the workspace's `spec.tokens` profile, normalizing per path segment only where that output is not a legal identifier | producer | §2.1, ADR-118 |
 | DSPEC-61 | An exporter emits a token's original path as `name`, unmodified, because the derived `id` folds case and punctuation and cannot be reversed | producer | §2.1, ADR-118 |
-| DSPEC-62 | A directory under `foundations/` is named from the foundation concern vocabulary; the schema validates a sidecar's contents and cannot validate the path that selects it | validator | §2.1, ADR-118 |
+| DSPEC-62 | A directory under `foundations/` is named from the foundation concern vocabulary; a document schema validates contents and cannot validate the path that selects it | validator | §2.1, ADR-118 |
+| DSPEC-63 | A `tokens.yaml` is written at the foundation scope only, because a token belongs to a foundation rather than to any component | validator | §2.1, ADR-118 |
 
 Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.
 

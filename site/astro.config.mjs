@@ -174,6 +174,7 @@ export default defineConfig({
                 { label: 'Composition Examples', slug: 'schema/documents/composition-examples' },
                 { label: 'Supplemental', slug: 'schema/documents/supplemental' },
                 { label: 'Guidelines', slug: 'schema/documents/guidelines' },
+                { label: 'Tokens', slug: 'schema/documents/tokens' },
               ],
             },
             {

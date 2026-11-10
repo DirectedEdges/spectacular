@@ -24,9 +24,9 @@
     "./schema/root": "./schema/root.schema.json",
     "./schema/conventions": "./schema/conventions.schema.json",
     "./schema/settings": "./schema/settings.schema.json",
-    "./schema/sidecar": "./schema/sidecar.schema.json",
     "./schema/supplemental": "./schema/supplemental.schema.json",
-    "./schema/guidelines": "./schema/guidelines.schema.json"
+    "./schema/guidelines": "./schema/guidelines.schema.json",
+    "./schema/tokens": "./schema/tokens.schema.json"
   },
   "files": [
     "dist",

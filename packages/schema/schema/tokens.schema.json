@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://spectacular.systems/schema/0.40.0/tokens.schema.json",
+  "title": "Specs Tokens Document Schema",
+  "description": "What each token in a foundation is for, authored as foundations/<concern>/tokens.yaml. A reference table, not a rulebook: useWhen says what each token is for, dontUseWhen says which are off-limits and what replaces them. Neither binds a reader the way a guideline does, which is why this is its own document — a foundation's guidelines.yaml is about how tokens, themes and raw values are applied across the catalogue, and thirty tokens with a sentence each is reference material that was drowning those rules. A token is identified by the path the library spells it with, spaces and capitals included; a DSDS-legal identifier is derived at export (DSPEC-60), never authored here. This file is self-contained. (ADR-118)",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "meta": { "$ref": "#/definitions/TokensMeta" },
+    "useWhen": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/TokenSubject" },
+      "description": "What each token is for."
+    },
+    "dontUseWhen": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/TokenSubject" },
+      "description": "Which tokens are off-limits, why, and what replaces them."
+    }
+  },
+  "definitions": {
+    "TokensMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Authorship and review status for the document as a whole. Every member is optional.",
+      "properties": {
+        "concern": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The foundation this document covers, restating what the containing directory names."
+        },
+        "status": {
+          "description": "Where the document sits in its review cycle.",
+          "oneOf": [
+            {
+              "const": "proposed",
+              "description": "Drafted and awaiting a ratifier; its descriptions are not yet the system's position."
+            },
+            {
+              "const": "ratified",
+              "description": "Reviewed and adopted; its descriptions are the system's position."
+            },
+            {
+              "const": "deprecated",
+              "description": "Superseded or withdrawn; kept for the record and not to be followed."
+            }
+          ]
+        },
+        "author": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Who authored it. Duplicates git history, and is here for a reader who will not consult git."
+        },
+        "updated": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "When it was last revised, as YYYY-MM-DD. Hand-maintained, so it can go stale."
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 },
+          "description": "The generated reports this document was synthesized from, as workspace-relative paths."
+        }
+      }
+    },
+    "TokenPointer": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A reference to one thing, either inside this workspace or outside it. Exactly one member is present: to names something the workspace holds, href names something it does not. Resolution of to is DSPEC-57.",
+      "properties": {
+        "to": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What this points at inside the workspace — normally another token's path."
+        },
+        "href": {
+          "type": "string",
+          "format": "uri",
+          "description": "What this points at outside the workspace, as an absolute URL."
+        }
+      },
+      "oneOf": [{ "required": ["to"] }, { "required": ["href"] }]
+    },
+    "TokenRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rel"],
+      "description": "A pointer that states its relationship explicitly, for the relationships that have no field of their own.",
+      "properties": {
+        "to": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What this points at inside the workspace."
+        },
+        "href": {
+          "type": "string",
+          "format": "uri",
+          "description": "What this points at outside the workspace, as an absolute URL."
+        },
+        "rel": {
+          "description": "What the target is to the token carrying this ref.",
+          "oneOf": [
+            {
+              "const": "same-as",
+              "description": "The target describes the same token at another scope, and the duplication is deliberate."
+            },
+            {
+              "const": "relates-to",
+              "description": "The target is an issue or document bearing on this token, without describing it."
+            },
+            {
+              "const": "source",
+              "description": "The target is the code or package this token comes from."
+            },
+            {
+              "const": "design",
+              "description": "The target is the design file or collection this token comes from."
+            },
+            {
+              "const": "demo",
+              "description": "The target is a running example of this token in use."
+            }
+          ]
+        }
+      },
+      "oneOf": [{ "required": ["to"] }, { "required": ["href"] }]
+    },
+    "TokenSubject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$token", "$description"],
+      "description": "One token, and what it is for.",
+      "properties": {
+        "$token": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The token, as a <collection>/<group>/<name> path spelled as the library spells it — the same form every spec's $token and analysis/foundations.yaml carry."
+        },
+        "$description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What it is for, or why it is off-limits."
+        },
+        "alternatives": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/TokenPointer" },
+          "description": "What to reach for instead of this one. Meaningful under dontUseWhen, where its absence says something true: nothing replaces this token."
+        },
+        "refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/TokenRef" },
+          "description": "Related references, including same-as when this restates a token at another scope."
+        }
+      }
+    }
+  }
+}

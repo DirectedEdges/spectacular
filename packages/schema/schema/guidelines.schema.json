@@ -1,20 +1,12 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://spectacular.systems/schema/0.40.0/guidelines.schema.json",
-  "title": "Specs Guidelines Sidecar Schema",
-  "description": "What whoever uses a component must observe when arranging it, authored beside the spec as guidelines.yaml. The audience is a consumer, not a builder — what a builder must implement is supplemental.schema.json's subject. An entry is a guideline item as the Design System Documentation Specification (DSDS) 0.23.1 defines one; the document is not a DSDS document, since DSDS requires kind and for on every section and this carries neither, so an exporter wraps a concern's entries in a DSDS section. Three scopes share this shape, and entries across scopes are additive rather than overriding (DSPEC-56). (ADR-118)",
+  "title": "Specs Guidelines Document Schema",
+  "description": "What whoever uses a component or a foundation must observe, authored beside the spec as guidelines.yaml. The audience is a consumer, not a builder — what a builder must implement is supplemental.schema.json's subject. This document carries rules only: at a foundation's scope that means how tokens, themes and raw values are applied across the catalogue, never a per-token registry of what each token is for, which is tokens.schema.json's subject. An entry is a guideline item as the Design System Documentation Specification (DSDS) 0.23.1 defines one; the document is not a DSDS document, since DSDS requires kind and for on every section and this carries neither, so an exporter wraps a concern's entries in a DSDS section. Three scopes share this shape, and entries across scopes are additive rather than overriding (DSPEC-56). This file is self-contained. (ADR-118)",
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "meta": { "$ref": "sidecar.schema.json#/definitions/SidecarMeta" },
-    "useWhen": {
-      "$ref": "#/definitions/SelectionGuidance",
-      "description": "What each subject in a set is for."
-    },
-    "dontUseWhen": {
-      "$ref": "#/definitions/SelectionGuidance",
-      "description": "Which subjects are off-limits, why, and what replaces them."
-    },
+    "meta": { "$ref": "#/definitions/GuidelinesMeta" },
     "anatomy": {
       "$ref": "#/definitions/Section",
       "description": "Rules about the element tree: what parts a component has and how they nest."
@@ -25,7 +17,7 @@
     },
     "styles": {
       "$ref": "#/definitions/Section",
-      "description": "Rules about the style values a component's parts carry."
+      "description": "Rules about the style values a component's parts carry, and how a foundation's values are applied."
     },
     "slotComposition": {
       "$ref": "#/definitions/Section",
@@ -61,14 +53,53 @@
     }
   },
   "definitions": {
-    "Section": {
-      "type": "array",
-      "minItems": 1,
-      "description": "Rules for one concern a consumer must observe.",
-      "items": { "$ref": "#/definitions/GuidelineEntry" }
+    "GuidelinesMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Authorship and review status for the document as a whole. Every member is optional; status is the member that earns the block, because it is how a ratifier knows whether they are reading a proposal or settled guidance.",
+      "properties": {
+        "concern": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The subject this document covers, restating what the containing directory names — a foundation concern at the foundation scope, a component name at the component scope."
+        },
+        "status": {
+          "description": "Where the document sits in its review cycle.",
+          "oneOf": [
+            {
+              "const": "proposed",
+              "description": "Drafted and awaiting a ratifier; its rules are not yet the system's position."
+            },
+            {
+              "const": "ratified",
+              "description": "Reviewed and adopted; its rules are the system's position."
+            },
+            {
+              "const": "deprecated",
+              "description": "Superseded or withdrawn; kept for the record and not to be followed."
+            }
+          ]
+        },
+        "author": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Who authored it. Duplicates git history, and is here for a reader who will not consult git."
+        },
+        "updated": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "When it was last revised, as YYYY-MM-DD. Hand-maintained, so it can go stale."
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 },
+          "description": "The generated reports this document was synthesized from, as workspace-relative paths."
+        }
+      }
     },
     "ObligationLevel": {
-      "description": "How strongly a guideline binds, with RFC 2119 semantics. DSDS 0.23.1 defines the first four; may is RFC 2119's fifth and is added here, because a permission recorded as should asserts an obligation the system does not hold.",
+      "description": "How strongly a guideline binds, with RFC 2119 semantics. DSDS 0.23.1 defines the first four; may is RFC 2119's fifth and is added here, because a permission recorded as should asserts an obligation the system does not hold. Each description names the colloquial words an author reaches for, because the authored files already use them.",
       "examples": ["must"],
       "oneOf": [
         {
@@ -93,6 +124,54 @@
         }
       ]
     },
+    "GuidelinesCheckedBy": {
+      "description": "How a guideline is checked. The checks member names what does the checking, and is required whenever this is automated.",
+      "examples": ["manual"],
+      "oneOf": [
+        {
+          "const": "automated",
+          "description": "A test or lint rule decides it, with no human reading required."
+        },
+        {
+          "const": "assisted",
+          "description": "A tool surfaces candidates and a human judges them."
+        },
+        {
+          "const": "manual",
+          "description": "A human decides it, with no tool involved."
+        }
+      ]
+    },
+    "GuidelineReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A reference to one thing, either inside this workspace or outside it. Exactly one member is present: to names something the workspace holds, href names something it does not. Resolution of to is DSPEC-57.",
+      "properties": {
+        "to": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What this points at inside the workspace — a component, a token, or an item within one."
+        },
+        "href": {
+          "type": "string",
+          "format": "uri",
+          "description": "What this points at outside the workspace, as an absolute URL."
+        }
+      },
+      "oneOf": [{ "required": ["to"] }, { "required": ["href"] }]
+    },
+    "GuidelineReferences": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/GuidelineReference" },
+      "description": "One or more references to things, inside this workspace or outside it."
+    },
+    "Section": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Rules for one concern a consumer must observe.",
+      "items": { "$ref": "#/definitions/GuidelineEntry" }
+    },
     "GuidelineEntry": {
       "type": "object",
       "additionalProperties": false,
@@ -109,7 +188,7 @@
           "description": "How strongly it binds."
         },
         "alternatives": {
-          "$ref": "sidecar.schema.json#/definitions/Pointers",
+          "$ref": "#/definitions/GuidelineReferences",
           "description": "What to use instead, when the remedy is a thing this can point at. Preferred over instead whenever the remedy can be named, because a pointer resolves and a sentence does not."
         },
         "instead": {
@@ -118,19 +197,19 @@
           "description": "What to do instead, when the remedy is a rule rather than a thing. An exporter folds this into statement rather than dropping it (DSPEC-59)."
         },
         "refines": {
-          "$ref": "sidecar.schema.json#/definitions/Pointer",
+          "$ref": "#/definitions/GuidelineReference",
           "description": "A broader guideline this one elaborates."
         },
         "evidence": {
-          "$ref": "sidecar.schema.json#/definitions/Pointers",
+          "$ref": "#/definitions/GuidelineReferences",
           "description": "Source material supporting the rule."
         },
         "checkedBy": {
-          "$ref": "sidecar.schema.json#/definitions/CheckedBy",
+          "$ref": "#/definitions/GuidelinesCheckedBy",
           "description": "How this is checked."
         },
         "checks": {
-          "$ref": "sidecar.schema.json#/definitions/Pointers",
+          "$ref": "#/definitions/GuidelineReferences",
           "description": "What does the checking. Required when checkedBy is automated."
         }
       },
@@ -139,71 +218,6 @@
         "required": ["checkedBy"]
       },
       "then": { "required": ["checks"] }
-    },
-    "SelectionSubject": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["$description"],
-      "description": "One thing in a set, and what it is for. Exactly one of $token or $name is present. A token is identified by the path the rest of the system spells it with, spaces and capitals included — a DSDS-legal identifier is derived at export (DSPEC-60), never authored here.",
-      "properties": {
-        "$token": {
-          "type": "string",
-          "minLength": 1,
-          "description": "The token this is about, as a <collection>/<group>/<name> path."
-        },
-        "$name": {
-          "type": "string",
-          "minLength": 1,
-          "description": "The prop, variant or slot fill this is about."
-        },
-        "$description": {
-          "type": "string",
-          "minLength": 1,
-          "description": "What it is for, or why it is off-limits."
-        },
-        "alternatives": {
-          "$ref": "sidecar.schema.json#/definitions/Pointers",
-          "description": "What to reach for instead of this one. Meaningful under dontUseWhen, where its absence says something true: nothing replaces this subject."
-        },
-        "refs": {
-          "type": "array",
-          "minItems": 1,
-          "items": { "$ref": "sidecar.schema.json#/definitions/Ref" },
-          "description": "Related references, including same-as when this restates a subject at another scope."
-        }
-      },
-      "oneOf": [{ "required": ["$token"] }, { "required": ["$name"] }]
-    },
-    "SelectionGuidance": {
-      "type": "object",
-      "additionalProperties": false,
-      "description": "Subjects grouped by what kind of thing they are. A set of thirty tokens is a table a reader scans, not thirty rules a reader works through, which is why selection guidance is its own shape rather than one entry per subject.",
-      "properties": {
-        "tokens": {
-          "type": "array",
-          "minItems": 1,
-          "items": { "$ref": "#/definitions/SelectionSubject" },
-          "description": "Tokens, identified by path."
-        },
-        "props": {
-          "type": "array",
-          "minItems": 1,
-          "items": { "$ref": "#/definitions/SelectionSubject" },
-          "description": "Props, identified by name."
-        },
-        "variants": {
-          "type": "array",
-          "minItems": 1,
-          "items": { "$ref": "#/definitions/SelectionSubject" },
-          "description": "Variants, identified by name."
-        },
-        "slotFills": {
-          "type": "array",
-          "minItems": 1,
-          "items": { "$ref": "#/definitions/SelectionSubject" },
-          "description": "Slot fills, identified by name."
-        }
-      }
     }
   }
 }

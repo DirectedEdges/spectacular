@@ -1,23 +1,19 @@
 /**
- * Type-level tests for the supplemental sidecar (ADR-118).
+ * Type-level tests for the supplemental document (ADR-118).
  * These files are intentionally never executed — they are compiled with tsc
  * to assert that the type shape is correct.
- *
- * The shared sidecar vocabulary — `ComponentConcern`, `Platform`, `CheckedBy`,
- * `Pointer`, `SidecarMeta` — is exercised here and in `GuidelinesDocument`,
- * which is why it has no test file of its own.
  */
 import type {
-  CheckedBy,
-  ComponentConcern,
   FoundationConcern,
   Platform,
-  Pointer,
   SchemaGap,
-  SidecarMeta,
-  SidecarStatus,
+  SupplementalCheck,
+  SupplementalCheckedBy,
+  SupplementalConcern,
   SupplementalDocument,
   SupplementalEntry,
+  SupplementalMeta,
+  SupplementalStatus,
 } from '../types/index.js';
 
 const gap: SchemaGap = {
@@ -46,7 +42,7 @@ const checked: SupplementalEntry = {
   checks: [{ to: 'tests/motion.test.ts' }, { href: 'https://example.test/lint-rule' }],
 };
 
-const meta: SidecarMeta = {
+const meta: SupplementalMeta = {
   concern: 'button',
   status: 'proposed',
   author: 'Nathan Curtis',
@@ -72,11 +68,11 @@ const empty: SupplementalDocument = {};
 const group: Platform = 'web';
 const native: Platform[] = ['ios', 'android'];
 
-const concern: ComponentConcern = 'slotComposition';
+const concern: SupplementalConcern = 'slotComposition';
 const foundation: FoundationConcern = 'elevation';
-const verification: CheckedBy = 'assisted';
-const status: SidecarStatus = 'deprecated';
-const pointer: Pointer = { to: 'DE Color/Alert/Error/Background' };
+const verification: SupplementalCheckedBy = 'assisted';
+const status: SupplementalStatus = 'deprecated';
+const check: SupplementalCheck = { to: 'tests/badge.test.tsx' };
 
 // @ts-expect-error — `intent` alone is not an entry; the gap is what keeps the file overlay-only.
 const noGap: SupplementalEntry = { intent: 'Something the spec cannot carry.' };
@@ -90,7 +86,7 @@ const dropped: SupplementalEntry = { intent: 'x', schemaGap: gap, regenerationRi
 // @ts-expect-error — `platforms` is a list of platforms, not a map to an implementation path.
 const pathMap: SupplementalEntry = { intent: 'x', schemaGap: gap, platforms: { react: 'component.tsx' } };
 
-// @ts-expect-error — `guidelines` left this document for its own file.
+// @ts-expect-error — `guidelines` is its own document, not a section here.
 const guidelinesKey: SupplementalDocument = { guidelines: [{ intent: 'x', schemaGap: gap }] };
 
 // @ts-expect-error — `configurations` is not the concern name; the vocabulary kept `props`.
@@ -98,6 +94,9 @@ const renamedConcern: SupplementalDocument = { configurations: [{ intent: 'x', s
 
 // @ts-expect-error — `swiftui` names a framework; the enum names emission targets.
 const framework: Platform = 'swiftui';
+
+// @ts-expect-error — selection guidance lives in the tokens document, never here.
+const selection: SupplementalDocument = { useWhen: [] };
 
 export {
   document,
@@ -109,7 +108,7 @@ export {
   foundation,
   verification,
   status,
-  pointer,
+  check,
   noGap,
   stringGap,
   dropped,
@@ -117,4 +116,5 @@ export {
   guidelinesKey,
   renamedConcern,
   framework,
+  selection,
 };

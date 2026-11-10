@@ -77,23 +77,37 @@ export type { SlotContentRef } from './SlotContentRef.js';
 // Conditional types
 export type { Conditional, ConditionExpression, ConditionArgs } from './Conditional.js';
 
-// Sidecar types — the authored documents beside a spec (ADR-118)
+// The three authored documents beside a spec (ADR-118). Siblings, with no
+// parent concept above them — each declares its own header, verification and
+// reference types rather than sharing one.
 export type {
-  SidecarMeta,
-  SidecarStatus,
-  ComponentConcern,
-  FoundationConcern,
+  SupplementalDocument,
+  SupplementalEntry,
+  SupplementalMeta,
+  SupplementalStatus,
+  SupplementalConcern,
+  SupplementalCheckedBy,
+  SupplementalCheck,
+  SchemaGap,
   Platform,
-  CheckedBy,
-  Pointer,
-  Ref,
-  RefRelationship,
-} from './Sidecar.js';
-export type { SupplementalDocument, SupplementalEntry, SchemaGap } from './SupplementalDocument.js';
+  FoundationConcern,
+} from './SupplementalDocument.js';
 export type {
   GuidelinesDocument,
   GuidelineEntry,
+  GuidelinesMeta,
+  GuidelinesStatus,
+  GuidelinesConcern,
+  GuidelinesCheckedBy,
+  GuidelineReference,
   ObligationLevel,
-  SelectionGuidance,
-  SelectionSubject,
 } from './GuidelinesDocument.js';
+export type {
+  TokensDocument,
+  TokensMeta,
+  TokensStatus,
+  TokenSubject,
+  TokenPointer,
+  TokenRef,
+  TokenRefRelationship,
+} from './TokensDocument.js';

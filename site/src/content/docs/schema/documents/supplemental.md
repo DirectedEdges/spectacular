@@ -5,9 +5,9 @@ description: "The supplemental.yaml file contract for what a component needs bey
 
 `supplemental.yaml` records what a component needs that the spec cannot carry — a press-scale transform, an `IntersectionObserver`, a conditional `aria-hidden`. Its audience is whoever builds the component.
 
-Every entry names the schema path that cannot carry it. That is what keeps the file small: anything the schema *can* carry belongs in the spec, and an entry that cannot name its gap is an entry in the wrong place. What a component's *user* must observe is the other sidecar's subject — [Guidelines](/schema/documents/guidelines/).
+Every entry names the schema path that cannot carry it. That is what keeps the file small: anything the schema *can* carry belongs in the spec, and an entry that cannot name its gap is an entry in the wrong place. What a component's *user* must observe is [Guidelines](/schema/documents/guidelines/)'s subject, and what each token in a foundation is for is [Tokens](/schema/documents/tokens/)'s.
 
-Both sidecars are authored by hand. No run writes either, so neither carries `metadata.source`; they carry `meta` instead, which records authorship and review status rather than Figma provenance.
+All three are authored by hand. No run writes any of them, so none carries `metadata.source`; they carry `meta` instead, which records authorship and review status rather than Figma provenance. They are siblings with no parent kind above them, so each schema is self-contained and repeats the definitions the others declare.
 
 ## Scopes
 
@@ -23,7 +23,7 @@ The same shape is written at three scopes. An entry at a broader scope and one a
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| `meta` | `SidecarMeta` | No | Authorship and review status for the document |
+| `meta` | `SupplementalMeta` | No | Authorship and review status for the document |
 | *concern key* | `SupplementalEntry[]` | No | One list per concern — `anatomy`, `props`, `styles`, `slotComposition`, `events`, `accessibility`, `behavior`, `motion`, `layout`, `overrides`, `naming` |
 
 A document carrying only a `meta` block is valid, and so is an empty one.
@@ -84,6 +84,7 @@ motion:
 
 ## See Also
 
-- [Guidelines](/schema/documents/guidelines/) — the other sidecar, for whoever uses a component
-- [Component](/schema/component/) — the spec a sidecar sits beside
+- [Guidelines](/schema/documents/guidelines/) — the rules whoever uses a component or foundation must observe
+- [Tokens](/schema/documents/tokens/) — what each token in a foundation is for
+- [Component](/schema/component/) — the spec these sit beside
 - [Specification](/schema/specification/) — document kinds, and the rules a validator applies

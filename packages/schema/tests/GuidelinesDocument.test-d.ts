@@ -1,22 +1,24 @@
 /**
- * Type-level tests for the guidelines sidecar (ADR-118).
+ * Type-level tests for the guidelines document (ADR-118).
  * These files are intentionally never executed — they are compiled with tsc
  * to assert that the type shape is correct.
  */
 import type {
   GuidelineEntry,
+  GuidelineReference,
+  GuidelinesCheckedBy,
+  GuidelinesConcern,
   GuidelinesDocument,
+  GuidelinesMeta,
+  GuidelinesStatus,
   ObligationLevel,
-  Ref,
-  SelectionGuidance,
-  SelectionSubject,
 } from '../types/index.js';
 
 /** A prohibition whose remedy is a thing, so it points rather than describes. */
 const pointed: GuidelineEntry = {
-  statement: 'Style any property from a DE Palette ramp step.',
+  statement: 'Use a badge for a value that changes while on screen.',
   level: 'must-not',
-  alternatives: [{ to: 'DE Color/Alert/Error/Background' }],
+  alternatives: [{ to: 'liveRegion' }],
 };
 
 /** A prohibition whose remedy is a rule, which no pointer can hold. */
@@ -33,56 +35,45 @@ const permission: GuidelineEntry = {
 };
 
 const verified: GuidelineEntry = {
-  statement: 'Fill a badge slot with at least one child.',
+  statement: 'Set accessibilityLabel on a badge whose slot holds no text child.',
   level: 'must',
+  instead: 'Give the badge a text child, if the design permits one.',
+  refines: { to: 'components/guidelines.yaml#accessibility' },
+  evidence: [{ href: 'https://www.w3.org/WAI/WCAG22/Understanding/non-text-content' }],
   checkedBy: 'automated',
-  checks: [{ to: 'tests/badge.test.tsx' }],
-  evidence: [{ href: 'https://example.test/research' }],
-  refines: { to: 'components/guidelines.yaml#slotComposition' },
+  checks: [{ to: 'react/src/components/Badge/a11y.test.tsx' }],
 };
 
-/** An off-limits subject with a replacement, and one without — absence is meaningful. */
-const dontUseWhen: SelectionGuidance = {
-  tokens: [
-    {
-      $token: 'DE Palette/*',
-      $description: 'a raw ramp step — styling from a ramp bypasses the layer carrying intent',
-      alternatives: [{ to: 'DE Color/Alert/Error/Background' }],
-    },
-    {
-      $token: 'DE Color/Utility/Figma/*',
-      $description: 'Figma plugin and panel chrome, not product surfaces',
-    },
-  ],
+const meta: GuidelinesMeta = {
+  concern: 'color',
+  status: 'proposed',
+  updated: '2026-11-06',
+  sources: ['analysis/foundations.yaml'],
 };
 
-const useWhen: SelectionGuidance = {
-  tokens: [{ $token: 'DE Color/Text/Primary', $description: 'default body text on a light surface' }],
-  props: [{ $name: 'color', $description: 'the status reported, never decoration' }],
-  variants: [{ $name: 'XS', $description: 'dense rows only' }],
-  slotFills: [{ $name: 'glyph', $description: 'a leading status glyph' }],
+/**
+ * A foundation's rules are about how values are applied across the catalogue —
+ * not about what any one token is for, which is the tokens document's subject.
+ */
+const foundation: GuidelinesDocument = {
+  meta,
+  styles: [prose, permission],
 };
 
-const sameAs: Ref = { to: 'components/guidelines.yaml#styles', rel: 'same-as' };
-
-const crossScope: SelectionSubject = {
-  $name: 'color',
-  $description: 'restates the catalogue-scope rule deliberately',
-  refs: [sameAs],
-};
-
-const document: GuidelinesDocument = {
-  meta: { concern: 'color', status: 'proposed', updated: '2026-11-06' },
-  useWhen,
-  dontUseWhen,
-  styles: [pointed, prose, permission],
-  slotComposition: [verified],
+const component: GuidelinesDocument = {
+  meta: { concern: 'badge', status: 'ratified' },
+  accessibility: [verified],
+  slotComposition: [pointed],
 };
 
 /** A document carrying only a header is valid. */
 const headerOnly: GuidelinesDocument = { meta: { status: 'ratified' } };
 
 const levels: ObligationLevel[] = ['must', 'should', 'should-not', 'must-not', 'may'];
+const concern: GuidelinesConcern = 'overrides';
+const verification: GuidelinesCheckedBy = 'assisted';
+const status: GuidelinesStatus = 'deprecated';
+const reference: GuidelineReference = { to: 'DE Color/Alert/Error/Background' };
 
 // @ts-expect-error — `never` is the authored word; the level set is RFC 2119's.
 const never: ObligationLevel = 'never';
@@ -102,21 +93,27 @@ const wrongField: GuidelineEntry = { intent: 'Keep a badge label short.', level:
 // @ts-expect-error — guidelines carry no `schemaGap`; the overlay-only gate is the other document's.
 const gated: GuidelineEntry = { statement: 'x', level: 'must', schemaGap: { path: 'a', need: 'b' } };
 
-// @ts-expect-error — a subject says what it is for, so `$description` is required.
-const undescribed: SelectionSubject = { $token: 'DE Color/Text/Primary' };
+// @ts-expect-error — per-token tables are the tokens document's, never a guidelines section.
+const tokenTable: GuidelinesDocument = { useWhen: [{ $token: 'a', $description: 'b' }] };
+
+// @ts-expect-error — and neither is the off-limits table.
+const dontTable: GuidelinesDocument = { dontUseWhen: [{ $token: 'a', $description: 'b' }] };
 
 export {
-  document,
+  foundation,
+  component,
   headerOnly,
-  useWhen,
-  dontUseWhen,
-  crossScope,
   levels,
+  concern,
+  verification,
+  status,
+  reference,
   never,
   warn,
   avoid,
   unlevelled,
   wrongField,
   gated,
-  undescribed,
+  tokenTable,
+  dontTable,
 };

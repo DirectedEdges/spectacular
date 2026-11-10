@@ -1,13 +1,17 @@
-import { CheckedBy, ComponentConcern, Pointer, Ref, SidecarMeta } from './Sidecar.js';
-
 /**
- * What whoever uses a component must observe when arranging it, authored beside
+ * What whoever uses a component or a foundation must observe, authored beside
  * the spec as `guidelines.yaml` (ADR-118).
  *
  * The audience is a consumer, not a builder — what a builder must implement is
  * `SupplementalDocument`'s subject. An entry here carries an obligation level
  * and no schema gap, which is the reverse of a supplemental entry and the reason
  * the two are separate documents rather than one shape with everything optional.
+ *
+ * This document carries **rules only**. At a foundation's scope that means how
+ * tokens, themes and raw values are applied across the catalogue — never a
+ * per-token registry of what each token is for, which is `TokensDocument`'s
+ * subject. A rule binds a reader; a token's purpose merely describes a thing,
+ * and the two were conflated while this was one document.
  *
  * An entry is a guideline item as the Design System Documentation Specification
  * (DSDS) 0.23.1 defines one: `statement`, `level`, `checkedBy`, `checks`,
@@ -21,16 +25,76 @@ import { CheckedBy, ComponentConcern, Pointer, Ref, SidecarMeta } from './Sideca
  * pointer can hold. An exporter appends `instead` to `statement` rather than
  * dropping it (DSPEC-59), so no consumer receives a prohibition without its fix.
  *
- * Three scopes write this document, as with the supplemental sidecar, and
- * entries across scopes are additive rather than overriding (DSPEC-56).
+ * This file is self-contained, declaring its own header, verification and
+ * pointer types rather than sharing them with its sibling documents.
  */
+
+/** Where a guidelines document sits in its review cycle. @since 0.40.0 */
+export type GuidelinesStatus =
+  /** Drafted and awaiting a ratifier; its rules are not yet the system's position. */
+  | 'proposed'
+  /** Reviewed and adopted; its rules are the system's position. */
+  | 'ratified'
+  /** Superseded or withdrawn; kept for the record and not to be followed. */
+  | 'deprecated';
+
+/**
+ * The header a guidelines document opens with.
+ *
+ * Every member is optional. `status` is the member that earns the block — it is
+ * how a ratifier knows whether they are reading a proposal or settled guidance.
+ * @since 0.40.0
+ */
+export type GuidelinesMeta = {
+  /** The subject this document covers, restating what the containing directory names. */
+  concern?: string;
+  /** Where the document sits in its review cycle. */
+  status?: GuidelinesStatus;
+  /** Who authored it. Duplicates git history, and is here for a reader who will not consult git. */
+  author?: string;
+  /** When it was last revised, as `YYYY-MM-DD`. Hand-maintained, so it can go stale. */
+  updated?: string;
+  /** The generated reports this document was synthesized from, as workspace-relative paths. */
+  sources?: string[];
+};
+
+/**
+ * The concern a guidelines section covers. The same eleven the supplemental
+ * document uses, so one vocabulary spans both and the spec they sit beside.
+ * @since 0.40.0
+ */
+export type GuidelinesConcern =
+  /** The element tree: what parts a component has and how they nest. */
+  | 'anatomy'
+  /** The props a component takes, and what a caller may pass. */
+  | 'props'
+  /** The style values a component's parts carry. */
+  | 'styles'
+  /** What may fill a slot, in what quantity, and in what arrangement. */
+  | 'slotComposition'
+  /** What a component emits, and when. */
+  | 'events'
+  /** What assistive technology receives, and what a caller must supply for it. */
+  | 'accessibility'
+  /** What a component does in response to interaction or state. */
+  | 'behavior'
+  /** How a component traverses a change rather than where it ends up. */
+  | 'motion'
+  /** How a component's parts are arranged and sized relative to each other. */
+  | 'layout'
+  /** What a caller may replace or supply in place of a component's own part. */
+  | 'overrides'
+  /** Why a component, prop, or part carries the name it does. */
+  | 'naming';
 
 /**
  * How strongly a guideline binds, with RFC 2119 semantics.
  *
  * DSDS 0.23.1 defines the first four. `may` is RFC 2119's fifth and is added
  * here, because a permission recorded as `should` asserts an obligation the
- * system does not hold.
+ * system does not hold. Each description names the colloquial words an author
+ * reaches for, because the authored files already use them: the level is what
+ * those words mean, not a vocabulary competing with them.
  * @since 0.40.0
  */
 export type ObligationLevel =
@@ -46,6 +110,36 @@ export type ObligationLevel =
   | 'may';
 
 /**
+ * How a guideline is checked.
+ *
+ * `checks` names what does the checking, and the schema requires it whenever
+ * this is `automated`.
+ * @since 0.40.0
+ */
+export type GuidelinesCheckedBy =
+  /** A test or lint rule decides it, with no human reading required. */
+  | 'automated'
+  /** A tool surfaces candidates and a human judges them. */
+  | 'assisted'
+  /** A human decides it, with no tool involved. */
+  | 'manual';
+
+/**
+ * A reference to one thing, either inside this workspace or outside it.
+ *
+ * Exactly one member is present; the schema rejects both and neither. `to` names
+ * something the workspace holds — a component, a token, or an item within one —
+ * and `href` names something it does not.
+ * @since 0.40.0
+ */
+export type GuidelineReference = {
+  /** What this points at inside the workspace. Resolution is DSPEC-57. */
+  to?: string;
+  /** What this points at outside the workspace, as an absolute URL. */
+  href?: string;
+};
+
+/**
  * One rule a consumer must observe.
  * @since 0.40.0
  */
@@ -59,7 +153,7 @@ export type GuidelineEntry = {
    * over `instead` whenever the remedy can be named, because a pointer resolves
    * and a sentence does not.
    */
-  alternatives?: Pointer[];
+  alternatives?: GuidelineReference[];
   /**
    * What to do instead, when the remedy is a rule rather than a thing — "style
    * from the semantic layer" names no single token. An exporter folds this into
@@ -67,73 +161,24 @@ export type GuidelineEntry = {
    */
   instead?: string;
   /** A broader guideline this one elaborates. */
-  refines?: Pointer;
+  refines?: GuidelineReference;
   /** Source material supporting the rule. */
-  evidence?: Pointer[];
+  evidence?: GuidelineReference[];
   /** How this is checked. */
-  checkedBy?: CheckedBy;
+  checkedBy?: GuidelinesCheckedBy;
   /** What does the checking. Required when `checkedBy` is `automated`. */
-  checks?: Pointer[];
+  checks?: GuidelineReference[];
 };
 
 /**
- * One thing in a set, and what it is for.
+ * A `guidelines.yaml` document: a header, and one list of rules per concern.
  *
- * Exactly one of `$token` or `$name` is present; the schema rejects both and
- * neither. `$token` identifies a token by the path the rest of the system
- * spells it with, spaces and capitals included — a DSDS-legal identifier is
- * derived at export (DSPEC-60), never authored here.
- * @since 0.40.0
- */
-export type SelectionSubject = {
-  /** The token this is about, as a `<collection>/<group>/<name>` path. */
-  $token?: string;
-  /** The prop, variant or slot fill this is about. */
-  $name?: string;
-  /** What it is for, or why it is off-limits. */
-  $description: string;
-  /**
-   * What to reach for instead of this one. Meaningful under `dontUseWhen`, where
-   * its absence says something true: nothing replaces this subject.
-   */
-  alternatives?: Pointer[];
-  /** Related references, including `same-as` when this restates a subject at another scope. */
-  refs?: Ref[];
-};
-
-/**
- * Subjects grouped by what kind of thing they are.
- *
- * A set of thirty tokens is a table a reader scans, not thirty rules a reader
- * works through, which is why selection guidance is its own shape rather than
- * one `should` entry per subject.
- * @since 0.40.0
- */
-export type SelectionGuidance = {
-  /** Tokens, identified by path. */
-  tokens?: SelectionSubject[];
-  /** Props, identified by name. */
-  props?: SelectionSubject[];
-  /** Variants, identified by name. */
-  variants?: SelectionSubject[];
-  /** Slot fills, identified by name. */
-  slotFills?: SelectionSubject[];
-};
-
-/**
- * A `guidelines.yaml` document: a header, selection guidance, and one list of
- * rules per concern.
- *
- * No member is required, and a document carrying only a header is valid.
+ * No concern key is required, and a document carrying only a header is valid.
  * @since 0.40.0
  */
 export type GuidelinesDocument = {
   /** Authorship and review status for the document as a whole. */
-  meta?: SidecarMeta;
-  /** What each subject in a set is for. */
-  useWhen?: SelectionGuidance;
-  /** Which subjects are off-limits, why, and what replaces them. */
-  dontUseWhen?: SelectionGuidance;
+  meta?: GuidelinesMeta;
 } & {
-  [concern in ComponentConcern]?: GuidelineEntry[];
+  [concern in GuidelinesConcern]?: GuidelineEntry[];
 };
