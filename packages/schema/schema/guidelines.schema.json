@@ -73,23 +73,23 @@
       "oneOf": [
         {
           "const": "must",
-          "description": "An absolute requirement; a usage that disregards it is wrong."
+          "description": "An absolute requirement; a usage that disregards it is wrong. Often written instead as required, or always."
         },
         {
           "const": "should",
-          "description": "A strong recommendation; disregard it only with a considered reason."
+          "description": "A strong recommendation; disregard it only with a considered reason. Often written instead as recommended, or prefer."
         },
         {
           "const": "should-not",
-          "description": "A strong recommendation against; do it only with a considered reason."
+          "description": "A strong recommendation against; do it only with a considered reason. Often written instead as avoid."
         },
         {
           "const": "must-not",
-          "description": "An absolute prohibition; a usage that does it is wrong."
+          "description": "An absolute prohibition; a usage that does it is wrong. Often written instead as never."
         },
         {
           "const": "may",
-          "description": "A permission the system grants, and neither requires nor discourages."
+          "description": "A permission the system grants, and neither requires nor discourages. Often written instead as optional, or could."
         }
       ]
     },

@@ -34,15 +34,15 @@ import { CheckedBy, ComponentConcern, Pointer, Ref, SidecarMeta } from './Sideca
  * @since 0.40.0
  */
 export type ObligationLevel =
-  /** An absolute requirement; a usage that disregards it is wrong. */
+  /** An absolute requirement; a usage that disregards it is wrong. Often written instead as required, or always. */
   | 'must'
-  /** A strong recommendation; disregard it only with a considered reason. */
+  /** A strong recommendation; disregard it only with a considered reason. Often written instead as recommended, or prefer. */
   | 'should'
-  /** A strong recommendation against; do it only with a considered reason. */
+  /** A strong recommendation against; do it only with a considered reason. Often written instead as avoid. */
   | 'should-not'
-  /** An absolute prohibition; a usage that does it is wrong. */
+  /** An absolute prohibition; a usage that does it is wrong. Often written instead as never. */
   | 'must-not'
-  /** A permission the system grants, and neither requires nor discourages. */
+  /** A permission the system grants, and neither requires nor discourages. Often written instead as optional, or could. */
   | 'may';
 
 /**

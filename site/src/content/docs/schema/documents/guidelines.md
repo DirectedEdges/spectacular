@@ -56,13 +56,15 @@ Prefer `alternatives` over `instead` whenever the remedy can be named. A pointer
 
 RFC 2119 semantics.
 
-| Value | Meaning |
-|---|---|
-| `must` | An absolute requirement; a usage that disregards it is wrong |
-| `should` | A strong recommendation; disregard it only with a considered reason |
-| `should-not` | A strong recommendation against; do it only with a considered reason |
-| `must-not` | An absolute prohibition; a usage that does it is wrong |
-| `may` | A permission the system grants, and neither requires nor discourages |
+| Value | Meaning | Often written instead as |
+|---|---|---|
+| `must` | An absolute requirement; a usage that disregards it is wrong | required, always |
+| `should` | A strong recommendation; disregard it only with a considered reason | recommended, prefer |
+| `should-not` | A strong recommendation against; do it only with a considered reason | avoid |
+| `must-not` | An absolute prohibition; a usage that does it is wrong | never |
+| `may` | A permission the system grants, and neither requires nor discourages | optional, could |
+
+The right-hand column is why the five values are worth learning: the words an author reaches for naturally — *always*, *never*, *avoid* — are not five distinct strengths but five labels for these. Recording the level means a reader never has to infer strength from how emphatically a sentence was written.
 
 ### SelectionGuidance
 

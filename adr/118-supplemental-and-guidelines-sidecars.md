@@ -225,6 +225,31 @@ What is ours: the decision to adopt rather than invent, the builder-versus-consu
 
 **One scope limit worth stating plainly.** A `guidelines.yaml` *item* is a DSDS guideline item. The *document* is not a DSDS document. DSDS requires `kind` and `for` on every section, and this ADR uses concern keys as the top-level map and rejects `for` (Notes). So the mapping is item-for-item and section-by-construction: an exporter wraps a concern's entries in a DSDS section, supplying `kind: guidelines` and `for: all`. Nothing is lost, but the document is a source format that maps cleanly to DSDS rather than DSDS itself, and earlier drafts of this ADR overstated that.
 
+**The shape in practice.** One entry exercising every field, so the parts can be seen together rather than inferred from the options below:
+
+```yaml
+# components/badge/guidelines.yaml
+accessibility:
+  - statement: "Set accessibilityLabel on a badge whose slot holds no text child."
+    level: must
+    instead: "Give the badge a text child, if the design permits one."
+    refines: { to: "components/guidelines.yaml#accessibility" }
+    evidence: [{ href: "https://www.w3.org/WAI/WCAG22/Understanding/non-text-content" }]
+    checkedBy: automated
+    checks: [{ to: "react/src/components/Badge/a11y.test.tsx" }]
+```
+
+Read in order: *what* the rule is, *how hard* it binds, *what to do instead* when it is a prohibition, *which broader rule* it narrows, *why* anyone believes it, and *what proves* it still holds. Only the first two are required; an entry carrying just those is ordinary and correct.
+
+The same entry if the remedy were a thing rather than a rule — the common case, and the one that needs no extension to DSDS:
+
+```yaml
+  - statement: "Use a badge for a value that changes while on screen."
+    level: must-not
+    alternatives: [{ to: "liveRegion" }]
+    checkedBy: manual
+```
+
 #### Option A: DSDS item fields, DSDS levels plus `may`, DSDS `alternatives` for a nameable remedy, and `instead` for a prose one *(Selected)*
 
 A guideline entry is a DSDS guideline item: `statement`, `level`, `checkedBy`, `checks`, `evidence`, `alternatives`, `refines`, each used as DSDS defines it. `level` is one of `must`, `should`, `should-not`, `must-not`, `may`.
@@ -274,6 +299,45 @@ Two additions to DSDS, both deliberate and both minimal:
 
 `regenerationRisk` is removed. `checkedBy` takes `automated`, `assisted`, or `manual`, and `checks` lists the tests or lint rules that do the checking, required when `checkedBy` is `automated`.
 
+**What the authored data actually holds, and what it becomes.** Three entries from `button` and `icon`, each a real `regenerationRisk` value:
+
+```yaml
+# 1. button, the press-scale entry — a grade, a dependency list and an
+#    instruction in one string
+regenerationRisk: "medium — declared in motion.css (React, imported by
+  component.tsx) and inline in component.ts; keyed to the emitted `.button`
+  class and the `:active:not(:disabled)` selector the states convention
+  produces. Re-check the selector in styles.css after every re-emit."
+# becomes
+checkedBy: manual
+checks: [{ to: "react/src/components/Button/motion.css" }]
+```
+
+The grade goes, because `medium` was never comparable across entries. The dependency list goes into `checks`, which can be resolved. The instruction — re-check the selector — has no home, and that is the loss this option accepts.
+
+```yaml
+# 2. icon, the aria-hidden entry — a grade plus a verification that a human
+#    actually performed
+regenerationRisk: "low — both emitters import an authored `component.*` beside
+  the scaffold in place of the scaffold itself, so the emitted stories exercise
+  these files (verified in the emitted stories' imports). Re-check both imports
+  after every re-emit."
+# becomes
+checkedBy: assisted
+checks: [{ to: "react/src/components/Icon/stories.tsx" }]
+```
+
+`assisted` is the honest value: a tool shows the emitted imports, a human reads them. Nothing in the old field could say that.
+
+```yaml
+# 3. badge, every guideline entry — a grade with no ledger behind it at all
+regenerationRisk: "none — spec-folder file, generate never writes it"
+# becomes
+# (nothing — the field is simply absent)
+```
+
+Eight of `badge`'s nine entries say `none` or `pending`. That is the field reporting that it had nothing to record, eight times, and `checkedBy` being optional says the same thing by saying nothing.
+
 **Pros**:
 - Replaces a free-text paragraph with a value a tool can act on, and uses DSDS's names for it.
 - The field it replaces was carrying three things at once — a grade, a dependency list, and an instruction — and several entries filled it with `"none"` or `"pending"`, which is a grade and no ledger.
@@ -297,6 +361,47 @@ Two additions to DSDS, both deliberate and both minimal:
 #### Option A: An object, required on supplemental, absent from guidelines *(Selected)*
 
 `schemaGap: { path, need }`. `path` admits a JSON Schema pointer and also any repo-relative target — `analysis/foundations.yaml` and a `conventions.specs.*` key are both already cited in the authored files. Required on every `supplemental.yaml` entry. Not a field on `guidelines.yaml` at all.
+
+**Three kinds of target, all present in the authored files.** The split matters because only the first can be resolved mechanically:
+
+```yaml
+# 1. A JSON Schema pointer — resolvable, so DSPEC-58 can check it exists
+schemaGap:
+  path: styles.schema.json#/definitions/Styles
+  need: "the property set carries no transition, duration, easing or delay key,
+    so no variant delta can state how a style change is traversed — only its
+    endpoints"
+```
+
+```yaml
+# 2. A generated report — the gap is in the library's data, not the contract.
+#    Checkable for existence only
+schemaGap:
+  path: analysis/foundations.yaml
+  need: "the library publishes colour, dimension, string and typography tokens
+    only; no duration or easing token exists to reference"
+```
+
+```yaml
+# 3. A conventions key — the declaration exists but nothing reads it
+schemaGap:
+  path: conventions.specs.accessibility.label
+  need: "the convention declares the prop name, and no emitter binding reads it"
+```
+
+Case 2 is why `path` is not restricted to schema pointers. A missing motion token is a real gap, and forcing it to name `styles.schema.json` would point at the wrong thing — the schema can express a duration; the library has none to express.
+
+And the entries that have no gap at all are the tell this field exists to catch:
+
+```yaml
+# From image — `schemaGap` opening with "none" means the entry is in the wrong
+# file. The visual IS spec-carried; only the failure case is not
+schemaGap: "none for the visual — the fallback is spec-carried as root's
+  backgroundColor. The gap is the failure case: no surface reacts to an image
+  whose bytes fail to load"
+```
+
+Under the object form this cannot be written. The entry either names the surface that fails — in this case there is none, because no schema surface models a load error — or it is split, with the spec-carried half deleted and the failure case keeping the entry.
 
 **Pros**:
 - Splits the one string that currently carries both the location and the argument, so the location can be checked mechanically and the argument read by a human.
@@ -333,6 +438,38 @@ Functionally close to the selection, differing only in whether the field exists 
 `FoundationConcern` is `color`, `typography`, `layout`, `space`, `shape`, `elevation`, `motion`, `brand`.
 
 Scopes are additive, not overriding. A catalogue entry and a component entry both apply; neither replaces the other. Entries are statements about a subject, not values at a key, so there is nothing for a narrower scope to win.
+
+**The tree as it fills in.** The marathon workspace today, plus where the next files land — the authored sidecars marked, everything else already generated or specced:
+
+```
+specs/
+├── analysis/                       # generated; nothing authored here
+│   ├── foundations.yaml
+│   ├── styling.byToken.yaml
+│   └── …
+├── foundations/
+│   ├── color/
+│   │   ├── guidelines.yaml         # authored — today's foundations/color.yaml
+│   │   └── supplemental.yaml       # authored — e.g. no motion token exists
+│   ├── typography/
+│   │   └── guidelines.yaml         # authored
+│   └── space/
+│       └── guidelines.yaml         # authored
+└── components/
+    ├── guidelines.yaml             # authored — every component
+    ├── supplemental.yaml           # authored — every component
+    ├── badge/
+    │   ├── api.yaml                # generated
+    │   ├── variants.yaml           # generated
+    │   ├── styling.yaml            # generated
+    │   ├── examples.yaml           # generated
+    │   ├── guidelines.yaml         # authored
+    │   └── supplemental.yaml       # authored
+    └── button/
+        └── …
+```
+
+A foundation directory holds the same two filenames a component directory does, which is the symmetry the suffixed form in Option B gave up. Only concerns a system has something to say about get a directory — eight are available and three exist here, because nothing has been written about shape, elevation, brand, motion or layout yet. An absent directory is not a gap to fill.
 
 **Pros**:
 - A rule true of every component is stated once. `image`'s and `icon`'s `accessibilityLabel` accessibility entries are nearly identical and belong at the catalogue scope.
@@ -422,6 +559,35 @@ dontUseWhen:
 
 Both documents open with `meta`: `concern`, `status`, `author`, `updated`, and `sources`.
 
+**In place, as the head of a document that continues.** The block is five lines at the top of a file whose body runs for a hundred, so it is only worth judging in that position:
+
+```yaml
+# foundations/color/guidelines.yaml
+meta:
+  concern: color
+  status: proposed
+  author: Nathan Curtis
+  updated: 2026-11-06
+  sources:
+    - analysis/foundations.yaml
+    - analysis/styling.byToken.yaml
+    - analysis/styling.byComponent.yaml
+    - config/conventions/figma.primitives.yaml
+
+useWhen:
+  tokens:
+    - { $token: "DE Color/Text/Primary", $description: "default body and label text on any light surface" }
+    # … twenty-nine more
+
+styles:
+  - statement: "Style any property from a `DE Palette/*` ramp step."
+    level: must-not
+    instead: "Style from the semantic token that aliases the ramp step."
+    # … ten more
+```
+
+`status: proposed` is the line a ratifier reads first and the only thing in the workspace that distinguishes a draft from settled guidance. `sources` is what a reviewer needs to check the synthesis against, and what tells a later run which inputs have moved since.
+
 **Pros**:
 - `color.yaml` already has it, and `status: proposed` is load-bearing — it is how a ratifier knows the file is a proposal rather than settled guidance. Nothing else in the workspace distinguishes the two.
 - `sources:` records which generated reports a document was synthesized from, which is what a reviewer needs to check the synthesis and what a regeneration needs to know has gone stale.
@@ -454,6 +620,36 @@ DSDS specifies nothing about design-tool translation — no rule for spaces in t
 Authored content is unaffected: a `to` in an authored `alternatives` carries the token path exactly as the rest of the system spells it, because the authored document is a source format rather than a DSDS document (see D7's scope limit). The translation is the exporter's, in two parts:
 
 > A DSDS exporter derives a token's `id` from whatever the workspace's `spec.tokens` profile emits for that token. If the result is not a legal DSDS id, it is normalized with DSDS's own algorithm, applied per path segment so the slashes a token id is permitted to keep are kept. The exporter MUST also emit the token's original path as `name`, unmodified.
+
+**Where the value comes from, and what happens to it.** One token, traced end to end. Nothing here is new machinery — the first two rows already happen on every run:
+
+| Stage | Value | Who produces it |
+|---|---|---|
+| Figma variable | name `Action/Hover background`, in collection `DE Color` | The library |
+| Spec and report | `DE Color/Action/Hover background` | `tokenPath()` in the CLI's foundations analyzer, which joins the collection name to the variable name |
+| Authored in a sidecar | `to: "DE Color/Action/Hover background"` | A human, spelling it exactly as every other token reference in the system does |
+| Validated | resolved against `analysis/foundations.yaml` by that same path (DSPEC-57) | The CLI validator |
+| Exported to DSDS | `name: "DE Color/Action/Hover background"` and `id: "de-color/action/hover-background"` | A DSDS exporter, which does not exist yet |
+
+So an author writes one spelling, the one already in their fingers, and the derived identifier appears only in an exported document:
+
+```yaml
+# foundations/color/guidelines.yaml — what a human writes
+dontUseWhen:
+  tokens:
+    - $token: "DE Palette/Red/44"
+      $description: "a raw ramp step"
+      alternatives: [{ to: "DE Color/Alert/Error/Background" }]
+```
+
+```yaml
+# what a DSDS export would carry — id derived, name preserved
+- kind: token
+  id: de-color/alert/error/background
+  name: DE Color/Alert/Error/Background
+```
+
+The transform folds case and collapses every run of non-alphanumeric characters to one dash, so it is many-to-one and cannot be reversed. `name` is what makes that safe. Run across all 272 tokens in the component-marathon library, it produces 272 distinct ids — including the case-only pair `DE Color/Text/Primary Inverse` and `DE Color/Icon/Primary inverse`, which stay apart because their groups differ. That is a fact about this library, not a guarantee, which is why DSPEC-60's exporter needs a collision check that fails loudly.
 
 `spec.tokens` is already this system's single answer to how a token is named for a given consumer — eight profiles behind one enum, settled by ADR-007. A `tokens` profile a team has already chosen is a better source for their ids than a scheme invented here.
 
@@ -618,18 +814,21 @@ SupplementalEntry:
 
 **Example — new shape** (`schema/guidelines.schema.json`):
 ```yaml
+# Each description names the colloquial words an author reaches for, because
+# those are the words the authored files already use — the level is what those
+# words mean, not a vocabulary competing with them.
 ObligationLevel:
   oneOf:
     - const: must
-      description: "An absolute requirement; a usage that disregards it is wrong."
+      description: "An absolute requirement; a usage that disregards it is wrong. Often written instead as required, or always."
     - const: should
-      description: "A strong recommendation; disregard it only with a considered reason."
+      description: "A strong recommendation; disregard it only with a considered reason. Often written instead as recommended, or prefer."
     - const: should-not
-      description: "A strong recommendation against; do it only with a considered reason."
+      description: "A strong recommendation against; do it only with a considered reason. Often written instead as avoid."
     - const: must-not
-      description: "An absolute prohibition; a usage that does it is wrong."
+      description: "An absolute prohibition; a usage that does it is wrong. Often written instead as never."
     - const: may
-      description: "A permission the system grants and neither requires nor discourages."
+      description: "A permission the system grants and neither requires nor discourages. Often written instead as optional, or could."
 
 GuidelineEntry:
   required: [statement, level]
