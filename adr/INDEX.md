@@ -4,7 +4,6 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
-| 118 | Two Authored Documents Beside a Spec — `supplemental.yaml` for Builders, `guidelines.yaml` for Consumers | (reserved, draft on `118-supplemental-and-guidelines-sidecars`) |
 | 117 | A Library's Images Are Assets It Lays Out, Named by a Pattern | (reserved, draft on `117-library-image-assets`) |
 | 115 | Closed Style Value Sets | |
 | 114 | Describe Enum Options Where They Are Declared | (reserved, draft in PR #799) |
@@ -28,6 +27,7 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
+| 118 | Two Authored Documents Beside a Spec — `supplemental.yaml` for Builders, `guidelines.yaml` for Consumers | Two hand-authored documents carrying `meta` rather than Figma provenance; guidelines entries are DSDS 0.23.1 items; each schema self-contained |
 | 117 | A Library's Images Are Assets It Lays Out, Named by a Pattern | `images.match` becomes a `{i}` naming pattern over laid-out image assets; `images.component` alone names the designated image component |
 | 116 | Nested style members declare their own defaults | 23 of 30 optional composite members declare a `default`; required members declare none; `lineHeight` settles on `'AUTO'` |
 | 115 | Closed Style Value Sets | Five keys that inherited an open string wrapper become named closed sets, each dropping three value forms nothing writes |

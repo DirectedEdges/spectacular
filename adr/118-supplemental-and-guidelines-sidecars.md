@@ -2,7 +2,7 @@
 
 **Branch**: `118-supplemental-and-guidelines-sidecars`
 **Created**: 2026-11-09
-**Status**: DRAFT
+**Status**: ACCEPTED
 **Summary**: `SupplementalDocument` and `GuidelinesDocument` join the concern documents as authored siblings, divided by who reads them.
 **Decides**: none
 **Deciders**: Nathan Curtis (author)
