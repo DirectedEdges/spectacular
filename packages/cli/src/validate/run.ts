@@ -8,11 +8,10 @@ import * as path from 'path';
 import * as yaml from 'yaml';
 import { concernValidators, describeAjvError, isMissingSourceError, type ConcernName } from './schemas.js';
 import {
-  AUTHORED_KINDS,
   authoredFilesIn,
   authoredValidator,
   workspaceAuthoredFiles,
-  type AuthoredLocation,
+  type AuthoredFile,
 } from './authored.js';
 import { checkReferences, type ParsedSpec, type WorkspaceIndex } from './references.js';
 import { loadTokenIndex, type TokenIndex } from './tokens.js';
@@ -189,7 +188,7 @@ export function runValidate(options: ValidateOptions): ValidateResult {
       // The two authored documents, when present (ADR-118). Both are hand-written,
       // so neither is required and an absent one is ordinary.
       let supplementalDoc: unknown;
-      for (const location of authoredFilesIn(dir, '')) {
+      for (const location of authoredFilesIn({ dir, label: '' })) {
         const doc = validateAuthored(location, findings, kind, name);
         if (location.kind === 'supplemental') supplementalDoc = doc;
       }
@@ -331,7 +330,7 @@ function unreachableAuthoredFiles(componentKey: string, supplemental: unknown, w
 
 /** Shape-check one authored document, recording any failure as a finding. */
 function validateAuthored(
-  location: AuthoredLocation,
+  location: AuthoredFile,
   findings: Finding[],
   kind: SpecKind,
   spec: string,
@@ -341,7 +340,7 @@ function validateAuthored(
     doc = yaml.parse(fs.readFileSync(location.file, 'utf8'));
   } catch (e) {
     findings.push({
-      kind, spec, file: location.label, path: '/',
+      kind, spec, file: location.fileLabel, path: '/',
       message: `not parseable as YAML: ${(e as Error).message.split('\n')[0]}`,
       level: 'error',
     });
@@ -355,7 +354,7 @@ function validateAuthored(
       const line = `${errPath}|${message}`;
       if (seen.has(line)) continue;
       seen.add(line);
-      findings.push({ kind, spec, file: location.label, path: errPath, message, level: 'error' });
+      findings.push({ kind, spec, file: location.fileLabel, path: errPath, message, level: 'error' });
     }
   }
   return doc;

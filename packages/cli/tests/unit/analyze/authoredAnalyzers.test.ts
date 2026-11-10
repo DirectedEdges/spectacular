@@ -181,6 +181,51 @@ describe('guidelines analyzer', () => {
     expect(byLevel.map(r => r.level)).toEqual(['never']);
   });
 
+  // The catalogue and foundation scopes sit outside the per-spec walk, so they
+  // are picked up in finalize or not at all. Without this the report omitted a
+  // foundation's rules entirely, which is most of what it is for.
+  it('picks up the catalogue and foundation scopes the spec walk never visits', async () => {
+    const a = new GuidelinesAnalyzer();
+
+    // Catalogue scope: every component.
+    const components = path.join(root, 'specs', 'components');
+    fs.mkdirSync(components, { recursive: true });
+    fs.writeFileSync(
+      path.join(components, 'guidelines.yaml'),
+      yaml.stringify({ accessibility: [{ statement: 'Label every control.', level: 'must' }] }),
+    );
+
+    // Foundation scope, keyed by a foundation concern.
+    const color = path.join(root, 'specs', 'foundations', 'color');
+    fs.mkdirSync(color, { recursive: true });
+    fs.writeFileSync(
+      path.join(color, 'guidelines.yaml'),
+      yaml.stringify({
+        meta: { concern: 'color', status: 'proposed' },
+        color: [{ statement: 'Style from a raw ramp step.', level: 'must-not' }],
+        elevation: [{ statement: 'Assemble a shadow inline.', level: 'must' }],
+      }),
+    );
+
+    const badge = specDir('badge', {
+      guidelines: { props: [{ statement: 'Keep the label short.', level: 'should' }] },
+    });
+    await a.run({}, context('badge', badge));
+    await a.finalize(path.join(root, 'specs'), path.join(root, 'specs', 'analysis'), undefined, 'YAML');
+
+    const report = await reportOf('guidelines');
+    expect(report.summary.specsWithDocument).toBe(3);
+    expect(report.summary.rules).toBe(4);
+    expect(report.coverage.withDocument).toEqual(['badge', 'components', 'foundations/color']);
+
+    // A foundation concern key is reported as itself, not folded into a
+    // component concern.
+    const concerns = (report.byConcern as Array<{ concern: string }>).map(r => r.concern);
+    expect(concerns).toContain('color');
+    expect(concerns).toContain('elevation');
+    expect(report.awaitingRatification).toContain('foundations/color');
+  });
+
   it('treats an unparseable document as absent, leaving the finding to validate', async () => {
     const a = new GuidelinesAnalyzer();
     const dir = path.join(root, 'specs', 'components', 'broken');

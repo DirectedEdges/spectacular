@@ -3,6 +3,7 @@ import path from 'path';
 import yaml from 'yaml';
 import type { AnalyzerFoundations, Transformer, TransformerContext } from '../transforms/transformer.js';
 import { ANALYSIS_DIR } from '../utilities/specsLayout.js';
+import { authoredScopes } from '../utilities/authoredScopes.js';
 
 /**
  * Reports what the catalogue's `supplemental.yaml` documents say, pivoted
@@ -153,9 +154,25 @@ export class SupplementalAnalyzer implements Transformer {
     outputFormat?: 'JSON' | 'YAML',
   ): Promise<void> {
     if (outputFormat) this._outputFormat = outputFormat;
+    // `outputDir` is the specs root, which is what makes the two scopes outside
+    // the per-spec folders reachable from here. Collected in `finalize` rather
+    // than `run` because the spec walk never visits them, so without this the
+    // report silently omits one whole scope.
+    this.collectScopes(outputDir);
     const outDir = analysisDir ?? path.join(outputDir, ANALYSIS_DIR);
     await fs.ensureDir(outDir);
     await writeReport(outDir, 'supplemental', this.buildAggregate(), this._outputFormat);
+  }
+
+  /** The catalogue and foundation scopes, each folded in as its own row. */
+  private collectScopes(specsRoot: string): void {
+    for (const scope of authoredScopes(specsRoot)) {
+      // Trailing slash off: the label is a row name here, not a path prefix.
+      const label = scope.label.replace(/\/$/, '');
+      if (this._collected.some(c => c.component === label)) continue;
+      const collected = this.collect(label, scope.dir);
+      if (collected.present) this._collected.push(collected);
+    }
   }
 
   private buildAggregate(): SupplementalAggregate {

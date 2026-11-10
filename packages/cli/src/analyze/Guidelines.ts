@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import type { AnalyzerFoundations, Transformer, TransformerContext } from '../transforms/transformer.js';
 import { ANALYSIS_DIR } from '../utilities/specsLayout.js';
+import { authoredScopes } from '../utilities/authoredScopes.js';
 import { readAuthored, unique, writeReport } from './Supplemental.js';
 
 /**
@@ -142,9 +143,24 @@ export class GuidelinesAnalyzer implements Transformer {
     outputFormat?: 'JSON' | 'YAML',
   ): Promise<void> {
     if (outputFormat) this._outputFormat = outputFormat;
+    // `outputDir` is the specs root. The catalogue and foundation scopes sit
+    // outside the per-spec folders the walk visits, so they are collected here
+    // or not at all — and a foundation's rules are most of what this report is
+    // for, which made the omission worth fixing rather than noting.
+    this.collectScopes(outputDir);
     const outDir = analysisDir ?? path.join(outputDir, ANALYSIS_DIR);
     await fs.ensureDir(outDir);
     await writeReport(outDir, 'guidelines', this.buildAggregate(), this._outputFormat);
+  }
+
+  /** The catalogue and foundation scopes, each folded in as its own row. */
+  private collectScopes(specsRoot: string): void {
+    for (const scope of authoredScopes(specsRoot)) {
+      const label = scope.label.replace(/\/$/, '');
+      if (this._collected.some(c => c.spec === label)) continue;
+      const collected = this.collect(label, scope.dir);
+      if (collected.present) this._collected.push(collected);
+    }
   }
 
   private buildAggregate(): GuidelinesAggregate {
