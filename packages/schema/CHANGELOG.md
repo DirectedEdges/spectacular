@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Role concept dispositions in the platform bindings** — `mappings/bindings/react.json` and `webcomponents.json` gain a `concepts.roles` block: every vocabulary concept with `disposition: implemented | inert` and, for implemented ones, the realising module. Closes the one key class where the bindings' "does platform X realise this?" promise broke — the fact previously lived only in the emitters' own registries, which nothing downstream may read
 - `SupplementalDocument` — the `supplemental.yaml` contract: what a component needs beyond the spec, for whoever builds it (ADR-118)
 - `GuidelinesDocument` — the `guidelines.yaml` contract: the rules whoever uses a component or foundation must observe (ADR-118)
 - `SupplementalEntry` — carries `intent`, a required `SchemaGap`, optional `platforms`, `checkedBy` and `checks`

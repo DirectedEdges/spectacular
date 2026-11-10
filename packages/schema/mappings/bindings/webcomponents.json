@@ -284,6 +284,37 @@
         "notes": "Event-handler composition is expected to mirror the React binding's handlerCases through the shared events model, and `instance` role routing the same — both left undeclared here until confirmed against this emitter. The precedence module is shared, so suppression cannot diverge."
       }
     },
+    "roles": {
+      "$comment": "Role concept dispositions for this platform — implemented (the emitter realises the concept) or inert (recognized vocabulary that currently renders as if unannotated). The implemented set mirrors the emitter's role registry plus the shared part concepts; a registry change must update this block.",
+      "alert": { "disposition": "implemented", "module": "Roles/announcement.ts", "basis": "implementation" },
+      "button": { "disposition": "implemented", "module": "Roles/button.ts", "basis": "implementation" },
+      "checkbox": { "disposition": "implemented", "module": "Roles/checkbox.ts", "basis": "implementation" },
+      "decoration": { "disposition": "implemented", "module": "Roles/decoration.ts", "basis": "implementation" },
+      "decrement": { "disposition": "inert", "basis": "implementation", "notes": "Vocabulary concept only; no docs page worked through and no emitter — the annotation rides inert." },
+      "description": { "disposition": "implemented", "module": "Roles/description.ts", "basis": "implementation" },
+      "disclosure": { "disposition": "implemented", "module": "Roles/disclosure.ts", "basis": "implementation" },
+      "errormessage": { "disposition": "implemented", "module": "Roles/errormessage.ts", "basis": "implementation" },
+      "group": { "disposition": "inert", "basis": "implementation", "notes": "Vocabulary concept with a docs page; no emitter yet — the annotation rides inert and the element renders as if unannotated." },
+      "image": { "disposition": "implemented", "module": "Roles/image.ts", "basis": "implementation" },
+      "increment": { "disposition": "inert", "basis": "implementation", "notes": "Vocabulary concept only; no docs page worked through and no emitter — the annotation rides inert." },
+      "indicator": { "disposition": "implemented", "module": "Roles/indicator.ts", "basis": "implementation" },
+      "label": { "disposition": "implemented", "module": "Roles/label.ts", "basis": "implementation" },
+      "link": { "disposition": "implemented", "module": "Roles/link.ts", "basis": "implementation" },
+      "panel": { "disposition": "implemented", "module": "Roles/panel.ts", "basis": "implementation" },
+      "password": { "disposition": "inert", "basis": "implementation", "notes": "Vocabulary concept with a docs page; no emitter yet — the annotation rides inert and the element renders as if unannotated." },
+      "placeholder": { "disposition": "implemented", "module": "from-specs partConcepts (shared core)", "basis": "implementation" },
+      "progressbar": { "disposition": "implemented", "module": "Roles/announcement.ts", "basis": "implementation" },
+      "radio": { "disposition": "inert", "basis": "implementation", "notes": "Vocabulary concept with a docs page; no emitter yet — the annotation rides inert and the element renders as if unannotated." },
+      "searchbox": { "disposition": "inert", "basis": "implementation", "notes": "Vocabulary concept with a docs page; no emitter yet — the annotation rides inert and the element renders as if unannotated." },
+      "slider": { "disposition": "inert", "basis": "implementation", "notes": "Vocabulary concept only; no docs page worked through and no emitter — the annotation rides inert." },
+      "spinbutton": { "disposition": "inert", "basis": "implementation", "notes": "Vocabulary concept only; no docs page worked through and no emitter — the annotation rides inert." },
+      "status": { "disposition": "implemented", "module": "Roles/announcement.ts", "basis": "implementation" },
+      "switch": { "disposition": "implemented", "module": "Roles/switch.ts", "basis": "implementation" },
+      "textarea": { "disposition": "inert", "basis": "implementation", "notes": "Vocabulary concept with a docs page; no emitter yet — the annotation rides inert and the element renders as if unannotated." },
+      "textbox": { "disposition": "implemented", "module": "Roles/textbox.ts", "basis": "implementation" },
+      "togglebutton": { "disposition": "implemented", "module": "Roles/togglebutton.ts", "basis": "implementation" },
+      "value": { "disposition": "implemented", "module": "from-specs partConcepts (shared core)", "basis": "implementation" }
+    },
     "references": {
       "token": {
         "disposition": "bound",

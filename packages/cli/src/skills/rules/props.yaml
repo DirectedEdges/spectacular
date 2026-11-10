@@ -11,12 +11,13 @@ nullable:
       adr: 65
 enum:
   guidelines:
-    - must: "write `nullable: false` on a number prop carrying an `enum`, keep the enum in authored variant-axis order with the default first, and never sort it"
+    - must: "write `nullable: false` on a number prop carrying an `enum`; order any enum naturally — the scale's own order (`XS, S, M, L, XL`; `100, 200, 300`) or the library's axis order — and set the default with the `default` field, never by position; never re-sort an ordered vocabulary"
       adr: 72
     - should: "keep the whole prop a string enum when any one option is non-numeric"
       adr: 72
 glyphProps:
   guidelines:
+    - could: "omit a glyph prop's `default` — a glyph prop with no default renders nothing, which is a designed fallback, not an error; declare a `default` only when the component should always show some glyph"
     - must: "spell a glyph-bound prop's `default` and every entry in its `examples` in the workspace's formatted key spelling (`info`, `caretRight`) — a glyph name is a reference into the icon key space, exactly as `instanceOf` is into the component key space, and the renderer matches it against `formatKey(<cache name>, format.keys)`; the raw cache spelling (`Info`, `Caret Right`) matches nothing and the glyph silently drops"
       note: "deliberately opposite to enum option values, which are vocabulary and keep the library's own spelling verbatim (`Primary inverse`) — references are formatted, vocabulary is verbatim; when unsure which a value is, ask whether something resolves it (reference) or displays it (vocabulary)"
 default:

@@ -75,6 +75,11 @@ The dev posture is live — `specs run` re-emits the platform trees on save and 
 
 If the posture is not running, start it; do not fall back to one-shot `specs react` / `specs render` invocations per iteration. If render reports a stale or unusable cache, run `specs cache` once and retry.
 
+Two situations with sanctioned answers, so they cost no deliberation:
+
+- **The bridge plugin is not connected** — that is a human-side control in the Figma app. Report it as a pending human action, keep authoring; the watch renders when the plugin reconnects.
+- **You need a re-render without a real change** (the plugin just reconnected, the canvas was cleared) — a no-op save of the spec file (`touch`, or add-and-remove a space) is the sanctioned trigger; the watch renders on change, and a contentless change is a legitimate one.
+
 ## 8. The two authored documents
 
 For every requirement the table in step 1 marked supplemental:

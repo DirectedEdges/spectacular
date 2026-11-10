@@ -29,7 +29,7 @@ Start only the process whose check failed. **Never kill a running posture proces
 ```bash
 mkdir -p .posture
 nohup node_modules/.bin/specs run > .posture/specs-run.log 2>&1 & echo $! > .posture/specs-run.pid
-nohup node_modules/.bin/specs render --watch > .posture/render-watch.log 2>&1 & echo $! > .posture/render-watch.pid
+nohup node_modules/.bin/specs render --watch --overwrite specs/components > .posture/render-watch.log 2>&1 & echo $! > .posture/render-watch.pid
 ```
 
 Portable sh — no `setsid` (absent on macOS), no GNU-only flags.
