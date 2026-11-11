@@ -26,6 +26,10 @@ authoringOrder:
     - warn: "expect `variants.yaml` to fail validation once on a slot-bearing component — its `children.examples[0]` `$slotContent` pointer cannot resolve until `examples.yaml` exists; author examples next rather than reworking the binding"
 layout:
   guidelines:
+    - must: "size a slot-bearing element `layoutSizingVertical: HUG` — a slot's height belongs to whatever fills it, and `FIXED` renders the component wrong"
+      never: "leave a slot-bearing element's vertical sizing to chance — state `HUG` even when it looks like the obvious default"
+      note: "`layoutSizingVertical` on a collapsed primitive wrapper is the slot box's own child-layout value; the collapse split keeps it there and leaves the remaining keys on the root, so one authored element legitimately carries both this and the root's dimension — not a contradiction to reconcile"
+      adr: [58, 83]
     - could: "a slot element may own its auto-layout — `layoutMode` and `itemSpacing` on the slot govern the gap between its fills, and emit as flex + gap (ruled by the system owner)"
 pointers:
   guidelines:

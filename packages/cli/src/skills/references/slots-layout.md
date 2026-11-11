@@ -51,6 +51,8 @@ A slot is a prop the component exposes for content it does not define. Authoring
 | 2. Bind an element to it | `variants.yaml` | the slot-bearing element's `children: {$binding: '#/props/<slot>', examples: [{$slotContent: …}, …]}` — a `SlotBinding`; `examples[0]` is the authored default fill |
 | 3. Author the fills | `examples.yaml` | `slotContentExamples.<name>` — an anonymous triplet of `anatomy` + `elements` + `layout`, complete in itself |
 
+A slot-bearing element sizes `layoutSizingVertical: HUG`. Its height is its fills' height, so a slot left `FIXED` renders the component wrong.
+
 A fill arrives one of two ways:
 
 - **Default slot** — an instance filling the designated default slot may be nested as a plain child element. The nesting is the fill; nothing points between levels.
