@@ -75,6 +75,37 @@ describe('collectSpecFiles', () => {
   it('names the directory it cannot read', async () => {
     expect(() => collectSpecFiles(path.join(dir, 'nope'))).toThrow(/Cannot read specs directory/);
   });
+
+  // ADR-096 put components under `components/` and compositions under `compositions/`.
+  // This reader derived the layout itself and only ever looked for `specs/<key>/`, so on
+  // every current workspace it collected nothing: the instance manifest's spec layer was
+  // empty, and a component the workspace authored and rendered could not be nested in
+  // another — every lookup fell through to the fetched cache.
+  it('reads components under components/, keyed by folder', async () => {
+    await writeSpec(path.join('components', 'link'), 'api', { title: 'Link' });
+    await writeSpec(path.join('components', 'link'), 'variants', { default: {} });
+    const found = await collectSpecFiles(specsDir());
+    expect(found.map((f) => f.key)).toEqual(['link', 'link']);
+  });
+
+  it('reads compositions alongside components', async () => {
+    await writeSpec(path.join('components', 'link'), 'api', { title: 'Link' });
+    await writeSpec(path.join('compositions', 'signUp'), 'api', { title: 'Sign up' });
+    expect((await collectSpecFiles(specsDir())).map((f) => f.key).sort()).toEqual(['link', 'signUp']);
+  });
+
+  it('does not treat analysis or foundations as specs', async () => {
+    await writeSpec(path.join('components', 'link'), 'api', { title: 'Link' });
+    await writeSpec('analysis', 'props', { props: {} });
+    await writeSpec(path.join('foundations', 'color'), 'guidelines', { statements: [] });
+    expect((await collectSpecFiles(specsDir())).map((f) => f.key)).toEqual(['link']);
+  });
+
+  it('returns nothing for a workspace with no specs, rather than failing', async () => {
+    // Legal: every instance can resolve from the fetched cache alone.
+    await fs.ensureDir(path.join(specsDir(), 'components'));
+    expect(await collectSpecFiles(specsDir())).toEqual([]);
+  });
 });
 
 describe('buildManifest — layer 1, a spec key to its own node', () => {

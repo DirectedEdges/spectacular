@@ -9,6 +9,9 @@ nullable:
     - should: "omit `nullable` on open-valued props — absence already means nullable for string, number, slot, and image props"
       must: "write `nullable: true` explicitly on an enum prop that accepts null — absence there means not nullable"
       adr: 65
+imageProps:
+  guidelines:
+    - must: "treat unset and explicitly empty as different statements on an image prop — a prop never mentioned resolves to its authoring-default example, and one passed empty resolves to the placeholder surface; the role concept's page carries the contract"
 enum:
   guidelines:
     - must: "write `nullable: false` on a number prop carrying an `enum`; order any enum naturally — the scale's own order (`XS, S, M, L, XL`; `100, 200, 300`) or the library's axis order — and set the default with the `default` field, never by position; never re-sort an ordered vocabulary"
@@ -37,6 +40,9 @@ codeOnly:
     - must: "give a requirement that is a prop in code — a semantic element choice (`tag`), an accessibility label, a heading level — a code-only prop in api.yaml, never a hand-authored platform file; supplemental is for what no prop surface can carry, and a behavior the consumer configures is a prop"
       note: "a closed vocabulary makes it an enum code-only prop — enum values on the prop, codeOnly extension beside them (the schema's `instanceOf` carries the Figma-side enum source when captured); an open string is only for genuinely free text like a label"
     - must: "declare a prop that exists only in code — never as a Figma variant axis — with `$extensions: {com.figma: {type: TEXT, source: {kind: codeOnlyProp, layer: <name>}, name: <name>}}`; the renderer's code-only handling reads exactly this declaration, and an undeclared string prop's disposition in the component set is guesswork (an accessibility label is the canonical case)"
+      note: "`type: TEXT` names the **Figma layer's** kind, not the prop's own type, and is the same for every code-only prop whatever the prop declares. A boolean code-only prop stays `type: boolean` in the api — its value is carried on that prop's text layer child inside the code-only props layer, which is what `TEXT` describes"
+    - could: "let a code-only prop drive presentation when the presentation genuinely cannot be built in Figma — a cross-product too large for a component set is the clear case"
+      never: "reach for a code-only prop for presentation Figma *can* carry; that belongs on a Figma prop, code-only or not is a question of where the control can exist, not of what it controls"
     - never: "coin the `name`/`layer` value yourself — both are config lookups, not judgment: the container layer is `config/conventions/figma.yaml codeOnlyProps.match`, and the per-prop sub-layer is the same file's `naming` convention applied to the prop key; only when the workspace declares neither does the designer's own language decide, surfaced under Decisions to confirm"
     - must: "read `layer` as this prop's own sub-layer — one per code-only prop (`layer: headingLevel` for a `headingLevel` prop) — never the name of a shared container holding all code-only props"
 invalidPropCombinations:

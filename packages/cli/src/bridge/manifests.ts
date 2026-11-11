@@ -18,6 +18,7 @@ import { parse } from 'yaml';
 import { countUnpublished, type VariablesIndex } from '../utilities/variablesIndex.js';
 import { formatKey } from '../utilities/formatKey.js';
 import { specFolderKey } from '../utilities/specFolderKey.js';
+import { resolveSpecsLayout, SPEC_KINDS } from '../utilities/specsLayout.js';
 import {
   readCacheFile,
   type ComponentsEntry, type StylesEntry, type VariablesEntry, type IconsEntry,
@@ -234,40 +235,74 @@ export function buildVariablesManifest(dataDir: string): VariablesManifest {
 }
 
 /**
- * Collect all spec YAML files from a specs directory.
- * Handles both flat layouts (specsDir/foo.yaml) and subdirectory layouts
- * (specsDir/foo/variants.yaml, specsDir/foo/api.yaml, etc.).
- * Returns an array of { key, path } where key is the camelCase component name.
+ * Collect every spec YAML file under a specs directory, keyed by spec folder name.
+ *
+ * The layout comes from `specsLayout` (ADR-096), which is the one module that knows
+ * where each kind of spec lives. This reader used to derive it itself, looking for
+ * `specs/<key>/*.yaml` — a shape no current workspace has, since a component sits at
+ * `specs/components/<key>/*.yaml`. The scan therefore collected nothing for any
+ * component, and the instance manifest's spec layer silently had no entries at all:
+ * every nested instance resolved through the fetched cache instead, so a component
+ * the workspace authored and rendered itself could not be placed inside another.
+ *
+ * Both kinds are collected. A composition can be instanced like a component, and
+ * keying by folder name is what `instanceOf` matches against.
  */
 export function collectSpecFiles(specsDir: string): Array<{ key: string; path: string }> {
-  let entries: string[];
+  // The root itself being unreadable is a different failure from a layout holding no
+  // specs: one is a wrong or missing workspace, the other an empty one.
   try {
-    entries = readdirSync(specsDir);
+    readdirSync(specsDir);
   } catch (e) {
     throw new Error(`Cannot read specs directory "${specsDir}": ${(e as Error).message}`);
   }
 
+  const layout = resolveSpecsLayout(specsDir);
   const files: Array<{ key: string; path: string }> = [];
-  for (const entry of entries) {
-    const entryPath = pathResolve(specsDir, entry);
-    let stat;
-    try { stat = statSync(entryPath); } catch { continue; }
 
-    if (stat.isFile() && entry.endsWith('.yaml')) {
-      // Flat layout: specsDir/foo.yaml → key "foo"
-      files.push({ key: basename(entry, '.yaml'), path: entryPath });
-    } else if (stat.isDirectory()) {
-      // Subdirectory layout: specsDir/foo/variants.yaml → key "foo"
-      // Prefer variants.yaml; also collect api.yaml and others for nodeId scanning.
-      let subEntries: string[];
-      try { subEntries = readdirSync(entryPath); } catch { continue; }
-      for (const sub of subEntries) {
-        if (sub.endsWith('.yaml')) {
-          files.push({ key: entry, path: pathResolve(entryPath, sub) });
+  for (const kind of SPEC_KINDS) {
+    const dir = layout.dirFor(kind);
+    // A legacy directory returns the root for both kinds; collecting twice would
+    // duplicate every entry, and the dedupe downstream keys on first-wins.
+    if (kind === 'composition' && layout.legacy) continue;
+
+    let entries: string[];
+    try { entries = readdirSync(dir); } catch { continue; }
+
+    for (const entry of entries) {
+      const entryPath = pathResolve(dir, entry);
+      let stat;
+      try { stat = statSync(entryPath); } catch { continue; }
+
+      if (stat.isFile() && entry.endsWith('.yaml')) {
+        // A spec written as one file rather than a folder of concerns.
+        files.push({ key: basename(entry, '.yaml'), path: entryPath });
+      } else if (stat.isDirectory()) {
+        // A folder of concern files — every one is scanned, since the node id may
+        // sit in any of them.
+        let subEntries: string[];
+        try { subEntries = readdirSync(entryPath); } catch { continue; }
+        for (const sub of subEntries) {
+          if (sub.endsWith('.yaml')) {
+            files.push({ key: entry, path: pathResolve(entryPath, sub) });
+          }
         }
       }
     }
   }
 
+  // A spec written as a single file directly at the specs root. The layout module does
+  // not call this legacy — that word is reserved for spec *folders* at the root — so it
+  // is swept separately, and under the current layout there is simply nothing to find.
+  for (const entry of readdirSync(specsDir)) {
+    if (!entry.endsWith('.yaml')) continue;
+    const entryPath = pathResolve(specsDir, entry);
+    try { if (!statSync(entryPath).isFile()) continue; } catch { continue; }
+    const key = basename(entry, '.yaml');
+    if (!files.some((f) => f.path === entryPath)) files.push({ key, path: entryPath });
+  }
+
+  // No specs is a legal state: a workspace can resolve every instance from the fetched
+  // cache alone, and layer 3 is built from that regardless of what this returns.
   return files;
 }

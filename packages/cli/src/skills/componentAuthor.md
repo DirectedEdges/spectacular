@@ -41,6 +41,7 @@ Read, in order:
 3. `analysis/props.yaml` — the system's prop vocabulary. Reuse a prop name and its value set when the concept matches; never coin a synonym for a prop the system already has.
 4. `analysis/styling.byToken.yaml` and `analysis/styling.byComponent.yaml` — which tokens the system uses for which properties. Your token choices come from here.
 5. `analysis/dependencies.byComponent.yaml` — how components nest, for choosing `instanceOf` targets.
+6. `mappings/bindings/` in the schema package, for the **concepts this component actually touches** — a prop type, a role, a style key. Each concept carries a disposition, and the two that matter are `approximated` (the platform keeps something lossier than the spec says) and `bound` (the platform substitutes a value, such as emitting an authoring-default example as a fallback). Reading them here is half a minute and tells you up front what a surface will do with what you are about to write; reaching for them only after a surface looks wrong has cost whole rounds.
 
 If `analysis/` is missing or stale, run `specs analyze` first. A report that is empty at this catalogue size is skipped, not studied. When emulating the closest sibling, read **all three** of its concern files — the pattern a task hinges on has sat in the one file a session skipped. Decide and write down: components to nest, the closest sibling to emulate (idiom only — structure always comes from the schema), and the token set.
 
@@ -88,7 +89,9 @@ Two situations with sanctioned answers, so they cost no deliberation:
 
 ## 8. The two authored documents
 
-For every requirement the table in step 1 marked supplemental:
+**Read the fresh scaffold first, before authoring any platform file.** The emitter regenerates it from the spec you just wrote, and it already produces more than it looks like: the element wrappers your anatomy declares, `object-fit` on a replaced element, `border-radius: inherit`, the selectors the states convention generates. Author only what the scaffold does not produce, and delete any overlay rule it now covers. An overlay written before the scaffold is read duplicates the generator by hand — and when the anatomy changes, every one of those hand-built rules has to be found and removed again.
+
+Then, for every requirement the table in step 1 marked supplemental:
 
 - Implement it in hand-authored files **beside** the emitted output in the platform tree. Never edit emitted files — a re-emit overwrites them. Files you add are safe: emit overwrites only its own filenames, and prune removes only whole directories whose spec is gone.
 - **Name the entry point by convention.** An emitter imports an authored `component.tsx` (React) or `component.ts` (Web Components) in place of the scaffold when it finds one beside it, and points the generated stories at it. It finds the file by that **name** — nothing in the spec or either document declares it. A file under any other name is reached only if one of those imports it, so put the implementation in `component.*` and let it import whatever else it needs.
@@ -97,7 +100,7 @@ For every requirement the table in step 1 marked supplemental:
 - `specs validate` checks both documents' shape against their published contracts — run it after writing, like any concern file.
 - **Rename procedure:** renaming the component orphans its old emitted directory — prune removes it, custom files included. Move custom files first.
 
-After every later re-emit, diff the fresh scaffold against your custom files. Where an overlay depends on something the emitter produces — a BEM class, a selector the states convention generates — record that dependency in the entry's `checks` so the next re-emit has something to re-verify against.
+After every later re-emit, diff the fresh scaffold against your custom files again — the anatomy may have gained an element the scaffold now handles. Where an overlay depends on something the emitter produces — a BEM class, a selector the states convention generates — record that dependency in the entry's `checks` so the next re-emit has something to re-verify against.
 
 ## 9. Report
 

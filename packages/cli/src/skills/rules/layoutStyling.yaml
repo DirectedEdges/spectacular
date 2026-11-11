@@ -13,6 +13,7 @@ width:
   guidelines:
     - should: "give a composition or other page-scale root a concrete width — `FILL` at a rendered root has no parent to fill and collapses"
       note: "the number is the system's page width, not a default — read it from the system's own compositions or ask; nothing here supplies one"
+    - warn: "writing `width` forces the node's horizontal sizing to FIXED on render, whatever the spec declares beside it — so `width` next to `layoutSizingHorizontal: FILL` is not a pair that negotiates. On a *component root* the FILL intent survives as a Dev Mode annotation, because a Figma root cannot hold FILL; anywhere else the width simply wins"
 layoutSizingHorizontal|layoutSizingVertical:
   guidelines:
     - could: "declare `FILL` on a *component* root to state how it sizes in a consumer's layout (`layoutSizingHorizontal: FILL` on a text root for \"fill its container\") — the standalone rendered node has no parent and collapses to content width, which is expected, not a defect"
