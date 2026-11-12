@@ -108,15 +108,7 @@ export class CssvarsTransformer implements Transformer {
       if (!sectioned) continue;
       fileJsons.push(sectioned.assembleDocument(sectioned.pageEntries().map(e => e.id)).json as Json);
     }
-    const foundations = await loadFoundations(variablePaths, stylePaths, fileJsons[0]);
-    // Seed style tables from any additional file JSONs (loadFoundations takes one).
-    for (const fj of fileJsons.slice(1)) {
-      for (const [styleId, s] of Object.entries<Json>(fj.styles ?? {})) {
-        const type = s?.styleType || s?.type;
-        if (!styleId || !type || foundations.styles.has(styleId)) continue;
-        foundations.styles.set(styleId, { id: styleId, name: s?.name || styleId, type });
-      }
-    }
+    const foundations = await loadFoundations(variablePaths, stylePaths, fileJsons);
 
     const defs = collectStyleDefs(fileJsons);
     const varName = (name: string) => `--${kebabizePath(name)}`;

@@ -34,12 +34,17 @@ export interface FoundationsData {
  *    indexed by node_id (primary) and key hash (secondary) for flexible lookup
  *
  * After loading, seeded entries are enriched with $custom from the styles endpoint via shared key hash.
- * 
+ * A library file that consumes its own published library holds SEVERAL document entries per published
+ * key — the local style plus one copy for each place a component was pasted from a published version —
+ * so every entry sharing a key is enriched, not just one.
+ *
  * @param variablePaths - Array of file paths to variables JSON files
  * @param stylePaths - Array of file paths to styles JSON files
- * @param fileJson - Optional library file JSON to seed styles from (handles remote/published styles)
+ * @param fileJson - Optional library file JSON (or several) to seed styles from, handling
+ *                   remote/published style references. With several, the first to define a
+ *                   style id wins.
  * @returns Object containing styles, variables, and collections Maps
- * 
+ *
  * @example
  * ```typescript
  * const libraryJson = await fs.readJSON('./data/library.file.json');
@@ -60,22 +65,25 @@ export interface FoundationsData {
 export async function loadFoundations(
   variablePaths: string[],
   stylePaths: string[],
-  fileJson?: Record<string, any>
+  fileJson?: Record<string, any> | Array<Record<string, any>>
 ): Promise<FoundationsData> {
   const styles: StylesMap = new Map();
   const variables: VariablesMap = new Map();
   const collections: CollectionsMap = new Map();
-  
-  // Seed styles from file itself (handles remote/published style references in components)
-  // Track seeded entries by their key hash so we can enrich them after loading styles endpoint
-  const seededKeyMap = new Map<string, string>(); // key hash -> styleId
-  if (fileJson?.styles && typeof fileJson.styles === 'object') {
-    for (const [styleId, s] of Object.entries<any>(fileJson.styles)) {
-      if (!styleId) continue;
+
+  // Seed styles from the file itself (handles remote/published style references in components).
+  // Every (styleId, key hash) pair is recorded, not one id per key: several document entries
+  // legitimately share a key, and all of them need the published entry's $custom.
+  const seededKeys: Array<[styleId: string, keyHash: string]> = [];
+  const fileJsons = fileJson == null ? [] : Array.isArray(fileJson) ? fileJson : [fileJson];
+  for (const fj of fileJsons) {
+    if (!fj?.styles || typeof fj.styles !== 'object') continue;
+    for (const [styleId, s] of Object.entries<any>(fj.styles)) {
+      if (!styleId || styles.has(styleId)) continue;
       const type = s?.styleType || s?.type;
       if (!type) continue;
 
-      if (s?.key) seededKeyMap.set(s.key, styleId);
+      if (s?.key) seededKeys.push([styleId, s.key]);
 
       styles.set(styleId, {
         id: styleId,
@@ -157,7 +165,7 @@ export async function loadFoundations(
   }
 
   // Reconcile: enrich file-seeded entries with $custom from styles endpoint via shared key hash
-  for (const [keyHash, styleId] of seededKeyMap) {
+  for (const [styleId, keyHash] of seededKeys) {
     const seeded = styles.get(styleId);
     const keyEntry = styles.get(keyHash);
     if (seeded && keyEntry?.$custom && !seeded.$custom) {

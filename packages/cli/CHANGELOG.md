@@ -49,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A custom token mapped to a published style now reaches every node bound to it**, including nodes bound to copies of that style pasted in from the published library — where only one copy per style resolved and the rest fell back to the Figma style name
+
 - **The stylesheet now states a slot's `contentStyles` for component-admitting slots too — glyph rules included.** The emitters stamp primitive fills with `data-content="text"` / `data-content="glyph"` markers a composed component's root never carries, so the CSS transform's withholding gates are gone: glyph box/tint rules emit for every slot, and a mixed slot's box-level text properties (truncation, line-clamp) land on the text fill's own marker instead of being dropped. Pairs with the emitters ceasing to inline any governed formatting — the badge's label and icon now recolor per variant from the sheet, for stories and consumer fills alike
 
 - **The posture no longer includes a render watch.** A render per save on a many-variant component cannot finish before the next save triggers the next render, and the loop breaks Figma. `specs-cli.posture` brings up `specs run` alone; `component.author` renders once per component (`specs render specs/components/<key> --overwrite`) after `api`, `variants`, and `examples` validate
