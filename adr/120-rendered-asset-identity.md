@@ -140,6 +140,42 @@ Record rendered identities in a workspace file keyed by spec, leaving specs unto
 
 ---
 
+### Decision 4 — What the record protects: `generate` over existing files
+
+The record exists to be read. The reader that matters most is `generate`, because generate is the one operation that can destroy an authored spec — and today it cannot tell that it is about to.
+
+Generate rebuilds `metadata` from the Figma node on every pass: author, timestamp, generator, schema, `source`, conventions, settings. It reads nothing from the file it replaces. So an authored spec that has been rendered and then captured back comes out asserting it was captured from the node it produced, and the authored metadata — including the `rendered` record this ADR introduces — is gone. The round trip launders authored work into generated work, in one field.
+
+Three facts decide whether an overwrite is safe. Two do not exist yet: a spec's origin (ADR-106) and whether a node was produced by this workspace's own render (this ADR). The third — whether a selection was derived or hand-edited — is acted on by `curation.preserveManualSelections` but recorded nowhere.
+
+`R` is the node being generated from; `S` is the existing spec for that key.
+
+| # | Spec exists | `S` origin | `S` has rendered record | `R` vs recorded node | Behavior | Why |
+|---|---|---|---|---|---|---|
+| 1 | no | — | — | `R` not workspace-rendered | **write** | Ordinary first capture. |
+| 2 | no | — | — | `R` **is** some spec's rendered node | **refuse** | Self-capture: a second spec, under a library-derived key, describing a component this workspace already authored. |
+| 3 | yes | captured | no | same node | **overwrite** | Ordinary re-capture — what generate is for. |
+| 4 | yes | captured | no | different node | **refuse** | Two nodes claim one spec key; taking the newer one retires a component by accident. |
+| 5 | yes | authored | no | — | **refuse** | Authored work, never rendered. Capture has no business here. |
+| 6 | yes | authored | yes | `R` == the rendered node | **refuse** | The data-loss case: render → fetch → scan → generate, round-tripping authored work over itself. |
+| 7 | yes | authored | yes | `R` != the rendered node | **refuse** | Capturing an unrelated node over authored work. |
+| 8 | yes | any | any | any, **with the override naming this component** | **overwrite** | The deliberate migration path. |
+
+Rows 2 and 5–7 are silent overwrites today. Three resolved points:
+
+- **The override names the component**, one per invocation — never a count and never a bare boolean. A count is the kind of number an agent fills in from the error it just read, and a boolean is the kind of flag that gets added to a command permanently, which is how a guard stops existing. A catalogue-wide migration costs one invocation per component, and that cost is the guard working.
+- **A refusal skips the row and every row depending on it.** A bare skip would generate a spec referencing a spec that was never written — exactly what `curation.includeDependencies` exists to prevent — so the dependency walk runs in reverse on a refusal, and the report names both what was refused and what was skipped for it.
+- **"Workspace-rendered" is per file key.** A rendered record matches only when the file key matches, so rendering one spec into a second file produces a distinct asset and capturing from that file is not self-capture. This is why `fileKey` is a required member in Decision 2 rather than a convenience.
+
+Two consequences for the record itself:
+
+- **Capture must preserve `rendered` rather than rebuild it.** It is a fact about the spec, not about the run, so a pass that reconstructs run facts has no business discarding it. Without this the record is only as durable as the next generate pass, and rows 2 and 6 lose the fact they turn on.
+- **Overwriting under the override replaces the record**, because the capture is now the spec's origin and what it previously rendered is no longer true of it.
+
+*Out of scope, deliberately:* the manifest is the surface where a human says "spec this", and a row today carries only a checkbox, name, node id, type and dev status — none of the three deciding facts. Making those visible before the box is ticked is a manifest decision, not this one. Whether `scan` marks a self-rendered row, omits it, or stays unchanged is **open**.
+
+---
+
 ## Decision
 
 ### Type changes (`types/`)
