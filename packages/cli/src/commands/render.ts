@@ -16,7 +16,7 @@ import { postRender, getBridgeStatus, type RenderResponse } from '../bridge/clie
 import { resolveFileKey } from '../bridge/pickConnection.js';
 import { findComponentFolders, isComponentFolder, loadSpec } from '../render/SpecLoader.js';
 import { startSpinner } from '../utilities/spinner.js';
-import { refreshCache } from '../cache/cache.js';
+import { refreshCache, recordRenderedComponent } from '../cache/cache.js';
 import { reportCache } from '../cache/report.js';
 import { figmaOf } from '../config/PlatformConventions.js';
 import { loadDevStatusByNodeId, devStatusForSpec, type WritableDevStatus } from '../render/manifestDevStatus.js';
@@ -314,6 +314,34 @@ async function renderSpecPath(
         `Render incomplete: ${dropped} instance element(s) not rendered (--strict). ` +
         'Drop --strict to accept an incomplete render.'
       );
+    }
+  }
+
+  // The node this render produced is now something the workspace can place, and nothing
+  // else knows it exists — so record it where render resolves references from. Without
+  // this, a second spec instancing this one resolves nothing and its instance is dropped,
+  // and the only way to make this component placeable is to capture the file back.
+  //
+  // The entry's name is the spec key, which is already in the configured key format, so
+  // formatting it again is identity — the same reading ADR-066 gives a name that arrived
+  // pre-formatted. Recorded under the workspace's first source alias, which owns the
+  // partition; `fileKey` is the Figma file the node actually lives in.
+  const renderDataDir = options.workspaceSettings?.data?.directory;
+  const renderAlias = Object.keys(options.workspaceSettings?.data?.sources ?? {})[0];
+  if (renderDataDir && renderAlias && result.nodeId && fileKey) {
+    try {
+      recordRenderedComponent({
+        dataDir: renderDataDir,
+        alias: renderAlias,
+        nodeId: result.nodeId,
+        name,
+        fileKey,
+      });
+    } catch (e) {
+      // The render succeeded; failing to record it must not turn that into an error. The
+      // cost of a miss is the next render not finding this component, which reports
+      // itself as an incomplete render rather than as silence.
+      console.warn(`  ⚠ Rendered, but could not record it for reuse: ${(e as Error).message}`);
     }
   }
 

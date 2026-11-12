@@ -171,6 +171,33 @@ describe('buildManifest — layer 2, a subcomponent reference', () => {
   });
 });
 
+describe('buildManifest — layer 3, a component this workspace rendered', () => {
+  // `specs render` records the node it produced in the components cache, with no published
+  // key — it is not published — and the entry's name is the spec key, already in the
+  // configured format, so formatting it again is identity. This is what lets one authored
+  // component be nested in another without capturing the file back.
+  it('resolves a rendered entry by node id alone', async () => {
+    await writeCache('components', { '84021:19488': { name: 'egdsLink', file: 'lib', fileKey: 'abc123' } });
+    const spec = { anatomy: { thing: { type: 'instance', instanceOf: 'egdsLink' } } };
+    expect(buildManifest(spec, specsDir(), dataDir(), 'CAMEL').egdsLink).toEqual({ id: '84021:19488' });
+  });
+
+  it('omits key entirely rather than sending it as undefined', async () => {
+    // A `key: undefined` serializes into the render payload as a published key, which the
+    // plugin would try to import — for a component that was never published.
+    await writeCache('components', { '84021:19488': { name: 'egdsLink', file: 'lib' } });
+    const spec = { anatomy: { thing: { type: 'instance', instanceOf: 'egdsLink' } } };
+    const entry = buildManifest(spec, specsDir(), dataDir(), 'CAMEL').egdsLink;
+    expect('key' in entry).toBe(false);
+  });
+
+  it('still carries the published key when the entry has one', async () => {
+    await writeCache('components', { '9:9': { key: 'pub9', name: 'egdsLink', file: 'lib' } });
+    const spec = { anatomy: { thing: { type: 'instance', instanceOf: 'egdsLink' } } };
+    expect(buildManifest(spec, specsDir(), dataDir(), 'CAMEL').egdsLink).toEqual({ id: '9:9', key: 'pub9' });
+  });
+});
+
 describe('buildManifest — layer 3, a library component with no spec', () => {
   it('recognises a referenced component by formatting the library name the same way', async () => {
     // A spec names a component with a formatted key and the transform is lossy, so the

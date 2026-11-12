@@ -110,7 +110,13 @@ export function buildManifest(spec: Record<string, unknown>, specsDir: string, d
       const formatted = formatKey(entry.name, keyFormat);
       // First occurrence wins. Distinct components can format to the same key (the transform
       // is lossy), and nothing in the payload says which one a spec meant.
-      if (!byFormattedName.has(formatted)) byFormattedName.set(formatted, { id, key: entry.key });
+      //
+      // `key` is omitted rather than set to undefined when the entry has none: an entry a
+      // render wrote is not published, so it has only a node id, and a `key: undefined`
+      // would serialize into the payload as a published key the plugin would try to import.
+      if (!byFormattedName.has(formatted)) {
+        byFormattedName.set(formatted, entry.key ? { id, key: entry.key } : { id });
+      }
     }
     let added = 0;
     for (const name of referenced) {

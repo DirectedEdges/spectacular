@@ -397,6 +397,35 @@ specs generate --config workspaces/mobile/config -o workspaces/mobile/specs/
 ### `--verbose`
 Enable detailed logging — resolved config path, source and mode detection, foundations loaded, and per-component progress.
 
+## Generating over an authored spec
+
+**Today `generate` overwrites whatever it finds, every time.** It rebuilds a spec's `metadata` from the Figma node and reads nothing from the file it replaces, so it cannot tell a spec it generated last week from one a person wrote by hand. The protections are procedural — curate in the manifest, scope the run with `-c`, know what you are pointing it at.
+
+That is a real hazard in a workspace that authors specs rather than capturing them. The destructive path is a round trip: author a spec, render it to Figma, fetch the file, and generate the node your own render created back over the spec that produced it.
+
+These are the rules that **should** apply. Not yet enforced — the facts two of them turn on are the spec's origin, which the schema does not yet record, and whether a node came from this workspace's own render, which [the cache now records](/cli/commands/cache/#what-a-render-adds).
+
+`R` is the node being generated from; `S` is the existing spec for that key.
+
+| # | Spec exists | `S` origin | Rendered record | `R` vs recorded node | Behavior |
+|---|---|---|---|---|---|
+| 1 | no | — | — | `R` not workspace-rendered | **write** — ordinary first capture |
+| 2 | no | — | — | `R` **is** a node this workspace rendered | **refuse** — self-capture: a second spec describing a component you already authored |
+| 3 | yes | captured | no | same node | **overwrite** — ordinary re-capture, what generate is for |
+| 4 | yes | captured | no | different node | **refuse** — two nodes claiming one spec key |
+| 5 | yes | authored | no | — | **refuse** — authored work, never rendered |
+| 6 | yes | authored | yes | `R` == the rendered node | **refuse** — the round trip, over itself |
+| 7 | yes | authored | yes | `R` != the rendered node | **refuse** — an unrelated node over authored work |
+| 8 | yes | any | any | any, with the override naming this component | **overwrite** — the deliberate migration path |
+
+Three things the rules settle:
+
+- **The override names the component**, one per invocation — never a count, never a bare boolean. A count is a number filled in from the error message that just printed; a boolean is a flag that ends up in the command permanently, which is how a guard stops existing.
+- **A refusal skips the row and everything depending on it.** Generating a component whose dependency was refused produces a spec referencing a spec that was never written — the failure [`curation.includeDependencies`](/settings/curation/) exists to prevent.
+- **"Workspace-rendered" is per Figma file.** Rendering one spec into a second file produces a genuinely distinct asset, so capturing from that other file is not self-capture.
+
+A separate question, still open: whether [`scan`](/cli/commands/scan/) should mark a self-rendered node in the manifest so you see it before selecting, omit it, or leave it as it is. A manifest row today carries a checkbox, a name, a node id, a type and a dev status — none of the three facts above.
+
 ## Rebuilding the spec tree
 
 `generate` overwrites the files it produces and removes nothing else. A component

@@ -99,6 +99,19 @@ The cache is built for every source declared under `data.sources` in `config/set
 
 `render` is stricter: it needs every declared source present and current, and fails naming the ones that aren't.
 
+## What a render adds
+
+Fetched payloads aren't the only thing in `components.yaml`. When [`render`](/cli/commands/render/) places a component on the canvas, it records the node it produced — because that node is now something the workspace can place, and nothing else knows it exists. Without the record, a second spec instancing the first resolves nothing and its instance is silently dropped.
+
+A rendered entry differs from a fetched one in two ways:
+
+- **No published key.** Only a published component has one. A component you rendered isn't published, so the entry carries a node id alone — which is enough to place it in the same file, and not enough to import it into a different one.
+- **A `fileKey`.** A fetched entry belongs to its source alias, and that alias is one file. A render may target a file no declared source points at, so the entry names the Figma file itself.
+
+They sit in their own partition, `<alias>:rendered`, so neither producer's rebuild disturbs the other's — the same arrangement the two image producers use. The partition names no payload, because there isn't one, and [staleness](#staleness) is only ever judged against payloads that exist on disk.
+
+**A fetch repairs the record for free.** Rebuilding an alias replaces its entries from the new payload, so a rendered entry either reappears — because the node really is in the file — or disappears, because it isn't. There is no third state, which is why nothing here has to be reconciled and no timestamp has to be compared.
+
 ## Examples
 
 ```bash
