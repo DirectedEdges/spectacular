@@ -1,13 +1,13 @@
 // `specs storybook init` — scaffold the host, once. Writes package.json,
 // tsconfig.json and .storybook/*, creates content-overrides/, and seeds
-// content/components/tabs.json so the manager's build-time import resolves
+// content/components/modes.json so the preview's build-time import resolves
 // before the first publish. Prints the install step; the customer installs
 // Storybook — we never ship or vendor it (ADR A decision 1).
 import fs from 'fs-extra';
 import path from 'path';
 import type { Workspace } from './workspace.js';
 import { readTemplate, renderTemplate, templatesHash, STORYBOOK_VERSION, STORYBOOK_MAJOR } from './templates.js';
-import { deriveTabs, deriveModes } from './concerns/components/index.js';
+import { deriveModes } from './concerns/components/index.js';
 import { resolveStorybookPort, type PortSource } from './port.js';
 
 declare const __SPECS_CLI_VERSION__: string;
@@ -31,6 +31,8 @@ export interface InitResult {
    * main.ts imports packages the old install never held.
    */
   staleInstall: string[];
+  /** Host files on disk this CLI no longer scaffolds and nothing imports. */
+  orphaned: string[];
 }
 
 /** Files init owns. `--force` rewrites exactly these — never content/ or content-overrides/. */
@@ -41,8 +43,16 @@ const HOST_FILES: Array<{ out: string; template: string }> = [
   { out: '.storybook/preview.tsx', template: 'preview.tsx.tpl' },
   { out: '.storybook/manager.tsx', template: 'manager.tsx.tpl' },
   { out: '.storybook/manager-head.html', template: 'manager-head.html.tpl' },
-  { out: '.storybook/ComponentDocs.tsx', template: 'ComponentDocs.tsx.tpl' },
+  { out: '.storybook/PlatformDocs.tsx', template: 'PlatformDocs.tsx.tpl' },
 ];
+
+/**
+ * Host files this CLI used to scaffold and no longer does. An existing scaffold
+ * keeps them, and nothing imports them any more — but they are the customer's
+ * files, possibly edited, so init says they are orphaned rather than deleting
+ * them.
+ */
+const RETIRED_HOST_FILES = ['.storybook/ComponentDocs.tsx'];
 
 export function init(ws: Workspace, options: InitOptions): InitResult {
   const dotStorybook = path.join(ws.storybookDir, '.storybook');
@@ -116,18 +126,11 @@ export function init(ws: Workspace, options: InitOptions): InitResult {
     fs.ensureDirSync(path.join(ws.root, dir));
   }
 
-  // Seed tabs.json: the manager imports it at build time, so it must exist
-  // before the first publish. Publish rewrites it from the same derivation.
-  const tabsFile = path.join(ws.storybookDir, 'content', 'components', 'tabs.json');
-  if (!fs.existsSync(tabsFile)) {
-    fs.ensureDirSync(path.dirname(tabsFile));
-    fs.writeFileSync(tabsFile, JSON.stringify(deriveTabs(ws), null, 2) + '\n');
-    written.push(path.join('storybook', 'content', 'components', 'tabs.json'));
-  }
-
-  // Seed modes.json for the same reason: the scaffolded preview imports it.
+  // Seed modes.json: the scaffolded preview imports it at build time, so it must
+  // exist before the first publish. Publish rewrites it from the same derivation.
   const modesFile = path.join(ws.storybookDir, 'content', 'components', 'modes.json');
   if (!fs.existsSync(modesFile)) {
+    fs.ensureDirSync(path.dirname(modesFile));
     fs.writeFileSync(modesFile, JSON.stringify(deriveModes(ws, ws.config.conventions.storybook?.modes), null, 2) + '\n');
     written.push(path.join('storybook', 'content', 'components', 'modes.json'));
   }
@@ -137,6 +140,9 @@ export function init(ws: Workspace, options: InitOptions): InitResult {
     port: String(resolvedPort.port),
     portSource: resolvedPort.source,
     staleInstall: staleInstall(ws, packageJson),
+    orphaned: RETIRED_HOST_FILES.filter((f) => fs.existsSync(path.join(ws.storybookDir, f))).map((f) =>
+      path.join('storybook', f),
+    ),
   };
 }
 

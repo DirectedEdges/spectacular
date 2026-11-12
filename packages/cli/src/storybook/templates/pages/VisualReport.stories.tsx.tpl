@@ -326,11 +326,7 @@ function VisualReport() {
 export default {
   title: 'Testing/{{PAGE_TITLE}}',
   parameters: {
-    previewTabs: {
-      canvas: { title: 'Page' },
-      'specs-spike/framework-tabs/webcomponents': { hidden: true },
-      'specs-spike/framework-tabs/specs': { hidden: true },
-    },
+    previewTabs: { canvas: { title: 'Page' } },
     layout: 'fullscreen',
     options: { showPanel: false },
   },

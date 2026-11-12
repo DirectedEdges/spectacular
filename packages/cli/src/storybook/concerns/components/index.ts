@@ -1,29 +1,81 @@
-// The components concern: tabs.json, the navigation contract between what the
-// workspace emitted and what the scaffolded manager registers (specs#642/#631).
-// Specs is always present — it is the one view that needs no transform.
+// The components concern: the views a component offers, and the navigation
+// contract between what the workspace emitted and how the host orders it
+// (specs#642/#631).
+//
+// A component is a folder in the sidebar and every view of it is a leaf inside
+// it. Two of those leaves are the emitters' — React and Web component — and the
+// rest are published here: the spec documents, and one page per platform per
+// baseline of the visual diffs. That replaced the two rows of in-page tabs a
+// component docs page used to carry, which were built on Storybook's addon tabs,
+// deprecated in 10 and removed in 11.
 import fs from 'fs-extra';
 import path from 'path';
 import yaml from 'yaml';
 import type { Concern, BuiltFile } from '../types.js';
 import type { Workspace } from '../../workspace.js';
-import { resolveSpecsLayout } from '../../../utilities/specsLayout.js';
+import { resolveSpecsLayout, SPEC_KINDS, type SpecKind } from '../../../utilities/specsLayout.js';
 import { kebabizePath } from '../../../transforms/css/values/tokens.js';
+import { readTemplate, renderTemplate } from '../../templates.js';
+import { reportNameFor } from '../../../testing/visual/types.js';
+import { PLATFORM_LEAVES, specDisplayName, specNavFolder } from './navTitle.js';
 
-export type TabId = 'react' | 'webcomponents' | 'specs';
+/**
+ * A spec document published as its own view. `examples` is deliberately not one.
+ *
+ * `api` and `variants` every run generates, so their view is always there and an
+ * absent file is a defect worth saying so about. `supplemental` and `guidelines`
+ * are authored by hand (ADR-118) — supplemental for whoever builds the
+ * component, guidelines for whoever uses it — and most components have neither,
+ * so those views appear only where the document does. A view that exists only to
+ * report its own emptiness is noise on every component in the catalogue.
+ */
+const SPEC_VIEWS = [
+  { leaf: 'API', concern: 'api', always: true },
+  { leaf: 'Variants', concern: 'variants', always: true },
+  { leaf: 'Supplemental', concern: 'supplemental', always: false },
+  { leaf: 'Guidelines', concern: 'guidelines', always: false },
+] as const;
 
-export interface TabsJson {
-  /** In fixed order: react, webcomponents, specs — absent platforms produce no tab. */
-  tabs: TabId[];
-  /** What the built-in canvas shows: the first tree that exists, else specs. */
-  canvas: TabId;
-}
+/** The folder the per-component diff pages sit in, below the views themselves. */
+const TESTING_FOLDER = 'Testing';
 
-export function deriveTabs(ws: Workspace): TabsJson {
-  const tabs: TabId[] = [];
-  if (ws.hasReact) tabs.push('react');
-  if (ws.hasWebComponents) tabs.push('webcomponents');
-  tabs.push('specs');
-  return { tabs, canvas: tabs[0] };
+/**
+ * The two questions a diff answers, and the report each writes. Mirrors the
+ * Testing section's own pages — same report basenames, same baseline wording,
+ * same flag in the empty state — because these show one component's variants in
+ * full where those rank every component against each other.
+ */
+const DIFF_MODES = [
+  { mode: 'figma' as const, leaf: 'Fidelity', baseline: 'Figma exports', flag: '' },
+  { mode: 'accepted' as const, leaf: 'Changes', baseline: 'last accepted renders', flag: ' --against accepted' },
+];
+
+const PLATFORMS = [
+  { target: 'react' as const, leaf: PLATFORM_LEAVES.react, emitted: (ws: Workspace) => ws.hasReact },
+  { target: 'webcomponents' as const, leaf: PLATFORM_LEAVES.webcomponents, emitted: (ws: Workspace) => ws.hasWebComponents },
+];
+
+/**
+ * Every nav segment below a component, in the order the sidebar reads them: the
+ * views themselves, then the Testing folder, then what is inside it.
+ *
+ * Not published, and that is forced rather than chosen: Storybook's indexer
+ * extracts the preview's `storySort` out of its AST and `eval`s it on its own, so
+ * that function can reference no import and no module constant. The order lives
+ * as a literal inside it. This export exists so a test can hold the two copies
+ * to the same names — a segment the preview does not rank sorts alphabetically
+ * and lands in the wrong place, which nothing errors on.
+ *
+ * A subcomponent folder is deliberately absent: it is ranked by not being here,
+ * which is what puts it after everything the component itself offers.
+ */
+export function viewLeaves(): string[] {
+  return [
+    ...PLATFORMS.map((p) => p.leaf),
+    ...SPEC_VIEWS.map((v) => v.leaf),
+    TESTING_FOLDER,
+    ...PLATFORMS.flatMap((p) => DIFF_MODES.map((m) => `${p.leaf} ${m.leaf}`)),
+  ];
 }
 
 export interface ModeControl {
@@ -185,25 +237,147 @@ function readSpecDoc(folder: string, concern: string): Record<string, unknown> |
   return undefined;
 }
 
+/** Every spec in the workspace, with the sidebar folder its views sit in. */
+function specFolders(
+  ws: Workspace,
+): Array<{ kind: SpecKind; key: string; navFolder: string; folder: string }> {
+  const layout = resolveSpecsLayout(ws.specsDir);
+  const out: Array<{ kind: SpecKind; key: string; navFolder: string; folder: string }> = [];
+  for (const kind of SPEC_KINDS) {
+    const keys = kind === 'component' ? ws.componentKeys : ws.compositionKeys;
+    for (const key of keys) {
+      const folder = layout.folderFor(kind, key);
+      const api = readSpecDoc(folder, 'api');
+      const title = typeof api?.title === 'string' ? api.title : undefined;
+      out.push({ kind, key, navFolder: specNavFolder(kind, key, title), folder });
+    }
+  }
+  return out;
+}
+
+/** Whether a spec folder holds one concern document, in any format it may take. */
+function hasSpecDoc(folder: string, concern: string): boolean {
+  return ['yaml', 'yml', 'json'].some((ext) => fs.existsSync(path.join(folder, `${concern}.${ext}`)));
+}
+
+/**
+ * The report basenames one platform's page tries, in order.
+ *
+ * Reports written before the platform split carry no target and held React
+ * results, so React falls back to the untargeted name. Web Components never had
+ * an untargeted report and must not read React's.
+ */
+function reportCandidates(mode: 'figma' | 'accepted', target: 'react' | 'webcomponents'): string[] {
+  const targeted = reportNameFor(mode, target);
+  return target === 'react' ? [targeted, mode === 'accepted' ? 'regression' : 'fidelity'] : [targeted];
+}
+
+/**
+ * Whether one spec has results in the first of these reports that exists.
+ *
+ * A report covers the specs the visual manifest pinned, which is rarely the whole
+ * catalogue: gating on the report file alone published a page for every component
+ * and most of them said "this spec isn't in the visual manifest". The reports are
+ * keyed by spec folder key — the same key this concern names its pages after — so
+ * the check is a lookup, not a match.
+ *
+ * Only the first existing report is consulted, because that is the one the page
+ * will read: a later candidate it never reaches must not decide whether it
+ * publishes.
+ */
+function reportHasSpec(ws: Workspace, candidates: string[], kindDir: string, key: string): boolean {
+  for (const name of candidates) {
+    const file = path.join(ws.root, 'testing', 'visual', 'report', `${name}.json`);
+    if (!fs.existsSync(file)) continue;
+    try {
+      const report = JSON.parse(fs.readFileSync(file, 'utf-8')) as Record<string, Record<string, unknown> | undefined>;
+      return Boolean(report[kindDir]?.[key]);
+    } catch {
+      // An unreadable report is the diff's problem. Publish nothing from it
+      // rather than failing the whole publish over one malformed file.
+      return false;
+    }
+  }
+  return false;
+}
+
+/**
+ * One file per view leaf, per spec. The directory mirrors the spec's own kind and
+ * folder key rather than its title, so a retitled component moves its sidebar
+ * entry without moving the file publish compares against.
+ */
+function viewPages(ws: Workspace): BuiltFile[] {
+  const specTemplate = readTemplate('pages/SpecConcern.stories.tsx.tpl');
+  const testingTemplate = readTemplate('pages/ComponentTesting.stories.tsx.tpl');
+  const files: BuiltFile[] = [];
+
+  for (const spec of specFolders(ws)) {
+    // The kind as the host reads it off a story id, and as the specs/ directory
+    // names it — plural, where SpecKind is singular.
+    const kindDir = spec.kind === 'component' ? 'components' : 'compositions';
+    const dir = path.join(spec.kind, spec.key);
+
+    const displayName = specDisplayName(spec.navFolder);
+
+    for (const view of SPEC_VIEWS) {
+      if (!view.always && !hasSpecDoc(spec.folder, view.concern)) continue;
+      files.push({
+        path: path.join(dir, `${view.leaf}.stories.tsx`),
+        content: renderTemplate(specTemplate, {
+          NAV_TITLE: `${spec.navFolder}/${view.leaf}`,
+          PAGE_HEADING: JSON.stringify(`${displayName} / ${view.leaf}`),
+          KIND: kindDir,
+          SLUG: spec.key,
+          CONCERN: view.concern,
+        }),
+      });
+    }
+
+    for (const platform of PLATFORMS) {
+      if (!platform.emitted(ws)) continue;
+      for (const mode of DIFF_MODES) {
+        const candidates = reportCandidates(mode.mode, platform.target);
+        // A page publishes only when this spec has results to show, so the
+        // Testing folder lists what a reader can actually open.
+        if (!reportHasSpec(ws, candidates, kindDir, spec.key)) continue;
+        const leaf = `${platform.leaf} ${mode.leaf}`;
+        files.push({
+          path: path.join(dir, `${platform.target}-${mode.mode}.stories.tsx`),
+          content: renderTemplate(testingTemplate, {
+            NAV_TITLE: `${spec.navFolder}/${TESTING_FOLDER}/${leaf}`,
+            PAGE_HEADING: JSON.stringify(`${displayName} / ${leaf}`),
+            KIND: kindDir,
+            SLUG: spec.key,
+            REPORT_CANDIDATES: JSON.stringify(candidates),
+            BASELINE_LABEL: mode.baseline,
+            DIFF_FLAG: `${mode.flag} --target ${platform.target}`,
+          }),
+        });
+      }
+    }
+  }
+  return files;
+}
+
 export const components: Concern = {
   name: 'components',
 
-  // tabs.json must always exist: the scaffolded manager imports it at build
-  // time, and the Specs view exists in every workspace.
+  // modes.json and compositions.json must always exist: the scaffolded host
+  // imports them at build time, before a workspace has modes or compositions.
   detect(): boolean {
     return true;
   },
 
   async build(ws: Workspace): Promise<BuiltFile[]> {
     return [
-      { path: 'tabs.json', content: JSON.stringify(deriveTabs(ws), null, 2) + '\n' },
       {
         path: 'modes.json',
         content: JSON.stringify(deriveModes(ws, ws.config.conventions.storybook?.modes), null, 2) + '\n',
       },
-      // Always written, empty list included: the scaffolded docs page imports it at
-      // build time, exactly as it does tabs.json.
+      // Always written, empty list included: a consumer importing it at build
+      // time must resolve before the workspace has a composition.
       { path: 'compositions.json', content: JSON.stringify(deriveCompositions(ws), null, 2) + '\n' },
+      ...viewPages(ws),
     ];
   },
 };

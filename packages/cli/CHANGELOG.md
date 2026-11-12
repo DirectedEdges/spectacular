@@ -37,6 +37,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Authoring rules and `component.author` sharpened from the first eg marathon round: prop-shaped requirements (semantic tag, accessibility label) route to **code-only props**, never hand-authored platform files, with closed vocabularies as enums; code-only container and sub-layer names are config lookups (`figma.yaml` `codeOnlyProps.match` + `naming`), not judgment; `default` vs `examples` purposes stated (Figma renders `examples`; `default` is encoded in the component); FILL on a component root documented as consumer-context intent (captured via the `sizingHorizontal`/`sizingVertical` Dev Mode annotations); conventions lead the correlation step; a foundations-guideline-shaped guess may be drafted via `guidelines.propose` in the same pass
 
+- **A component expands in the Storybook sidebar to one entry per view**, with React, Web component, API and Variants replacing the two rows of in-page tabs, plus Supplemental and Guidelines where those documents exist and a Testing entry per platform once a diff report exists
+
+- **Web Components no longer has a top-level Storybook section.** Each platform's docs page is an entry under the component it documents, so a workspace emitting both platforms lists each component once
+
+- **A component's docs page names the component in its heading**, not just the view — `DS Button / React` rather than a bare `React`, which read identically on every component
+
+- **A component's visual diffs sit in a Testing folder under it**, as `React Fidelity`, `React Changes` and the Web Component pair, and a page publishes only when that component has results in the report — where every component used to get a page and most of them said it had none
+
+- **`supplemental.yaml` and `guidelines.yaml` are sidebar views under the component**, below API and Variants, and only for a component that has the document
+
 ### Fixed
 
 - **The stylesheet now states a slot's `contentStyles` for component-admitting slots too — glyph rules included.** The emitters stamp primitive fills with `data-content="text"` / `data-content="glyph"` markers a composed component's root never carries, so the CSS transform's withholding gates are gone: glyph box/tint rules emit for every slot, and a mixed slot's box-level text properties (truncation, line-clamp) land on the text fill's own marker instead of being dropped. Pairs with the emitters ceasing to inline any governed formatting — the badge's label and icon now recolor per variant from the sheet, for stories and consumer fills alike
@@ -78,6 +88,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`specs analyze keys` groups `byName` by name and cause**, so a name that folds in one component and stays flat in another gets a row for each rather than one row carrying whichever cause was reached first
 
 ### Removed
+
+- **A component's Storybook views no longer include Examples**
+
+- **`storybook/.storybook/ComponentDocs.tsx` is no longer part of the scaffold**, and nothing imports it; `specs storybook init --force` reports an existing copy as orphaned instead of deleting it, since the file is yours
+
+- **`content/components/tabs.json` is gone**, and no `views.json` replaces it. The order the views read in lives in the `storySort` parameter in `.storybook/preview.tsx`, which Storybook requires to be self-contained — edit the `VIEWS` list there to change it
 
 
 ## [0.36.0] - 2026-10-29

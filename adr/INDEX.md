@@ -4,6 +4,8 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
+| 119 | Overrides on Instance Elements | (reserved, draft in PR #915) |
+| 118 | Two Authored Documents Beside a Spec — `supplemental.yaml` for Builders, `guidelines.yaml` for Consumers | (reserved, accepted on `118-supplemental-and-guidelines-sidecars`) |
 | 117 | A Library's Images Are Assets It Lays Out, Named by a Pattern | (reserved, draft on `117-library-image-assets`) |
 | 115 | Closed Style Value Sets | |
 | 114 | Describe Enum Options Where They Are Declared | (reserved, draft in PR #799) |
@@ -135,6 +137,14 @@
 | 003 | Gradient Support for Color Style Properties | Add `GradientValue` (LINEAR/RADIAL/ANGULAR) discriminated union and `ColorStyle` type for gradient fills |
 | 002 | Replace `effectStyleId` with `effects` | Remove `effectStyleId`; add grouped `effects` key with `Shadow`, `Blur`, `Effects` types |
 | 001 | Surface License State in Component Output | Add optional `generator.license` (`status`, `level`) to Metadata for downstream entitlement gating |
+
+## Withdrawn
+
+A number here is spent. The row stays so it is never reissued; nothing is decided by it.
+
+| # | Title | Why |
+|---|-------|-----|
+| 120 | A Spec Records the Asset Its Render Produced | Needed no ADR. The fact belongs in the render cache, not on the spec — and no ADR has covered a cache gaining a partition. |
 
 ## Superseded
 

@@ -86,6 +86,12 @@ const InitCommand = new Command('init')
         console.log(`  Port ${result.port}, from conventions/storybook.yaml (host.port).`);
         console.log('');
       }
+      if (result.orphaned.length > 0) {
+        console.log('  These host files are left over from an older scaffold. Nothing imports them');
+        console.log('  now, and they are yours, so this run left them alone — delete them when ready:');
+        for (const file of result.orphaned) console.log(`      ${file}`);
+        console.log('');
+      }
       if (result.staleInstall.length > 0) {
         console.log('  ⚠ storybook/package.json changed, but the existing install no longer matches it:');
         for (const line of result.staleInstall) console.log(`      ${line}`);
