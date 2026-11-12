@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.40.0] - Unreleased
 
+This release moves meaning into the contract, in three places where a consumer used to supply it:
+
+- **Every `Styles` property now declares what it means when absent or out of range**, so no transform decides: each property carries a `default`, five keys that inherited an open string wrapper become closed value sets, and the two fraction-valued properties bound their literal to the unit interval.
+- **Two hand-authored documents sit beside a spec** — `supplemental.yaml` for whoever builds a component and `guidelines.yaml` for whoever uses it — each with its own schema and its own shape check.
+- **A library's images are the assets it lays out, found by a naming pattern**, with the designated image component declared separately rather than sharing that key.
+
 ### Breaking
 
 - `Styles.opacity` and `Styles.cornerSmoothing` — typed as `UnitIntervalStyle` (`number | TokenReference | null`), literal bounded to 0–1; a string, boolean, `PropBinding` or `Conditional` no longer compiles, and `opacity: 76` no longer validates (ADR-121)
@@ -74,12 +80,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PositionOffset` — its description now states how offsets combine per axis: one edge pins at the element's own size, opposite edges stretch it between them (`top: 0` + `bottom: 0` spans the parent's height), a centre offset centres its axis. Stated once on the shared definition every edge references, per the constitution's documentation rules; the combination semantics previously existed only in the render bindings, so an author asking "can I pin four edges" found no answer where the value is declared. Description and examples only — no validation change
 - `ColorStyleValue`, `GradientStop.color`, `Shadow.color` — every arm is a bare `$ref` taking its description from the type it refers to, so the three colour forms read the same across all eight properties that admit them. Validates identically
 
-### Removed
-
 ### Migration
 
 - `images.match` → `images.component`: move a designated image component's name to `component`, and read `match` as a `{i}` naming pattern for the images a library lays out on a page. A declaration left on `match` fails validation, since the block admits no additional properties
 - `Styles.opacity`, `Styles.cornerSmoothing`: write the literal on the 0–1 scale, or bind a token and let it resolve on its own scale. A percentage written as a whole number — `opacity: 76` — now fails validation instead of failing at the canvas write; use `0.76`, or the token whose rung matches
+
+### ADRs
+
+#### Accepted
+
+- [105](../../adr/105-type-schema-parity.md) — Type–Schema Parity for Overlapping Prop Unions
+- [113](../../adr/113-style-defaults-in-the-schema.md) — Style defaults belong to the schema
+- [114](../../adr/114-enum-option-descriptions.md) — Describe Enum Options Where They Are Declared
+- [115](../../adr/115-closed-style-value-sets.md) — Closed Style Value Sets
+- [116](../../adr/116-nested-style-defaults.md) — Nested style members declare their own defaults
+- [117](../../adr/117-library-image-assets.md) — A Library's Images Are Assets It Lays Out, Named by a Pattern
+- [118](../../adr/118-supplemental-and-guidelines-sidecars.md) — Two Authored Documents Beside a Spec — `supplemental.yaml` for Builders, `guidelines.yaml` for Consumers
+- [121](../../adr/121-unit-interval.md) — A unit-interval style type for `opacity` and `cornerSmoothing`
+
+#### New drafts
+
+- [106](../../adr/106-authored-provenance.md) — Spec Provenance Beyond Figma Capture
+- [107](../../adr/107-schema-file-identity.md) — Schema File Identity and Packaging
+- [108](../../adr/108-slot-content-pointer-namespace.md) — The `$slotContent` Pointer Namespace
 
 
 ## [0.39.0] - 2026-10-29

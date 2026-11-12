@@ -1,6 +1,6 @@
 # Specs Specification
 
-**Version 0.39.0 — Draft**
+**Version 0.40.0 — Draft**
 
 This document is the normative specification for the Specs document format: what a Specs document is, what a producer must write, what a consumer may rely on, and what a validator must reject.
 
@@ -360,7 +360,7 @@ A consumer that emits platform code MUST NOT read `$extensions['com.figma']`: th
 
 ### 8.1 Versioning
 
-This specification and the `@directededges/specs-schema` package share a version; the current version is 0.39.0. Pre-1.0, a minor release MAY break. Every breaking change MUST be recorded under `### Breaking` in `CHANGELOG.md` with a migration note (`test:` none — `unenforced`).
+This specification and the `@directededges/specs-schema` package share a version; the current version is 0.40.0. Pre-1.0, a minor release MAY break. Every breaking change MUST be recorded under `### Breaking` in `CHANGELOG.md` with a migration note (`test:` none — `unenforced`).
 
 ### 8.2 Schema identity
 
