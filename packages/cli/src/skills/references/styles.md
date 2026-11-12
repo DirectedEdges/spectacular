@@ -35,10 +35,10 @@ Structural properties carry layout structure, take only their closed value set (
 
 A token reference is `{$token: "<path>", $type: "<type>"}`. Rules:
 
-- **Copy the path exactly as the catalogue spells it.** A token path is slash-separated (`Color/Primary`), per the `TokenReference` definition — but segment names and casing are the library's, not yours: read them verbatim from `analysis/styling.byToken.yaml`. Common `$type` values: `color`, `dimension`, `typography`, `effect`.
+- **Copy the path exactly as the catalogue spells it.** A token path is slash-separated (`Color/Primary`), per the `TokenReference` definition — but segment names and casing are the library's, not yours: read them verbatim from `analysis/styling.byToken.yaml`. Common `$type` values: `color`, `dimension`, `typography`, `effects`.
 - **The token must exist in the source library.** `specs validate` checks every `$token` against the render caches and errors on one the library does not have; a class it cannot check is stated in a note. A token you invented will not resolve on any platform.
 - **Prefer a token wherever one exists.** A literal where the system has a token is a consistency defect, not a shortcut. Check how sibling components style the same property (`analysis/styling.byComponent.yaml`).
-- **Composite tokens bind whole nodes.** `typography: {$token, $type: typography}` corresponds to a Figma *text style*; `effects: {$token, $type: effect}` to a Figma *effect style*. Use the composite when the library has a named style; go inline only when it does not.
+- **Composite tokens bind whole nodes.** `typography: {$token, $type: typography}` corresponds to a Figma *text style*; `effects: {$token, $type: effects}` to a Figma *effect style* — plural on both sides, because `effects` is the Specs extension type for an effect-style reference and the singular is not in the enum. Use the composite when the library has a named style; go inline only when it does not.
 
 ## Bindings and conditionals in styles
 

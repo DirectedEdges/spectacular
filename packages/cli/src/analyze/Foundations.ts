@@ -72,12 +72,15 @@ const VARIABLE_TYPES: Record<string, string> = {
 /** Figma named-style type → `$type`. GRID styles bind to nothing a spec styles, so they are omitted. */
 const STYLE_TYPES: Record<string, string> = {
   TEXT: 'typography',
-  EFFECT: 'effect',
+  // Plural: `effects` is what TokenReference.$type accepts for an effect-style
+  // reference. The singular reads naturally and is not in the enum, so a report
+  // spelling it that way hands the author a value validation rejects.
+  EFFECT: 'effects',
   FILL: 'color',
 };
 
 /** The section order of the report — fixed, so two runs diff cleanly. */
-const TYPE_ORDER = ['color', 'dimension', 'string', 'boolean', 'typography', 'effect'];
+const TYPE_ORDER = ['color', 'dimension', 'string', 'boolean', 'typography', 'effects'];
 
 export class FoundationsAnalyzer implements Transformer {
   readonly name = 'foundations';
