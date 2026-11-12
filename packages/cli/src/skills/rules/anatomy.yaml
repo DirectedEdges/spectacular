@@ -44,3 +44,5 @@ elements:
     - never: "author a container whose only child is a slot — the slot is the content area"
       adr: 83
       note: "the sanctioned shape: the root *is* the collapsed primitive — `root: {type: slot}` for a slot-only component, exactly as a text- or glyph-only component's root is the text or glyph element"
+    - never: "bind the root element's `visible` to a prop — whether the component exists at all is the consumer's decision, taken at the call site"
+      note: "a tooltip does not decide whether it is on screen; the thing that opens it does, as `{open && <Tooltip/>}`. The root *is* the instance, so hiding it is hiding the instance — which belongs to whatever placed it. `visible` on a child element is the normal case and stays: 73 of them across the reference catalogue, and not one on a root."

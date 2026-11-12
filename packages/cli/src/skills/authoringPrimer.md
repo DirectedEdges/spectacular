@@ -1,6 +1,6 @@
 ---
 name: specs-cli.authoring.primer
-description: The structural contract for authoring specs by hand — the two kinds, the three files, the five references, the authoring order, and the validate loop. Prerequisite for every authoring skill (component.author, composition.author, guidelines.propose).
+description: The structural contract for authoring specs by hand — the two kinds, the three files, the six references, the authoring order, and the validate loop. Prerequisite for every authoring skill (component.author, composition.author, guidelines.propose).
 ---
 <!--
   Canonical skill emitted by `specs skills install` — overwritten on every
@@ -39,7 +39,7 @@ Every file's `metadata` states its `concern` (`api`, `variants`, or `examples`).
 
 In `variants.yaml`, `default.elements` describes **every** anatomy element: `styles`, `content` (text string, glyph name, or a `$binding`), `children`, `propConfigurations` (nested instances only). Entries under `variants` describe only what that configuration changes.
 
-## The five references
+## The six references
 
 | Reference | Written where | Value | Resolves to |
 |---|---|---|---|
@@ -48,6 +48,20 @@ In `variants.yaml`, `default.elements` describes **every** anatomy element: `sty
 | `$binding` | element `content`, `children`, `styles.visible`, configuration values | `"#/props/<prop>"` | the owning scope's `props` — a subcomponent's binding resolves against the subcomponent's own props |
 | `$slotContent` | slot-prop configuration values, `children.examples` | `"#/components/<key>/slotContentExamples/<name>"` (optionally `/subcomponents/<sub>/` in the middle) | that spec's examples file |
 | `$token` | style values | `{$token: "<slash/separated/path>", $type: "<type>"}` | a token in the source library |
+| `$image` | `backgroundImage`, an image prop's `examples` or `default` | `"#/components/<key>/images/<name>"` | an entry in that spec's own `images` registry |
+
+An `images` registry sits in `examples.yaml`, keyed by a name you choose. Each entry carries `src` — the workspace-relative path to the file — and the Figma identity under `$extensions.com.figma.imageHash`:
+
+```yaml
+images:
+  poolDeck:
+    src: ../../../assets/images/ab843a9f….jpg
+    $extensions:
+      com.figma:
+        imageHash: ab843a9f…
+```
+
+What the library already holds is in `data/cache/images.yaml`, keyed by content hash, each entry carrying its `src`, the library's `name` for it, which components `usedBy` it, and an `origin` of `style`, `pageFrame` or `component`. Read that to find an image; never write a raw Figma hash into a style value.
 
 ## The authoring order
 

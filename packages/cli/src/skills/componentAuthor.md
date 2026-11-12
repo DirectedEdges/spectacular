@@ -67,6 +67,8 @@ Load the primer's `references/styles.md` first. The `default` block fully descri
 
 At least one `instanceExamples` entry showing a realistic configuration. `slotContentExamples` for every slot the component declares. Validate; zero errors.
 
+**A component that shows an image also carries an `images` registry here.** Find what the library holds in `data/cache/images.yaml` — keyed by content hash, each entry giving its `src`, the library's `name`, which components `usedBy` it, and an `origin`. Write the entry under a name you choose, carrying `src` and `$extensions.com.figma.imageHash`, then point at it with `$image: "#/components/<key>/images/<name>"` from `backgroundImage` or from an image prop's `examples`. Never put a raw Figma hash in a style value (`rules/styles.yaml · images`).
+
 ## 7. Compile and observe
 
 The dev posture is live — `specs run` re-emits the platform trees on save. The canvas is NOT watched: render it yourself, **once, after `api.yaml`, `variants.yaml`, and `examples.yaml` all validate clean** — a render per save on a many-variant component cannot finish before the next save, and the loop breaks Figma:
