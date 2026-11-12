@@ -22,7 +22,7 @@
           "default": true
         },
         "opacity": {
-          "$ref": "#/definitions/NumberStyleValue",
+          "$ref": "#/definitions/UnitIntervalStyleValue",
           "description": "How opaque the element and its contents are, from fully transparent to fully opaque.",
           "default": 1,
           "examples": [0.5, 0]
@@ -304,7 +304,7 @@
           "examples": [{ "top": 8, "end": 16, "bottom": 8, "start": 16 }]
         },
         "cornerSmoothing": {
-          "$ref": "#/definitions/NumberStyleValue",
+          "$ref": "#/definitions/UnitIntervalStyleValue",
           "description": "How far a rounded corner departs from a circular arc toward a squircle.",
           "default": 0,
           "examples": [0.6, 1]
@@ -415,6 +415,28 @@
       "oneOf": [
         {
           "type": "number"
+        },
+        {
+          "$ref": "#/definitions/TokenReference"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "UnitInterval": {
+      "description": "A number on the mathematical unit interval [0, 1], inclusive at both ends.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "examples": [0.5, 0, 1]
+    },
+    "UnitIntervalStyleValue": {
+      "examples": [0.5, 0],
+      "description": "A unit-interval number, a token reference, or null. The bound applies to the literal only — a token reference resolves on the token's own scale, which in a given library may run 0–100, so 0.72 and {\"$token\": \"Opacity/72\"} are both correct where the literal 72 is not.",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/UnitInterval"
         },
         {
           "$ref": "#/definitions/TokenReference"

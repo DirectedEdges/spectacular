@@ -3,7 +3,7 @@
 **Branch**: `121-unit-interval`
 **Created**: 2026-11-12
 **Status**: DRAFT
-**Summary**: *(written at implementation — see `/specs.adr.implement`)*
+**Summary**: A `UnitIntervalStyle` type bounds `opacity` and `cornerSmoothing` literals to [0, 1], joining `ColorStyle` among the narrowed style types.
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 
