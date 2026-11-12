@@ -1,6 +1,6 @@
-# ADR: A normalized fraction style type for `opacity` and `cornerSmoothing`
+# ADR: A unit-interval style type for `opacity` and `cornerSmoothing`
 
-**Branch**: `121-normalized-fraction`
+**Branch**: `121-unit-interval`
 **Created**: 2026-11-12
 **Status**: DRAFT
 **Summary**: *(written at implementation — see `/specs.adr.implement`)*
@@ -59,7 +59,7 @@ One constraint shapes the solution. These properties are token-bindable, and in 
 
 #### Option A: A domain-specific style type carrying the bound *(Selected)*
 
-Define `NormalizedStyle` in `types/` and `NormalizedStyleValue` in `schema/`, mirroring the `ColorStyle` ↔ `ColorStyleValue` pair. The numeric branch declares `minimum: 0` and `maximum: 1`; the `TokenReference` and `null` branches are unconstrained.
+Define `UnitIntervalStyle` in `types/` and `UnitIntervalStyleValue` in `schema/`, mirroring the `ColorStyle` ↔ `ColorStyleValue` pair. The numeric branch declares `minimum: 0` and `maximum: 1`; the `TokenReference` and `null` branches are unconstrained.
 
 **Pros**:
 - Satisfies the constitution's typing rule by the route it names explicitly — a domain-specific type, as `ColorStyle` already is for the four colour properties.
@@ -90,21 +90,29 @@ Leave both declarations alone and have `specs validate` check style literals aga
 
 ### Decision 2 — Naming
 
-#### Option A: `NormalizedStyle` / `NormalizedStyleValue` *(Selected)*
+#### Option A: `UnitIntervalStyle` / `UnitIntervalStyleValue`, over a `UnitInterval` primitive *(Selected)*
+
+Three names, two of them new definitions:
+
+- `UnitInterval` — a schema definition for the bounded number itself: `type: number`, `minimum: 0`, `maximum: 1`.
+- `UnitIntervalStyleValue` — the schema's style union: `oneOf` of `UnitInterval`, `TokenReference`, `null`.
+- `UnitIntervalStyle` — the TypeScript type mirroring that union.
 
 **Pros**:
-- "Normalised 0–1" is the phrasing this schema already uses for gradient axes, stop positions and colour alpha, so the term carries its meaning without a gloss.
-- Follows the established `<Domain>Style` ↔ `<Domain>StyleValue` pair naming.
-- Names the value's shape rather than its two current consumers, so a third property adopting it does not make the name wrong.
+- Derived from the mathematical unit interval, [0, 1], which names the constraint exactly and unambiguously rather than describing it.
+- Follows the established `<Domain>Style` ↔ `<Domain>StyleValue` pair naming, so it reads as a sibling of `ColorStyle` ↔ `ColorStyleValue`.
+- Naming the bounded number separately gives the constraint one home. Gradient centre axes, gradient stop positions and colour alpha each restate `minimum: 0, maximum: 1` inline today; they can adopt `UnitInterval` later without this ADR having to touch them.
+- Names the value's shape rather than its two current adopters, so a third property adopting it does not make the name wrong.
 
 **Cons / Trade-offs**:
-- "Normalized" says the range but not the unit, so the description must state that a token resolves on the token's own scale.
+- Assumes the reader is comfortable with the mathematical term. It is a deliberate trade: "unit interval" has exactly one meaning, where "normalized" or "fraction" each have several.
+- The name states the range but not the unit, so the description must still say that a token reference resolves on the token's own scale.
 
 ---
 
-#### Option B: `FractionStyle` / `OpacityStyle` *(Rejected)*
+#### Option B: `NormalizedStyle` / `FractionStyle` / `OpacityStyle` *(Rejected)*
 
-**Rejected because**: `OpacityStyle` is wrong for `cornerSmoothing` the moment it is adopted by both, and `FractionStyle` introduces a word this schema does not use anywhere, where "normalised" is already in service.
+**Rejected because**: `OpacityStyle` is wrong for `cornerSmoothing` the moment both adopt it. `FractionStyle` is ambiguous — a fraction is any ratio, not specifically one bounded by 1. `NormalizedStyle` is the closest contender and matches the "normalised 0–1" phrasing already in the schema's descriptions, but "normalized" is overloaded: it is also used for Unicode normalization, database normalization, and vector normalization, and it describes a process rather than naming the set. The mathematical term is the unambiguous one.
 
 ---
 
@@ -114,9 +122,9 @@ Leave both declarations alone and have `specs validate` check style literals aga
 
 | File | Change | Bump |
 |------|--------|------|
-| `Styles.ts` | Added exported type `NormalizedStyle` | MINOR |
-| `Styles.ts` | Narrowed field `opacity` from `Style` to `NormalizedStyle` | MAJOR |
-| `Styles.ts` | Narrowed field `cornerSmoothing` from `Style` to `NormalizedStyle` | MAJOR |
+| `Styles.ts` | Added exported type `UnitIntervalStyle` | MINOR |
+| `Styles.ts` | Narrowed field `opacity` from `Style` to `UnitIntervalStyle` | MAJOR |
+| `Styles.ts` | Narrowed field `cornerSmoothing` from `Style` to `UnitIntervalStyle` | MAJOR |
 
 **Example — new shape** (`types/Styles.ts`):
 ```yaml
@@ -125,32 +133,39 @@ opacity: Style
 cornerSmoothing: Style
 
 # After
-NormalizedStyle: number | TokenReference | null   # new exported type
-opacity: NormalizedStyle
-cornerSmoothing: NormalizedStyle
+UnitIntervalStyle: number | TokenReference | null   # new exported type
+opacity: UnitIntervalStyle
+cornerSmoothing: UnitIntervalStyle
 ```
 
 ### Schema changes (`schema/`)
 
 | File | Change | Bump |
 |------|--------|------|
-| `styles.schema.json` | Added definition `NormalizedStyleValue` | MINOR |
-| `styles.schema.json` | Repointed `opacity` from `NumberStyleValue` to `NormalizedStyleValue` | MAJOR |
-| `styles.schema.json` | Repointed `cornerSmoothing` from `NumberStyleValue` to `NormalizedStyleValue` | MAJOR |
+| `styles.schema.json` | Added definition `UnitInterval` | MINOR |
+| `styles.schema.json` | Added definition `UnitIntervalStyleValue` | MINOR |
+| `styles.schema.json` | Repointed `opacity` from `NumberStyleValue` to `UnitIntervalStyleValue` | MAJOR |
+| `styles.schema.json` | Repointed `cornerSmoothing` from `NumberStyleValue` to `UnitIntervalStyleValue` | MAJOR |
 
 **Example — new shape** (`schema/styles.schema.json`):
 ```yaml
-# New definition
-NormalizedStyleValue:
+# New definitions
+UnitInterval:
   description: >-
-    A number normalised to 0–1, a token reference, or null. The range applies to a
+    A number on the unit interval [0, 1], inclusive at both ends.
+  type: number
+  minimum: 0
+  maximum: 1
+  examples: [0.5, 0, 1]
+
+UnitIntervalStyleValue:
+  description: >-
+    A unit-interval number, a token reference, or null. The bound applies to a
     literal only — a token reference resolves on the token's own scale, which in a
     given library may be 0–100.
   examples: [0.5, 0]
   oneOf:
-    - type: number
-      minimum: 0
-      maximum: 1
+    - $ref: "#/definitions/UnitInterval"
     - $ref: "#/definitions/TokenReference"
     - type: "null"
 ```
@@ -159,6 +174,10 @@ NormalizedStyleValue:
 
 `NumberStyleValue` is left exactly as it is — it remains the type for every unbounded number in `Styles`, and nothing else is repointed by this ADR.
 
+`UnitInterval` is defined as a primitive in its own right so the bound has one home. Three existing definitions restate `minimum: 0, maximum: 1` inline — gradient centre axes, gradient stop positions, and colour alpha. This ADR does not repoint them: they are correct as they stand, and changing them is a cleanup with its own blast radius. The new definition exists so the next bounded fraction references it rather than restating it a fourth time.
+
+The TypeScript side gains one name, not two. `UnitInterval` has no TS counterpart because TypeScript cannot express a numeric range — a `type UnitInterval = number` alias would state the bound in its name while enforcing nothing, which is the kind of decorative type the constitution's parity rule is meant to prevent. The range lives only where it can be enforced.
+
 The `StyleKey` property-name union is untouched: this change alters what values those two keys accept, not which keys exist.
 
 ---
@@ -166,7 +185,8 @@ The `StyleKey` property-name union is untouched: this change alters what values 
 ## Type ↔ Schema Impact
 
 - **Symmetric**: Yes — and it removes an existing asymmetry rather than adding one.
-- **Parity check**: `NormalizedStyle` in `types/Styles.ts` mirrors `NormalizedStyleValue` in `schema/styles.schema.json`, branch for branch — `number`, `TokenReference`, `null`. Before this ADR the type admitted `string`, `boolean`, `PropBinding` and `Conditional` that the schema rejected; after it, the two agree. The numeric bound is expressible in JSON Schema and not in TypeScript, which is the one intentional asymmetry: the type states the shape, the schema states the range.
+- **Parity check**: `UnitIntervalStyle` in `types/Styles.ts` mirrors `UnitIntervalStyleValue` in `schema/styles.schema.json`, branch for branch — `number`, `TokenReference`, `null`. Before this ADR the type admitted `string`, `boolean`, `PropBinding` and `Conditional` that the schema rejected; after it, the two agree.
+- **Justified asymmetry**: `UnitInterval` exists in `schema/` with no type counterpart. TypeScript cannot express a numeric range, so the bound is declared once in the place that enforces it. The type states the shape; the schema states the range.
 
 ---
 
@@ -192,7 +212,7 @@ Per-package depth is out of scope here and belongs to `/specs.adr.analyze`.
 
 **Change class**: `MAJOR` — for CHANGELOG placement, not a version bump.
 
-**Justification**: Constitution §Versioning sets `MAJOR` for any breaking change to a type signature or schema structure. Two things qualify. Narrowing `opacity` and `cornerSmoothing` from `Style` to `NormalizedStyle` removes assignability a TS consumer may have relied on. And a spec carrying `opacity: 76` validates today and will not after this change — a previously accepted document becomes invalid, which is breaking regardless of the document being wrong on its face. The new type and definition are themselves additive and MINOR-class; the repointing is what sets the class for the ADR.
+**Justification**: Constitution §Versioning sets `MAJOR` for any breaking change to a type signature or schema structure. Two things qualify. Narrowing `opacity` and `cornerSmoothing` from `Style` to `UnitIntervalStyle` removes assignability a TS consumer may have relied on. And a spec carrying `opacity: 76` validates today and will not after this change — a previously accepted document becomes invalid, which is breaking regardless of the document being wrong on its face. The new type and definition are themselves additive and MINOR-class; the repointing is what sets the class for the ADR.
 
 ---
 
@@ -201,6 +221,6 @@ Per-package depth is out of scope here and belongs to `/specs.adr.analyze`.
 - An out-of-range fraction fails at `specs validate` rather than eleven seconds into a canvas write, and fails for every tool validating against the published schema rather than only inside the CLI.
 - The declared contract states the range, so no range table has to be maintained in validator code and none can drift from the schema.
 - The two properties' TS types stop over-promising: a string, a boolean, a prop binding or a conditional no longer typecheck where the schema would have rejected them anyway.
-- A future property whose literal is a 0–1 fraction adopts `NormalizedStyle` instead of restating the bound.
+- A future property whose literal is a unit-interval number adopts `UnitIntervalStyle`, or references `UnitInterval` directly where it is not token-bindable, instead of restating the bound.
 - Any spec in any workspace carrying an out-of-range literal on these two properties will start failing validation and must be corrected to either a 0–1 literal or a token reference. Those specs were already failing at render, so this surfaces an existing defect rather than creating one.
 - `NumberStyleValue` remains unbounded and shared, so every dimension property is unaffected.

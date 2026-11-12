@@ -4,7 +4,7 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
-| 121 | A Normalized Fraction Style Type for `opacity` and `cornerSmoothing` | |
+| 121 | A Unit-Interval Style Type for `opacity` and `cornerSmoothing` | |
 | 119 | Overrides on Instance Elements | (reserved, draft in PR #915) |
 | 118 | Two Authored Documents Beside a Spec — `supplemental.yaml` for Builders, `guidelines.yaml` for Consumers | (reserved, accepted on `118-supplemental-and-guidelines-sidecars`) |
 | 117 | A Library's Images Are Assets It Lays Out, Named by a Pattern | (reserved, draft on `117-library-image-assets`) |
