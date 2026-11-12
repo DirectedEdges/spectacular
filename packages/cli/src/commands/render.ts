@@ -326,16 +326,20 @@ async function renderSpecPath(
   // formatting it again is identity — the same reading ADR-066 gives a name that arrived
   // pre-formatted. Recorded under the workspace's first source alias, which owns the
   // partition; `fileKey` is the Figma file the node actually lives in.
+  // The file key comes from the result, not from `--file`: a non-interactive run passes
+  // none and lets the bridge pick the connection, so the local value is undefined exactly
+  // when an agent is driving — which is most of the time.
+  const renderedIn = result.fileKey ?? fileKey;
   const renderDataDir = options.workspaceSettings?.data?.directory;
   const renderAlias = Object.keys(options.workspaceSettings?.data?.sources ?? {})[0];
-  if (renderDataDir && renderAlias && result.nodeId && fileKey) {
+  if (renderDataDir && renderAlias && result.nodeId && renderedIn) {
     try {
       recordRenderedComponent({
         dataDir: renderDataDir,
         alias: renderAlias,
         nodeId: result.nodeId,
         name,
-        fileKey,
+        fileKey: renderedIn,
       });
     } catch (e) {
       // The render succeeded; failing to record it must not turn that into an error. The
