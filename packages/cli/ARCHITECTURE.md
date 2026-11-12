@@ -203,6 +203,17 @@ the work lives in the feature folder.
   `perComponentOutput` (basename, extension follows the run's format) so the
   command can name those files — output appearing unannounced in a spec folder
   reads as corruption.
+- **A component is a folder in the Storybook sidebar, and `storybook/concerns/components/navTitle.ts`
+  has to name that folder exactly the way the emitters do.** A disagreement with
+  `storyTitle` in the other repo's `from-specs` splits one component into two
+  sidebar folders, with the platform pages in one and the spec and testing pages
+  in the other, and nothing errors. Both sides have tests naming the same cases;
+  the normalization is three rules — collapse `" / "`, drop a segment that
+  sanitizes to an empty id part, fall back to the folder key. The visual
+  manifest's story join is the second place that agreement matters:
+  `testing/visual/shoot.ts`'s `titleCandidates` matches the platform leaf first
+  and keeps the pre-leaf spellings, because a workspace's emitted trees are only
+  as new as its last transform run.
 
 ## Key nodes
 
@@ -219,6 +230,7 @@ the work lives in the feature folder.
 | `src/utilities/` | The 15 modules more than one feature imports — the layout seam, the payload format (`sectionedFile` + `payloadSplit` + `payloadRead`, one on-disk format in three files), the key derivations, the exit-code contract, the watch loop, the dev-status vocabulary. Entry rule above; it is not a catch-all |
 | `src/transforms/` | Open counterparts of transform modules (see drift note below). Root holds what more than one transformer or a command uses — `states.ts`, `naming.ts`, `writeAtomic.ts`, `examples.ts`, `externalWrites.ts`, the registry; everything only the stylesheet needs is under `css/` |
 | `src/transforms/css/` | The stylesheet transformer, in four stages: `values/` (spec value → CSS value), `style/` (spec style key → declarations, one module per property family), `analysis/` (what the spec says about its elements), `sheet/` (declarations → a stylesheet). A module imports from a stage above it, never below. `css/README.md` is the map (specs#691) |
+| `src/storybook/` | The host and what it shows. `templates/` is inert text — never imported, read off disk and written into the customer's workspace — and `init` owns `.storybook/`, which publish never touches. `concerns/` is one folder per sidebar section, each declaring `detect` and `build`, iterated in registry order by `publish.ts`, which rewrites a concern's folder wholesale and withholds any page a `content-overrides/` twin shadows. `concerns/components/` is the only concern that writes pages for specs rather than for a section: the views under a component the emitters do not emit — API, Variants, and a testing page per platform per baseline |
 | `skills/` | Procedures a customer's agent runs. Holding place until #592 makes skills canonical and ships them from the CLI package; `skills/README.md` says what is provisional |
 | `src/pipeline/` | **The chain seam** (ADR-101). `steps.ts` is the single place the order lives — each step declares `inputs`, `outputs`, `active` and a `run` that calls a command's `runX()` function in-process, never a subprocess, which is what holds the license to one check per run. `plan.ts` answers which steps a workspace has and which step a changed file enters at; `drive.ts` is the two drivers; `chainCommand.ts` is the flags, option mapping and failure report `build` and `run` share, so the pair cannot drift on what they accept. A step runs whole or scoped by `--components`, except `analyze`, which always reads the whole catalogue because every analyzer's `finalize()` writes a catalogue-wide report |
 | `src/utilities/specsLayout.ts` | **The layout seam.** `resolveSpecsLayout` (reads, legacy-aware) / `writeLayout` (always current) / `specFolderNames` / `dirFor(kind)` / `analysisDir()`. Emitted trees mirror it: `<tree>/src/<kind-dir>/<Name>` |

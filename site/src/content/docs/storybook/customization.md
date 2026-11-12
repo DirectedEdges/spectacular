@@ -63,8 +63,10 @@ customize it:
 | Page | Built from | To customize |
 |---|---|---|
 | Overview, Foundations, Analysis, Versions | A `.stories.tsx` under `content/` | Copy to `content-overrides/` — the mechanism above |
-| **Component pages** | No file at all — autodocs entries rendered by `.storybook/ComponentDocs.tsx` | Edit that host file; it changes **every** component page at once. There is no per-component override |
+| A component's **API**, **Variants** and **Testing** views | A `.stories.tsx` under `content/components/`, one per view per component | Copy to `content-overrides/` — the mechanism above, and the only per-component customization there is |
+| A component's **React** and **Web components** views | No file under `content/` — Storybook's own autodocs page over the emitted story file | Nothing to copy. Change what `specs react` / `specs webcomponents` emit, or the spec behind it |
 | Mode toolbar | `.storybook/preview.tsx` + generated `content/components/modes.json` | Behavior in the host file; which controls exist via `modes.collections` in the conventions file |
+| Order of the views under a component | `.storybook/preview.tsx` + generated `content/components/views.json` | The sort in the host file; which views exist follows from what you emitted and diffed |
 
 Two consequences worth knowing before you fork:
 
@@ -72,7 +74,7 @@ Two consequences worth knowing before you fork:
   `content/…/data/` — live data is the point, but it means you cannot freeze a
   page's content by forking it, and a data-shape change lands in your fork too.
   The publish output's override report is the early warning.
-- Host-file edits (`ComponentDocs.tsx`, `preview.tsx`) are yours until the next
+- Host-file edits (`preview.tsx`, `main.ts`) are yours until the next
   `init --force`, which rewrites host files wholesale. Re-apply after an
   upgrade; `content-overrides/` is the only tree no command ever writes.
 

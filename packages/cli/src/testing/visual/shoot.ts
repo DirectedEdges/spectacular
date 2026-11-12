@@ -43,24 +43,34 @@ const FREEZE_CSS =
   'html,body{scrollbar-width:none}::-webkit-scrollbar{width:0;height:0;display:none}' +
   'html,body{margin:0!important;padding:0!important}#storybook-root{margin:0!important;padding:0!important}';
 
-/** The platform prefixes a target's stories carry, in lookup order. */
+/**
+ * The titles a target's stories can carry, in lookup order.
+ *
+ * Both platforms now title as `<section>/<title>/<platform leaf>`: a component is
+ * a folder in the sidebar and each platform's docs page is a leaf inside it. The
+ * older spellings stay in the list because a workspace's emitted trees are only
+ * as new as its last transform run, and a stale tree joining as no-story reads
+ * as a missing story rather than as an un-regenerated one.
+ */
 export function titleCandidates(target: Target, kind: SpecKind, titlePath: string): string[] {
+  const section = kind === 'composition' ? 'Compositions' : 'Components';
   if (target === 'react') {
-    return kind === 'composition' ? [`Compositions/${titlePath}`] : [`Components/${titlePath}`];
+    return [`${section}/${titlePath}/React`, `${section}/${titlePath}`];
   }
-  // Web Components stories title under one platform root. A composition's
-  // title is already group-prefixed before the emitter adds that root, so the
-  // real title nests both — `Web Components/Compositions/Card`. Listing only
-  // the other two spellings is why every Web Components composition reported
-  // as no-story. The sidebar hides stories by matching the `Web Components/`
-  // prefix, so the title is the emitter's to keep and this list's to match.
-  return kind === 'composition'
-    ? [
-        `Web Components/Compositions/${titlePath}`,
-        `Web Components/${titlePath}`,
-        `Web Components Compositions/${titlePath}`,
-      ]
-    : [`Web Components/${titlePath}`];
+  // A Web Components composition's title was group-prefixed before the emitter
+  // added the platform root, so the retired spelling nests both —
+  // `Web Components/Compositions/Card`. Listing only the other two is why every
+  // Web Components composition once reported as no-story.
+  return [
+    `${section}/${titlePath}/Web components`,
+    ...(kind === 'composition'
+      ? [
+          `Web Components/Compositions/${titlePath}`,
+          `Web Components/${titlePath}`,
+          `Web Components Compositions/${titlePath}`,
+        ]
+      : [`Web Components/${titlePath}`]),
+  ];
 }
 
 interface ShootTask {

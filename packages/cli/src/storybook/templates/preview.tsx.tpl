@@ -2,11 +2,14 @@
 // touches it.
 import type { Preview } from '@storybook/react';
 import { addons } from 'storybook/preview-api';
-import { ComponentDocs } from './ComponentDocs.js';
 {{CSSVARS_IMPORT}}
 // Mode toolbar controls (specs#636): published from conventions/storybook.yaml
 // `modes.collections`, driving the attributes the emitted stylesheet switches on.
 import modesJson from '../content/components/modes.json';
+// The reading order of the leaves under a component: each platform's docs page
+// followed by its testing views, then the spec documents. Published by
+// `specs storybook`, which is also what decides which of them exist.
+import viewsJson from '../content/components/views.json';
 
 interface ModeControl {
   name: string;
@@ -60,25 +63,59 @@ const withModes = (Story: any, context: { globals: Record<string, string> }) => 
   return Story();
 };
 
+/** Top-level sections in reading order; anything else sorts after them, alphabetically. */
+const SECTIONS = ['Overview', 'Foundations', 'Components', 'Compositions', 'Analysis', 'Versions'];
+
+/** The leaves under a component, in the order `specs storybook` published. */
+const VIEWS: string[] = (viewsJson as { views?: string[] }).views ?? [];
+
+const rankIn = (order: string[], value: string): number => {
+  const at = order.indexOf(value);
+  return at === -1 ? order.length : at;
+};
+
+/**
+ * Sort by title path, one segment at a time.
+ *
+ * The first segment takes the system's section order. A final segment naming one
+ * of a component's views takes the published view order, because alphabetical
+ * order on those names puts API first and splits the two platforms apart.
+ * Everything else is alphabetical.
+ */
+const storySort = (a: { title: string }, b: { title: string }): number => {
+  const left = a.title.split('/');
+  const right = b.title.split('/');
+  for (let i = 0; i < Math.max(left.length, right.length); i++) {
+    const x = left[i];
+    const y = right[i];
+    if (x === y) continue;
+    // One path has run out: the shallower entry is this folder's own page.
+    if (x === undefined) return -1;
+    if (y === undefined) return 1;
+    if (i === 0) {
+      const bySection = rankIn(SECTIONS, x) - rankIn(SECTIONS, y);
+      if (bySection !== 0) return bySection;
+    } else if (i === left.length - 1 && i === right.length - 1) {
+      const byView = rankIn(VIEWS, x) - rankIn(VIEWS, y);
+      if (byView !== 0) return byView;
+    }
+    return x.localeCompare(y);
+  }
+  return 0;
+};
+
 const preview: Preview = {
   ...(modeControls.length ? { globalTypes, initialGlobals, decorators: [withModes] } : {}),
   // Autodocs: a per-component Docs page listing every story, labeled.
   tags: ['autodocs'],
   parameters: {
-    // Sections in reading order; entries alphabetical within each.
-    options: {
-      storySort: {
-        method: 'alphabetical',
-        order: ['Overview', 'Foundations', 'Components', 'Compositions', 'Analysis', 'Versions'],
-      },
-    },
+    options: { storySort },
     // Composed slot content is one long JSX expression; dedent preserves the
     // serializer's tree structure without prettier re-splitting attributes
     // onto one line each.
     docs: {
-      // Component pages get React / Web Components / Specs as in-page tabs;
-      // every other page supplies its own docs.page and is untouched.
-      page: ComponentDocs,
+      // No global docs page: a component's React view is Storybook's own autodocs
+      // page, and every other view is a published page carrying its own docs.page.
       source: { format: 'dedent' },
       // Give every story on the Docs page the canvas toolbar, not just the primary.
       canvas: {

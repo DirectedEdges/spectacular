@@ -80,26 +80,26 @@ describe('report names', () => {
 });
 
 describe('story title candidates', () => {
-  it('matches the Web Components composition title the emitter actually writes', () => {
-    // `Web Components/` is prefixed onto a title the shared naming code has
-    // already prefixed with `Compositions/`, so the real title nests both.
-    // Omitting this spelling is why every Web Components composition
-    // reported as no-story.
-    expect(titleCandidates('webcomponents', 'composition', 'Card')).toContain(
-      'Web Components/Compositions/Card',
-    );
+  it('matches the platform leaf under the component, for both kinds and both targets', () => {
+    expect(titleCandidates('react', 'component', 'Card')[0]).toBe('Components/Card/React');
+    expect(titleCandidates('react', 'composition', 'Card')[0]).toBe('Compositions/Card/React');
+    expect(titleCandidates('webcomponents', 'component', 'Card')[0]).toBe('Components/Card/Web components');
+    expect(titleCandidates('webcomponents', 'composition', 'Card')[0]).toBe('Compositions/Card/Web components');
   });
 
-  it('keeps the platform root on every Web Components title', () => {
-    for (const kind of ['component', 'composition'] as const) {
-      for (const candidate of titleCandidates('webcomponents', kind, 'Card')) {
-        expect(candidate.startsWith('Web Components')).toBe(true);
-      }
-    }
+  // A workspace's emitted trees are only as new as its last transform run, so a
+  // tree written before the platform leaf existed still has to join.
+  it('still matches the retired spellings', () => {
+    expect(titleCandidates('react', 'component', 'Card')).toContain('Components/Card');
+    expect(titleCandidates('webcomponents', 'component', 'Card')).toContain('Web Components/Card');
+    // `Web Components/` was prefixed onto a title the shared naming code had
+    // already prefixed with `Compositions/`, so that spelling nests both.
+    // Omitting it is why every Web Components composition reported as no-story.
+    expect(titleCandidates('webcomponents', 'composition', 'Card')).toContain('Web Components/Compositions/Card');
   });
 
-  it('titles React stories under the kind group, with no platform root', () => {
-    expect(titleCandidates('react', 'component', 'Card')).toEqual(['Components/Card']);
-    expect(titleCandidates('react', 'composition', 'Card')).toEqual(['Compositions/Card']);
+  it('never offers one target a title the other target writes', () => {
+    expect(titleCandidates('react', 'component', 'Card')).not.toContain('Components/Card/Web components');
+    expect(titleCandidates('webcomponents', 'component', 'Card')).not.toContain('Components/Card/React');
   });
 });

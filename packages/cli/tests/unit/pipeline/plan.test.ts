@@ -451,6 +451,6 @@ describe('watchPaths', () => {
     const ws = workspace({ data: ['ds'], manifest: true, specs: true, react: true, storybook: true, config: true });
     const plan = resolvePlan(ws);
     expect(entryFor(plan, ws, path.join(root, 'react', 'src', 'components', 'DsButton', 'scaffold.tsx'))).toBeNull();
-    expect(entryFor(plan, ws, path.join(root, 'storybook', 'content', 'components', 'tabs.json'))).toBeNull();
+    expect(entryFor(plan, ws, path.join(root, 'storybook', 'content', 'components', 'views.json'))).toBeNull();
   });
 });

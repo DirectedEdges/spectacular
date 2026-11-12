@@ -27,7 +27,7 @@ storybook/
 ├── package.json          declares Storybook (Node 20.19+); you run `npm install`
 ├── tsconfig.json
 ├── .storybook/           main.ts, preview.tsx, manager.tsx, scaffold.json
-├── content/components/   tabs.json + modes.json, seeded so the host compiles
+├── content/components/   views.json + modes.json, seeded so the host compiles
 └── content-overrides/    yours — no command ever writes here
 ```
 
@@ -103,14 +103,21 @@ ran `fetch` gets no Foundations section rather than empty pages.
 
 ### `components`
 
-Not the component stories — those come from
+Not the component stories — the React and Web components views come from
 [`react`](/cli/commands/react/) and
-[`webcomponents`](/cli/commands/webcomponents/). This concern writes the
-navigation contract the host reads at build time: `tabs.json` (which
-framework tabs exist, derived from which trees you emitted — Specs is always
-present) and `modes.json` (which variable collections get toolbar mode
-controls, from `conventions/storybook.yaml`). Always publishes, because the
-scaffolded host cannot compile without them.
+[`webcomponents`](/cli/commands/webcomponents/). This concern writes the rest of
+what sits under a component in the sidebar, plus the navigation contract the host
+reads at build time:
+
+- One page per component per view it owns — **API**, **Variants**, and a
+  **Testing** page for each platform and baseline that has a report to read.
+- `views.json` — the order the views read in, derived from which trees you
+  emitted.
+- `modes.json` — which variable collections get toolbar mode controls, from
+  `conventions/storybook.yaml`.
+
+Always publishes, because the scaffolded host cannot compile without the two
+JSON files.
 
 ### `analysis`
 

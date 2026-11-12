@@ -5,7 +5,8 @@ import os from 'os';
 import { fileURLToPath } from 'url';
 import { Storybook } from '../../../src/commands/storybook.js';
 import { registry, concernNames } from '../../../src/storybook/concerns/registry.js';
-import { deriveTabs, deriveCompositions, deriveModes } from '../../../src/storybook/concerns/components/index.js';
+import { deriveViews, deriveCompositions, deriveModes } from '../../../src/storybook/concerns/components/index.js';
+import { specNavFolder } from '../../../src/storybook/concerns/components/navTitle.js';
 import { kebabizePath } from '../../../src/transforms/css/values/tokens.js';
 import { buildColorData } from '../../../src/storybook/concerns/foundations/color.js';
 import { buildIconsData } from '../../../src/storybook/concerns/foundations/icons.js';
@@ -60,15 +61,64 @@ describe('package boundary (ADR A decision 1)', () => {
   });
 });
 
-describe('deriveTabs', () => {
+describe('deriveViews', () => {
   const ws = (hasReact: boolean, hasWebComponents: boolean) =>
     ({ hasReact, hasWebComponents } as Workspace);
 
-  it('specs is always present, order fixed, canvas is the first tree', () => {
-    expect(deriveTabs(ws(true, true))).toEqual({ tabs: ['react', 'webcomponents', 'specs'], canvas: 'react' });
-    expect(deriveTabs(ws(true, false))).toEqual({ tabs: ['react', 'specs'], canvas: 'react' });
-    expect(deriveTabs(ws(false, true))).toEqual({ tabs: ['webcomponents', 'specs'], canvas: 'webcomponents' });
-    expect(deriveTabs(ws(false, false))).toEqual({ tabs: ['specs'], canvas: 'specs' });
+  it('each platform is followed by its own testing views, spec documents last', () => {
+    expect(deriveViews(ws(true, true)).views).toEqual([
+      'React',
+      'React — Testing (Fidelity)',
+      'React — Testing (Changes)',
+      'Web components',
+      'Web components — Testing (Fidelity)',
+      'Web components — Testing (Changes)',
+      'API',
+      'Variants',
+    ]);
+  });
+
+  it('an unemitted platform contributes no views', () => {
+    expect(deriveViews(ws(false, true)).views).toEqual([
+      'Web components',
+      'Web components — Testing (Fidelity)',
+      'Web components — Testing (Changes)',
+      'API',
+      'Variants',
+    ]);
+  });
+
+  it('the spec documents stand alone in a workspace that has emitted nothing', () => {
+    expect(deriveViews(ws(false, false)).views).toEqual(['API', 'Variants']);
+  });
+
+  it('omits Examples — it is no longer one of the views', () => {
+    expect(deriveViews(ws(true, true)).views).not.toContain('Examples');
+  });
+});
+
+/**
+ * The folder a published view lands in has to be the folder the emitters put
+ * their own pages in, or one component splits into two sidebar folders. These
+ * are the cases `storyTitle` in from-specs normalizes, asserted on this side of
+ * the repo boundary.
+ */
+describe('specNavFolder', () => {
+  it('nests each kind under its own section', () => {
+    expect(specNavFolder('component', 'card', 'Card')).toBe('Components/Card');
+    expect(specNavFolder('composition', 'checkout', 'Checkout')).toBe('Compositions/Checkout');
+  });
+
+  it('collapses spaced separators without creating blank levels', () => {
+    expect(specNavFolder('component', 'item', 'DS  Nav /  Item')).toBe('Components/DS  Nav/Item');
+  });
+
+  it('drops a segment that sanitizes to nothing', () => {
+    expect(specNavFolder('component', 'users', 'DS Row / _ / Users')).toBe('Components/DS Row/Users');
+  });
+
+  it('falls back to the folder key when the spec carries no title', () => {
+    expect(specNavFolder('component', 'egdsButton', undefined)).toBe('Components/EgdsButton');
   });
 });
 
@@ -308,9 +358,10 @@ describe('buildImagesData', () => {
 describe('templates', () => {
   it('ships every host template and page template', () => {
     const dir = templatesDir();
-    for (const file of ['package.json.tpl', 'tsconfig.json.tpl', 'main.ts.tpl', 'preview.tsx.tpl', 'manager.tsx.tpl', 'manager-head.html.tpl', 'ComponentDocs.tsx.tpl',
+    for (const file of ['package.json.tpl', 'tsconfig.json.tpl', 'main.ts.tpl', 'preview.tsx.tpl', 'manager.tsx.tpl', 'manager-head.html.tpl',
       'pages/Color.stories.tsx.tpl', 'pages/Typography.stories.tsx.tpl', 'pages/Icons.stories.tsx.tpl', 'pages/Images.stories.tsx.tpl',
-      'pages/GettingStarted.stories.tsx.tpl', 'pages/Analysis.stories.tsx.tpl', 'pages/VersionsStub.stories.tsx.tpl']) {
+      'pages/GettingStarted.stories.tsx.tpl', 'pages/Analysis.stories.tsx.tpl', 'pages/VersionsStub.stories.tsx.tpl',
+      'pages/SpecConcern.stories.tsx.tpl', 'pages/ComponentTesting.stories.tsx.tpl', 'pages/VisualReport.stories.tsx.tpl']) {
       expect(fs.existsSync(path.join(dir, file)), file).toBe(true);
     }
   });
@@ -447,5 +498,89 @@ describe('deriveCompositions', () => {
     );
     // The malformed document is the generator's problem; the nav contract still has a row.
     expect(deriveCompositions(ws).compositions.map((c) => c.key)).toEqual(['broken']);
+  });
+});
+
+/**
+ * The views a component carries as sidebar leaves. These pages are TSX the host
+ * compiles, not data — a template that renders to something Vite cannot parse
+ * takes the whole Storybook instance down, and the failure surfaces far from the
+ * template. So each one is parsed here, as well as checked for its title.
+ */
+describe('components concern — published view pages', () => {
+  const componentsConcern = registry.find((c) => c.name === 'components')!;
+
+  function workspace(options: { react: boolean; webcomponents: boolean; reports: string[] }): Workspace {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sb-views-'));
+    fs.ensureDirSync(path.join(root, 'specs', 'components', 'egdsButton'));
+    fs.writeFileSync(
+      path.join(root, 'specs', 'components', 'egdsButton', 'api.yaml'),
+      'title: EGDS Button (Beta)\nprops: {}\n',
+    );
+    for (const name of options.reports) {
+      fs.ensureDirSync(path.join(root, 'testing', 'visual', 'report'));
+      fs.writeFileSync(path.join(root, 'testing', 'visual', 'report', `${name}.json`), '{}');
+    }
+    return {
+      root,
+      specsDir: path.join(root, 'specs'),
+      assetsDir: path.join(root, 'assets'),
+      componentKeys: ['egdsButton'],
+      compositionKeys: [],
+      hasReact: options.react,
+      hasWebComponents: options.webcomponents,
+      config: { conventions: {} },
+    } as unknown as Workspace;
+  }
+
+  /** Every story page the concern built, keyed by the title its meta declares. */
+  async function pagesByTitle(ws: Workspace): Promise<Map<string, string>> {
+    const built = await componentsConcern.build(ws);
+    const pages = new Map<string, string>();
+    for (const file of built) {
+      if (!file.path.endsWith('.stories.tsx')) continue;
+      const title = /title: '([^']*)'/.exec(file.content)?.[1];
+      expect(title, file.path).toBeTruthy();
+      pages.set(title!, file.content);
+    }
+    return pages;
+  }
+
+  it('lands every view in the folder the emitters title their own pages under', async () => {
+    const pages = await pagesByTitle(
+      workspace({ react: true, webcomponents: true, reports: ['fidelity.react', 'regression.webcomponents'] }),
+    );
+    expect([...pages.keys()].sort()).toEqual([
+      'Components/EGDS Button (Beta)/API',
+      'Components/EGDS Button (Beta)/React — Testing (Fidelity)',
+      'Components/EGDS Button (Beta)/Variants',
+      'Components/EGDS Button (Beta)/Web components — Testing (Changes)',
+    ]);
+  });
+
+  it('publishes a testing page only for a platform-and-baseline that has a report', async () => {
+    const pages = await pagesByTitle(workspace({ react: true, webcomponents: true, reports: [] }));
+    expect([...pages.keys()].sort()).toEqual([
+      'Components/EGDS Button (Beta)/API',
+      'Components/EGDS Button (Beta)/Variants',
+    ]);
+  });
+
+  it('reads an untargeted report as React results, never as Web Components', async () => {
+    const pages = await pagesByTitle(workspace({ react: true, webcomponents: true, reports: ['fidelity'] }));
+    expect(pages.has('Components/EGDS Button (Beta)/React — Testing (Fidelity)')).toBe(true);
+    expect(pages.has('Components/EGDS Button (Beta)/Web components — Testing (Fidelity)')).toBe(false);
+  });
+
+  it('renders every page to TSX that parses, with no placeholder left behind', async () => {
+    const esbuild = await import('esbuild');
+    const pages = await pagesByTitle(
+      workspace({ react: true, webcomponents: true, reports: ['fidelity.react', 'fidelity.webcomponents'] }),
+    );
+    expect(pages.size).toBeGreaterThan(0);
+    for (const [title, content] of pages) {
+      expect(content, title).not.toMatch(/\{\{[A-Z_]+\}\}/);
+      expect(() => esbuild.transformSync(content, { loader: 'tsx' }), title).not.toThrow();
+    }
   });
 });

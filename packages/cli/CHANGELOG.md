@@ -33,6 +33,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **A component expands in the Storybook sidebar to one entry per view**, with React, Web components, API and Variants replacing the two rows of in-page tabs, plus a Testing entry per platform once a diff report exists
+
+- **Web Components no longer has a top-level Storybook section.** Each platform's docs page is an entry under the component it documents, so a workspace emitting both platforms lists each component once
+
 ### Fixed
 
 - **A variant that sets an aspect ratio now changes the element's shape.** The ratio was emitted alongside the width and height the default block fixed, which CSS ignores, so every ratio option rendered as the default.
@@ -48,6 +52,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`specs analyze keys` groups `byName` by name and cause**, so a name that folds in one component and stays flat in another gets a row for each rather than one row carrying whichever cause was reached first
 
 ### Removed
+
+- **A component's Storybook views no longer include Examples**
+
+- **`storybook/.storybook/ComponentDocs.tsx` is no longer part of the scaffold**, and nothing imports it; `specs storybook init --force` reports an existing copy as orphaned instead of deleting it, since the file is yours
 
 
 ## [0.36.0] - 2026-10-29

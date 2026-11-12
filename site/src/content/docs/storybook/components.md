@@ -1,39 +1,48 @@
 ---
 title: "Components"
-description: "One entry per component, with each platform you emit as a tab."
+description: "One sidebar entry per component, expanding to a view per platform and per spec document."
 ---
 
 The sidebar lists each component once, under **Components** — not once per
-framework. The component's name is the link; clicking it opens its docs page:
-a live example, a controls table generated from the component's props, and
-every emitted story.
+framework. The component's name is a folder, and it expands to one entry per
+view of that component.
 
-## The framework tabs
+## The views under a component
 
-At the top of a component's page — ordinary tabs inside the page, the same treatment the Analysis pages use:
-
-| Tab | Shows | Present when |
+| View | Shows | Present when |
 |---|---|---|
-| **React** | The React docs page — controls, stories | You ran `specs react` |
-| **Web Components** | The same component's Lit output, same stories | You ran `specs webcomponents` |
-| **Specs** | The authored spec itself — `api`, `variants`, `examples` — formatted | **Always** |
+| **React** | The React docs page — a live example, a controls table generated from the props, and every emitted story | You ran `specs react` |
+| **React — Testing (Fidelity)** | This component's variants diffed against its Figma exports | A fidelity report exists for React |
+| **React — Testing (Changes)** | The same variants diffed against the renders you last accepted | A regression report exists for React |
+| **Web components** | The same component's Lit output, same stories | You ran `specs webcomponents` |
+| **Web components — Testing (Fidelity)** | The Lit output diffed against the Figma exports | A fidelity report exists for Web Components |
+| **Web components — Testing (Changes)** | The Lit output diffed against the accepted renders | A regression report exists for Web Components |
+| **API** | The authored `api.yaml`, formatted | **Always** |
+| **Variants** | The authored `variants.yaml`, formatted | **Always** |
 
-The tab set follows from what your workspace actually contains. A platform you
-never emitted gets no tab, and the Specs tab is always there because it is the
-one view that doesn't depend on a transform having run. A workspace that emits
-nothing still has a complete, browsable component list — specs only.
+The set follows from what your workspace actually contains. A platform you never
+emitted contributes no views, and a Testing view appears only once a report
+exists for it to read — so a workspace that has never run a diff shows the four
+views it can answer. API and Variants are always there because they do not depend
+on a transform having run: a workspace that emits nothing still has a complete,
+browsable component list.
 
-The tabs appear on component pages and nowhere else; a Foundations page has no
-React/Web Components split, so it doesn't offer one.
+The Testing views show one component's variants in full. The pages under
+**Testing** in the sidebar do the opposite — they rank every component against
+every other.
+
+Only a component or a composition expands this way. A Foundations page has no
+platform split, so it has no views.
 
 ## Subcomponents
 
-A component with subcomponents (Alert with its Actions, say) appears as a small
-group: an **Overview** page for the component itself, and one entry per
-subcomponent beneath it.
+A component with subcomponents (Alert with its Actions, say) nests them: the
+component's own views sit directly under it, and each subcomponent is a folder
+beside them with views of its own.
 
 ## Stories on the docs page
 
-Every story down the page carries **Show code** and **Open full screen**. The
-stories themselves come from your specs — the examples and variants you
-authored — via `specs react` / `specs webcomponents`, not from this command.
+Every story down a platform's docs page carries **Show code** and **Open full
+screen**. The stories themselves come from your specs — the examples and
+variants you authored — via `specs react` / `specs webcomponents`, not from this
+command.
