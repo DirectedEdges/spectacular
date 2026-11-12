@@ -10,8 +10,41 @@ import type {
   Sides, Corners, ItemSpacing, LayoutMode, WrapAlignment,
   MainAxisAlignment, CrossAxisAlignment, Position, PositionOffset,
   StrokeDashPattern, TextAlignHorizontal, TextOverflow,
-  ContentStyles, TextContentStyles, GlyphContentStyles,
+  ContentStyles, TextContentStyles, GlyphContentStyles, UnitIntervalStyle,
 } from '../types/index.js';
+
+// ─── UnitIntervalStyle — opacity and cornerSmoothing ───────────────────────
+
+// The three arms: a number, a token reference, null
+const uiNumber: UnitIntervalStyle = 0.72;
+const uiZero: UnitIntervalStyle = 0;
+const uiOne: UnitIntervalStyle = 1;
+const uiToken: UnitIntervalStyle = { $token: 'Constants/Opacity/72', $type: 'number' };
+const uiNull: UnitIntervalStyle = null;
+
+// Both properties take it
+const opacityNumber: Styles = { opacity: 0.5 };
+const opacityToken: Styles = { opacity: { $token: 'Constants/Opacity/56', $type: 'number' } };
+const smoothingNumber: Styles = { cornerSmoothing: 0.6 };
+
+// The range itself is the schema's to enforce — TypeScript cannot express it, so an
+// out-of-range literal still compiles here and is rejected by `specs validate`.
+const uiOutOfRange: UnitIntervalStyle = 76;
+
+// A string is no longer assignable to either property. Both were typed as the
+// generic `Style` union before, which accepted this while the schema rejected it.
+// @ts-expect-error: a unit-interval style is never a string
+const _opacityString: Styles = { opacity: '0.5' };
+
+// @ts-expect-error: a unit-interval style is never a boolean
+const _opacityBoolean: Styles = { opacity: true };
+
+// @ts-expect-error: a unit-interval style is never a string
+const _smoothingString: Styles = { cornerSmoothing: 'squircle' };
+
+// Neither property is prop-bindable or conditional — the schema never admitted either
+// @ts-expect-error: a unit-interval style carries no prop binding
+const _opacityBound: Styles = { opacity: { $binding: '#/props/fade' } };
 
 // ─── ColorStyle ────────────────────────────────────────────────────────────
 

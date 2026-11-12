@@ -7,7 +7,7 @@ import { ImageValue } from "./Image.js";
 export type Styles = Partial<{
   rotation: Style;
   visible: boolean | TokenReference | PropBinding | Conditional;
-  opacity: Style;
+  opacity: UnitIntervalStyle;
   locked: boolean;
   backgroundColor: ColorStyle;
   /** Image fill painted on a layer. Present on container element types. Fallback representation used when no image component is configured. A `TokenReference` when the image fill comes from an applied Figma fill style (the style reference routes here — not to `backgroundColor` — when the styled paint is an image). Absent when there is no image fill. @since 0.28.0 */
@@ -77,7 +77,7 @@ export type Styles = Partial<{
   itemSpacing: Style | ItemSpacing;
   /** Padding. Scalar when uniform; `Sides` object when per-side values differ. @since 1.0.0 */
   padding: Style | Sides;
-  cornerSmoothing: Style;
+  cornerSmoothing: UnitIntervalStyle;
   aspectRatio: AspectRatioStyle;
 }>;
 
@@ -245,6 +245,21 @@ export type ColorString = string;
  * whose values are always colour-semantics and may carry gradient data.
  */
 export type ColorStyle = ColorString | ColorObject | TokenReference | GradientValue | null;
+
+/**
+ * A style value on the mathematical unit interval [0, 1].
+ * Mirrors `UnitIntervalStyleValue` in `schema/styles.schema.json`.
+ * Used for `opacity` and `cornerSmoothing` — the two properties whose literal is a
+ * fraction of a whole rather than a measurement.
+ *
+ * The bound belongs to the literal, and only the schema can state it: a
+ * {@link TokenReference} resolves on the token's own scale, which in a given library
+ * may run 0–100. So `0.72` and `{$token: 'Opacity/72'}` are both correct where the
+ * literal `72` is not.
+ *
+ * @since 0.40.0
+ */
+export type UnitIntervalStyle = number | TokenReference | null;
 
 /**
  * Inline typography properties grouped into a composite object.

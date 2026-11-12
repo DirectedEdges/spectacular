@@ -9,12 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking
 
+- `Styles.opacity` and `Styles.cornerSmoothing` — typed as `UnitIntervalStyle` (`number | TokenReference | null`), literal bounded to 0–1; a string, boolean, `PropBinding` or `Conditional` no longer compiles, and `opacity: 76` no longer validates (ADR-121)
 - `PlatformConventions.images.match` — a naming pattern over laid-out image assets, previously a component name (ADR-117)
 - `PlatformConventions.images.component` — this platform's own name for the designated image component (ADR-117)
 
 ### Added
 
 - **Role concept dispositions in the platform bindings** — `mappings/bindings/react.json` and `webcomponents.json` gain a `concepts.roles` block: every vocabulary concept with `disposition: implemented | inert` and, for implemented ones, the realising module. Closes the one key class where the bindings' "does platform X realise this?" promise broke — the fact previously lived only in the emitters' own registries, which nothing downstream may read
+- `UnitIntervalStyle` — a style value on the unit interval [0, 1]; the bound is the schema's, since a `TokenReference` resolves on the token's own scale (ADR-121)
+- `UnitInterval` — the bounded number as its own schema definition, so the constraint has one home (ADR-121)
 - `SupplementalDocument` — the `supplemental.yaml` contract: what a component needs beyond the spec, for whoever builds it (ADR-118)
 - `GuidelinesDocument` — the `guidelines.yaml` contract: the rules whoever uses a component or foundation must observe (ADR-118)
 - `SupplementalEntry` — carries `intent`, a required `SchemaGap`, optional `platforms`, `checkedBy` and `checks`
@@ -76,6 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Migration
 
 - `images.match` → `images.component`: move a designated image component's name to `component`, and read `match` as a `{i}` naming pattern for the images a library lays out on a page. A declaration left on `match` fails validation, since the block admits no additional properties
+- `Styles.opacity`, `Styles.cornerSmoothing`: write the literal on the 0–1 scale, or bind a token and let it resolve on its own scale. A percentage written as a whole number — `opacity: 76` — now fails validation instead of failing at the canvas write; use `0.76`, or the token whose rung matches
 
 
 ## [0.39.0] - 2026-10-29

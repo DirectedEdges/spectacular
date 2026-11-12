@@ -29,6 +29,7 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
+| 121 | A Unit-Interval Style Type for `opacity` and `cornerSmoothing` | `UnitIntervalStyle` over a `UnitInterval` primitive; the bound is on the literal, since a token resolves on its own scale — often 0–100 |
 | 118 | Two Authored Documents Beside a Spec — `supplemental.yaml` for Builders, `guidelines.yaml` for Consumers | Two hand-authored documents carrying `meta` rather than Figma provenance; guidelines entries are DSDS 0.23.1 items; each schema self-contained |
 | 117 | A Library's Images Are Assets It Lays Out, Named by a Pattern | `images.match` becomes a `{i}` naming pattern over laid-out image assets; `images.component` alone names the designated image component |
 | 116 | Nested style members declare their own defaults | 23 of 30 optional composite members declare a `default`; required members declare none; `lineHeight` settles on `'AUTO'` |
