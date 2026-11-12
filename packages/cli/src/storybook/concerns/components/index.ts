@@ -19,10 +19,21 @@ import { readTemplate, renderTemplate } from '../../templates.js';
 import { reportNameFor } from '../../../testing/visual/types.js';
 import { PLATFORM_LEAVES, specDisplayName, specNavFolder } from './navTitle.js';
 
-/** A spec document published as its own view. `examples` is deliberately not one. */
+/**
+ * A spec document published as its own view. `examples` is deliberately not one.
+ *
+ * `api` and `variants` every run generates, so their view is always there and an
+ * absent file is a defect worth saying so about. `supplemental` and `guidelines`
+ * are authored by hand (ADR-118) — supplemental for whoever builds the
+ * component, guidelines for whoever uses it — and most components have neither,
+ * so those views appear only where the document does. A view that exists only to
+ * report its own emptiness is noise on every component in the catalogue.
+ */
 const SPEC_VIEWS = [
-  { leaf: 'API', concern: 'api' },
-  { leaf: 'Variants', concern: 'variants' },
+  { leaf: 'API', concern: 'api', always: true },
+  { leaf: 'Variants', concern: 'variants', always: true },
+  { leaf: 'Supplemental', concern: 'supplemental', always: false },
+  { leaf: 'Guidelines', concern: 'guidelines', always: false },
 ] as const;
 
 /** The folder the per-component diff pages sit in, below the views themselves. */
@@ -227,18 +238,26 @@ function readSpecDoc(folder: string, concern: string): Record<string, unknown> |
 }
 
 /** Every spec in the workspace, with the sidebar folder its views sit in. */
-function specFolders(ws: Workspace): Array<{ kind: SpecKind; key: string; navFolder: string }> {
+function specFolders(
+  ws: Workspace,
+): Array<{ kind: SpecKind; key: string; navFolder: string; folder: string }> {
   const layout = resolveSpecsLayout(ws.specsDir);
-  const out: Array<{ kind: SpecKind; key: string; navFolder: string }> = [];
+  const out: Array<{ kind: SpecKind; key: string; navFolder: string; folder: string }> = [];
   for (const kind of SPEC_KINDS) {
     const keys = kind === 'component' ? ws.componentKeys : ws.compositionKeys;
     for (const key of keys) {
-      const api = readSpecDoc(layout.folderFor(kind, key), 'api');
+      const folder = layout.folderFor(kind, key);
+      const api = readSpecDoc(folder, 'api');
       const title = typeof api?.title === 'string' ? api.title : undefined;
-      out.push({ kind, key, navFolder: specNavFolder(kind, key, title) });
+      out.push({ kind, key, navFolder: specNavFolder(kind, key, title), folder });
     }
   }
   return out;
+}
+
+/** Whether a spec folder holds one concern document, in any format it may take. */
+function hasSpecDoc(folder: string, concern: string): boolean {
+  return ['yaml', 'yml', 'json'].some((ext) => fs.existsSync(path.join(folder, `${concern}.${ext}`)));
 }
 
 /**
@@ -301,6 +320,7 @@ function viewPages(ws: Workspace): BuiltFile[] {
     const displayName = specDisplayName(spec.navFolder);
 
     for (const view of SPEC_VIEWS) {
+      if (!view.always && !hasSpecDoc(spec.folder, view.concern)) continue;
       files.push({
         path: path.join(dir, `${view.leaf}.stories.tsx`),
         content: renderTemplate(specTemplate, {

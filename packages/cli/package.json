@@ -21,9 +21,11 @@
   },
   "dependencies": {
     "@directededges/react-from-specs": "^0.6.0",
+    "@directededges/specs-from-figma": "file:../../../specs-transforms/packages/specs-from-figma",
+    "@directededges/specs-schema": "file:../../../spectacular/packages/schema",
     "@directededges/webcomponents-from-specs": "^0.6.0",
-    "@directededges/specs-schema": "^0.39.0",
-    "@directededges/specs-from-figma": "^0.38.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "commander": "^11.1.0",
     "fs-extra": "^11.2.0",
     "tslib": "^2.6.2",

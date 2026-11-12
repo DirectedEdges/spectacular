@@ -4,7 +4,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { parse } from 'yaml';
 import {
-  refreshCache, validateCache, readCacheFile, cachePath, describeProblems,
+  refreshCache, validateCache, readCacheFile, cachePath, describeProblems, recordRenderedComponent,
   type ComponentsEntry, type StylesEntry, type VariablesEntry, type IconsEntry, type ImagesEntry,
 } from '../../../src/cache/cache.js';
 
@@ -442,6 +442,74 @@ describe('Cache', () => {
       const report = build();
       expect(report.failures).toEqual([]);
       expect(report.aliasCounts.library).toEqual({ components: 3, styles: 3, variables: 2, icons: 1, images: 0 });
+    });
+  });
+
+  describe('a render recording its own output', () => {
+    // Render creates a node the workspace now owns, and nothing else knows it exists.
+    // Until it is recorded, a second spec instancing the first resolves nothing and its
+    // instance is dropped — and the only way to make the first placeable was to capture
+    // the file back, which is the round trip that overwrites authored work.
+    const record = (overrides: Partial<{ nodeId: string; name: string; fileKey: string }> = {}) =>
+      recordRenderedComponent({
+        dataDir, alias: 'library',
+        nodeId: '84021:19488', name: 'egdsLink', fileKey: 'abc123',
+        ...overrides,
+      });
+
+    it('writes an entry with no published key', () => {
+      build();
+      record();
+      const cache = readCacheFile<ComponentsEntry>(dataDir, 'components')!;
+      expect(cache.entries['84021:19488']).toEqual({ name: 'egdsLink', file: 'library', fileKey: 'abc123' });
+    });
+
+    it('keeps the fetched entries beside it', () => {
+      build();
+      record();
+      const cache = readCacheFile<ComponentsEntry>(dataDir, 'components')!;
+      expect(cache.entries['1:1']).toBeDefined();
+      expect(Object.keys(cache.entries)).toHaveLength(4);
+    });
+
+    it('occupies its own partition, so neither producer overwrites the other', () => {
+      build();
+      record();
+      const cache = readCacheFile<ComponentsEntry>(dataDir, 'components')!;
+      expect(Object.keys(cache.sources).sort()).toEqual(['library', 'library:rendered']);
+    });
+
+    it('is never judged stale, having no payload behind it', () => {
+      // validateCache walks payload-derived keys only, so an unbacked partition cannot
+      // make a cache look stale — there is no file to stat.
+      build();
+      record();
+      expect(validateCache({ dataDir, aliases: ['library'], glyphs: { match: PATTERN } })).toEqual([]);
+    });
+
+    it('records into a cache that does not exist yet', () => {
+      record();
+      const cache = readCacheFile<ComponentsEntry>(dataDir, 'components')!;
+      expect(cache.entries['84021:19488'].name).toBe('egdsLink');
+    });
+
+    it('a later render of the same component replaces its entry', () => {
+      record();
+      record({ fileKey: 'def456' });
+      const cache = readCacheFile<ComponentsEntry>(dataDir, 'components')!;
+      expect(cache.entries['84021:19488'].fileKey).toBe('def456');
+    });
+
+    it('a fetch rebuild drops it, because the payload is the authority', () => {
+      // The self-healing property: a rendered row either reappears in the new payload
+      // because the node is really there, or disappears because it is not. Nothing to
+      // reconcile, and no staleness anyone has to model.
+      build();
+      record();
+      build(['library'], true);
+      const cache = readCacheFile<ComponentsEntry>(dataDir, 'components')!;
+      expect(cache.entries['84021:19488']).toBeUndefined();
+      expect(cache.entries['1:1']).toBeDefined();
     });
   });
 });

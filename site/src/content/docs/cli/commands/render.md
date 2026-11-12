@@ -167,7 +167,21 @@ The node id is the component that was created or updated — open it directly at
 
 An instance element that can't be resolved is content the component was supposed to contain, so this is called out as a count rather than left to a per-element warning that scrolls past in a batch. It's still a success — the component exists — unless you pass [`--strict`](#--strict).
 
-The usual cause is a cache that doesn't know the referenced component: run [`specs fetch`](/cli/commands/fetch/) to refresh it.
+The cause is a cache that doesn't know the referenced component. For a library component, refresh it with [`specs fetch`](/cli/commands/fetch/). For a component this workspace authored, render that component once — a render records itself, and the record is what makes it placeable.
+
+### What a render records
+
+A successful render writes the node it produced into the components cache, so the next render can place it. Two authored components can then reference each other with no fetch, no scan and no generate — the round trip that overwrites authored specs.
+
+The entry carries the node id, the spec key, and the Figma file the node lives in. It carries **no published key**, because a component you rendered isn't published: enough to place it in the same file, not enough to import it elsewhere. Render into a second file and the record names that file instead, so a reference the current file can't reach reports itself as incomplete rather than resolving to the wrong node.
+
+Recording is best-effort. If it fails, the render still succeeded and says so:
+
+```
+  ⚠ Rendered, but could not record it for reuse: <reason>
+```
+
+The cost of a miss is the next render not finding this component, which surfaces as an incomplete render rather than as silence. See [`cache`](/cli/commands/cache/#what-a-render-adds) for where the entry lives and how a fetch repairs it.
 
 ### A batch
 

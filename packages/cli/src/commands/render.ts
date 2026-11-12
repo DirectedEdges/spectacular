@@ -16,7 +16,7 @@ import { postRender, getBridgeStatus, type RenderResponse } from '../bridge/clie
 import { resolveFileKey } from '../bridge/pickConnection.js';
 import { findComponentFolders, isComponentFolder, loadSpec } from '../render/SpecLoader.js';
 import { startSpinner } from '../utilities/spinner.js';
-import { refreshCache } from '../cache/cache.js';
+import { refreshCache, recordRenderedComponent } from '../cache/cache.js';
 import { reportCache } from '../cache/report.js';
 import { figmaOf } from '../config/PlatformConventions.js';
 import { loadDevStatusByNodeId, devStatusForSpec, type WritableDevStatus } from '../render/manifestDevStatus.js';
@@ -317,6 +317,38 @@ async function renderSpecPath(
     }
   }
 
+  // The node this render produced is now something the workspace can place, and nothing
+  // else knows it exists — so record it where render resolves references from. Without
+  // this, a second spec instancing this one resolves nothing and its instance is dropped,
+  // and the only way to make this component placeable is to capture the file back.
+  //
+  // The entry's name is the spec key, which is already in the configured key format, so
+  // formatting it again is identity — the same reading ADR-066 gives a name that arrived
+  // pre-formatted. Recorded under the workspace's first source alias, which owns the
+  // partition; `fileKey` is the Figma file the node actually lives in.
+  // The file key comes from the result, not from `--file`: a non-interactive run passes
+  // none and lets the bridge pick the connection, so the local value is undefined exactly
+  // when an agent is driving — which is most of the time.
+  const renderedIn = result.fileKey ?? fileKey;
+  const renderDataDir = options.workspaceSettings?.data?.directory;
+  const renderAlias = Object.keys(options.workspaceSettings?.data?.sources ?? {})[0];
+  if (renderDataDir && renderAlias && result.nodeId && renderedIn) {
+    try {
+      recordRenderedComponent({
+        dataDir: renderDataDir,
+        alias: renderAlias,
+        nodeId: result.nodeId,
+        name,
+        fileKey: renderedIn,
+      });
+    } catch (e) {
+      // The render succeeded; failing to record it must not turn that into an error. The
+      // cost of a miss is the next render not finding this component, which reports
+      // itself as an incomplete render rather than as silence.
+      console.warn(`  ⚠ Rendered, but could not record it for reuse: ${(e as Error).message}`);
+    }
+  }
+
   // Matches the shape fetch sets for per-item work: `✓ Verb: subject (detail)`.
   console.log(`✓ Rendered: ${name} (${(elapsed / 1000).toFixed(1)}s, nodeId: ${result.nodeId})`);
   if (options.timing) printTimingReport(result, elapsed);
@@ -469,12 +501,52 @@ async function watchAndRender(
     targets: [watchTarget],
     debounceMs: WATCH_DEBOUNCE_MS,
     runOnStart: true,
-    run: async () => {
-      if (isBatchDir) {
-        await renderBatchDirectory(absSpecPath, watchOptions, { watch: true });
-      } else {
+    // Only a concern file is an authored change worth a round trip to the
+    // canvas. Analysis byproducts live inside the watched tree (`styling.yaml`
+    // beside each spec, reports under `analysis/`), and firing on them meant
+    // every `specs analyze` pass re-rendered the whole catalogue onto whatever
+    // page the plugin happened to be on.
+    filter: (filename) =>
+      /^(api|variants|examples|supplemental)\.ya?ml$/.test(path.basename(filename))
+      && !filename.split(path.sep).includes('analysis'),
+    run: async (changed) => {
+      if (!isBatchDir) {
         await renderSpecPath(absSpecPath, watchOptions);
+        return;
+      }
+      // A directory watch renders exactly the specs whose files changed — never
+      // the catalogue. The start-up run arrives with nothing changed and renders
+      // nothing: a watch means "re-render on change", and sweeping every
+      // component onto the plugin's current page at posture start was the other
+      // half of the duplicate-components problem.
+      const folders = changedComponentFolders(changed, absSpecPath);
+      if (folders.length === 0) {
+        if (changed.length === 0) console.log('Watching — no render until a spec changes.');
+        return;
+      }
+      for (const folder of folders) {
+        await renderSpecPath(folder, watchOptions);
       }
     },
   });
+}
+
+/**
+ * The component folders the changed files belong to — each changed path climbs
+ * to its nearest ancestor that is a spec folder, deduplicated. A path with no
+ * spec-folder ancestor (a root-level file, a report) maps to nothing.
+ */
+export function changedComponentFolders(changed: string[], watchRoot: string): string[] {
+  const folders = new Set<string>();
+  for (const rel of changed) {
+    let dir = path.dirname(path.resolve(watchRoot, rel));
+    while (dir.startsWith(watchRoot) && dir !== watchRoot) {
+      if (isComponentFolder(dir)) {
+        folders.add(dir);
+        break;
+      }
+      dir = path.dirname(dir);
+    }
+  }
+  return [...folders].sort();
 }

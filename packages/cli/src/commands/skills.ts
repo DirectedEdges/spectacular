@@ -24,7 +24,13 @@ const install = new Command('install')
         const dir = path.join(target, skill.name);
         fs.mkdirSync(dir, { recursive: true });
         fs.writeFileSync(path.join(dir, 'SKILL.md'), skill.markdown);
-        console.log(`✓ ${path.join(dir, 'SKILL.md')}`);
+        for (const file of skill.files ?? []) {
+          const filePath = path.join(dir, file.path);
+          fs.mkdirSync(path.dirname(filePath), { recursive: true });
+          fs.writeFileSync(filePath, file.content);
+        }
+        const extras = skill.files?.length ? ` (+${skill.files.length} files)` : '';
+        console.log(`✓ ${path.join(dir, 'SKILL.md')}${extras}`);
       }
       console.log(`${SKILL_ASSETS.length} skills installed (canonical — refresh overwrites them).`);
     } catch (e) {

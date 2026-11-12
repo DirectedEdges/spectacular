@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.37.0] - Unreleased
 
+### Breaking
+
+- **The designated image component is declared on `images.component`, not `images.match`** (ADR-117). Move the component's name to `component`; `match` now takes a `{i}` naming pattern for laid-out image assets, and a `match` without `{i}` is reported and ignored
+
 ### Added
+
+- `specs analyze foundations` — the workspace's token language as one authoring-facing manifest (`analysis/foundations.yaml`): variables and named styles consolidated as ready-to-paste `{$token, $type}` objects carrying names only (alias targets by name, descriptions where the library wrote one, platform code-name presence — never resolved values), plus every icon glyph with its formatted key spelling beside the raw name. Each variable also carries its default-mode `defaultValue` (alias chains resolved, colors as hex) — for understanding a token, never for authoring. Reads the fetched data, not the catalogue, so it runs on a workspace with zero specs (#881)
 
 - **An element annotated `role: image` emits a real image element**, with its fill carried on `src` and its fit stated as `object-fit` instead of painted as a background.
 
@@ -27,13 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`specs render --grid` arranges the rendered components into a 4:3 block instead of a row running off the canvas.** Each render lands 100px to the right of whatever is already on the page, so rendering a catalogue walked the output into one very wide row that no zoom-to-fit could show usefully. With the flag, everything `render` has placed on that page is laid into rows 100px apart in canvas order — the block at least as wide as 4:3 and never taller — after each component lands, so a single render, a `--watch` rebuild and a full catalogue all end in the same correct arrangement. Only nodes `render` created are moved; anything else on the page keeps its position and the block anchors clear of it, and the components stay direct children of the canvas rather than being gathered into a frame. Off by default.
 
-### Breaking
-
-- **The designated image component is declared on `images.component`, not `images.match`** (ADR-117). Move the component's name to `component`; `match` now takes a `{i}` naming pattern for laid-out image assets, and a `match` without `{i}` is reported and ignored
-
 ### Changed
 
-- **A component expands in the Storybook sidebar to one entry per view**, with React, Web component, API and Variants replacing the two rows of in-page tabs, plus a Testing entry per platform once a diff report exists
+- Authoring rules and `component.author` sharpened from the first eg marathon round: prop-shaped requirements (semantic tag, accessibility label) route to **code-only props**, never hand-authored platform files, with closed vocabularies as enums; code-only container and sub-layer names are config lookups (`figma.yaml` `codeOnlyProps.match` + `naming`), not judgment; `default` vs `examples` purposes stated (Figma renders `examples`; `default` is encoded in the component); FILL on a component root documented as consumer-context intent (captured via the `sizingHorizontal`/`sizingVertical` Dev Mode annotations); conventions lead the correlation step; a foundations-guideline-shaped guess may be drafted via `guidelines.propose` in the same pass
+
+- **A component expands in the Storybook sidebar to one entry per view**, with React, Web component, API and Variants replacing the two rows of in-page tabs, plus Supplemental and Guidelines where those documents exist and a Testing entry per platform once a diff report exists
 
 - **Web Components no longer has a top-level Storybook section.** Each platform's docs page is an entry under the component it documents, so a workspace emitting both platforms lists each component once
 
@@ -41,7 +45,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **A component's visual diffs sit in a Testing folder under it**, as `React Fidelity`, `React Changes` and the Web Component pair, and a page publishes only when that component has results in the report — where every component used to get a page and most of them said it had none
 
+- **`supplemental.yaml` and `guidelines.yaml` are sidebar views under the component**, below API and Variants, and only for a component that has the document
+
 ### Fixed
+
+- **The stylesheet now states a slot's `contentStyles` for component-admitting slots too — glyph rules included.** The emitters stamp primitive fills with `data-content="text"` / `data-content="glyph"` markers a composed component's root never carries, so the CSS transform's withholding gates are gone: glyph box/tint rules emit for every slot, and a mixed slot's box-level text properties (truncation, line-clamp) land on the text fill's own marker instead of being dropped. Pairs with the emitters ceasing to inline any governed formatting — the badge's label and icon now recolor per variant from the sheet, for stories and consumer fills alike
+
+- **The posture no longer includes a render watch.** A render per save on a many-variant component cannot finish before the next save triggers the next render, and the loop breaks Figma. `specs-cli.posture` brings up `specs run` alone; `component.author` renders once per component (`specs render specs/components/<key> --overwrite`) after `api`, `variants`, and `examples` validate
+
+- `specs skills install` now ships `templates/guidelines.yaml` with the component-author skill — the skill's step 8 referenced it, the file existed in source, and the installer never emitted it
+- The images-convention migration warning (`images.match` without `{i}`, ADR-117) no longer prints on every command — it is deferred at config load and surfaces where the convention is consumed (`specs fetch`), so a declared-but-unused convention stays quiet on validate and analyze
+- **Storybook shows components emitted after the server started.** The scaffold's story globs were guarded by `fs.existsSync` on the platform trees, so a server that booted before the first emit silently never registered any component — `storybook publish` reported current and validation passed while the sidebar stayed empty. The globs are now unconditional and `specs storybook init` creates the platform story directories so they are valid at boot. Re-run `specs storybook init --force` in an existing workspace to pick up the new `main.ts`
+
+- `specs validate` no longer prints "unknown format" lines — the schemas' standard formats (`date-time`, `uri`) are now registered via `ajv-formats` and actually validate, instead of being ignored with a warning on every compile (~30 lines per run)
+
+- The unreachable-authored-file warning names the platform file it is about, as a workspace-relative path, instead of attributing it to `supplemental.yaml /checks` — a location that was fabricated when no supplemental file existed. It also no longer fires on generated files: `metadata.ts` joined the emitters' output after the validator's roster was written, and any file stamped with the emitters' "Generated. Do not edit" header is now recognized regardless of the roster
+
+- `--authored` no longer reports the missing `metadata.source` it exists to forgive — three guaranteed warnings per spec on every clean run trained sessions to filter warnings, which is how a real one gets lost. The durable fix is authored provenance (ADR-106, #873); this removes the noise until it lands
+
+- `analysis/foundations.yaml` lists each variable collection's modes — the library's theming axes, previously discoverable only by accident in emitted CSS
+
+- `specs validate` reports what each used dimension token resolves to in the default mode (`strokeWeight: …/2x → 16`) — a multiplier name read as pixels shipped a 16px outline with 0 errors. Orientation only: values are themed, and nothing passes or fails on them
+
+- `specs validate` warns when an authored platform file sits beside the scaffold that no supplemental entry mentions — the emitters load an authored `component.*` only when `platforms.<tree>` names it, so an unmentioned file is dead while everything reports clean
+
+- `specs validate` resolves image pointers against the spec's own `images` registry — a dangling `#/images/<key>`, or a file-qualified spelling the schema doesn't define, previously shipped a grey image with 0 errors
+
+- `specs validate` checks `instanceExamples` configurations against the contract — declared props, boolean types, enum membership — exactly as it already checked a variant's `configuration`. Unchecked, a stale example (`size: Large` after the enum dropped it) validated clean and reached Storybook as a silently wrong story
+
+- `specs render --watch` over a directory re-renders **only the specs whose files changed** — it previously re-rendered the whole catalogue on every event, onto whatever page the plugin had open. The start-up pass now renders nothing (a watch means re-render *on change*), and only concern-file events trigger at all, so `specs analyze` writing its reports no longer causes renders (#884)
 
 - **A variant that sets an aspect ratio now changes the element's shape.** The ratio was emitted alongside the width and height the default block fixed, which CSS ignores, so every ratio option rendered as the default.
 

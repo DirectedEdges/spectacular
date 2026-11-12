@@ -1,0 +1,48 @@
+# Judgment rules for api.yaml anatomy.* — keys mirror the schema node they govern.
+# useWhen: ordered, evaluate top to bottom, first match wins. guidelines: modality-keyed
+# items — must/never hard, should/avoid strong convention, could/warn judgment.
+# adr: the decision an item projects.
+type:
+  useWhen:
+    instance: a component already expresses it
+    text: a text run
+    glyph: a named icon
+    slot: a region consumers fill
+    container: carries any block styling or layout role
+    vector: literal vector artwork, none of the above
+    rectangle|ellipse|line|polygon|star: literal vector geometry only
+  guidelines:
+    - must: "in compositions, instanceExamples, and slot content, author a primitive the library's promotion map covers as that component instance, configured by its mapped props (`config/conventions/<platform>.primitives.yaml`)"
+      never: "author a styled primitive in composed content where a promoted component exists (a `text` card title where a heading component is mapped)"
+      note: "no promotion map in the workspace → primitives govern composed content too; this rule is inert, not implied"
+      adr: [74, 75]
+    - should: "author the primitive and note the gap when the map names a target that has no spec folder yet — a growing catalogue declares its roster before authoring it, and the rule binds only once the target's spec exists"
+    - could: "keep a primitive where the slot's own `contentStyles` must format it — a component fill discards `contentStyles` (the schema says so at `Element.contentStyles`), so promoting would defeat the formatting the slot declares"
+    - should: "inside a smaller atomic component, favor primitive `text` and `container` elements for its own anatomy — the promotion map governs composed content, not a component's internals (a badge's label is `text`, not `acmeText`)"
+    - must: "model a styled block as a `container` (`notch: container; 12x12; rotation 45; position ABSOLUTE; bottom -6; parent clipsContent: false`)"
+      never: "use a shape primitive for anything carrying style — background, radius, padding, offsets (`rectangle` as a notch)"
+extensions:
+  guidelines:
+    - must: "give a collapsed primitive its Figma layer identity — when the primitive IS the component root (a glyph or text with no wrapper, per ADR-058), author `$extensions: {com.figma: {name: <layer name>}}` on that anatomy element; without it the renderer names and binds the layer from the raw spec key"
+      adr: 58
+instanceOf:
+  guidelines:
+    - must: "reference a subcomponent as `{$ref: \"#/subcomponents/<key>\"}` — the pointer is internal, always within the same document"
+      adr: [30, 94]
+    - must: "spell `instanceOf` as the target's generated component key — grep existing `instanceOf` values or the target's own anatomy references; the folder name is the lowercased form, never the authority (`radioGroupItem`, folder `radiogroupitem`)"
+    - should: "decompose a fixed-anatomy wrapper into its parts when the content needs more repetition than the wrapper's anatomy holds (a three-link trail from `breadcrumbLink` ×2 + `breadcrumbSeparator` ×2 + `breadcrumbCurrent`, not one `breadcrumb` whose api is `props: {}`)"
+role:
+  guidelines:
+    - must: "give an element at most one `role` — the control or part it *is*; what it *does* goes in `actions`"
+      adr: [67, 87]
+    - should: "name part roles bare and scoped by position (`placeholder`, never `inputPlaceholder`)"
+      adr: 104
+elements:
+  guidelines:
+    - never: "author a plain container wrapping a single text or glyph — the primitive is the element (generation collapses such wrappers)"
+      adr: 58
+    - never: "author a container whose only child is a slot — the slot is the content area"
+      adr: 83
+      note: "the sanctioned shape: the root *is* the collapsed primitive — `root: {type: slot}` for a slot-only component, exactly as a text- or glyph-only component's root is the text or glyph element"
+    - never: "bind the root element's `visible` to a prop — whether the component exists at all is the consumer's decision, taken at the call site"
+      note: "a tooltip does not decide whether it is on screen; the thing that opens it does, as `{open && <Tooltip/>}`. The root *is* the instance, so hiding it is hiding the instance — which belongs to whatever placed it. `visible` on a child element is the normal case and stays: 73 of them across the reference catalogue, and not one on a root."

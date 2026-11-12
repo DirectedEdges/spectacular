@@ -65,7 +65,16 @@ export function init(ws: Workspace, options: InitOptions): InitResult {
   }
 
   const workspaceName = path.basename(ws.root);
+  // The import ships live against a stub stylesheet the first publish
+  // overwrites. The old commented-out import waited on a human to notice the
+  // "uncomment after first emit" moment; nobody did, every token-driven
+  // declaration was an invalid var() (CSS drops the declaration), and a fresh
+  // workspace's first components rendered as 0×0 transparent boxes.
   const cssvarsPath = path.join(ws.assetsDir, 'cssvars', 'cssvars.css');
+  if (!fs.existsSync(cssvarsPath)) {
+    fs.ensureDirSync(path.dirname(cssvarsPath));
+    fs.writeFileSync(cssvarsPath, '/* Placeholder written by `specs storybook init` — the first `specs react` or `specs webcomponents` publish overwrites it. */\n');
+  }
   // The port is resolved, not defaulted: a `--force` that defaulted the flag
   // to 6006 rewrote the npm script and moved an already-running workspace off
   // its own address — including for the screenshot runner, which reads the
@@ -77,11 +86,7 @@ export function init(ws: Workspace, options: InitOptions): InitResult {
     PORT: String(resolvedPort.port),
     STORYBOOK_VERSION,
     STORYBOOK_MAJOR,
-    // Only asset kinds present produce config entries (specs#610): a workspace
-    // that never emitted a platform gets the import commented, not broken.
-    CSSVARS_IMPORT: fs.existsSync(cssvarsPath)
-      ? "import '../../assets/cssvars/cssvars.css';"
-      : "// No generated stylesheet yet — after `specs react` or `specs webcomponents`, uncomment:\n// import '../../assets/cssvars/cssvars.css';",
+    CSSVARS_IMPORT: "import '../../assets/cssvars/cssvars.css';",
   };
 
   const written: string[] = [];
@@ -112,6 +117,14 @@ export function init(ws: Workspace, options: InitOptions): InitResult {
 
   // The override tree: the customer's, from the start. No command writes into it.
   fs.ensureDirSync(path.join(ws.storybookDir, 'content-overrides'));
+
+  // The platform story trees main.ts globs over, before anything is emitted.
+  // The globs are unconditional so a server started before the first emit still
+  // picks the stories up when they appear; that only works if the directories
+  // exist when the server boots.
+  for (const dir of ['react/src/components', 'react/src/compositions', 'webcomponents/src/components', 'webcomponents/src/compositions']) {
+    fs.ensureDirSync(path.join(ws.root, dir));
+  }
 
   // Seed modes.json: the scaffolded preview imports it at build time, so it must
   // exist before the first publish. Publish rewrites it from the same derivation.

@@ -1,0 +1,17 @@
+# Judgment rules for variants.yaml — the default baseline and the layered deltas.
+defaultBaseline:
+  guidelines:
+    - should: "describe every element the anatomy declares in `default.elements` — an element declared but left out of `default` is legal and validates clean, and is still poor practice: the baseline is where a reader learns what the element is, and a variant that is the element's first mention reads as a delta from nothing"
+layering:
+  guidelines:
+    - must: "author each variant as only its diff from `default` — the resolved state is every matching variant layered onto the default in order"
+      should: "omit a variant whose diff is empty"
+      adr: 34
+    - never: "write two style keys that compete for the same outcome within one variant or within `default` — state one. Across variants it is fine: matching variants layer, and the resolution is the renderer's own styles mechanics, not something to restate here"
+content:
+  guidelines:
+    - must: "spell a glyph name — in `content`, a bound prop's `default`, and its `examples` — in the workspace's formatted key spelling (`info`, `caretRight`), never the raw icon cache name (`Info`, `Caret Right`); the renderer matches content against cache names run through `format.keys`, and a raw spelling matches nothing"
+configuration:
+  guidelines:
+    - warn: "an absent prop key inherits; a `null` value overrides with unset — different statements, not interchangeable"
+      adr: 80

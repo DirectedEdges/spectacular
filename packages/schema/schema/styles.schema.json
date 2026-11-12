@@ -22,7 +22,7 @@
           "default": true
         },
         "opacity": {
-          "$ref": "#/definitions/NumberStyleValue",
+          "$ref": "#/definitions/UnitIntervalStyleValue",
           "description": "How opaque the element and its contents are, from fully transparent to fully opaque.",
           "default": 1,
           "examples": [0.5, 0]
@@ -136,7 +136,7 @@
         },
         "position": {
           "$ref": "#/definitions/PositionStyleValue",
-          "description": "Whether the element is placed by its parent's layout or by its own offsets. Present whenever any positioning offset is.",
+          "description": "Whether the element is placed by its parent's layout or by its own offsets — `top`, `start`, `end`, `bottom`, and the centre offsets, which `ABSOLUTE` makes meaningful. Present whenever any positioning offset is.",
           "default": "AUTO",
           "examples": ["ABSOLUTE"]
         },
@@ -144,7 +144,7 @@
           "$ref": "#/definitions/PositionOffset",
           "description": "Distance from the parent's top edge, when the element is positioned against it.",
           "default": null,
-          "examples": ["10%"]
+          "examples": ["10%", 0]
         },
         "bottom": {
           "$ref": "#/definitions/PositionOffset",
@@ -156,7 +156,7 @@
           "$ref": "#/definitions/PositionOffset",
           "description": "Distance from the parent's start edge, when the element is positioned against it (ADR-041).",
           "default": null,
-          "examples": ["5%"]
+          "examples": ["5%", 0]
         },
         "end": {
           "$ref": "#/definitions/PositionOffset",
@@ -304,7 +304,7 @@
           "examples": [{ "top": 8, "end": 16, "bottom": 8, "start": 16 }]
         },
         "cornerSmoothing": {
-          "$ref": "#/definitions/NumberStyleValue",
+          "$ref": "#/definitions/UnitIntervalStyleValue",
           "description": "How far a rounded corner departs from a circular arc toward a squircle.",
           "default": 0,
           "examples": [0.6, 1]
@@ -363,7 +363,7 @@
     },
     "ContentStyles": {
       "type": "object",
-      "description": "The styles applied to primitive content filling an element, as distinct from Styles, which are the element's own. Keyed by primitive, using the same reserved markers SlotProp.anyOf carries, because a slot's default content may hold more than one kind — a glyph and a label — and each kind is formatted by a disjoint property set. On a slot element each entry is captured from the first top-level primitive of that kind in the slot's default content, per variant, and is overridden per variant through variants[].elements exactly as styles is. A component fill is formatted by the component it instantiates, so a consumer rendering one applies styles and discards contentStyles. Meaningful only on a slot element, and its keys should agree with that slot's anyOf markers — both authoring/generator contracts, neither schema-enforced. (ADR-102)",
+      "description": "Formatting for a slot's primitive content, keyed by kind ($text, $glyph) because one fill may hold both and each kind takes a disjoint property set. Captured per variant from the first top-level primitive of each kind in the default fill, and overridden per variant through variants[].elements exactly as styles is. Authoring direction, same contract: a primitive must sit top-level in the fill for contentStyles to reach it. Applies to primitive content only: a component fill is formatted by the component it instantiates, so a consumer applies its styles and discards contentStyles. Independent of the slot's anyOf. (ADR-102)",
       "examples": [{ "$text": { "typography": { "fontFamily": "Inter", "fontSize": 14 } } }],
       "properties": {
         "$text": {
@@ -415,6 +415,28 @@
       "oneOf": [
         {
           "type": "number"
+        },
+        {
+          "$ref": "#/definitions/TokenReference"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "UnitInterval": {
+      "description": "A number on the mathematical unit interval [0, 1], inclusive at both ends.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "examples": [0.5, 0, 1]
+    },
+    "UnitIntervalStyleValue": {
+      "examples": [0.5, 0],
+      "description": "A unit-interval number, a token reference, or null. The bound applies to the literal only — a token reference resolves on the token's own scale, which in a given library may run 0–100, so 0.72 and {\"$token\": \"Opacity/72\"} are both correct where the literal 72 is not.",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/UnitInterval"
         },
         {
           "$ref": "#/definitions/TokenReference"
@@ -1287,8 +1309,8 @@
       "examples": ["mixed"]
     },
     "PositionOffset": {
-      "description": "Positional offset value. Pixel number, percentage string (SCALE constraint), or null. Not token-bindable.",
-      "examples": ["10%"],
+      "description": "Positional offset value. Pixel number, percentage string (SCALE constraint), or null. Not token-bindable. Offsets combine per axis: one edge set pins the element to that edge at its own size; opposite edges both set stretch it between them, its dimension an outcome (`top: 0` + `bottom: 0` spans the parent's height); a centre offset centres its axis instead, displaced by the value.",
+      "examples": ["10%", 0],
       "oneOf": [
         {
           "type": "number"

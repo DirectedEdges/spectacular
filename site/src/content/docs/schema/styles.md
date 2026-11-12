@@ -18,7 +18,7 @@ The Default column is the value a property is treated as having when absent — 
 | [`centerVerticalOffset`](/schema/styles/center-vertical-offset/) | `PositionOffset` | `y` and constraints <small>[ADR 041](https://github.com/DirectedEdges/specs/blob/main/adr/041-layout-positioning.md)</small> | `null` |
 | [`clipsContent`](/schema/styles/clips-content/) | `Style` | — | `false` |
 | [`cornerRadius`](/schema/styles/corner-radius/) | `Style`<br>`Corners` | — | `0` |
-| [`cornerSmoothing`](/schema/styles/corner-smoothing/) | `Style` | — | `0` |
+| [`cornerSmoothing`](/schema/styles/corner-smoothing/) | `UnitIntervalStyle` | — | `0` |
 | [`crossAxisAlignment`](/schema/styles/cross-axis-alignment/) | `CrossAxisAlignment` | `counterAxisAlignItems` <small>[ADR 040](https://github.com/DirectedEdges/specs/blob/main/adr/040-layout-alignment.md)</small> | `"START"` |
 | [`effects`](/schema/styles/effects/) | `TokenReference`<br>`Effects` | — | `null` |
 | [`end`](/schema/styles/end/) | `PositionOffset` | `x` and constraints <small>[ADR 041](https://github.com/DirectedEdges/specs/blob/main/adr/041-layout-positioning.md)</small> | `null` |
@@ -46,7 +46,7 @@ The Default column is the value a property is treated as having when absent — 
 | [`maxWidth`](/schema/styles/max-width/) | `Style` | — | `null` |
 | [`minHeight`](/schema/styles/min-height/) | `Style` | — | `0` |
 | [`minWidth`](/schema/styles/min-width/) | `Style` | — | `0` |
-| [`opacity`](/schema/styles/opacity/) | `Style` | — | `1` |
+| [`opacity`](/schema/styles/opacity/) | `UnitIntervalStyle` | — | `1` |
 | [`padding`](/schema/styles/padding/) | `Style`<br>`Sides` | — | `0` |
 | [`paragraphIndent`](/schema/styles/typography/paragraph-indent/) | `number`<br>`TokenReference` | *(via `typography`)* | `0` |
 | [`paragraphSpacing`](/schema/styles/typography/paragraph-spacing/) | `number`<br>`TokenReference` | *(via `typography`)* | `0` |

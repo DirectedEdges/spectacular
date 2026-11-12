@@ -1,0 +1,71 @@
+# Judgment rules for variants.yaml elements.*.styles — keys are style properties or families.
+# Facts about the styles schema (which properties exist, where $token is legal) live in
+# specs-cli.author.styles; this file carries judgment only.
+reports:
+  guidelines:
+    - should: "read `analysis/styling.byComponent.yaml` for how siblings style a property before authoring it — a raw literal is a last resort after the promotion map and the token set both come up empty"
+tokens:
+  guidelines:
+    - must: "resolve token names from `analysis/foundations.yaml` first — it is the complete token language as ready-to-paste `{$token, $type}` objects, with alias targets and the icon key spellings; `analysis/styling.byToken.yaml` adds usage precedent (which components already use a token where); never grep the raw data caches for spellings"
+    - must: "copy token paths exactly as the reports spell them — never a re-cased, re-segmented, or otherwise reformatted variant"
+    - should: "use a token wherever the library has one for the property — a literal there is a consistency defect"
+    - never: "invent a token name — a path that looks plausible for this system but appears in no report or cache"
+      should: "use a literal and note the gap when no suitable token exists"
+visible:
+  guidelines:
+    - must: "bind `visible` on nested elements only — root show/hide is interaction state owned by the behavior layer"
+      never: "put a `$binding` on the root element's `visible` (also emits broken React today — specs#766)"
+    - must: "state both `then` and `else` when visibility derives from a nullable content prop via a `Conditional`"
+      never: "point a bare `$binding` at a string prop to drive visibility"
+      adr: 18
+padding|strokeWeight|cornerRadius:
+  guidelines:
+    - should: "write a scalar when every side or corner is equal, and the logical-key object only when they differ (`{top, end, bottom, start}`, `{topStart, …}`)"
+      never: "use physical `left`/`right` keys or the string `\"mixed\"`"
+      adr: 10
+itemSpacing:
+  guidelines:
+    - should: "give `itemSpacing` a scalar unless the horizontal and vertical gaps genuinely differ — only then the `{horizontal, vertical}` object"
+      adr: 37
+typography|effects:
+  guidelines:
+    - must: "express typography and effects as one composite key — a style/token reference when the layer uses a named style, the inline object otherwise"
+      never: "emit flat legacy keys (`fontSize`, `lineHeight`, `effectStyleId`)"
+      adr: [2, 5]
+    - should: "order `shadows` as an array where `inset: true` means inner; `layerBlur`/`backgroundBlur` are singular"
+      adr: 2
+gradients:
+  guidelines:
+    - must: "supply the gradient arm's required fields — `angle` for `LINEAR`, `center` for `RADIAL`/`ANGULAR` — with every stop's `position` and center x/y normalized 0–1"
+      adr: 3
+structural:
+  guidelines:
+    - never: "put a `$token` or `$binding` on any property whose definition says \"Structural property — not token-bindable\" — literal value from its declared set, or null; the schema's described `oneOf` is the authority on which properties and options"
+      adr: [4, 38, 39, 40, 59, 62, 115]
+    - should: "express a solid stroke by omitting `strokeDashPattern`"
+      adr: 4
+defaults:
+  guidelines:
+    - should: "omit an optional composite member sitting at its schema-declared default (`Sides`/`Corners` members 0, `alpha` 1, `inset` false, `objectFit` COVER, the `Typography` transform members) — writing it out restates the schema"
+      adr: [113, 116]
+fillColor:
+  guidelines:
+    - must: "color a glyph with `fillColor` — not `backgroundColor` (containers) or `textColor` (text)"
+      adr: 13
+backgroundImage:
+  guidelines:
+    - must: "point `backgroundImage` and an image prop's default at an `images` registry entry via `$image` — never a raw Figma hash"
+      adr: 63
+    - must: "forward an image into a nested image instance through `propConfigurations` with an `ImageBinding` — `backgroundImage` carries only the static no-component fallback"
+      adr: 63
+layoutSizingHorizontal|layoutSizingVertical:
+  when:
+    FIXED:
+      opens: [width|height]
+    FILL:
+      requires: parent layoutMode HORIZONTAL|VERTICAL
+    any:
+      opens: [minWidth|minHeight, maxWidth|maxHeight]
+  guidelines:
+    - should: "prefer `HUG`/`FILL` so content drives size; `FIXED` plus `width`/`height` only when the design truly fixes the dimension"
+    - could: "bound any sizing mode with `min`/`max` — hug-with-a-floor (`HUG` + `minWidth`) and fill-with-a-ceiling (`FILL` + `maxWidth`) are both legal and useful"

@@ -28,6 +28,10 @@ export type DevStatusRequest = RenderRequestBody['devStatus'];
 export interface RenderResult {
   success: boolean;
   nodeId?: string;
+  /** The Figma file the render landed in, filled in here rather than by the plugin: a
+   *  non-interactive caller passes no `--file` and so never learns which connection
+   *  served it, and a node id means nothing without its file. */
+  fileKey?: string;
   error?: string;
   /** Phase durations reported by the plugin render (see figma-from-specs Timings.ts). */
   timings?: { total: number; phases: Array<{ label: string; ms: number; count: number }> };
@@ -278,6 +282,9 @@ export class BridgeOperations<S extends Sendable> {
     conn.ws.send(payload);
     const result = await (promise as Promise<RenderResult>);
     bridgeTimings.push({ label: 'plugin round-trip', ms: Date.now() - sentAt });
-    return { ...result, bridgeTimings, payloadKB: Math.round(payload.length / 1024) };
+    // The file the render actually landed in. The caller usually does not know it: a
+    // non-interactive run passes no `--file` and lets this connection resolve itself, so
+    // without reporting it back the only record of where a node lives is this log line.
+    return { ...result, fileKey: conn.fileKey, bridgeTimings, payloadKB: Math.round(payload.length / 1024) };
   }
 }

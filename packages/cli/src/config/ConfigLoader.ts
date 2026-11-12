@@ -38,6 +38,13 @@ import type { CLIConfig } from '../config/types.js';
  * Conventions is deliberately absent: it is a *directory* of per-platform files
  * (ADR-078), not one file, and is read by {@link ConfigLoader.readConventionsDir}.
  */
+/**
+ * Images-convention complaints deferred at config load. Config load runs on every
+ * command; these print only where the convention is consumed (`specs fetch`), so a
+ * declared-but-unused convention does not warn on validate or analyze.
+ */
+export const imagesConventionWarnings: string[] = [];
+
 const CONFIG_DIR_FILES = ['settings'] as const;
 
 /**
@@ -670,7 +677,10 @@ export class ConfigLoader {
           console.warn(`Invalid ${where} images.match: expected a non-empty string. Ignoring match.`);
         }
         if (match && !match.includes('{i}')) {
-          console.warn(`${where} images.match must include the {i} placeholder, which captures the image name (e.g. "Image / {i}"). Ignoring match.`);
+          // Deferred, not printed: config load runs on every command, and a declared-but-
+          // unconsumed convention is not worth yelling about on validate or analyze. The
+          // commands that consume images.match print it (fetch).
+          imagesConventionWarnings.push(`${where} images.match must include the {i} placeholder, which captures the image name (e.g. "Image / {i}"). Ignoring match.`);
           match = undefined;
         }
         let component = typeof img.component === 'string' && (img.component as string).trim() !== ''

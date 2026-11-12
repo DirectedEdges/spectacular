@@ -172,7 +172,7 @@ describe('slot contentStyles (ADR-102)', () => {
   describe('$glyph — the masked-span vocabulary', () => {
     it('formats the glyph fill against the emitters\' span, as a direct child of the slot', async () => {
       const { react } = await run(tmpDir, glyphSlotSpec(), glyphOnlyApi);
-      expect(react).toContain('.ds-badge__children > [data-element][aria-hidden="true"] {');
+      expect(react).toContain('.ds-badge__children > [data-content="glyph"] {');
       expect(react).toContain('background-color: var(--color-on-surface);');
       expect(react).toContain('width: var(--constants-sizing-4x);');
       expect(react).toContain('height: 16px;');
@@ -181,7 +181,7 @@ describe('slot contentStyles (ADR-102)', () => {
     it('reaches the slotted glyph span through ::slotted() in the host sheet', async () => {
       const { host } = await run(tmpDir, glyphSlotSpec(), glyphOnlyApi);
       expect(host).toContain(
-        '.ds-badge__children > slot::slotted([data-element][aria-hidden="true"]) {');
+        '.ds-badge__children > slot::slotted([data-content="glyph"]) {');
       expect(host).toContain('background-color: var(--color-on-surface);');
     });
 
@@ -198,10 +198,10 @@ describe('slot contentStyles (ADR-102)', () => {
       ]), glyphOnlyApi);
       expect(react).toContain('/* Variant: emphasized — children slot content */');
       expect(react).toMatch(
-        /\.ds-badge\[data-emphasized[^\]]*\] \.ds-badge__children > \[data-element\]\[aria-hidden="true"\] \{\n {2}background-color: var\(--color-inverse-on-surface\);\n\}/,
+        /\.ds-badge\[data-emphasized[^\]]*\] \.ds-badge__children > \[data-content="glyph"\] \{\n {2}background-color: var\(--color-inverse-on-surface\);\n\}/,
       );
       expect(host).toMatch(
-        /\.ds-badge__children > slot::slotted\(\[data-element\]\[aria-hidden="true"\]\) \{\n {2}background-color: var\(--color-inverse-on-surface\);\n\}/,
+        /\.ds-badge__children > slot::slotted\(\[data-content="glyph"\]\) \{\n {2}background-color: var\(--color-inverse-on-surface\);\n\}/,
       );
       expect(react).not.toContain('!important');
       expect(host).not.toContain('!important');
@@ -223,14 +223,13 @@ describe('slot contentStyles (ADR-102)', () => {
       expect(react).toContain('var(--color-inverse-on-surface)');
     });
 
-    it('emits no non-inherited glyph declarations on a slot that admits a component', async () => {
-      // `glyphSlotApi`'s anyOf mixes `$glyph` with `dsIcon`/`dsMark` — a slotted
-      // icon component's own root is emitted as `<span {...rootAttrs}
-      // aria-hidden="true" data-element="root">`, matching the same masked-span
-      // selector a primitive glyph fill uses. The rule must not exist at all on
-      // such a slot: the glyph's fill color, width and height are non-inherited
-      // and would otherwise override the component's own color via `!important`
-      // and win the default rule on specificity.
+    it('emits the glyph rules for a slot that admits a component too — the marker discriminates', async () => {
+      // `glyphSlotApi`'s anyOf mixes `$glyph` with `dsIcon`/`dsMark`. The
+      // `data-content="glyph"` marker is stamped only on a primitive glyph
+      // fill — a composed component's root (`data-element="root"`,
+      // `aria-hidden`) never carries it — so the rule reaches the primitive
+      // fill alone and no longer needs withholding (system-owner ruling,
+      // Badge round).
       const { react, host } = await run(tmpDir, glyphSlotSpec([
         {
           configuration: { emphasized: true },
@@ -241,8 +240,10 @@ describe('slot contentStyles (ADR-102)', () => {
           },
         },
       ]), glyphSlotApi);
-      expect(react).not.toContain('[data-element][aria-hidden="true"]');
-      expect(host).not.toContain('::slotted([data-element][aria-hidden="true"])');
+      expect(react).toContain('[data-content="glyph"]');
+      expect(react).toContain('background-color: var(--color-inverse-on-surface);');
+      expect(host).toContain('::slotted([data-content="glyph"])');
+      expect(react).not.toContain('!important');
     });
   });
 
@@ -274,8 +275,10 @@ describe('slot contentStyles (ADR-102)', () => {
         textOverflow: 'ELLIPSIS',
       });
       const mixedOut = await run(tmpDir, mixed.variants, mixed.api);
-      // A truncation box on the slot element would clip a composed component.
-      expect(mixedOut.react).not.toContain('text-overflow: ellipsis');
+      // A truncation box on the slot element would clip a composed component —
+      // on a mixed slot it lands on the text fill's own marker instead.
+      expect(mixedOut.react).not.toMatch(/\.ds-badge__label \{[^}]*text-overflow/);
+      expect(mixedOut.react).toMatch(/> \[data-content="text"\] \{[^}]*text-overflow: ellipsis/);
       expect(mixedOut.react).toContain('color: var(--color-on-surface);');
     });
 
@@ -335,7 +338,7 @@ describe('slot contentStyles (ADR-102)', () => {
       expect(react).not.toContain('!important');
     });
 
-    it('a variant override on a mixed slot emits inherited properties only, normal priority', async () => {
+    it('a variant override on a mixed slot: inherited on the slot element, box on the marker', async () => {
       const spec = textSlotSpec(['$text', 'dsBadge'], [
         {
           configuration: { emphasized: true },
@@ -355,9 +358,10 @@ describe('slot contentStyles (ADR-102)', () => {
       expect(react).toMatch(
         /\.ds-badge__label \{\n {2}color: var\(--color-inverse-on-surface\);\n\}/,
       );
-      // No selector can single the primitive span out from a component fill,
-      // and a line-clamp box on the slot element would clip the component.
-      expect(react).not.toContain('line-clamp');
+      // The line-clamp box would clip a component on the slot element; the text
+      // fill's own marker is where it lands, reaching the primitive fill alone.
+      expect(react).not.toMatch(/\.ds-badge__label \{[^}]*line-clamp/);
+      expect(react).toMatch(/> \[data-content="text"\] \{[^}]*line-clamp: 2/);
       expect(react).not.toContain('!important');
     });
   });
@@ -370,12 +374,12 @@ describe('slot contentStyles (ADR-102)', () => {
       // the emitters no longer inline this formatting, so withholding it here
       // would leave the slot's formatting stated nowhere.
       const { react, host } = await run(tmpDir, glyphSlotSpec(), noAnyOfApi);
-      expect(react).toContain('.ds-badge__children > [data-element][aria-hidden="true"] {');
+      expect(react).toContain('.ds-badge__children > [data-content="glyph"] {');
       expect(react).toContain('background-color: var(--color-on-surface);');
       expect(react).toContain('width: var(--constants-sizing-4x);');
       expect(react).toContain('height: 16px;');
       expect(host).toContain(
-        '.ds-badge__children > slot::slotted([data-element][aria-hidden="true"]) {');
+        '.ds-badge__children > slot::slotted([data-content="glyph"]) {');
       expect(react).not.toContain('!important');
       expect(host).not.toContain('!important');
     });
@@ -393,7 +397,7 @@ describe('slot contentStyles (ADR-102)', () => {
       ]), noAnyOfApi);
       expect(react).toContain('/* Variant: emphasized — children slot content */');
       expect(react).toMatch(
-        /\.ds-badge\[data-emphasized[^\]]*\] \.ds-badge__children > \[data-element\]\[aria-hidden="true"\] \{\n {2}background-color: var\(--color-inverse-on-surface\);\n\}/,
+        /\.ds-badge\[data-emphasized[^\]]*\] \.ds-badge__children > \[data-content="glyph"\] \{\n {2}background-color: var\(--color-inverse-on-surface\);\n\}/,
       );
     });
 
@@ -445,11 +449,11 @@ describe('slot contentStyles (ADR-102)', () => {
         ],
       }, noAnyOfApi);
       expect(react).toMatch(
-        /\.ds-badge\[data-emphasized[^\]]*\] \.ds-badge__children > \[data-element\]\[aria-hidden="true"\] \{/,
+        /\.ds-badge\[data-emphasized[^\]]*\] \.ds-badge__children > \[data-content="glyph"\] \{/,
       );
       expect(react).toContain('background-color: var(--color-inverse-on-surface);');
       expect(react).toContain('width: var(--constants-sizing-4x);');
-      expect(host).toContain('slot::slotted([data-element][aria-hidden="true"])');
+      expect(host).toContain('slot::slotted([data-content="glyph"])');
       expect(react).not.toContain('!important');
     });
 

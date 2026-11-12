@@ -70,6 +70,7 @@ For each area that has changed files (or that the ADR says should be affected), 
 - Every schema change is reflected in the JSON schema files under `schema/`
 - `CHANGELOG.md` has an entry for this change under the correct semver bump
 - No field mentioned in the ADR is absent from the types
+- Changed or added `description`s pass the constitution's documentation rules (`CONSTITUTION.md` § Documentation): one sentence target, bounding not consequence-explaining, no restated types/defaults/option meanings; combination semantics live on the definition that owns them. Applies to every schema edit, not only ADR-driven ones — hand edits have no other gate
 
 #### Specification (`packages/schema/SPECIFICATION.md`)
 - Every requirement the ADR declares that draft-07 cannot enforce has a §9 rule-catalogue row, or is stated as a §2–§8 prose requirement

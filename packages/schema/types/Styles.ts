@@ -7,7 +7,7 @@ import { ImageValue } from "./Image.js";
 export type Styles = Partial<{
   rotation: Style;
   visible: boolean | TokenReference | PropBinding | Conditional;
-  opacity: Style;
+  opacity: UnitIntervalStyle;
   locked: boolean;
   backgroundColor: ColorStyle;
   /** Image fill painted on a layer. Present on container element types. Fallback representation used when no image component is configured. A `TokenReference` when the image fill comes from an applied Figma fill style (the style reference routes here — not to `backgroundColor` — when the styled paint is an image). Absent when there is no image fill. @since 0.28.0 */
@@ -77,7 +77,7 @@ export type Styles = Partial<{
   itemSpacing: Style | ItemSpacing;
   /** Padding. Scalar when uniform; `Sides` object when per-side values differ. @since 1.0.0 */
   padding: Style | Sides;
-  cornerSmoothing: Style;
+  cornerSmoothing: UnitIntervalStyle;
   aspectRatio: AspectRatioStyle;
 }>;
 
@@ -133,20 +133,18 @@ export type GlyphContentStyles = Partial<{
  * The styles applied to primitive content filling an element, as distinct from the
  * element's own {@link Styles} (ADR-102).
  *
- * Keyed by primitive, using the same reserved markers `SlotProp.anyOf` carries, because a
- * slot's default content may hold more than one kind — a glyph and a label — and each
- * kind is formatted by a disjoint property set. A flat block could not attribute which
- * styles belonged to which primitive.
+ * Formatting for a slot's primitive content, keyed by kind (`$text`, `$glyph`) because
+ * one fill may hold both and each kind takes a disjoint property set — a flat block
+ * could not attribute which styles belong to which primitive.
  *
- * On a slot element each entry is the formatting that kind of fill takes on, captured from
- * the first top-level primitive of that kind in the slot's default content, per variant. It
- * is overridden per variant through `variants[].elements` exactly as `styles` is.
+ * Captured per variant from the first top-level primitive of each kind in the default
+ * fill, and overridden per variant through `variants[].elements` exactly as `styles` is.
+ * Authoring direction, same contract: a primitive must sit top-level in the fill for
+ * `contentStyles` to reach it.
  *
- * A component fill is formatted by the component it instantiates, so a consumer rendering
- * one applies `styles` and discards `contentStyles`.
- *
- * Meaningful only on a slot element, and its keys should agree with that slot's `anyOf`
- * markers — both authoring/generator contracts, neither schema-enforced.
+ * Applies to primitive content only: a component fill is formatted by the component it
+ * instantiates, so a consumer applies its `styles` and discards `contentStyles`.
+ * Independent of the slot's `anyOf`.
  * @since 0.39.0
  */
 export type ContentStyles = Partial<{
@@ -247,6 +245,21 @@ export type ColorString = string;
  * whose values are always colour-semantics and may carry gradient data.
  */
 export type ColorStyle = ColorString | ColorObject | TokenReference | GradientValue | null;
+
+/**
+ * A style value on the mathematical unit interval [0, 1].
+ * Mirrors `UnitIntervalStyleValue` in `schema/styles.schema.json`.
+ * Used for `opacity` and `cornerSmoothing` — the two properties whose literal is a
+ * fraction of a whole rather than a measurement.
+ *
+ * The bound belongs to the literal, and only the schema can state it: a
+ * {@link TokenReference} resolves on the token's own scale, which in a given library
+ * may run 0–100. So `0.72` and `{$token: 'Opacity/72'}` are both correct where the
+ * literal `72` is not.
+ *
+ * @since 0.40.0
+ */
+export type UnitIntervalStyle = number | TokenReference | null;
 
 /**
  * Inline typography properties grouped into a composite object.

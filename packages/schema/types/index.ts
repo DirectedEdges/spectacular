@@ -63,7 +63,7 @@ export type { Settings, ResolvedSettings, ColorFormat, SourceEntry } from './Set
 export { DEFAULT_SETTINGS } from './Settings.js';
 
 // Style types
-export type { Styles, ContentStyles, TextContentStyles, GlyphContentStyles, Style, ColorStyle, ColorString, ColorObject, StyleKey, TokenReference, AspectRatioValue, AspectRatioStyle, Typography, Sides, Corners, ItemSpacing, LayoutMode, WrapAlignment, MainAxisAlignment, CrossAxisAlignment, Position, PositionOffset, StrokeDashPattern, TextAlignHorizontal, TextOverflow, StrokeAlign, LayoutSizing, TextAlignVertical, PrimaryAxisSizingMode } from './Styles.js';
+export type { Styles, ContentStyles, TextContentStyles, GlyphContentStyles, Style, ColorStyle, ColorString, ColorObject, UnitIntervalStyle, StyleKey, TokenReference, AspectRatioValue, AspectRatioStyle, Typography, Sides, Corners, ItemSpacing, LayoutMode, WrapAlignment, MainAxisAlignment, CrossAxisAlignment, Position, PositionOffset, StrokeDashPattern, TextAlignHorizontal, TextOverflow, StrokeAlign, LayoutSizing, TextAlignVertical, PrimaryAxisSizingMode } from './Styles.js';
 export type { Shadow, Blur, Effects } from './Effects.js';
 export type { GradientStop, GradientCenter, LinearGradient, RadialGradient, AngularGradient, GradientValue } from './Gradient.js';
 
@@ -76,3 +76,31 @@ export type { SlotContentRef } from './SlotContentRef.js';
 
 // Conditional types
 export type { Conditional, ConditionExpression, ConditionArgs } from './Conditional.js';
+
+// The two authored documents beside a spec (ADR-118). Siblings, with no parent
+// concept above them — each declares its own header, verification and
+// reference types rather than sharing one.
+export type {
+  SupplementalDocument,
+  FoundationSupplementalDocument,
+  SupplementalEntry,
+  SupplementalMeta,
+  SupplementalStatus,
+  SupplementalConcern,
+  SupplementalCheckedBy,
+  SupplementalCheck,
+  SchemaGap,
+  Platform,
+  FoundationConcern,
+} from './SupplementalDocument.js';
+export type {
+  GuidelinesDocument,
+  FoundationGuidelinesDocument,
+  GuidelineEntry,
+  GuidelinesMeta,
+  GuidelinesStatus,
+  GuidelinesConcern,
+  GuidelinesCheckedBy,
+  GuidelineReference,
+  ObligationLevel,
+} from './GuidelinesDocument.js';

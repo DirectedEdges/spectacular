@@ -1,0 +1,43 @@
+# examples.yaml — documented usages (schema: component-concern.schema.json#/definitions/ComponentExamplesDocument)
+# Optional file. instanceExamples configure the whole component; slotContentExamples
+# are named fills other specs (or this one) point at via $slotContent; images is the
+# registry a $image pointer resolves against.
+metadata:
+  concern: examples
+# images:
+#   # One entry per image this component shows. Find what the library holds in
+#   # data/cache/images.yaml. Point at an entry with
+#   # $image: "#/components/<key>/images/<name>" from backgroundImage or from an
+#   # image prop's examples — never a raw Figma hash in a style value.
+#   <name>:
+#     src: ../../../assets/images/<hash>.jpg
+#     $extensions:
+#       com.figma:
+#         imageHash: <hash>
+instanceExamples:
+  # A pre-configured usage. Scalars for scalar props; $slotContent for slot props;
+  # $binding is NOT allowed here (documented configuration, not a live binding).
+  default:
+    title: <Example title>
+    propConfigurations:
+      text: <Sample text>
+      appearance: <value>
+# slotContentExamples:
+#   # A self-contained triplet: its own anatomy + elements + layout.
+#   <key>__children__default:
+#     anatomy:
+#       wrapper:
+#         type: container
+#       content:
+#         type: instance
+#         instanceOf: <componentFolderKey>
+#     elements:
+#       wrapper:
+#         styles:
+#           layoutMode: VERTICAL
+#       content:
+#         propConfigurations:
+#           <propOfNestedComponent>: <value>
+#     layout:
+#       - wrapper:
+#           - content

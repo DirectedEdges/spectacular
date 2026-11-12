@@ -82,6 +82,8 @@ describe('sidebar order in the scaffolded preview', () => {
       'Web component',
       'API',
       'Variants',
+      'Supplemental',
+      'Guidelines',
       'Testing',
       'React Fidelity',
       'React Changes',
@@ -632,6 +634,24 @@ describe('components concern — published view pages', () => {
     expect(pages.get('Components/DS Button (Beta)/Testing/React Fidelity')).toContain(
       '"DS Button (Beta) / React Fidelity"',
     );
+  });
+
+  /**
+   * `api` and `variants` every run generates. `supplemental` and `guidelines`
+   * are authored by hand and most components have neither, so a view that
+   * exists only to report its own emptiness is noise on every component.
+   */
+  it('publishes an authored spec view only for a component that has the document', async () => {
+    const ws = workspace({ react: true, webcomponents: true, reports: [] });
+    expect([...(await pagesByTitle(ws)).keys()]).not.toContain('Components/DS Button (Beta)/Supplemental');
+
+    fs.writeFileSync(
+      path.join((ws as unknown as { root: string }).root, 'specs', 'components', 'dsButton', 'supplemental.yaml'),
+      'entries: []\n',
+    );
+    const after = [...(await pagesByTitle(ws)).keys()];
+    expect(after).toContain('Components/DS Button (Beta)/Supplemental');
+    expect(after).not.toContain('Components/DS Button (Beta)/Guidelines');
   });
 
   it('publishes a testing page only for a platform-and-baseline that has a report', async () => {

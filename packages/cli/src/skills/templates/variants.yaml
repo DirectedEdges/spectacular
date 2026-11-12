@@ -1,0 +1,55 @@
+# variants.yaml — the appearance (schema: component-concern.schema.json#/definitions/ComponentVariantsDocument)
+# default is the COMPLETE baseline: layout tree + an entry for EVERY anatomy element.
+# Each variants[] entry is a DELTA: a configuration plus only what changes.
+metadata:
+  concern: variants
+default:
+  # One tree, starting at root; leaf = element name, parent = {name: [children]}.
+  # Every name must be declared in api.yaml anatomy.
+  layout:
+    - root:
+        - label
+  elements:
+    root:
+      styles:
+        # Container flow (structural, never $token):
+        layoutMode: HORIZONTAL   # NONE | HORIZONTAL | VERTICAL
+        mainAxisAlignment: CENTER
+        crossAxisAlignment: CENTER
+        layoutSizingHorizontal: HUG   # FILL | HUG | FIXED
+        layoutSizingVertical: HUG
+        # Tokens wherever the library has one (see analysis/styling.byToken.yaml):
+        backgroundColor:
+          $token: <Token.Path>
+          $type: color
+        padding:
+          $token: <Token.Path>
+          $type: dimension
+        cornerRadius:
+          $token: <Token.Path>
+          $type: dimension
+        itemSpacing:
+          $token: <Token.Path>
+          $type: dimension
+    label:
+      # Text content bound to a prop:
+      content:
+        $binding: '#/props/text'
+      styles:
+        textColor:
+          $token: <Token.Path>
+          $type: color
+        # Named text style when the library has one:
+        typography:
+          $token: <Token.Path>
+          $type: typography
+variants:
+  # One entry per prop configuration that changes anything. Deltas only.
+  - configuration:
+      appearance: <other value>
+    elements:
+      root:
+        styles:
+          backgroundColor:
+            $token: <Token.Path>
+            $type: color

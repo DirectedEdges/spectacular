@@ -1,0 +1,23 @@
+# guidelines/<area>/<topic>/rules.yaml template — copy, fill, delete what the topic doesn't need.
+meta:
+  topic: <area>/<topic>
+  status: proposed          # the ratifier removes or flips this line
+  author: <current user>
+  updated: <YYYY-MM-DD>
+  sources:
+    - analysis/<report>.yaml
+# useWhen: positive usage mappings — the thing, and when to use it. Groups by referent
+# kind: tokens ($token), props ($prop), or another kind the topic calls for.
+useWhen:
+  tokens:
+    - { $token: "<Token/Path>", $description: "<when to use it (`brief example`)>" }
+  # name:
+  #   - { $prop: "<propName>", $description: "<the concept it names>" }
+# dontUseWhen: same shape, for the explicit negative cases worth listing.
+# guidelines: modality-keyed rules — must/never hard, should/avoid strong convention,
+# could/warn judgment. A positive may pair with its counter-balancing negative in one
+# item. One line each; terms in backticks; brief example in parens. No computed data.
+guidelines:
+  - must: "<one-line statement (`example`)>"
+    never: "<its counter-balancing negative (`example`)>"
+  - should: "<convention (`example`)>"

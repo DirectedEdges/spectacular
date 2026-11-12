@@ -59,6 +59,15 @@ Nothing resolving is the one case in this vocabulary where silence is the correc
 
 The role never fabricates a source. An element it cannot give a picture to emits as it did before.
 
+An image prop distinguishes two ways of having no value, and they resolve differently:
+
+| What the consumer passes | What renders |
+|---|---|
+| Nothing — the prop is never mentioned | The prop's authoring-default example, so the component looks like itself out of the box |
+| An explicitly empty value | The placeholder surface, so an image slot that is genuinely awaiting content is visible as such |
+
+Unset and empty are different statements, and collapsing them hides one of the two cases a consumer needs.
+
 ## Specs
 
 Component anatomy typically has elements and roles like:

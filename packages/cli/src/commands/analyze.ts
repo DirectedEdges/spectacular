@@ -194,6 +194,15 @@ export async function runAnalyze(
     console.warn(warning);
   }
 
+  // Workspace facts for analyzers that work without visiting a spec.
+  for (const analyzer of analyzers) {
+    analyzer.setup?.({
+      dataDir,
+      outputFormat: config.settings.spec.format,
+      keys: config.settings.spec.keys,
+    });
+  }
+
   let succeeded = 0;
   let failed = 0;
 

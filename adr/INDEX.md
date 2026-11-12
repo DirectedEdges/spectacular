@@ -15,7 +15,6 @@
 | 108 | The `$slotContent` Pointer Namespace | (reserved, draft in PR #767) |
 | 107 | Schema File Identity and Packaging | (reserved, draft in PR #767) |
 | 106 | Spec Provenance Beyond Figma Capture | (reserved, draft in PR #767) |
-| 105 | Type–Schema Parity for Overlapping Prop Unions | (reserved, draft in PR #767) |
 | 104 | Roles on a Collapsed Root — `childRole` Says Which Layer Was Annotated | (reserved, draft on `feat/states-setup-skill`) |
 | 093 | Composed Dependency Selection Is a Setting | |
 | 092 | `invalidPropCombinations` — Renamed and Relocated to the Api Concern | |
@@ -30,6 +29,8 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
+| 121 | A Unit-Interval Style Type for `opacity` and `cornerSmoothing` | `UnitIntervalStyle` over a `UnitInterval` primitive; the bound is on the literal, since a token resolves on its own scale — often 0–100 |
+| 118 | Two Authored Documents Beside a Spec — `supplemental.yaml` for Builders, `guidelines.yaml` for Consumers | Two hand-authored documents carrying `meta` rather than Figma provenance; guidelines entries are DSDS 0.23.1 items; each schema self-contained |
 | 117 | A Library's Images Are Assets It Lays Out, Named by a Pattern | `images.match` becomes a `{i}` naming pattern over laid-out image assets; `images.component` alone names the designated image component |
 | 116 | Nested style members declare their own defaults | 23 of 30 optional composite members declare a `default`; required members declare none; `lineHeight` settles on `'AUTO'` |
 | 115 | Closed Style Value Sets | Five keys that inherited an open string wrapper become named closed sets, each dropping three value forms nothing writes |
@@ -39,6 +40,7 @@
 | 111 | Object-Typed Props | A prop whose value is an object of named scalar members; an opt-in convention folds separator-named Figma properties into one |
 | 110 | Rename `Spec*Document` to `Component*Document` | `Spec*Document` renamed to `Component*Document`, matching `CompositionApiDocument`'s naming now that a second spec kind exists |
 | 109 | Composition Concern Documents | Compositions get their own exact `splitConcerns` documents — never a loosened form of a component's, since a composition has no props to vary by |
+| 105 | Type–Schema Parity for Overlapping Prop Unions | `EnumProp`/`SlotProp` gain the types' `required` sets; `PropConfigurationValue` becomes `anyOf` — overlap-by-extension never compiles to `oneOf` |
 | 104 | Roles on a Collapsed Root — `childRole` Says Which Layer Was Annotated | A collapsed element records which of its two Figma layers carried a role: `role` the component node, `childRole` the collapsed child, both means both |
 | 103 | Structural Glyph Membership — `glyphs.structure` Convention | `glyphs` gains a structural membership form — child shapes + stored fill, named from the component name; a glyph cannot have properties |
 | 102 | Slots That Accept Primitive Content — `$text` and `$glyph` in `anyOf` | A slot states the primitives it accepts alongside components, and `Element.contentStyles` records how each primitive fill is formatted per variant |

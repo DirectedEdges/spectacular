@@ -159,7 +159,8 @@ describe('PropConfigurations.$nested structural conformance (ADR-052)', () => {
   it('both objects share the PropConfigurationValue definition for their value union', () => {
     expect(propDef.additionalProperties.$ref).toBe('#/definitions/PropConfigurationValue');
     expect(nestedDef.additionalProperties.$ref).toBe('#/definitions/PropConfigurationValue');
-    const kinds = (schema.definitions.PropConfigurationValue.oneOf as any[]).map((s) => s.type ?? s.$ref);
+    // anyOf, not oneOf: ImageBinding extends PropBinding, so the branches overlap (ADR-105).
+    const kinds = (schema.definitions.PropConfigurationValue.anyOf as any[]).map((s) => s.type ?? s.$ref);
     expect(kinds).toEqual(
       expect.arrayContaining(['#/definitions/Scalar', '#/definitions/PropBinding', '#/definitions/SlotContentRef'])
     );
@@ -168,7 +169,7 @@ describe('PropConfigurations.$nested structural conformance (ADR-052)', () => {
   });
 
   it('PropConfigurationValue admits null — the prop is unset in this configuration (ADR-080)', () => {
-    const kinds = (schema.definitions.PropConfigurationValue.oneOf as any[]).map((s) => s.type ?? s.$ref);
+    const kinds = (schema.definitions.PropConfigurationValue.anyOf as any[]).map((s) => s.type ?? s.$ref);
     expect(kinds).toContain('null');
   });
 

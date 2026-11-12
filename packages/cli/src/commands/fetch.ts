@@ -19,7 +19,7 @@ import { hasGlyphConvention } from '../utilities/glyphConvention.js';
 import { startSpinner, clearInlineStatus, renderInlineStatus, isInteractive, formatElapsed, erasePrintedLine } from '../utilities/spinner.js';
 import { refreshCache } from '../cache/cache.js';
 import { reportCache } from '../cache/report.js';
-import { ConfigLoader } from '../config/ConfigLoader.js';
+import { ConfigLoader, imagesConventionWarnings } from '../config/ConfigLoader.js';
 import { ERROR_CODES } from '../utilities/errorCodes.js';
 
 import type { SourceEntry } from '@directededges/specs-schema';
@@ -978,6 +978,7 @@ export const Fetch = new Command('fetch')
           // library declares the pattern that identifies them (ADR-117). Absent a
           // declaration this half simply finds nothing — a convention is never
           // inferred, because a wrong guess fabricates assets.
+          for (const w of imagesConventionWarnings.splice(0)) console.warn(w);
           const assetPattern = figmaOf(config.conventions).images?.match;
           const imagesFilePath = path.join(outDir, `${entry.alias}.file.json`);
           const imagesSectioned = SectionedFile.open(outDir, entry.alias);

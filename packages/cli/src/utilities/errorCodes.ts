@@ -29,6 +29,8 @@ export const ERROR_CODES = {
   RATE_LIMIT: 6,
   /** A named component is not in the source the command was pointed at. */
   COMPONENT_NOT_FOUND: 7,
+  /** A spec failed schema validation or a reference check (`specs validate`). */
+  VALIDATION_FAILED: 8,
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

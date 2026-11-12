@@ -80,8 +80,25 @@ A Specs document is exactly one of:
 | Components index | `components.schema.json` | A catalog of components |
 | Conventions | `conventions.schema.json` | A library's naming and structural conventions |
 | Settings | `settings.schema.json` | A workspace's run settings |
+| Supplemental | `supplemental.schema.json` | What a component needs beyond what the spec can carry |
+| Guidelines | `guidelines.schema.json` | The rules whoever uses a component or a foundation must observe |
 
 A component MAY be written whole or split into concern documents; the two forms carry the same information (ADR-091, ADR-110).
+
+The first six kinds are **generated**: a run writes them, and each records the Figma node it came from. The last two are **authored**: written by hand beside a spec, never by a run, and the distinction governs what they carry. An authored document has no Figma origin to record, so it carries `meta` (authorship and review status) where a generated document carries `metadata` (run and source provenance). The two member names are deliberately different, because the two blocks answer different questions (ADR-118).
+
+The two authored kinds are siblings with no parent kind above them. Each declares its own header, verification and reference definitions rather than referencing a shared file, so each schema is readable and validatable on its own; the repetition between them is accepted deliberately (ADR-118).
+
+They divide by audience, and by what kind of statement each makes:
+
+- **Supplemental** states a requirement on whoever *builds* the thing, and every entry names the schema surface that cannot carry it.
+- **Guidelines** states a rule binding whoever *uses* it. At a foundation's scope that means how tokens, themes and raw values are applied across the catalogue — not what any one token is for, which is a description rather than a rule and has no home in either document.
+
+Each is written at three scopes — one component, every component, one foundation — and the scopes are additive (DSPEC-56).
+
+**A foundation's sections are a different vocabulary, not a subset.** At the component scopes the section keys are `anatomy`, `props`, `styles`, `slotComposition`, `events`, `accessibility`, `behavior`, `motion`, `layout`, `overrides` and `naming`. At the foundation scope they are `color`, `typography`, `layout`, `space`, `shape`, `elevation`, `motion` and `brand`. Only `layout` and `motion` are in both. A document uses one vocabulary or the other and never both (DSPEC-64); because the two shared keys discriminate neither, the scope is ultimately the path, and a document using only those two is accepted at either.
+
+A reference's `to` names a token, a component, an item within one, or a workspace file. A `checks` reference naming a source file is legitimate and not a misuse — it is what an author knows and what re-verification after a regeneration needs. Resolution is **not** currently checked by anything (DSPEC-57 is `unenforced`): the target vocabulary admits four kinds with no stated way to tell them apart, so a resolver would either accept almost anything or reject legitimate targets. When one arrives, an unresolved target is a warning rather than an error, because an authored document legitimately references work not yet emitted.
 
 ### 2.2 Document identity
 
@@ -103,7 +120,13 @@ The members per concern:
 
 A component document MUST carry `title`, `anatomy` and `default` (schema: `component.schema.json`).
 
-Every document MUST carry `metadata.source` — the Figma page, node and node type it was generated from (schema: `metadata.schema.json`). A document without provenance cannot be regenerated or diffed against its origin.
+Every generated document MUST carry `metadata.source` — the Figma page, node and node type it was generated from (schema: `metadata.schema.json`). A document without provenance cannot be regenerated or diffed against its origin.
+
+An authored document (§2.1) MUST NOT carry `metadata` at all, and carries no provenance, because nothing generated it (schema: `supplemental.schema.json`, `guidelines.schema.json`). It MAY carry `meta`, whose `status` member is what distinguishes proposed content from ratified. Neither requires any member: a document carrying only a `meta` block, or nothing, is valid, because the scope path already names its subject (ADR-118).
+
+An entry in a supplemental document MUST name the surface that cannot carry it, in `schemaGap` (schema: `supplemental.schema.json`). This is what bounds the document: a requirement the schema can express belongs in the spec, and an entry unable to name its gap is in the wrong file. A guidelines entry carries no `schemaGap` — a consumer rule is not an overlay on a schema surface — so that bound applies to one of the two authored kinds and the other relies on review.
+
+A guidelines document MUST carry rules only, and MUST NOT carry per-token tables describing what each token is for (schema: `guidelines.schema.json`). A rule binds a reader; a description of a token does not, and mixing them buries the rules. Where per-token description belongs is not settled here — no document kind carries it, and the schema's position is only that this one does not (ADR-118).
 
 ### 2.4 Run metadata
 
@@ -419,6 +442,15 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-53 | A required member of a `Styles` composite type declares no `default` | package | §4.1b, ADR-116 |
 | DSPEC-54 | A frame is an image asset only when its name matches `images.match` and it is a direct child of a page, or of a section that is itself a direct page child; a match at any other depth is not an asset | producer | conventions reference, ADR-117 |
 | DSPEC-55 | A declared `images.component` requires a non-empty `images.sourceProps`, whose first entry is that component's own source prop | validator | conventions reference, ADR-077/117 |
+| DSPEC-56 | A supplemental or guidelines entry at the catalogue scope and one at the component scope both apply; neither overrides the other, because an entry is a statement about a subject rather than a value at a key | consumer | §2.1, ADR-118 |
+| DSPEC-57 | A reference's `to` names something that exists — a token, a component, an item within one, or a workspace file. A consumer that cannot resolve it reports a warning and continues, never an error | unenforced | §2.3, ADR-118 |
+| DSPEC-58 | A `schemaGap.path` that is a JSON Schema pointer resolves against the schema file it names | validator | §2.3, ADR-118 |
+| DSPEC-59 | An exporter emitting DSDS appends a guideline's `instead` to its `statement` and never drops it, so no consumer receives a prohibition without its remedy | producer | §2.1, ADR-118 |
+| DSPEC-60 | An exporter derives a token's DSDS `id` from the workspace's `spec.tokens` profile, normalizing per path segment only where that output is not a legal identifier | producer | §2.1, ADR-118 |
+| DSPEC-61 | An exporter emits a token's original path as `name`, unmodified, because the derived `id` folds case and punctuation and cannot be reversed | producer | §2.1, ADR-118 |
+| DSPEC-62 | A directory under `foundations/` is named from the foundation concern vocabulary; a document schema validates contents and cannot validate the path that selects it | validator | §2.1, ADR-118 |
+| DSPEC-63 | A guidelines document carries rules only, and no table describing what each token is for | validator | §2.3, ADR-118 |
+| DSPEC-64 | An authored document is keyed for one concern vocabulary or the other, never both; `layout` and `motion` are in each and discriminate neither, so the scope is the path | schema: `supplemental.schema.json`, `guidelines.schema.json` | §2.1, ADR-118 |
 
 Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.
 

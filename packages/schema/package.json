@@ -20,8 +20,12 @@
     "./schema/component": "./schema/component.schema.json",
     "./schema/component-concern": "./schema/component-concern.schema.json",
     "./schema/metadata": "./schema/metadata.schema.json",
+    "./schema/styles": "./schema/styles.schema.json",
+    "./schema/root": "./schema/root.schema.json",
     "./schema/conventions": "./schema/conventions.schema.json",
-    "./schema/settings": "./schema/settings.schema.json"
+    "./schema/settings": "./schema/settings.schema.json",
+    "./schema/supplemental": "./schema/supplemental.schema.json",
+    "./schema/guidelines": "./schema/guidelines.schema.json"
   },
   "files": [
     "dist",

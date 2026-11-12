@@ -59,6 +59,9 @@ export interface RenderRequestBody {
 export interface RenderResponse {
   success: boolean;
   nodeId?: string;
+  /** The Figma file the render landed in. Resolved by the bridge, since a non-interactive
+   *  run passes no `--file` and so never learns which connection served it. */
+  fileKey?: string;
   /** Non-fatal render degradations reported by the plugin (font fallbacks, skipped keys). */
   warnings?: string[];
   error?: unknown;

@@ -88,6 +88,8 @@ const preview: Preview = {
           'Web component',
           'API',
           'Variants',
+          'Supplemental',
+          'Guidelines',
           'Testing',
           'React Fidelity',
           'React Changes',
