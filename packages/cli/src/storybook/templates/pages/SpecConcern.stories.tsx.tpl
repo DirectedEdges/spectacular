@@ -34,21 +34,29 @@ function SpecConcernPage() {
     };
   }, []);
 
-  if (text === null) return <p style={{ font: '13px system-ui' }}>Loading {{CONCERN}}.yaml…</p>;
+  // The sidebar shows the view name alone, so the heading is the only place the
+  // page says which component it belongs to.
   return (
-    <pre
-      style={{
-        overflow: 'auto',
-        maxHeight: '80vh',
-        padding: 16,
-        fontSize: 12,
-        lineHeight: 1.5,
-        background: 'rgba(0,0,0,0.03)',
-        borderRadius: 4,
-      }}
-    >
-      {text}
-    </pre>
+    <>
+      <h1>{ {{PAGE_HEADING}} }</h1>
+      {text === null ? (
+        <p style={{ font: '13px system-ui' }}>Loading…</p>
+      ) : (
+        <pre
+          style={{
+            overflow: 'auto',
+            maxHeight: '80vh',
+            padding: 16,
+            fontSize: 12,
+            lineHeight: 1.5,
+            background: 'rgba(0,0,0,0.03)',
+            borderRadius: 4,
+          }}
+        >
+          {text}
+        </pre>
+      )}
+    </>
   );
 }
 

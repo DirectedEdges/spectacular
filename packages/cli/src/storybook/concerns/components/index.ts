@@ -3,7 +3,7 @@
 // (specs#642/#631).
 //
 // A component is a folder in the sidebar and every view of it is a leaf inside
-// it. Two of those leaves are the emitters' — React and Web components — and the
+// it. Two of those leaves are the emitters' — React and Web component — and the
 // rest are published here: the spec documents, and one page per platform per
 // baseline of the visual diffs. That replaced the two rows of in-page tabs a
 // component docs page used to carry, which were built on Storybook's addon tabs,
@@ -17,13 +17,16 @@ import { resolveSpecsLayout, SPEC_KINDS, type SpecKind } from '../../../utilitie
 import { kebabizePath } from '../../../transforms/css/values/tokens.js';
 import { readTemplate, renderTemplate } from '../../templates.js';
 import { reportNameFor } from '../../../testing/visual/types.js';
-import { PLATFORM_LEAVES, specNavFolder } from './navTitle.js';
+import { PLATFORM_LEAVES, specDisplayName, specNavFolder } from './navTitle.js';
 
 /** A spec document published as its own view. `examples` is deliberately not one. */
 const SPEC_VIEWS = [
   { leaf: 'API', concern: 'api' },
   { leaf: 'Variants', concern: 'variants' },
 ] as const;
+
+/** The folder the per-component diff pages sit in, below the views themselves. */
+const TESTING_FOLDER = 'Testing';
 
 /**
  * The two questions a diff answers, and the report each writes. Mirrors the
@@ -32,8 +35,8 @@ const SPEC_VIEWS = [
  * full where those rank every component against each other.
  */
 const DIFF_MODES = [
-  { mode: 'figma' as const, leaf: 'Testing (Fidelity)', baseline: 'Figma exports', flag: '' },
-  { mode: 'accepted' as const, leaf: 'Testing (Changes)', baseline: 'last accepted renders', flag: ' --against accepted' },
+  { mode: 'figma' as const, leaf: 'Fidelity', baseline: 'Figma exports', flag: '' },
+  { mode: 'accepted' as const, leaf: 'Changes', baseline: 'last accepted renders', flag: ' --against accepted' },
 ];
 
 const PLATFORMS = [
@@ -42,23 +45,26 @@ const PLATFORMS = [
 ];
 
 /**
- * Every view leaf a component can carry, in the order the sidebar reads them.
+ * Every nav segment below a component, in the order the sidebar reads them: the
+ * views themselves, then the Testing folder, then what is inside it.
  *
  * Not published, and that is forced rather than chosen: Storybook's indexer
  * extracts the preview's `storySort` out of its AST and `eval`s it on its own, so
  * that function can reference no import and no module constant. The order lives
  * as a literal inside it. This export exists so a test can hold the two copies
- * to the same names — a leaf the preview does not rank sorts alphabetically and
- * lands in the wrong place, which nothing errors on.
+ * to the same names — a segment the preview does not rank sorts alphabetically
+ * and lands in the wrong place, which nothing errors on.
+ *
+ * A subcomponent folder is deliberately absent: it is ranked by not being here,
+ * which is what puts it after everything the component itself offers.
  */
 export function viewLeaves(): string[] {
-  const leaves: string[] = [];
-  for (const platform of PLATFORMS) {
-    leaves.push(platform.leaf);
-    for (const mode of DIFF_MODES) leaves.push(`${platform.leaf} — ${mode.leaf}`);
-  }
-  leaves.push(...SPEC_VIEWS.map((v) => v.leaf));
-  return leaves;
+  return [
+    ...PLATFORMS.map((p) => p.leaf),
+    ...SPEC_VIEWS.map((v) => v.leaf),
+    TESTING_FOLDER,
+    ...PLATFORMS.flatMap((p) => DIFF_MODES.map((m) => `${p.leaf} ${m.leaf}`)),
+  ];
 }
 
 export interface ModeControl {
@@ -247,9 +253,33 @@ function reportCandidates(mode: 'figma' | 'accepted', target: 'react' | 'webcomp
   return target === 'react' ? [targeted, mode === 'accepted' ? 'regression' : 'fidelity'] : [targeted];
 }
 
-/** Which of a platform's testing pages have a report to read. */
-function hasReport(ws: Workspace, candidates: string[]): boolean {
-  return candidates.some((name) => fs.existsSync(path.join(ws.root, 'testing', 'visual', 'report', `${name}.json`)));
+/**
+ * Whether one spec has results in the first of these reports that exists.
+ *
+ * A report covers the specs the visual manifest pinned, which is rarely the whole
+ * catalogue: gating on the report file alone published a page for every component
+ * and most of them said "this spec isn't in the visual manifest". The reports are
+ * keyed by spec folder key — the same key this concern names its pages after — so
+ * the check is a lookup, not a match.
+ *
+ * Only the first existing report is consulted, because that is the one the page
+ * will read: a later candidate it never reaches must not decide whether it
+ * publishes.
+ */
+function reportHasSpec(ws: Workspace, candidates: string[], kindDir: string, key: string): boolean {
+  for (const name of candidates) {
+    const file = path.join(ws.root, 'testing', 'visual', 'report', `${name}.json`);
+    if (!fs.existsSync(file)) continue;
+    try {
+      const report = JSON.parse(fs.readFileSync(file, 'utf-8')) as Record<string, Record<string, unknown> | undefined>;
+      return Boolean(report[kindDir]?.[key]);
+    } catch {
+      // An unreadable report is the diff's problem. Publish nothing from it
+      // rather than failing the whole publish over one malformed file.
+      return false;
+    }
+  }
+  return false;
 }
 
 /**
@@ -268,11 +298,14 @@ function viewPages(ws: Workspace): BuiltFile[] {
     const kindDir = spec.kind === 'component' ? 'components' : 'compositions';
     const dir = path.join(spec.kind, spec.key);
 
+    const displayName = specDisplayName(spec.navFolder);
+
     for (const view of SPEC_VIEWS) {
       files.push({
         path: path.join(dir, `${view.leaf}.stories.tsx`),
         content: renderTemplate(specTemplate, {
           NAV_TITLE: `${spec.navFolder}/${view.leaf}`,
+          PAGE_HEADING: JSON.stringify(`${displayName} / ${view.leaf}`),
           KIND: kindDir,
           SLUG: spec.key,
           CONCERN: view.concern,
@@ -284,14 +317,15 @@ function viewPages(ws: Workspace): BuiltFile[] {
       if (!platform.emitted(ws)) continue;
       for (const mode of DIFF_MODES) {
         const candidates = reportCandidates(mode.mode, platform.target);
-        // A page publishes only when its report exists, so a workspace that has
-        // never run a diff shows the four views it can actually answer.
-        if (!hasReport(ws, candidates)) continue;
-        const leaf = `${platform.leaf} — ${mode.leaf}`;
+        // A page publishes only when this spec has results to show, so the
+        // Testing folder lists what a reader can actually open.
+        if (!reportHasSpec(ws, candidates, kindDir, spec.key)) continue;
+        const leaf = `${platform.leaf} ${mode.leaf}`;
         files.push({
           path: path.join(dir, `${platform.target}-${mode.mode}.stories.tsx`),
           content: renderTemplate(testingTemplate, {
-            NAV_TITLE: `${spec.navFolder}/${leaf}`,
+            NAV_TITLE: `${spec.navFolder}/${TESTING_FOLDER}/${leaf}`,
+            PAGE_HEADING: JSON.stringify(`${displayName} / ${leaf}`),
             KIND: kindDir,
             SLUG: spec.key,
             REPORT_CANDIDATES: JSON.stringify(candidates),

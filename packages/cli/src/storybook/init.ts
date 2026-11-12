@@ -43,6 +43,7 @@ const HOST_FILES: Array<{ out: string; template: string }> = [
   { out: '.storybook/preview.tsx', template: 'preview.tsx.tpl' },
   { out: '.storybook/manager.tsx', template: 'manager.tsx.tpl' },
   { out: '.storybook/manager-head.html', template: 'manager-head.html.tpl' },
+  { out: '.storybook/PlatformDocs.tsx', template: 'PlatformDocs.tsx.tpl' },
 ];
 
 /**

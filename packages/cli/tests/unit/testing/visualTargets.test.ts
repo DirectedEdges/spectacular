@@ -83,8 +83,8 @@ describe('story title candidates', () => {
   it('matches the platform leaf under the component, for both kinds and both targets', () => {
     expect(titleCandidates('react', 'component', 'Card')[0]).toBe('Components/Card/React');
     expect(titleCandidates('react', 'composition', 'Card')[0]).toBe('Compositions/Card/React');
-    expect(titleCandidates('webcomponents', 'component', 'Card')[0]).toBe('Components/Card/Web components');
-    expect(titleCandidates('webcomponents', 'composition', 'Card')[0]).toBe('Compositions/Card/Web components');
+    expect(titleCandidates('webcomponents', 'component', 'Card')[0]).toBe('Components/Card/Web component');
+    expect(titleCandidates('webcomponents', 'composition', 'Card')[0]).toBe('Compositions/Card/Web component');
   });
 
   // A workspace's emitted trees are only as new as its last transform run, so a
@@ -99,7 +99,7 @@ describe('story title candidates', () => {
   });
 
   it('never offers one target a title the other target writes', () => {
-    expect(titleCandidates('react', 'component', 'Card')).not.toContain('Components/Card/Web components');
+    expect(titleCandidates('react', 'component', 'Card')).not.toContain('Components/Card/Web component');
     expect(titleCandidates('webcomponents', 'component', 'Card')).not.toContain('Components/Card/React');
   });
 });

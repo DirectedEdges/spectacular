@@ -62,7 +62,7 @@ export function titleCandidates(target: Target, kind: SpecKind, titlePath: strin
   // `Web Components/Compositions/Card`. Listing only the other two is why every
   // Web Components composition once reported as no-story.
   return [
-    `${section}/${titlePath}/Web components`,
+    `${section}/${titlePath}/Web component`,
     ...(kind === 'composition'
       ? [
           `Web Components/Compositions/${titlePath}`,

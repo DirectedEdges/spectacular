@@ -33,9 +33,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **A component expands in the Storybook sidebar to one entry per view**, with React, Web components, API and Variants replacing the two rows of in-page tabs, plus a Testing entry per platform once a diff report exists
+- **A component expands in the Storybook sidebar to one entry per view**, with React, Web component, API and Variants replacing the two rows of in-page tabs, plus a Testing entry per platform once a diff report exists
 
 - **Web Components no longer has a top-level Storybook section.** Each platform's docs page is an entry under the component it documents, so a workspace emitting both platforms lists each component once
+
+- **A component's docs page names the component in its heading**, not just the view — `DS Button / React` rather than a bare `React`, which read identically on every component
+
+- **A component's visual diffs sit in a Testing folder under it**, as `React Fidelity`, `React Changes` and the Web Component pair, and a page publishes only when that component has results in the report — where every component used to get a page and most of them said it had none
 
 ### Fixed
 

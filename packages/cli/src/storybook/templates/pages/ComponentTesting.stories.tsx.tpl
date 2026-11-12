@@ -13,7 +13,6 @@ import type { Meta, StoryObj } from '@storybook/react';
 type Pair = {
   nodeId: string;
   config: Record<string, string>;
-  storyId: string | null;
   status: string;
   pass: boolean | null;
   dims?: { dw: number; dh: number };
@@ -24,8 +23,6 @@ type Pair = {
 };
 
 type Entry = {
-  /** The story title the manifest recorded, e.g. `Components/DS Button`. */
-  title?: string;
   summary: {
     passPct: number;
     variants: number;
@@ -54,31 +51,6 @@ const REPORT_CANDIDATES: string[] = {{REPORT_CANDIDATES}};
 const PASS_COLOR = '#2e9960';
 const FAIL_COLOR = '#d64545';
 const MUTED = '#666';
-
-/** Storybook's story-id derivation, enough of it to match a title to a slug. */
-function titleToPrefix(title: string): string {
-  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-}
-
-/**
- * This component's entry in the report. Matched on a pair's own storyId first —
- * that is the join the diff already made, so it needs no guessing. A component
- * whose every variant is missing a story has no storyId to match, so the
- * manifest's story title is the fallback: it is recorded with or without its
- * section prefix depending on the library, so both spellings count.
- */
-function findEntry(entries: Record<string, Entry>, kind: string, slug: string): Entry | null {
-  const want = `${kind}-${slug}`;
-  const all = Object.values(entries);
-  const byStory = all.find((e) => e.pairs.some((p) => p.storyId?.startsWith(`${want}--`)));
-  if (byStory) return byStory;
-  return (
-    all.find((e) => {
-      const prefix = e.title ? titleToPrefix(e.title) : '';
-      return prefix === want || prefix === slug;
-    }) ?? null
-  );
-}
 
 /** The variant's identity: its props, or `default` when it has none. */
 function configLabel(config: Record<string, string>): string {
@@ -136,22 +108,41 @@ function ComponentTestingPage() {
   }, []);
 
   const note: React.CSSProperties = { color: MUTED, font: '13px system-ui' };
+  // The sidebar shows the view name alone, so the heading is the only place the
+  // page says which component it belongs to.
+  const heading = <h1>{ {{PAGE_HEADING}} }</h1>;
   if (missing) {
     return (
-      <p style={note}>
-        No results yet — run <code>specs testing visual diff{{DIFF_FLAG}}</code>, then reload.
-      </p>
+      <>
+        {heading}
+        <p style={note}>
+          No results yet — run <code>specs testing visual diff{{DIFF_FLAG}}</code>, then reload.
+        </p>
+      </>
     );
   }
-  if (!report) return <p style={note}>Loading results…</p>;
+  if (!report) return <>{heading}<p style={note}>Loading results…</p></>;
 
+  // Reports are keyed by spec folder key, which is the key this page was named
+  // after — so this is a lookup, not a match. Publish only writes this page when
+  // the key is present, so an absent entry means the report moved underneath it.
   const entries = '{{KIND}}' === 'compositions' ? report.compositions : report.components;
-  const entry = entries ? findEntry(entries, '{{KIND}}', '{{SLUG}}') : null;
-  if (!entry) return <p style={note}>This spec isn’t in the visual manifest.</p>;
+  const entry = entries?.['{{SLUG}}'];
+  if (!entry) {
+    return (
+      <>
+        {heading}
+        <p style={note}>
+          This spec is no longer in the report — re-run <code>specs storybook</code> to catch the page up.
+        </p>
+      </>
+    );
+  }
 
   const s = entry.summary;
   return (
     <div style={{ font: '13px system-ui' }}>
+      {heading}
       <p style={{ color: MUTED, margin: '0 0 16px' }}>
         {new Date(report.generatedAt).toLocaleString()} · baseline: {{BASELINE_LABEL}} · scale{' '}
         {report.settings.scale} · <b style={{ color: PASS_COLOR }}>{s.pass} pass</b> ·{' '}

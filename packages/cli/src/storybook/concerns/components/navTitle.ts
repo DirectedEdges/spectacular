@@ -11,7 +11,7 @@ import { toPascalCase } from '../../../transforms/naming.js';
 import type { SpecKind } from '../../../utilities/specsLayout.js';
 
 /** The nav leaves the emitters claim. Published views must not collide with them. */
-export const PLATFORM_LEAVES = { react: 'React', webcomponents: 'Web components' } as const;
+export const PLATFORM_LEAVES = { react: 'React', webcomponents: 'Web component' } as const;
 
 /** The top-level section each kind browses under (ADR-097). */
 const SECTION: Record<SpecKind, string> = { component: 'Components', composition: 'Compositions' };
@@ -30,4 +30,17 @@ export function specNavFolder(kind: SpecKind, key: string, title: string | undef
     .split('/')
     .filter((seg) => seg.toLowerCase().replace(/[^a-z0-9]+/g, '').length > 0);
   return [SECTION[kind], ...segments].join('/');
+}
+
+/**
+ * What a published page calls the spec in its own heading — `DS Button`, or
+ * `Checkbox / Control` for a subcomponent.
+ *
+ * The sidebar already shows the component as the folder above the page, so the
+ * heading is the only place the page says which component it belongs to. The
+ * section is dropped: `Components` is the branch the reader navigated through,
+ * not part of the component's name.
+ */
+export function specDisplayName(navFolder: string): string {
+  return navFolder.split('/').slice(1).join(' / ');
 }

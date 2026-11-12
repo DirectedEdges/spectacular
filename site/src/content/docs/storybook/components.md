@@ -14,9 +14,9 @@ view of that component.
 | **React** | The React docs page — a live example, a controls table generated from the props, and every emitted story | You ran `specs react` |
 | **React — Testing (Fidelity)** | This component's variants diffed against its Figma exports | A fidelity report exists for React |
 | **React — Testing (Changes)** | The same variants diffed against the renders you last accepted | A regression report exists for React |
-| **Web components** | The same component's Lit output, same stories | You ran `specs webcomponents` |
-| **Web components — Testing (Fidelity)** | The Lit output diffed against the Figma exports | A fidelity report exists for Web Components |
-| **Web components — Testing (Changes)** | The Lit output diffed against the accepted renders | A regression report exists for Web Components |
+| **Web component** | The same component's Lit output, same stories | You ran `specs webcomponents` |
+| **Web component — Testing (Fidelity)** | The Lit output diffed against the Figma exports | A fidelity report exists for Web Components |
+| **Web component — Testing (Changes)** | The Lit output diffed against the accepted renders | A regression report exists for Web Components |
 | **API** | The authored `api.yaml`, formatted | **Always** |
 | **Variants** | The authored `variants.yaml`, formatted | **Always** |
 

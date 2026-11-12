@@ -2,6 +2,7 @@
 // touches it.
 import type { Preview } from '@storybook/react';
 import { addons } from 'storybook/preview-api';
+import { PlatformDocs } from './PlatformDocs.js';
 {{CSSVARS_IMPORT}}
 // Mode toolbar controls (specs#636): published from conventions/storybook.yaml
 // `modes.collections`, driving the attributes the emitted stylesheet switches on.
@@ -71,23 +72,27 @@ const preview: Preview = {
     // survive that extraction. The two orders are literals for the same reason.
     //
     // Titles are compared one path segment at a time. The first segment takes
-    // the system's section order; a final segment naming one of a component's
-    // views takes the view order, because alphabetical order on those names puts
-    // API first and splits the two platforms apart. Everything else is
-    // alphabetical. The view list is an ordering, not an inventory — a name with
-    // no page simply never appears.
+    // the system's section order. Every segment below that takes VIEWS, which
+    // ranks what a component offers; a segment VIEWS does not name — a
+    // subcomponent folder, a component name — sorts after all of them,
+    // alphabetically. That is what puts a component's own views above its
+    // subcomponents, where plain alphabetical order put `Item` above `React`.
+    //
+    // VIEWS is an ordering, not an inventory: a name with no page never appears,
+    // and a subcomponent that happens to be called `API` sorts where API sorts.
     options: {
       storySort: (a, b) => {
         const SECTIONS = ['Overview', 'Foundations', 'Components', 'Compositions', 'Analysis', 'Versions'];
         const VIEWS = [
           'React',
-          'React — Testing (Fidelity)',
-          'React — Testing (Changes)',
-          'Web components',
-          'Web components — Testing (Fidelity)',
-          'Web components — Testing (Changes)',
+          'Web component',
           'API',
           'Variants',
+          'Testing',
+          'React Fidelity',
+          'React Changes',
+          'Web component Fidelity',
+          'Web component Changes',
         ];
         const rankIn = (order, value) => {
           const at = order.indexOf(value);
@@ -102,13 +107,9 @@ const preview: Preview = {
           // One path has run out: the shallower entry is this folder's own page.
           if (x === undefined) return -1;
           if (y === undefined) return 1;
-          if (i === 0) {
-            const bySection = rankIn(SECTIONS, x) - rankIn(SECTIONS, y);
-            if (bySection !== 0) return bySection;
-          } else if (i === left.length - 1 && i === right.length - 1) {
-            const byView = rankIn(VIEWS, x) - rankIn(VIEWS, y);
-            if (byView !== 0) return byView;
-          }
+          const order = i === 0 ? SECTIONS : VIEWS;
+          const byOrder = rankIn(order, x) - rankIn(order, y);
+          if (byOrder !== 0) return byOrder;
           return x.localeCompare(y);
         }
         return 0;
@@ -118,8 +119,10 @@ const preview: Preview = {
     // serializer's tree structure without prettier re-splitting attributes
     // onto one line each.
     docs: {
-      // No global docs page: a component's React view is Storybook's own autodocs
-      // page, and every other view is a published page carrying its own docs.page.
+      // Storybook's autodocs page with the heading naming the component as well
+      // as the view. Every published page sets its own `docs.page` on its meta,
+      // which wins over this one.
+      page: PlatformDocs,
       source: { format: 'dedent' },
       // Give every story on the Docs page the canvas toolbar, not just the primary.
       canvas: {

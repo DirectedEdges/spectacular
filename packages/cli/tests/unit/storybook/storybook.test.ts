@@ -76,16 +76,17 @@ describe('package boundary (ADR A decision 1)', () => {
 describe('sidebar order in the scaffolded preview', () => {
   const preview = () => fs.readFileSync(path.join(templatesDir(), 'preview.tsx.tpl'), 'utf-8');
 
-  it('each platform is followed by its own testing views, spec documents last', () => {
+  it('reads platforms, then spec documents, then the Testing folder and its pages', () => {
     expect(viewLeaves()).toEqual([
       'React',
-      'React — Testing (Fidelity)',
-      'React — Testing (Changes)',
-      'Web components',
-      'Web components — Testing (Fidelity)',
-      'Web components — Testing (Changes)',
+      'Web component',
       'API',
       'Variants',
+      'Testing',
+      'React Fidelity',
+      'React Changes',
+      'Web component Fidelity',
+      'Web component Changes',
     ]);
   });
 
@@ -93,7 +94,30 @@ describe('sidebar order in the scaffolded preview', () => {
     expect(viewLeaves()).not.toContain('Examples');
   });
 
-  it('ranks every leaf the concern can publish, in the same order', () => {
+  /**
+   * A subcomponent folder is ranked by its absence from VIEWS. When the rank
+   * only applied to a segment both titles ended on, `Item` fell through to
+   * alphabetical and sorted above the component's own `React` page.
+   */
+  it('sorts a subcomponent folder after everything the component itself offers', () => {
+    const body = /storySort:\s*\(a, b\) =>\s*\{([\s\S]*?)\n {6}\},/.exec(preview())?.[1] ?? '';
+    const sort = new Function('a', 'b', body) as (a: { title: string }, b: { title: string }) => number;
+    const under = (leaf: string) => ({ title: `Components/Action List/${leaf}` });
+    const sorted = ['Item/React', 'Variants', 'Testing/React Changes', 'React', 'API', 'Web component']
+      .map(under)
+      .sort(sort)
+      .map((e) => e.title.split('/').slice(2).join('/'));
+    expect(sorted).toEqual([
+      'React',
+      'Web component',
+      'API',
+      'Variants',
+      'Testing/React Changes',
+      'Item/React',
+    ]);
+  });
+
+  it('ranks every segment the concern can publish, in the same order', () => {
     const source = preview();
     const positions = viewLeaves().map((leaf) => source.indexOf(`'${leaf}'`));
     for (const [i, at] of positions.entries()) {
@@ -387,7 +411,7 @@ describe('templates', () => {
     for (const file of ['package.json.tpl', 'tsconfig.json.tpl', 'main.ts.tpl', 'preview.tsx.tpl', 'manager.tsx.tpl', 'manager-head.html.tpl',
       'pages/Color.stories.tsx.tpl', 'pages/Typography.stories.tsx.tpl', 'pages/Icons.stories.tsx.tpl', 'pages/Images.stories.tsx.tpl',
       'pages/GettingStarted.stories.tsx.tpl', 'pages/Analysis.stories.tsx.tpl', 'pages/VersionsStub.stories.tsx.tpl',
-      'pages/SpecConcern.stories.tsx.tpl', 'pages/ComponentTesting.stories.tsx.tpl', 'pages/VisualReport.stories.tsx.tpl']) {
+      'pages/SpecConcern.stories.tsx.tpl', 'pages/ComponentTesting.stories.tsx.tpl', 'pages/VisualReport.stories.tsx.tpl', 'PlatformDocs.tsx.tpl']) {
       expect(fs.existsSync(path.join(dir, file)), file).toBe(true);
     }
   });
@@ -536,16 +560,32 @@ describe('deriveCompositions', () => {
 describe('components concern — published view pages', () => {
   const componentsConcern = registry.find((c) => c.name === 'components')!;
 
-  function workspace(options: { react: boolean; webcomponents: boolean; reports: string[] }): Workspace {
+  /**
+   * `reports` names the report files to write, each one covering `dsButton`.
+   * `reportsWithoutTheSpec` writes a report that exists but does not list it —
+   * the common case, since a visual manifest rarely pins the whole catalogue.
+   */
+  function workspace(options: {
+    react: boolean;
+    webcomponents: boolean;
+    reports: string[];
+    reportsWithoutTheSpec?: string[];
+  }): Workspace {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sb-views-'));
     fs.ensureDirSync(path.join(root, 'specs', 'components', 'dsButton'));
     fs.writeFileSync(
       path.join(root, 'specs', 'components', 'dsButton', 'api.yaml'),
       'title: DS Button (Beta)\nprops: {}\n',
     );
-    for (const name of options.reports) {
+    const writeReport = (name: string, body: string) => {
       fs.ensureDirSync(path.join(root, 'testing', 'visual', 'report'));
-      fs.writeFileSync(path.join(root, 'testing', 'visual', 'report', `${name}.json`), '{}');
+      fs.writeFileSync(path.join(root, 'testing', 'visual', 'report', `${name}.json`), body);
+    };
+    for (const name of options.reports) {
+      writeReport(name, JSON.stringify({ components: { dsButton: { summary: {}, pairs: [] } } }));
+    }
+    for (const name of options.reportsWithoutTheSpec ?? []) {
+      writeReport(name, JSON.stringify({ components: { dsCard: { summary: {}, pairs: [] } } }));
     }
     return {
       root,
@@ -578,10 +618,20 @@ describe('components concern — published view pages', () => {
     );
     expect([...pages.keys()].sort()).toEqual([
       'Components/DS Button (Beta)/API',
-      'Components/DS Button (Beta)/React — Testing (Fidelity)',
+      'Components/DS Button (Beta)/Testing/React Fidelity',
+      'Components/DS Button (Beta)/Testing/Web component Changes',
       'Components/DS Button (Beta)/Variants',
-      'Components/DS Button (Beta)/Web components — Testing (Changes)',
     ]);
+  });
+
+  it('names the component in every page heading, which the sidebar entry does not', async () => {
+    const pages = await pagesByTitle(
+      workspace({ react: true, webcomponents: true, reports: ['fidelity.react'] }),
+    );
+    expect(pages.get('Components/DS Button (Beta)/API')).toContain('"DS Button (Beta) / API"');
+    expect(pages.get('Components/DS Button (Beta)/Testing/React Fidelity')).toContain(
+      '"DS Button (Beta) / React Fidelity"',
+    );
   });
 
   it('publishes a testing page only for a platform-and-baseline that has a report', async () => {
@@ -592,10 +642,42 @@ describe('components concern — published view pages', () => {
     ]);
   });
 
+  /**
+   * Gating on the report FILE published a testing page for every component and
+   * most of them read "this spec isn't in the visual manifest" — a page whose
+   * only content is that it has none.
+   */
+  it('publishes no testing page for a spec the report does not cover', async () => {
+    const pages = await pagesByTitle(
+      workspace({ react: true, webcomponents: true, reports: [], reportsWithoutTheSpec: ['fidelity.react'] }),
+    );
+    expect([...pages.keys()].sort()).toEqual([
+      'Components/DS Button (Beta)/API',
+      'Components/DS Button (Beta)/Variants',
+    ]);
+  });
+
   it('reads an untargeted report as React results, never as Web Components', async () => {
     const pages = await pagesByTitle(workspace({ react: true, webcomponents: true, reports: ['fidelity'] }));
-    expect(pages.has('Components/DS Button (Beta)/React — Testing (Fidelity)')).toBe(true);
-    expect(pages.has('Components/DS Button (Beta)/Web components — Testing (Fidelity)')).toBe(false);
+    expect(pages.has('Components/DS Button (Beta)/Testing/React Fidelity')).toBe(true);
+    expect(pages.has('Components/DS Button (Beta)/Testing/Web component Fidelity')).toBe(false);
+  });
+
+  /**
+   * Only the first report that exists is consulted, because that is the one the
+   * page will read. A later candidate it never reaches must not decide whether
+   * the page publishes.
+   */
+  it('ignores the legacy report when the targeted one exists and omits the spec', async () => {
+    const pages = await pagesByTitle(
+      workspace({
+        react: true,
+        webcomponents: false,
+        reports: ['fidelity'],
+        reportsWithoutTheSpec: ['fidelity.react'],
+      }),
+    );
+    expect(pages.has('Components/DS Button (Beta)/Testing/React Fidelity')).toBe(false);
   });
 
   it('renders every page to TSX that parses, with no placeholder left behind', async () => {

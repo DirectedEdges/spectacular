@@ -103,7 +103,7 @@ ran `fetch` gets no Foundations section rather than empty pages.
 
 ### `components`
 
-Not the component stories — the React and Web components views come from
+Not the component stories — the React and Web component views come from
 [`react`](/cli/commands/react/) and
 [`webcomponents`](/cli/commands/webcomponents/). This concern writes the rest of
 what sits under a component in the sidebar, plus the navigation contract the host
