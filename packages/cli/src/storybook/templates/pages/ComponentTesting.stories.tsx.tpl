@@ -24,7 +24,7 @@ type Pair = {
 };
 
 type Entry = {
-  /** The story title the manifest recorded, e.g. `Components/EGDS Button`. */
+  /** The story title the manifest recorded, e.g. `Components/DS Button`. */
   title?: string;
   summary: {
     passPct: number;

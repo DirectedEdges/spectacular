@@ -17,7 +17,7 @@ export const PLATFORM_LEAVES = { react: 'React', webcomponents: 'Web components'
 const SECTION: Record<SpecKind, string> = { component: 'Components', composition: 'Compositions' };
 
 /**
- * The folder a spec's views sit in — `Components/EGDS Button`.
+ * The folder a spec's views sit in — `Components/DS Button`.
  *
  * `title` is the spec's own, falling back to the folder key as the emitters do.
  * Figma-style " / " separators collapse so they do not create nav levels with

@@ -118,7 +118,7 @@ describe('specNavFolder', () => {
   });
 
   it('falls back to the folder key when the spec carries no title', () => {
-    expect(specNavFolder('component', 'egdsButton', undefined)).toBe('Components/EgdsButton');
+    expect(specNavFolder('component', 'dsButton', undefined)).toBe('Components/DsButton');
   });
 });
 
@@ -512,10 +512,10 @@ describe('components concern — published view pages', () => {
 
   function workspace(options: { react: boolean; webcomponents: boolean; reports: string[] }): Workspace {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sb-views-'));
-    fs.ensureDirSync(path.join(root, 'specs', 'components', 'egdsButton'));
+    fs.ensureDirSync(path.join(root, 'specs', 'components', 'dsButton'));
     fs.writeFileSync(
-      path.join(root, 'specs', 'components', 'egdsButton', 'api.yaml'),
-      'title: EGDS Button (Beta)\nprops: {}\n',
+      path.join(root, 'specs', 'components', 'dsButton', 'api.yaml'),
+      'title: DS Button (Beta)\nprops: {}\n',
     );
     for (const name of options.reports) {
       fs.ensureDirSync(path.join(root, 'testing', 'visual', 'report'));
@@ -525,7 +525,7 @@ describe('components concern — published view pages', () => {
       root,
       specsDir: path.join(root, 'specs'),
       assetsDir: path.join(root, 'assets'),
-      componentKeys: ['egdsButton'],
+      componentKeys: ['dsButton'],
       compositionKeys: [],
       hasReact: options.react,
       hasWebComponents: options.webcomponents,
@@ -551,25 +551,25 @@ describe('components concern — published view pages', () => {
       workspace({ react: true, webcomponents: true, reports: ['fidelity.react', 'regression.webcomponents'] }),
     );
     expect([...pages.keys()].sort()).toEqual([
-      'Components/EGDS Button (Beta)/API',
-      'Components/EGDS Button (Beta)/React — Testing (Fidelity)',
-      'Components/EGDS Button (Beta)/Variants',
-      'Components/EGDS Button (Beta)/Web components — Testing (Changes)',
+      'Components/DS Button (Beta)/API',
+      'Components/DS Button (Beta)/React — Testing (Fidelity)',
+      'Components/DS Button (Beta)/Variants',
+      'Components/DS Button (Beta)/Web components — Testing (Changes)',
     ]);
   });
 
   it('publishes a testing page only for a platform-and-baseline that has a report', async () => {
     const pages = await pagesByTitle(workspace({ react: true, webcomponents: true, reports: [] }));
     expect([...pages.keys()].sort()).toEqual([
-      'Components/EGDS Button (Beta)/API',
-      'Components/EGDS Button (Beta)/Variants',
+      'Components/DS Button (Beta)/API',
+      'Components/DS Button (Beta)/Variants',
     ]);
   });
 
   it('reads an untargeted report as React results, never as Web Components', async () => {
     const pages = await pagesByTitle(workspace({ react: true, webcomponents: true, reports: ['fidelity'] }));
-    expect(pages.has('Components/EGDS Button (Beta)/React — Testing (Fidelity)')).toBe(true);
-    expect(pages.has('Components/EGDS Button (Beta)/Web components — Testing (Fidelity)')).toBe(false);
+    expect(pages.has('Components/DS Button (Beta)/React — Testing (Fidelity)')).toBe(true);
+    expect(pages.has('Components/DS Button (Beta)/Web components — Testing (Fidelity)')).toBe(false);
   });
 
   it('renders every page to TSX that parses, with no placeholder left behind', async () => {
