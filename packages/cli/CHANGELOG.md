@@ -57,6 +57,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`storybook/.storybook/ComponentDocs.tsx` is no longer part of the scaffold**, and nothing imports it; `specs storybook init --force` reports an existing copy as orphaned instead of deleting it, since the file is yours
 
+- **`content/components/tabs.json` is gone**, and no `views.json` replaces it. The order the views read in lives in the `storySort` parameter in `.storybook/preview.tsx`, which Storybook requires to be self-contained — edit the `VIEWS` list there to change it
+
 
 ## [0.36.0] - 2026-10-29
 

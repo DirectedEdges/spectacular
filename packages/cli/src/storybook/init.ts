@@ -1,13 +1,13 @@
 // `specs storybook init` — scaffold the host, once. Writes package.json,
 // tsconfig.json and .storybook/*, creates content-overrides/, and seeds
-// content/components/views.json so the preview's build-time import resolves
+// content/components/modes.json so the preview's build-time import resolves
 // before the first publish. Prints the install step; the customer installs
 // Storybook — we never ship or vendor it (ADR A decision 1).
 import fs from 'fs-extra';
 import path from 'path';
 import type { Workspace } from './workspace.js';
 import { readTemplate, renderTemplate, templatesHash, STORYBOOK_VERSION, STORYBOOK_MAJOR } from './templates.js';
-import { deriveViews, deriveModes } from './concerns/components/index.js';
+import { deriveModes } from './concerns/components/index.js';
 import { resolveStorybookPort, type PortSource } from './port.js';
 
 declare const __SPECS_CLI_VERSION__: string;
@@ -112,19 +112,11 @@ export function init(ws: Workspace, options: InitOptions): InitResult {
   // The override tree: the customer's, from the start. No command writes into it.
   fs.ensureDirSync(path.join(ws.storybookDir, 'content-overrides'));
 
-  // Seed views.json: the preview imports it at build time to order the leaves
-  // under a component, so it must exist before the first publish. Publish
-  // rewrites it from the same derivation.
-  const viewsFile = path.join(ws.storybookDir, 'content', 'components', 'views.json');
-  if (!fs.existsSync(viewsFile)) {
-    fs.ensureDirSync(path.dirname(viewsFile));
-    fs.writeFileSync(viewsFile, JSON.stringify(deriveViews(ws), null, 2) + '\n');
-    written.push(path.join('storybook', 'content', 'components', 'views.json'));
-  }
-
-  // Seed modes.json for the same reason: the scaffolded preview imports it.
+  // Seed modes.json: the scaffolded preview imports it at build time, so it must
+  // exist before the first publish. Publish rewrites it from the same derivation.
   const modesFile = path.join(ws.storybookDir, 'content', 'components', 'modes.json');
   if (!fs.existsSync(modesFile)) {
+    fs.ensureDirSync(path.dirname(modesFile));
     fs.writeFileSync(modesFile, JSON.stringify(deriveModes(ws, ws.config.conventions.storybook?.modes), null, 2) + '\n');
     written.push(path.join('storybook', 'content', 'components', 'modes.json'));
   }

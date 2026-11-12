@@ -66,7 +66,7 @@ customize it:
 | A component's **API**, **Variants** and **Testing** views | A `.stories.tsx` under `content/components/`, one per view per component | Copy to `content-overrides/` — the mechanism above, and the only per-component customization there is |
 | A component's **React** and **Web components** views | No file under `content/` — Storybook's own autodocs page over the emitted story file | Nothing to copy. Change what `specs react` / `specs webcomponents` emit, or the spec behind it |
 | Mode toolbar | `.storybook/preview.tsx` + generated `content/components/modes.json` | Behavior in the host file; which controls exist via `modes.collections` in the conventions file |
-| Order of the views under a component | `.storybook/preview.tsx` + generated `content/components/views.json` | The sort in the host file; which views exist follows from what you emitted and diffed |
+| Order of the views under a component | `.storybook/preview.tsx` alone — the `storySort` parameter | Edit the `VIEWS` list inside that function. Storybook reads the parameter out of the file and runs the function on its own, so it has to stay self-contained: no imports, no constants from elsewhere in the file |
 
 Two consequences worth knowing before you fork:
 

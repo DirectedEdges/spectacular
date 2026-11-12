@@ -41,31 +41,24 @@ const PLATFORMS = [
   { target: 'webcomponents' as const, leaf: PLATFORM_LEAVES.webcomponents, emitted: (ws: Workspace) => ws.hasWebComponents },
 ];
 
-export interface ViewsJson {
-  /** Every view leaf a component can carry, in the order the sidebar shows them. */
-  views: string[];
-}
-
 /**
- * The sidebar's reading order for the leaves under a component.
+ * Every view leaf a component can carry, in the order the sidebar reads them.
  *
- * Published so the host has one copy of it: the scaffolded preview imports this
- * to sort by, because alphabetical order on these names puts API first and
- * splits the two platforms apart.
- *
- * This is an ordering, not an inventory — a testing leaf is listed for every
- * emitted platform whether or not a report exists to publish a page from, and a
- * leaf with no page simply never appears.
+ * Not published, and that is forced rather than chosen: Storybook's indexer
+ * extracts the preview's `storySort` out of its AST and `eval`s it on its own, so
+ * that function can reference no import and no module constant. The order lives
+ * as a literal inside it. This export exists so a test can hold the two copies
+ * to the same names — a leaf the preview does not rank sorts alphabetically and
+ * lands in the wrong place, which nothing errors on.
  */
-export function deriveViews(ws: Workspace): ViewsJson {
-  const views: string[] = [];
+export function viewLeaves(): string[] {
+  const leaves: string[] = [];
   for (const platform of PLATFORMS) {
-    if (!platform.emitted(ws)) continue;
-    views.push(platform.leaf);
-    for (const mode of DIFF_MODES) views.push(`${platform.leaf} — ${mode.leaf}`);
+    leaves.push(platform.leaf);
+    for (const mode of DIFF_MODES) leaves.push(`${platform.leaf} — ${mode.leaf}`);
   }
-  views.push(...SPEC_VIEWS.map((v) => v.leaf));
-  return { views };
+  leaves.push(...SPEC_VIEWS.map((v) => v.leaf));
+  return leaves;
 }
 
 export interface ModeControl {
@@ -315,15 +308,14 @@ function viewPages(ws: Workspace): BuiltFile[] {
 export const components: Concern = {
   name: 'components',
 
-  // views.json must always exist: the scaffolded preview imports it at build
-  // time, and a workspace with no specs still has an ordering.
+  // modes.json and compositions.json must always exist: the scaffolded host
+  // imports them at build time, before a workspace has modes or compositions.
   detect(): boolean {
     return true;
   },
 
   async build(ws: Workspace): Promise<BuiltFile[]> {
     return [
-      { path: 'views.json', content: JSON.stringify(deriveViews(ws), null, 2) + '\n' },
       {
         path: 'modes.json',
         content: JSON.stringify(deriveModes(ws, ws.config.conventions.storybook?.modes), null, 2) + '\n',

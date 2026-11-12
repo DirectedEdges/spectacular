@@ -5,7 +5,7 @@ import os from 'os';
 import { fileURLToPath } from 'url';
 import { Storybook } from '../../../src/commands/storybook.js';
 import { registry, concernNames } from '../../../src/storybook/concerns/registry.js';
-import { deriveViews, deriveCompositions, deriveModes } from '../../../src/storybook/concerns/components/index.js';
+import { viewLeaves, deriveCompositions, deriveModes } from '../../../src/storybook/concerns/components/index.js';
 import { specNavFolder } from '../../../src/storybook/concerns/components/navTitle.js';
 import { kebabizePath } from '../../../src/transforms/css/values/tokens.js';
 import { buildColorData } from '../../../src/storybook/concerns/foundations/color.js';
@@ -61,12 +61,23 @@ describe('package boundary (ADR A decision 1)', () => {
   });
 });
 
-describe('deriveViews', () => {
-  const ws = (hasReact: boolean, hasWebComponents: boolean) =>
-    ({ hasReact, hasWebComponents } as Workspace);
+/**
+ * The sidebar order is a literal inside the preview's `storySort`, and it cannot
+ * be anything else: Storybook's indexer pulls that parameter out of the file's
+ * AST and `eval`s the function on its own, so it reaches no import, no module
+ * constant, no helper, and no TypeScript annotation. Writing `storySort` as a
+ * reference to a const took the whole instance down with "Parameter
+ * 'options.storySort' should be defined inline".
+ *
+ * That forces a second copy of the view order into the template, so these pin
+ * the two copies together. A leaf the preview does not rank falls through to
+ * alphabetical and lands in the wrong place, which nothing errors on.
+ */
+describe('sidebar order in the scaffolded preview', () => {
+  const preview = () => fs.readFileSync(path.join(templatesDir(), 'preview.tsx.tpl'), 'utf-8');
 
   it('each platform is followed by its own testing views, spec documents last', () => {
-    expect(deriveViews(ws(true, true)).views).toEqual([
+    expect(viewLeaves()).toEqual([
       'React',
       'React — Testing (Fidelity)',
       'React — Testing (Changes)',
@@ -78,22 +89,37 @@ describe('deriveViews', () => {
     ]);
   });
 
-  it('an unemitted platform contributes no views', () => {
-    expect(deriveViews(ws(false, true)).views).toEqual([
-      'Web components',
-      'Web components — Testing (Fidelity)',
-      'Web components — Testing (Changes)',
-      'API',
-      'Variants',
-    ]);
-  });
-
-  it('the spec documents stand alone in a workspace that has emitted nothing', () => {
-    expect(deriveViews(ws(false, false)).views).toEqual(['API', 'Variants']);
-  });
-
   it('omits Examples — it is no longer one of the views', () => {
-    expect(deriveViews(ws(true, true)).views).not.toContain('Examples');
+    expect(viewLeaves()).not.toContain('Examples');
+  });
+
+  it('ranks every leaf the concern can publish, in the same order', () => {
+    const source = preview();
+    const positions = viewLeaves().map((leaf) => source.indexOf(`'${leaf}'`));
+    for (const [i, at] of positions.entries()) {
+      expect(at, `${viewLeaves()[i]} is unranked in preview.tsx.tpl`).toBeGreaterThan(-1);
+    }
+    expect(positions).toEqual([...positions].sort((x, y) => x - y));
+  });
+
+  it('defines storySort inline, which is the only form the indexer accepts', () => {
+    // `storySort: (a, b) => {` — never `storySort,` or `storySort: someConst`.
+    expect(preview()).toMatch(/storySort:\s*\(a, b\)\s*=>/);
+  });
+
+  it('keeps the storySort body self-contained — no annotations, no outer references', () => {
+    const body = /storySort:\s*\(a, b\) =>\s*\{([\s\S]*?)\n {6}\},/.exec(preview())?.[1];
+    expect(body, 'storySort body not found — did its indentation change?').toBeTruthy();
+    // A type annotation does not survive the AST extraction, and neither does a
+    // reference to anything the function does not declare itself.
+    expect(body).not.toMatch(/:\s*(string|number|boolean)\b/);
+    for (const outer of ['viewsJson', 'modesJson', 'VIEW_ORDER', 'SECTION_ORDER']) {
+      expect(body).not.toContain(outer);
+    }
+  });
+
+  it('imports nothing that publish no longer writes', () => {
+    expect(preview()).not.toContain('views.json');
   });
 });
 

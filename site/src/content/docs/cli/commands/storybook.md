@@ -27,7 +27,7 @@ storybook/
 ├── package.json          declares Storybook (Node 20.19+); you run `npm install`
 ├── tsconfig.json
 ├── .storybook/           main.ts, preview.tsx, manager.tsx, scaffold.json
-├── content/components/   views.json + modes.json, seeded so the host compiles
+├── content/components/   modes.json, seeded so the host compiles
 └── content-overrides/    yours — no command ever writes here
 ```
 
@@ -111,13 +111,14 @@ reads at build time:
 
 - One page per component per view it owns — **API**, **Variants**, and a
   **Testing** page for each platform and baseline that has a report to read.
-- `views.json` — the order the views read in, derived from which trees you
-  emitted.
 - `modes.json` — which variable collections get toolbar mode controls, from
   `conventions/storybook.yaml`.
+- `compositions.json` — which compositions exist and what each is built from.
 
 Always publishes, because the scaffolded host cannot compile without the two
-JSON files.
+JSON files. The order the views read in is not published — it lives in the
+`storySort` parameter in `.storybook/preview.tsx`, which Storybook requires to be
+self-contained.
 
 ### `analysis`
 

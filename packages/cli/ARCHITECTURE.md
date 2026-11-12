@@ -214,6 +214,14 @@ the work lives in the feature folder.
   `testing/visual/shoot.ts`'s `titleCandidates` matches the platform leaf first
   and keeps the pre-leaf spellings, because a workspace's emitted trees are only
   as new as its last transform run.
+- **The sidebar order cannot be published, so the preview template carries its own
+  copy.** Storybook's indexer pulls `options.storySort` out of the preview file's
+  AST and `eval`s the function on its own, which means an identifier, an import, a
+  module constant or a TypeScript annotation all fail — the first two with
+  `Parameter 'options.storySort' should be defined inline`, at boot, taking the
+  whole instance with them. The order is a literal inside that function, and
+  `concerns/components/index.ts` exports `viewLeaves()` for no reason except to
+  let a test hold the two copies to the same names.
 
 ## Key nodes
 
