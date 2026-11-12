@@ -2,15 +2,13 @@
 // of this page, copy it to content-overrides/foundations/Color.stories.tsx and
 // edit the copy; it then always wins and publish never touches it.
 //
-// CSF rather than MDX: a docs entry only carries `previewTabs` from CSF meta
-// parameters, so an MDX page cannot opt out of the component framework tabs.
+// CSF rather than MDX, like every other generated page: a page is a meta with a
+// `docs.page`, which is the one shape publish has to write and override.
 import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 // Via the workspace-anchored path (not './data/…') so a copy of this file in
 // content-overrides/foundations/ keeps reading the published data.
 import data from '../../content/foundations/data/colors.json';
-
-// The framework tabs are views of one component; this page opts out.
 
 interface Swatch {
   name: string;
