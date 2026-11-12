@@ -5,7 +5,7 @@ All notable changes to `@directededges/specs-cli` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.37.0] - Unreleased
+## [0.37.0] - 2026-11-12
 
 ### Breaking
 
@@ -96,6 +96,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`storybook/.storybook/ComponentDocs.tsx` is no longer part of the scaffold**, and nothing imports it; `specs storybook init --force` reports an existing copy as orphaned instead of deleting it, since the file is yours
 
 - **`content/components/tabs.json` is gone**, and no `views.json` replaces it. The order the views read in lives in the `storySort` parameter in `.storybook/preview.tsx`, which Storybook requires to be self-contained — edit the `VIEWS` list there to change it
+
+### Dependency updates
+
+- **Every style property now says what it means when you leave it out.** Via `@directededges/specs-schema` 0.40.0, each `Styles` property declares a default, five properties that took any string now take a closed set of values, and the two fraction-valued properties are bounded to 0–1 — so no transform decides on your behalf, and `specs validate` tells you when a value is outside what the property allows. The same release adds the schemas behind the two hand-authored documents this CLI now shows in Storybook, `supplemental.yaml` and `guidelines.yaml`, and moves the designated image component to `images.component`.
+
+- **A component root can state how it sizes itself.** Via `@directededges/specs-from-figma` 0.39.0, a `sizingHorizontal:` / `sizingVertical:` Dev Mode annotation on the root is read into the spec, which is the only way a FILL root can be recorded at all — Figma cannot report it for a node whose parent is the page. A value outside Figma's three warns rather than being dropped in silence.
+
+- **Render writes that sizing back, and arranges a catalogue instead of marching it off-canvas.** Via `@directededges/figma-from-specs` 0.7.0, which also carries the fixes behind `specs render` in this release: a slot's formatting reaching its primitive content, a rounded rectangle arriving rounded, an unmatched glyph name warning instead of vanishing, and an overwrite re-render reclaiming the position it replaced.
+
+- **The emitted code for the image and decoration roles.** Via `@directededges/react-from-specs` 0.7.0 and `@directededges/webcomponents-from-specs` 0.7.0, which produce the real image elements and `aria-hidden` output described above, and the per-view story titles the new Storybook sidebar reads. Story ids are pinned to their previous spelling, so your visual diff reports keep matching.
 
 
 ## [0.36.0] - 2026-10-29

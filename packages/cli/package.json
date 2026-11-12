@@ -20,10 +20,10 @@
     "test": "cd ../.. && vitest -c vitest.config.ts packages/cli/tests"
   },
   "dependencies": {
-    "@directededges/react-from-specs": "^0.6.0",
-    "@directededges/specs-from-figma": "file:../../../specs-transforms/packages/specs-from-figma",
-    "@directededges/specs-schema": "file:../../../spectacular/packages/schema",
-    "@directededges/webcomponents-from-specs": "^0.6.0",
+    "@directededges/react-from-specs": "^0.7.0",
+    "@directededges/specs-from-figma": "^0.39.0",
+    "@directededges/specs-schema": "^0.40.0",
+    "@directededges/webcomponents-from-specs": "^0.7.0",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "commander": "^11.1.0",
