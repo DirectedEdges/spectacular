@@ -204,6 +204,8 @@ The `StyleKey` property-name union is untouched: this change alters what values 
 
 Per-package depth is out of scope here and belongs to `/specs.adr.analyze`.
 
+Per-package adoption analysis: `specs-local-workspace/adr/121/plan.md` (maintained outside this repo).
+
 ---
 
 ## Semver Decision
