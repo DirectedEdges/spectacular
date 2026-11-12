@@ -3,7 +3,7 @@
 **Branch**: `105-type-schema-parity`
 **Created**: 2026-10-16
 **Status**: ACCEPTED
-**Summary**: *(written at implementation — see `/specs.adr.implement`)*
+**Summary**: `EnumProp` and `SlotProp` carry the types' `required` sets, so `enum` discriminates; `PropConfigurationValue` becomes an `anyOf`.
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 
