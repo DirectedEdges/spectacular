@@ -1,0 +1,41 @@
+# supplemental.yaml — what this component needs beyond what the spec can carry
+# Contract: @directededges/specs-schema/schema/supplemental (ADR-118)
+#
+# Audience: whoever BUILDS the component. What someone USING it must observe
+# goes in guidelines.yaml beside this file — never here.
+#
+# Overlay-only. Every entry names the schema path that cannot carry it; if the
+# schema CAN carry it, it belongs in the spec, and validation of this file does
+# not excuse that misplacement. Entries are testable intent statements — each
+# transfers directly to a test-case criterion. No rationale prose.
+#
+# Sections (all optional, nothing else allowed): anatomy, props, styles,
+# slotComposition, events, accessibility, behavior, motion, layout, overrides,
+# naming.
+#
+# Entry fields:
+#   intent      required — one testable sentence of what must be true
+#   schemaGap   required — an object: { path, need }. `path` takes a JSON Schema
+#               pointer, or any workspace-relative target when the gap is in the
+#               library's own data (a motion token that does not exist is a gap
+#               in analysis/foundations.yaml, not in styles.schema.json)
+#   platforms   optional — a LIST of platforms this applies to: react,
+#               webcomponents, web (both web targets), ios, android. Absent
+#               means every platform. `web` may not sit beside either web leaf.
+#               It carries NO file path: an emitter finds an authored
+#               component.tsx / component.ts by NAME, beside the scaffold it
+#               generates, so nothing here declares it
+#   checkedBy   optional — automated | assisted | manual
+#   checks      optional — what does the checking, as { to } inside the
+#               workspace or { href } outside it. Required under `automated`
+#
+# An optional `meta` block takes concern, status (proposed | ratified |
+# deprecated), author, updated and sources.
+
+behavior:
+  - intent: <one testable sentence, e.g. "Tooltip positions against its trigger and flips at viewport edges">
+    schemaGap:
+      path: <e.g. component-concern.schema.json#/definitions/ComponentVariantsDocument>
+      need: <e.g. "no positioning-engine concept exists, so no authored surface can state it">
+    platforms: [react]
+    checkedBy: manual

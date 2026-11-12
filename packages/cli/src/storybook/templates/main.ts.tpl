@@ -15,15 +15,15 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const req = createRequire(import.meta.url);
 
 // The Storybook major this scaffold was tested against (ADR A). Outside it,
-// the failure modes are silent — a blank Web Components tab, component pages
-// quietly losing their tabs — so the host says so out loud instead.
+// the failure modes are silent — a component's views sorting into some other
+// order, a docs page coming up blank — so the host says so out loud instead.
 const TESTED_STORYBOOK_MAJOR = '{{STORYBOOK_MAJOR}}';
 try {
   const { version } = req('storybook/package.json') as { version: string };
   if (version.split('.')[0] !== TESTED_STORYBOOK_MAJOR) {
     console.warn(
       `[specs] This host was scaffolded for Storybook ${TESTED_STORYBOOK_MAJOR}.x but is running ${version}. ` +
-      `Component-page tabs and the sidebar filter may degrade without errors. ` +
+      `The order of the views under a component may degrade without errors. ` +
       `Upgrade the host with \`specs storybook init --force\`, then reinstall in storybook/.`,
     );
   }
@@ -126,13 +126,14 @@ function specsPublishOnChange() {
 const config: StorybookConfig = {
   stories: [
     ...contentStories(),
-    // Components and compositions, for the platform trees the workspace emitted.
-    ...(fs.existsSync(path.join(workspaceRoot, 'react/src'))
-      ? ['../../react/src/components/**/stories.tsx', '../../react/src/compositions/**/stories.tsx']
-      : []),
-    ...(fs.existsSync(path.join(workspaceRoot, 'webcomponents/src'))
-      ? ['../../webcomponents/src/components/**/stories.ts', '../../webcomponents/src/compositions/**/stories.ts']
-      : []),
+    // Components and compositions, for the platform trees the workspace emits.
+    // Unconditional: a server started before the first emit must still pick the
+    // stories up when they appear. `storybook init` guarantees the directories
+    // exist so the globs are valid at boot.
+    '../../react/src/components/**/stories.tsx',
+    '../../react/src/compositions/**/stories.tsx',
+    '../../webcomponents/src/components/**/stories.ts',
+    '../../webcomponents/src/compositions/**/stories.ts',
   ],
   // Docs pages — controls and actions are Storybook core since 9; argTypes
   // come from react-docgen over the generated scaffolds' prop interfaces.
@@ -152,7 +153,7 @@ const config: StorybookConfig = {
     ...(fs.existsSync(path.join(workspaceRoot, 'assets/images')) ? [{ from: '../../assets/images', to: '/assets/images' }] : []),
     ...(fs.existsSync(path.join(workspaceRoot, 'assets/fonts')) ? [{ from: '../../assets/fonts', to: '/assets/fonts' }] : []),
     ...(fs.existsSync(baselinesDir) ? [{ from: baselinesDir, to: '/baselines' }] : []),
-    // The Specs tab reads authored spec YAML over HTTP.
+    // The API and Variants views read authored spec YAML over HTTP.
     ...(fs.existsSync(path.join(workspaceRoot, 'specs')) ? [{ from: '../../specs', to: '/specs' }] : []),
   ],
   framework: {

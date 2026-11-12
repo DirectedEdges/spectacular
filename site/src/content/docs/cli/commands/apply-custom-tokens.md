@@ -49,7 +49,7 @@ When `-v` and `-s` are omitted, the command auto-discovers data files from `conf
 
 ## The Mapping File
 
-The mapping file is a JSON file you create and maintain. Each key is a Figma ID (`VariableID:*` for variables, `S:*` for styles), and each value must include a `$custom` object — the exact shape you want in the output:
+The mapping file is a JSON file you create and maintain. Each key is a Figma ID — a `VariableID:*` id for a variable, a node id like `1568:2977` for a published style — and each value must include a `$custom` object, the exact shape you want in the output:
 
 ```json
 {
@@ -70,8 +70,8 @@ The mapping file is a JSON file you create and maintain. Each key is a Figma ID 
     }
   },
 
-  // Style: map a published Figma style
-  "S:abc123def456,": {
+  // Style: map a published Figma style by its node id
+  "1568:2977": {
     "$custom": {
       "typography": "body.medium",
       "platform": "web"
@@ -82,7 +82,13 @@ The mapping file is a JSON file you create and maintain. Each key is a Figma ID 
 
 The `$custom` value can be **any JSON object** — Spectacular does not validate its contents beyond requiring it to be a non-null object. Your downstream consumers define the shape.
 
-> **Where do the Figma IDs come from?** Inspect your fetched `*.variables.json` or `*.styles.json` files — the IDs are the keys in the `meta.variables` and `meta.styles` objects.
+> **Where do the Figma IDs come from?** Inspect your fetched data files. In `*.variables.json`, variable IDs are the keys of the `meta.variables` object. In `*.styles.json`, `meta.styles` is an **array** — use each entry's `node_id` (its `key` hash also works for entries that have no `node_id`).
+
+### One published style, many copies in the file
+
+A library file that also consumes its own published library holds **several entries for the same published style** in its document: the local style, plus one copy for every place a component was pasted from a published version. Those copies have different node ids but share the published style's `key` hash.
+
+You do not need to find them. Map the published style once, by the `node_id` in `*.styles.json`, and `generate` applies that `$custom` to every copy sharing its key. Mapping a copy's id instead will not match anything — the copies live in the file document, not in the styles endpoint data the command augments.
 
 ## What Happens to the Data
 
@@ -195,6 +201,7 @@ If the command is interrupted before that step, the cache is left stale — `ren
 - **Idempotent**: Running the command multiple times with the same mapping produces identical output. Existing `$custom` values are overwritten.
 - **Non-destructive**: Only the `$custom` property is modified — all other data on each entry is preserved.
 - **Mixed mapping**: A single mapping file can contain both variable IDs and style IDs. The command augments variables and styles files in a single invocation.
+- **Reaches every copy of a style**: A `$custom` applied to a published style reaches every node bound to it, including nodes bound to copies of that style pasted from the published library.
 - **Empty `$custom` objects**: An empty `{}` is treated as absent — the `CUSTOM` profile will fall back to `TOKEN_FIGMA_EXTENSIONS` for that reference.
 
 ## Status Summary

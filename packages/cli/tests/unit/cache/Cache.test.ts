@@ -4,8 +4,8 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { parse } from 'yaml';
 import {
-  refreshCache, validateCache, readCacheFile, cachePath, describeProblems,
-  type ComponentsEntry, type StylesEntry, type VariablesEntry, type IconsEntry,
+  refreshCache, validateCache, readCacheFile, cachePath, describeProblems, recordRenderedComponent,
+  type ComponentsEntry, type StylesEntry, type VariablesEntry, type IconsEntry, type ImagesEntry,
 } from '../../../src/cache/cache.js';
 
 const PATTERN = 'Icon / {i}';
@@ -64,10 +64,10 @@ describe('Cache', () => {
     refreshCache({ dataDir, aliases, glyphs: { match: PATTERN }, force });
 
   describe('building', () => {
-    it('writes all four caches', () => {
+    it('writes every cache', () => {
       const report = build();
       expect(report.rebuilt).toEqual(['library']);
-      expect(report.counts).toEqual({ components: 3, styles: 3, variables: 2, icons: 1 });
+      expect(report.counts).toEqual({ components: 3, styles: 3, variables: 2, icons: 1, images: 0 });
     });
 
     it('records only components that carry a published key', () => {
@@ -129,6 +129,158 @@ describe('Cache', () => {
       const report = build(['library', 'missing']);
       expect(report.unfetched).toEqual(['missing']);
       expect(report.rebuilt).toEqual(['library']);
+    });
+  });
+
+  // specs#889. Two commands find images independently and neither can derive
+  // the other's: `fetch` reads the fill styles a library carries, and
+  // `generate --get-images` the fills placed on components. Each writes its own
+  // payload; the cache merges them by hash.
+  describe('images', () => {
+    const payload = (images: unknown[]) => JSON.stringify({ fileKey: 'f', images });
+
+    /** What `fetch --only <alias>,images` writes. */
+    const stylesPayload = (images: unknown[] = [
+      { imageHash: 'b60ac7bc', src: 'assets/images/b60ac7bc.png', name: 'Images / Wanaka', origin: 'style', styleKey: 'imgkey1', nodeId: '1568:2977' },
+    ]) => payload(images);
+
+    /** What `generate --get-images` writes. */
+    const componentsPayload = (images: unknown[] = [
+      { imageHash: '14dacdfc', src: 'assets/images/14dacdfc.jpg', usedBy: ['heroBanner'] },
+    ]) => payload(images);
+
+    it('keys an image by its hash and names the style carrying it', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), stylesPayload());
+      const report = build();
+      const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
+      expect(cache.entries['b60ac7bc']).toEqual({
+        src: 'assets/images/b60ac7bc.png',
+        name: 'Images / Wanaka',
+        origin: ['style'],
+        file: 'library',
+      });
+      expect(report.counts.images).toBe(1);
+    });
+
+    it('records a component-found image with its usage and no style name', () => {
+      writeFileSync(join(dataDir, 'library.component-images.json'), componentsPayload());
+      build();
+      const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
+      expect(cache.entries['14dacdfc']).toEqual({
+        src: 'assets/images/14dacdfc.jpg',
+        usedBy: ['heroBanner'],
+        origin: ['component'],
+        file: 'library',
+      });
+    });
+
+    // The case a hash key handles and a name key cannot.
+    it('merges an image both producers found into one entry carrying both facts', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), payload([
+        { imageHash: 'shared', src: 'assets/images/shared.png', name: 'Images / Helsinki', origin: 'style' },
+      ]));
+      writeFileSync(join(dataDir, 'library.component-images.json'), payload([
+        { imageHash: 'shared', src: 'assets/images/shared.png', usedBy: ['cardMedia'] },
+      ]));
+      const report = build();
+      expect(report.counts.images).toBe(1);
+      const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
+      expect(cache.entries['shared']).toEqual({
+        src: 'assets/images/shared.png',
+        name: 'Images / Helsinki',
+        usedBy: ['cardMedia'],
+        origin: ['style', 'component'],
+        file: 'library',
+      });
+    });
+
+    it('unions the components reported across producers, sorted', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), payload([
+        { imageHash: 'shared', name: 'S', usedBy: ['zeta'] },
+      ]));
+      writeFileSync(join(dataDir, 'library.component-images.json'), payload([
+        { imageHash: 'shared', usedBy: ['alpha', 'zeta'] },
+      ]));
+      build();
+      expect(readCacheFile<ImagesEntry>(dataDir, 'images')!.entries['shared'].usedBy)
+        .toEqual(['alpha', 'zeta']);
+    });
+
+    it('records each producer under its own partition key', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), stylesPayload());
+      writeFileSync(join(dataDir, 'library.component-images.json'), componentsPayload());
+      build();
+      const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
+      expect(Object.keys(cache.sources).sort()).toEqual(['library:components', 'library:styles']);
+      expect(cache.sources['library:styles'].from).toBe('library.images.json');
+      expect(cache.sources['library:components'].from).toBe('library.component-images.json');
+    });
+
+    // The other concerns carry entries forward; images always rebuild from both
+    // payloads, which is what makes a co-owned entry impossible to lose.
+    it('keeps one producer\'s entries when only the other\'s payload changed', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), stylesPayload());
+      writeFileSync(join(dataDir, 'library.component-images.json'), componentsPayload());
+      build();
+      writeFileSync(join(dataDir, 'library.component-images.json'), componentsPayload([
+        { imageHash: '14dacdfc', src: 'assets/images/14dacdfc.jpg', usedBy: ['heroBanner', 'pagingCarousel'] },
+      ]));
+      expect(build().rebuilt).toEqual(['library']);
+      const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
+      expect(cache.entries['b60ac7bc'].name).toBe('Images / Wanaka');
+      expect(cache.entries['14dacdfc'].usedBy).toEqual(['heroBanner', 'pagingCarousel']);
+    });
+
+    it('records an image whose bytes never landed, with no src', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), payload([
+        { imageHash: 'deadbeef', name: 'Images / Gone' },
+      ]));
+      build();
+      expect(readCacheFile<ImagesEntry>(dataDir, 'images')!.entries['deadbeef'])
+        .toEqual({ name: 'Images / Gone', origin: ['style'], file: 'library' });
+    });
+
+    it('writes an empty images cache when no payload exists, so "none" differs from "never built"', () => {
+      build();
+      const cache = readCacheFile<ImagesEntry>(dataDir, 'images')!;
+      expect(cache.entries).toEqual({});
+      expect(cache.sources['library:styles']).toBeUndefined();
+    });
+
+    it('builds for an alias that has images fetched but no file payload', () => {
+      writeFileSync(join(dataDir, 'brand.images.json'), payload([
+        { imageHash: 'brandhash', name: 'Images / Brand' },
+      ]));
+      const report = build(['library', 'brand']);
+      expect(report.unfetched).toEqual([]);
+      expect(readCacheFile<ImagesEntry>(dataDir, 'images')!.entries['brandhash'].file).toBe('brand');
+    });
+
+    it('reports a payload it cannot parse instead of contributing silently nothing', () => {
+      writeFileSync(join(dataDir, 'library.component-images.json'), '{ not json');
+      const report = build();
+      expect(report.failures.map(f => f.file)).toEqual(['library.component-images.json']);
+    });
+
+    it('makes a missing images cache a validation problem once a payload exists', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), payload([]));
+      const problems = validateCache({ dataDir, aliases: ['library'], glyphs: { match: PATTERN } });
+      expect(problems.filter(p => p.concern === 'images')).toEqual([
+        { concern: 'images', alias: 'library', reason: 'missing' },
+      ]);
+    });
+
+    it('validates each producer separately, so one stale payload reports once', () => {
+      writeFileSync(join(dataDir, 'library.images.json'), stylesPayload());
+      writeFileSync(join(dataDir, 'library.component-images.json'), componentsPayload());
+      build();
+      writeFileSync(join(dataDir, 'library.component-images.json'), componentsPayload([
+        { imageHash: 'different', usedBy: ['x'] },
+      ]));
+      const problems = validateCache({ dataDir, aliases: ['library'], glyphs: { match: PATTERN } });
+      expect(problems.filter(p => p.concern === 'images')).toEqual([
+        { concern: 'images', alias: 'library', reason: 'stale' },
+      ]);
     });
   });
 
@@ -270,7 +422,7 @@ describe('Cache', () => {
       expect(report.failures[0].alias).toBe('broken');
       expect(report.failures[0].file).toBe('broken.file.json');
       expect(report.failures[0].reason).toContain('broken.file.json');
-      expect(report.aliasCounts.broken).toEqual({ components: 0, styles: 0, variables: 0, icons: 0 });
+      expect(report.aliasCounts.broken).toEqual({ components: 0, styles: 0, variables: 0, icons: 0, images: 0 });
       // The healthy alias is unaffected — and its contribution is attributable.
       expect(report.aliasCounts.library.components).toBe(3);
       expect(report.counts.components).toBe(3);
@@ -289,7 +441,75 @@ describe('Cache', () => {
     it('records per-alias contributions when every payload is healthy', () => {
       const report = build();
       expect(report.failures).toEqual([]);
-      expect(report.aliasCounts.library).toEqual({ components: 3, styles: 3, variables: 2, icons: 1 });
+      expect(report.aliasCounts.library).toEqual({ components: 3, styles: 3, variables: 2, icons: 1, images: 0 });
+    });
+  });
+
+  describe('a render recording its own output', () => {
+    // Render creates a node the workspace now owns, and nothing else knows it exists.
+    // Until it is recorded, a second spec instancing the first resolves nothing and its
+    // instance is dropped — and the only way to make the first placeable was to capture
+    // the file back, which is the round trip that overwrites authored work.
+    const record = (overrides: Partial<{ nodeId: string; name: string; fileKey: string }> = {}) =>
+      recordRenderedComponent({
+        dataDir, alias: 'library',
+        nodeId: '84021:19488', name: 'egdsLink', fileKey: 'abc123',
+        ...overrides,
+      });
+
+    it('writes an entry with no published key', () => {
+      build();
+      record();
+      const cache = readCacheFile<ComponentsEntry>(dataDir, 'components')!;
+      expect(cache.entries['84021:19488']).toEqual({ name: 'egdsLink', file: 'library', fileKey: 'abc123' });
+    });
+
+    it('keeps the fetched entries beside it', () => {
+      build();
+      record();
+      const cache = readCacheFile<ComponentsEntry>(dataDir, 'components')!;
+      expect(cache.entries['1:1']).toBeDefined();
+      expect(Object.keys(cache.entries)).toHaveLength(4);
+    });
+
+    it('occupies its own partition, so neither producer overwrites the other', () => {
+      build();
+      record();
+      const cache = readCacheFile<ComponentsEntry>(dataDir, 'components')!;
+      expect(Object.keys(cache.sources).sort()).toEqual(['library', 'library:rendered']);
+    });
+
+    it('is never judged stale, having no payload behind it', () => {
+      // validateCache walks payload-derived keys only, so an unbacked partition cannot
+      // make a cache look stale — there is no file to stat.
+      build();
+      record();
+      expect(validateCache({ dataDir, aliases: ['library'], glyphs: { match: PATTERN } })).toEqual([]);
+    });
+
+    it('records into a cache that does not exist yet', () => {
+      record();
+      const cache = readCacheFile<ComponentsEntry>(dataDir, 'components')!;
+      expect(cache.entries['84021:19488'].name).toBe('egdsLink');
+    });
+
+    it('a later render of the same component replaces its entry', () => {
+      record();
+      record({ fileKey: 'def456' });
+      const cache = readCacheFile<ComponentsEntry>(dataDir, 'components')!;
+      expect(cache.entries['84021:19488'].fileKey).toBe('def456');
+    });
+
+    it('a fetch rebuild drops it, because the payload is the authority', () => {
+      // The self-healing property: a rendered row either reappears in the new payload
+      // because the node is really there, or disappears because it is not. Nothing to
+      // reconcile, and no staleness anyone has to model.
+      build();
+      record();
+      build(['library'], true);
+      const cache = readCacheFile<ComponentsEntry>(dataDir, 'components')!;
+      expect(cache.entries['84021:19488']).toBeUndefined();
+      expect(cache.entries['1:1']).toBeDefined();
     });
   });
 });

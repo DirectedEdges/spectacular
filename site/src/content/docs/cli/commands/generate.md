@@ -344,6 +344,33 @@ specs/
 
 `$image` pointers (in `backgroundImage` fills and `ImageBinding` examples) are unaffected — resolution touches one registry entry per image, never the references. Files are named by Figma's content hash, so an image shared by many components is downloaded and stored once, and re-runs are idempotent. Figma's download URLs are temporary and are never persisted. `src` is written relative to the spec file that carries it, so its depth follows the layout: `../../assets/images/...` from a component folder, `../assets/images/...` from a flat one.
 
+#### What it records for the images lookup
+
+`--get-images` also writes down what it found, so [`data/cache/images.yaml`](/cli/commands/cache/#what-it-writes) covers all three ways a library holds an image. Generate is the only command that sees the third — a fill on a component — and without a record those images exist on disk and inside one component's spec, leaving the lookup missing a third of its subject.
+
+It writes `{data.directory}/<alias>.component-images.json`, attributed to the source the specs were generated from, and rebuilds the render cache as its last step — so a [`render`](/cli/commands/render/) straight after a generate never meets a cache the generate just invalidated. Each image appears in `images.yaml` with `origin: [component]`, and `usedBy` naming the components that reference it, by spec key.
+
+An image found **both** ways is one entry carrying both facts. A photograph published as a fill style *and* placed on a card reads:
+
+```yaml
+25a26b806cc3ed542b6df2da5740d1bb652b1913:
+  src: assets/images/25a26b806cc3ed542b6df2da5740d1bb652b1913.png
+  name: Images / Emirates Stadium
+  usedBy: [deCard, patternsFilterPage]
+  origin: [style, component]
+  file: library
+```
+
+**A scoped run never removes what a fuller run recorded.** Generating three components sees fewer images than a catalogue pass, and an image did not stop existing because today's run was narrow — so the record merges by hash and only ever adds or updates:
+
+```
+✓ Recorded 1 component image(s) for the images cache (5 kept from an earlier pass)
+```
+
+Nothing prunes it, which is the cost of that rule: an image a component no longer uses stays listed. Deleting `<alias>.component-images.json` and re-running is the reset.
+
+Plain `specs generate` records nothing — it still resolves `src` for images whose files are already on disk, but only `--get-images` makes images that run's business, so a regenerate never dirties a cache it does not rebuild.
+
 ### `--from-bridge`
 Generate from the current selection in a connected Figma file via the [CLI bridge](/cli/commands/bridge/), instead of from a manifest or downloaded JSON. See [Bridge Mode](#bridge-mode).
 
@@ -369,6 +396,35 @@ specs generate --config workspaces/mobile/config -o workspaces/mobile/specs/
 
 ### `--verbose`
 Enable detailed logging — resolved config path, source and mode detection, foundations loaded, and per-component progress.
+
+## Generating over an authored spec
+
+**Today `generate` overwrites whatever it finds, every time.** It rebuilds a spec's `metadata` from the Figma node and reads nothing from the file it replaces, so it cannot tell a spec it generated last week from one a person wrote by hand. The protections are procedural — curate in the manifest, scope the run with `-c`, know what you are pointing it at.
+
+That is a real hazard in a workspace that authors specs rather than capturing them. The destructive path is a round trip: author a spec, render it to Figma, fetch the file, and generate the node your own render created back over the spec that produced it.
+
+These are the rules that **should** apply. Not yet enforced — the facts two of them turn on are the spec's origin, which the schema does not yet record, and whether a node came from this workspace's own render, which [the cache now records](/cli/commands/cache/#what-a-render-adds).
+
+`R` is the node being generated from; `S` is the existing spec for that key.
+
+| # | Spec exists | `S` origin | Rendered record | `R` vs recorded node | Behavior |
+|---|---|---|---|---|---|
+| 1 | no | — | — | `R` not workspace-rendered | **write** — ordinary first capture |
+| 2 | no | — | — | `R` **is** a node this workspace rendered | **refuse** — self-capture: a second spec describing a component you already authored |
+| 3 | yes | captured | no | same node | **overwrite** — ordinary re-capture, what generate is for |
+| 4 | yes | captured | no | different node | **refuse** — two nodes claiming one spec key |
+| 5 | yes | authored | no | — | **refuse** — authored work, never rendered |
+| 6 | yes | authored | yes | `R` == the rendered node | **refuse** — the round trip, over itself |
+| 7 | yes | authored | yes | `R` != the rendered node | **refuse** — an unrelated node over authored work |
+| 8 | yes | any | any | any, with the override naming this component | **overwrite** — the deliberate migration path |
+
+Three things the rules settle:
+
+- **The override names the component**, one per invocation — never a count, never a bare boolean. A count is a number filled in from the error message that just printed; a boolean is a flag that ends up in the command permanently, which is how a guard stops existing.
+- **A refusal skips the row and everything depending on it.** Generating a component whose dependency was refused produces a spec referencing a spec that was never written — the failure [`curation.includeDependencies`](/settings/curation/) exists to prevent.
+- **"Workspace-rendered" is per Figma file.** Rendering one spec into a second file produces a genuinely distinct asset, so capturing from that other file is not self-capture.
+
+A separate question, still open: whether [`scan`](/cli/commands/scan/) should mark a self-rendered node in the manifest so you see it before selecting, omit it, or leave it as it is. A manifest row today carries a checkbox, a name, a node id, a type and a dev status — none of the three facts above.
 
 ## Rebuilding the spec tree
 

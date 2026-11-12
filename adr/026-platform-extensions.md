@@ -4,6 +4,7 @@
 **Created**: 2026-03-16
 **Status**: ACCEPTED
 **Summary**: An `$extensions` object on every prop type unifies platform-specific metadata, replacing the Figma-only `x-platform` field.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

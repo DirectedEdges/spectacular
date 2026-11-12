@@ -4,6 +4,7 @@
 **Created**: 2026-03-23
 **Status**: ACCEPTED
 **Summary**: A `SubcomponentRef` lets `instanceOf` point at a subcomponent definition rather than repeat its name.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

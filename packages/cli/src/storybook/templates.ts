@@ -18,13 +18,21 @@ export const STORYBOOK_MAJOR = STORYBOOK_VERSION.split('.')[0];
  * Where the template files live. The published package carries them at
  * dist/storybook-templates/ (the build copies them beside the bundle);
  * running from a repo checkout finds them in src/.
+ *
+ * The source directory is tried FIRST, because its existence is what
+ * distinguishes a checkout from an install — a published package has no src/.
+ * In a checkout both directories exist, and only src/ is current: `npm run
+ * build` copies the templates into dist/, but the watcher that development
+ * actually runs only re-bundles the program. Preferring dist/ there served a
+ * new template from a directory that had never heard of it, so adding a page
+ * failed with ENOENT on a file plainly present in the tree.
  */
 export function templatesDir(): string {
   const here = path.dirname(fileURLToPath(import.meta.url));
   const candidates = [
+    path.join(here, '..', 'src', 'storybook', 'templates'),
     path.join(here, 'storybook-templates'),
     path.join(here, '..', 'storybook-templates'),
-    path.join(here, '..', 'src', 'storybook', 'templates'),
     path.join(here, 'templates'),
   ];
   for (const dir of candidates) {

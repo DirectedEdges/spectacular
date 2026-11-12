@@ -1,0 +1,43 @@
+# api.yaml — the contract (schema: component-concern.schema.json#/definitions/ComponentApiDocument)
+# Replace <Name> and every placeholder; delete the props and elements you don't need.
+# Authored spec: metadata omits `source` — validate with `specs validate <key> --authored`.
+metadata:
+  concern: api
+title: <Name>
+anatomy:
+  # Every element the component is made of. Keys follow the workspace's spec.keys
+  # setting (camelCase here). Types: container | text | glyph | slot | instance |
+  # vector | line | ellipse | rectangle | polygon | star
+  root:
+    type: container
+  label:
+    type: text
+  # An element that is an instance of another workspace component:
+  # icon:
+  #   type: instance
+  #   instanceOf: <componentFolderKey>
+props:
+  # BooleanProp — requires type + default
+  disabled:
+    type: boolean
+    default: false
+  # StringProp — open value set; default optional (deprecated — prefer examples)
+  text:
+    type: string
+    examples:
+      - <Sample text>
+  # EnumProp — requires type + default + enum
+  appearance:
+    type: string
+    default: <value>
+    enum:
+      - <value>
+      - <other value>
+  # SlotProp — content the component exposes but does not define
+  # children:
+  #   type: slot
+  #   defaultSlot: true
+# Prop value combinations that are invalid together (optional):
+# invalidPropCombinations:
+#   - disabled: true
+#     hover: true

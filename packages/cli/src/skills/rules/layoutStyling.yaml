@@ -1,0 +1,37 @@
+# Judgment rules for flow and positioning styling — keys are the style properties that
+# govern flow. (`layout` alone names the AST in specs; this file is layout *styling*.)
+# useWhen: ordered, first match wins. when: property interdependencies — setting the
+# key's value opens (makes meaningful) or requires the listed properties.
+layoutMode:
+  useWhen:
+    HORIZONTAL|VERTICAL: children flow along an axis — itemSpacing, padding, alignments do the work
+    NONE: freeform — every child positioned explicitly
+  when:
+    HORIZONTAL|VERTICAL:
+      opens: [itemSpacing, padding, mainAxisAlignment, crossAxisAlignment, wrap]
+width:
+  guidelines:
+    - should: "give a composition or other page-scale root a concrete width — `FILL` at a rendered root has no parent to fill and collapses"
+      note: "the number is the system's page width, not a default — read it from the system's own compositions or ask; nothing here supplies one"
+    - warn: "writing `width` forces the node's horizontal sizing to FIXED on render, whatever the spec declares beside it — so `width` next to `layoutSizingHorizontal: FILL` is not a pair that negotiates. On a *component root* the FILL intent survives as a Dev Mode annotation, because a Figma root cannot hold FILL; anywhere else the width simply wins"
+layoutSizingHorizontal|layoutSizingVertical:
+  guidelines:
+    - could: "declare `FILL` on a *component* root to state how it sizes in a consumer's layout (`layoutSizingHorizontal: FILL` on a text root for \"fill its container\") — the standalone rendered node has no parent and collapses to content width, which is expected, not a defect"
+      note: "capture reads this off a Dev Mode annotation (`sizingHorizontal:fill` / `sizingVertical:fill` on the root, same grammar as `role:`) because a Figma root cannot hold FILL itself; an authored spec just states the value"
+position:
+  useWhen:
+    AUTO: the child participates in the container's flow (default)
+    ABSOLUTE: the child pins over or outside the flow (notch, badge dot, overlay)
+  when:
+    ABSOLUTE:
+      opens: [top, start, end, bottom, centerHorizontalOffset, centerVerticalOffset, width, height]
+      note: offsets anchor edges — "locked to the upper right" = top + end; px number or "%" string
+      adr: 41
+    AUTO:
+      opens: [layoutSizingHorizontal, layoutSizingVertical]
+  guidelines:
+    - should: "pin an `ABSOLUTE` child with offsets; hanging past the edge takes a negative offset and parent `clipsContent: false` (`bottom: -6`)"
+      adr: 41
+    - must: "swap offset edges in a placement variant — null the old edge, set the new one (`bottom: null` + `top: -6`)"
+      never: "stack both edges of an axis"
+    - could: "pin a full-bleed layer to all four sides (`top: 0, end: 0, bottom: 0, start: 0`) — a state background or scrim stretches with its parent, and is the sanctioned departure from the one-edge-per-axis rule (ruled by the system owner, Pill round)"

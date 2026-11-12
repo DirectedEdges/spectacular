@@ -31,5 +31,11 @@
 #       # layout is a positioning box and is left unbound.
 #       direction: direction
 
+# What this platform calls the designated image component, when the library has
+# one. Each platform names it in its own file — DS Image in figma.yaml, DsImage
+# here. https://spectacular.systems/settings/images/
+# images:
+#   component: DsImage
+
 # Width of the container this platform places a fill-width root in.
 # defaultFillWidth: 375

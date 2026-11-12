@@ -4,6 +4,7 @@
 **Created**: 2026-05-22
 **Status**: ACCEPTED — supersedes the deferred `Element.overrides` design (retained below as Option C, *rejected*)
 **Summary**: A reserved `$nested` key in `PropConfigurations` carries path-addressed configurations that reach into nested instances.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Depends on**: [ADR-046 — Slots & Slot References](046-slots-and-slot-references), [ADR-047 — Component Slot Examples](047-component-slot-examples), [ADR-048 — Component Instance Examples](048-component-instance-examples), [ADR-049 — PropConfigurations Bindings](049-prop-configurations-bindings), [ADR-050 — Examples Config](050-examples-config)
 

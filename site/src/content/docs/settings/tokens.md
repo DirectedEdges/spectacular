@@ -58,6 +58,8 @@ The full shape adds raw Figma provenance under `$extensions`. For variables the 
 
 `CUSTOM` substitutes your own token shapes for Spectacular's built-in ones. Before generating, run [`applyCustomTokens`](/cli/commands/apply-custom-tokens/) to inject a `$custom` object onto each variable and style in your fetched data; when `CUSTOM` is active, that object becomes the property value verbatim. References that never received a `$custom` object fall back to the `TOKEN_FIGMA_EXTENSIONS` shape.
 
+Mapping a published style once covers every node bound to it, including nodes bound to copies of that style pasted in from the published library — a common case in a library file that consumes its own published version.
+
 ```json
 {
   "backgroundColor": { "name": "color-alert-info-bg", "value": "{color.alert.info.bg}" },

@@ -5,10 +5,12 @@ import os from 'os';
 import { fileURLToPath } from 'url';
 import { Storybook } from '../../../src/commands/storybook.js';
 import { registry, concernNames } from '../../../src/storybook/concerns/registry.js';
-import { deriveTabs, deriveCompositions, deriveModes } from '../../../src/storybook/concerns/components/index.js';
+import { viewLeaves, deriveCompositions, deriveModes } from '../../../src/storybook/concerns/components/index.js';
+import { specNavFolder } from '../../../src/storybook/concerns/components/navTitle.js';
 import { kebabizePath } from '../../../src/transforms/css/values/tokens.js';
 import { buildColorData } from '../../../src/storybook/concerns/foundations/color.js';
 import { buildIconsData } from '../../../src/storybook/concerns/foundations/icons.js';
+import { buildImagesData } from '../../../src/storybook/concerns/foundations/images.js';
 import { buildTypographyData } from '../../../src/storybook/concerns/foundations/typography.js';
 import { templatesDir, renderTemplate } from '../../../src/storybook/templates.js';
 import type { Workspace } from '../../../src/storybook/workspace.js';
@@ -59,15 +61,116 @@ describe('package boundary (ADR A decision 1)', () => {
   });
 });
 
-describe('deriveTabs', () => {
-  const ws = (hasReact: boolean, hasWebComponents: boolean) =>
-    ({ hasReact, hasWebComponents } as Workspace);
+/**
+ * The sidebar order is a literal inside the preview's `storySort`, and it cannot
+ * be anything else: Storybook's indexer pulls that parameter out of the file's
+ * AST and `eval`s the function on its own, so it reaches no import, no module
+ * constant, no helper, and no TypeScript annotation. Writing `storySort` as a
+ * reference to a const took the whole instance down with "Parameter
+ * 'options.storySort' should be defined inline".
+ *
+ * That forces a second copy of the view order into the template, so these pin
+ * the two copies together. A leaf the preview does not rank falls through to
+ * alphabetical and lands in the wrong place, which nothing errors on.
+ */
+describe('sidebar order in the scaffolded preview', () => {
+  const preview = () => fs.readFileSync(path.join(templatesDir(), 'preview.tsx.tpl'), 'utf-8');
 
-  it('specs is always present, order fixed, canvas is the first tree', () => {
-    expect(deriveTabs(ws(true, true))).toEqual({ tabs: ['react', 'webcomponents', 'specs'], canvas: 'react' });
-    expect(deriveTabs(ws(true, false))).toEqual({ tabs: ['react', 'specs'], canvas: 'react' });
-    expect(deriveTabs(ws(false, true))).toEqual({ tabs: ['webcomponents', 'specs'], canvas: 'webcomponents' });
-    expect(deriveTabs(ws(false, false))).toEqual({ tabs: ['specs'], canvas: 'specs' });
+  it('reads platforms, then spec documents, then the Testing folder and its pages', () => {
+    expect(viewLeaves()).toEqual([
+      'React',
+      'Web component',
+      'API',
+      'Variants',
+      'Supplemental',
+      'Guidelines',
+      'Testing',
+      'React Fidelity',
+      'React Changes',
+      'Web component Fidelity',
+      'Web component Changes',
+    ]);
+  });
+
+  it('omits Examples — it is no longer one of the views', () => {
+    expect(viewLeaves()).not.toContain('Examples');
+  });
+
+  /**
+   * A subcomponent folder is ranked by its absence from VIEWS. When the rank
+   * only applied to a segment both titles ended on, `Item` fell through to
+   * alphabetical and sorted above the component's own `React` page.
+   */
+  it('sorts a subcomponent folder after everything the component itself offers', () => {
+    const body = /storySort:\s*\(a, b\) =>\s*\{([\s\S]*?)\n {6}\},/.exec(preview())?.[1] ?? '';
+    const sort = new Function('a', 'b', body) as (a: { title: string }, b: { title: string }) => number;
+    const under = (leaf: string) => ({ title: `Components/Action List/${leaf}` });
+    const sorted = ['Item/React', 'Variants', 'Testing/React Changes', 'React', 'API', 'Web component']
+      .map(under)
+      .sort(sort)
+      .map((e) => e.title.split('/').slice(2).join('/'));
+    expect(sorted).toEqual([
+      'React',
+      'Web component',
+      'API',
+      'Variants',
+      'Testing/React Changes',
+      'Item/React',
+    ]);
+  });
+
+  it('ranks every segment the concern can publish, in the same order', () => {
+    const source = preview();
+    const positions = viewLeaves().map((leaf) => source.indexOf(`'${leaf}'`));
+    for (const [i, at] of positions.entries()) {
+      expect(at, `${viewLeaves()[i]} is unranked in preview.tsx.tpl`).toBeGreaterThan(-1);
+    }
+    expect(positions).toEqual([...positions].sort((x, y) => x - y));
+  });
+
+  it('defines storySort inline, which is the only form the indexer accepts', () => {
+    // `storySort: (a, b) => {` — never `storySort,` or `storySort: someConst`.
+    expect(preview()).toMatch(/storySort:\s*\(a, b\)\s*=>/);
+  });
+
+  it('keeps the storySort body self-contained — no annotations, no outer references', () => {
+    const body = /storySort:\s*\(a, b\) =>\s*\{([\s\S]*?)\n {6}\},/.exec(preview())?.[1];
+    expect(body, 'storySort body not found — did its indentation change?').toBeTruthy();
+    // A type annotation does not survive the AST extraction, and neither does a
+    // reference to anything the function does not declare itself.
+    expect(body).not.toMatch(/:\s*(string|number|boolean)\b/);
+    for (const outer of ['viewsJson', 'modesJson', 'VIEW_ORDER', 'SECTION_ORDER']) {
+      expect(body).not.toContain(outer);
+    }
+  });
+
+  it('imports nothing that publish no longer writes', () => {
+    expect(preview()).not.toContain('views.json');
+  });
+});
+
+/**
+ * The folder a published view lands in has to be the folder the emitters put
+ * their own pages in, or one component splits into two sidebar folders. These
+ * are the cases `storyTitle` in from-specs normalizes, asserted on this side of
+ * the repo boundary.
+ */
+describe('specNavFolder', () => {
+  it('nests each kind under its own section', () => {
+    expect(specNavFolder('component', 'card', 'Card')).toBe('Components/Card');
+    expect(specNavFolder('composition', 'checkout', 'Checkout')).toBe('Compositions/Checkout');
+  });
+
+  it('collapses spaced separators without creating blank levels', () => {
+    expect(specNavFolder('component', 'item', 'DS  Nav /  Item')).toBe('Components/DS  Nav/Item');
+  });
+
+  it('drops a segment that sanitizes to nothing', () => {
+    expect(specNavFolder('component', 'users', 'DS Row / _ / Users')).toBe('Components/DS Row/Users');
+  });
+
+  it('falls back to the folder key when the spec carries no title', () => {
+    expect(specNavFolder('component', 'dsButton', undefined)).toBe('Components/DsButton');
   });
 });
 
@@ -208,14 +311,118 @@ describe('buildIconsData', () => {
   });
 });
 
+describe('buildImagesData', () => {
+  /** A workspace with both download paths' output and one unresolved reference. */
+  function fixture(): { tmp: string; specs: string; images: string; data: string } {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'specs-sb-img-'));
+    const specs = path.join(tmp, 'specs');
+    const images = path.join(tmp, 'assets', 'images');
+    const data = path.join(tmp, 'data');
+    fs.ensureDirSync(path.join(specs, 'hero'));
+    fs.ensureDirSync(images);
+    fs.ensureDirSync(path.join(data, 'cache'));
+
+    // Two files on disk: one fetched from a fill style, one found on a component.
+    fs.writeFileSync(path.join(images, 'aaa111.png'), 'png');
+    fs.writeFileSync(path.join(images, 'bbb222.jpg'), 'jpg');
+
+    // Keyed by hash, with `origin` saying where each lives in Figma.
+    fs.writeFileSync(path.join(data, 'cache', 'images.yaml'),
+      'sources:\n  library:styles:\n    from: library.images.json\n    bytes: 1\n    mtime: x\n'
+      + 'entries:\n'
+      + '  aaa111:\n    src: assets/images/aaa111.png\n    name: Images / Wanaka\n    origin:\n      - style\n    file: library\n'
+      + '  bbb222:\n    src: assets/images/bbb222.jpg\n    usedBy:\n      - hero\n    origin:\n      - component\n    file: library\n');
+
+    // The component references the component-found image and one that was never downloaded.
+    fs.writeFileSync(path.join(specs, 'hero', 'api.yaml'), 'anatomy:\n  media:\n    type: image\n');
+    fs.writeFileSync(path.join(specs, 'hero', 'images.yaml'),
+      'images:\n'
+      + '  backdrop:\n    src: ../../assets/images/bbb222.jpg\n    $extensions:\n      com.figma:\n        imageHash: bbb222\n'
+      + '  pending:\n    $extensions:\n      com.figma:\n        imageHash: ccc333\n');
+    return { tmp, specs, images, data };
+  }
+
+  it('lists every image on disk, whichever path downloaded it', () => {
+    const { tmp, specs, images, data } = fixture();
+    const result = buildImagesData(specs, images, data)!;
+    expect(result.present.map(i => i.hash)).toEqual(['aaa111', 'bbb222']);
+    fs.removeSync(tmp);
+  });
+
+  it('names an image from the fill style it was fetched from, and leaves the rest unnamed', () => {
+    const { tmp, specs, images, data } = fixture();
+    const result = buildImagesData(specs, images, data)!;
+    expect(result.present[0].name).toBe('Images / Wanaka');
+    expect(result.present[1].name).toBeUndefined();
+    fs.removeSync(tmp);
+  });
+
+  // Read from the cache, never inferred from a missing name — a style-carried
+  // image with no name would otherwise look component-found.
+  it('takes each image\'s origin from the cache', () => {
+    const { tmp, specs, images, data } = fixture();
+    const result = buildImagesData(specs, images, data)!;
+    expect(result.present.find(i => i.hash === 'aaa111')!.origin).toEqual(['style']);
+    expect(result.present.find(i => i.hash === 'bbb222')!.origin).toEqual(['component']);
+    fs.removeSync(tmp);
+  });
+
+  it('reports an empty origin for a file neither producer has accounted for', () => {
+    const { tmp, specs, images, data } = fixture();
+    fs.writeFileSync(path.join(images, 'ccc444.png'), 'png');
+    const result = buildImagesData(specs, images, data)!;
+    expect(result.present.find(i => i.hash === 'ccc444')!.origin).toEqual([]);
+    fs.removeSync(tmp);
+  });
+
+  it('reports which components reference each image', () => {
+    const { tmp, specs, images, data } = fixture();
+    const result = buildImagesData(specs, images, data)!;
+    expect(result.present.find(i => i.hash === 'bbb222')!.referencedBy).toEqual(['hero']);
+    // A curated image nothing uses yet is still available to author with.
+    expect(result.present.find(i => i.hash === 'aaa111')!.referencedBy).toEqual([]);
+    fs.removeSync(tmp);
+  });
+
+  it('flags a registry entry whose image was never downloaded', () => {
+    const { tmp, specs, images, data } = fixture();
+    const result = buildImagesData(specs, images, data)!;
+    expect(result.missing).toEqual([{ hash: 'ccc333', referencedBy: ['hero'] }]);
+    fs.removeSync(tmp);
+  });
+
+  it('works with no cache at all, so images predating the images kind still list', () => {
+    const { tmp, specs, images, data } = fixture();
+    fs.removeSync(path.join(data, 'cache', 'images.yaml'));
+    const result = buildImagesData(specs, images, data)!;
+    expect(result.present.map(i => i.hash)).toEqual(['aaa111', 'bbb222']);
+    expect(result.present.every(i => i.name === undefined)).toBe(true);
+    fs.removeSync(tmp);
+  });
+
+  it('builds nothing for a workspace with no images and no references', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'specs-sb-img-'));
+    expect(buildImagesData(path.join(tmp, 'specs'), path.join(tmp, 'images'), tmp)).toBeNull();
+    fs.removeSync(tmp);
+  });
+});
+
 describe('templates', () => {
   it('ships every host template and page template', () => {
     const dir = templatesDir();
-    for (const file of ['package.json.tpl', 'tsconfig.json.tpl', 'main.ts.tpl', 'preview.tsx.tpl', 'manager.tsx.tpl', 'manager-head.html.tpl', 'ComponentDocs.tsx.tpl',
-      'pages/Color.stories.tsx.tpl', 'pages/Typography.stories.tsx.tpl', 'pages/Icons.stories.tsx.tpl',
-      'pages/GettingStarted.stories.tsx.tpl', 'pages/Analysis.stories.tsx.tpl', 'pages/VersionsStub.stories.tsx.tpl']) {
+    for (const file of ['package.json.tpl', 'tsconfig.json.tpl', 'main.ts.tpl', 'preview.tsx.tpl', 'manager.tsx.tpl', 'manager-head.html.tpl',
+      'pages/Color.stories.tsx.tpl', 'pages/Typography.stories.tsx.tpl', 'pages/Icons.stories.tsx.tpl', 'pages/Images.stories.tsx.tpl',
+      'pages/GettingStarted.stories.tsx.tpl', 'pages/Analysis.stories.tsx.tpl', 'pages/VersionsStub.stories.tsx.tpl',
+      'pages/SpecConcern.stories.tsx.tpl', 'pages/ComponentTesting.stories.tsx.tpl', 'pages/VisualReport.stories.tsx.tpl', 'PlatformDocs.tsx.tpl']) {
       expect(fs.existsSync(path.join(dir, file)), file).toBe(true);
     }
+  });
+
+  // The watcher development runs re-bundles the program and never re-copies
+  // templates, so dist/ holds whatever the last full build left. Resolving
+  // there first served a new template from a stale directory.
+  it('resolves templates from the source tree in a checkout, not from dist', () => {
+    expect(templatesDir()).toBe(path.resolve(here, '../../../src/storybook/templates'));
   });
 
   it('renders placeholders and refuses unknown ones', () => {
@@ -343,5 +550,165 @@ describe('deriveCompositions', () => {
     );
     // The malformed document is the generator's problem; the nav contract still has a row.
     expect(deriveCompositions(ws).compositions.map((c) => c.key)).toEqual(['broken']);
+  });
+});
+
+/**
+ * The views a component carries as sidebar leaves. These pages are TSX the host
+ * compiles, not data — a template that renders to something Vite cannot parse
+ * takes the whole Storybook instance down, and the failure surfaces far from the
+ * template. So each one is parsed here, as well as checked for its title.
+ */
+describe('components concern — published view pages', () => {
+  const componentsConcern = registry.find((c) => c.name === 'components')!;
+
+  /**
+   * `reports` names the report files to write, each one covering `dsButton`.
+   * `reportsWithoutTheSpec` writes a report that exists but does not list it —
+   * the common case, since a visual manifest rarely pins the whole catalogue.
+   */
+  function workspace(options: {
+    react: boolean;
+    webcomponents: boolean;
+    reports: string[];
+    reportsWithoutTheSpec?: string[];
+  }): Workspace {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sb-views-'));
+    fs.ensureDirSync(path.join(root, 'specs', 'components', 'dsButton'));
+    fs.writeFileSync(
+      path.join(root, 'specs', 'components', 'dsButton', 'api.yaml'),
+      'title: DS Button (Beta)\nprops: {}\n',
+    );
+    const writeReport = (name: string, body: string) => {
+      fs.ensureDirSync(path.join(root, 'testing', 'visual', 'report'));
+      fs.writeFileSync(path.join(root, 'testing', 'visual', 'report', `${name}.json`), body);
+    };
+    for (const name of options.reports) {
+      writeReport(name, JSON.stringify({ components: { dsButton: { summary: {}, pairs: [] } } }));
+    }
+    for (const name of options.reportsWithoutTheSpec ?? []) {
+      writeReport(name, JSON.stringify({ components: { dsCard: { summary: {}, pairs: [] } } }));
+    }
+    return {
+      root,
+      specsDir: path.join(root, 'specs'),
+      assetsDir: path.join(root, 'assets'),
+      componentKeys: ['dsButton'],
+      compositionKeys: [],
+      hasReact: options.react,
+      hasWebComponents: options.webcomponents,
+      config: { conventions: {} },
+    } as unknown as Workspace;
+  }
+
+  /** Every story page the concern built, keyed by the title its meta declares. */
+  async function pagesByTitle(ws: Workspace): Promise<Map<string, string>> {
+    const built = await componentsConcern.build(ws);
+    const pages = new Map<string, string>();
+    for (const file of built) {
+      if (!file.path.endsWith('.stories.tsx')) continue;
+      const title = /title: '([^']*)'/.exec(file.content)?.[1];
+      expect(title, file.path).toBeTruthy();
+      pages.set(title!, file.content);
+    }
+    return pages;
+  }
+
+  it('lands every view in the folder the emitters title their own pages under', async () => {
+    const pages = await pagesByTitle(
+      workspace({ react: true, webcomponents: true, reports: ['fidelity.react', 'regression.webcomponents'] }),
+    );
+    expect([...pages.keys()].sort()).toEqual([
+      'Components/DS Button (Beta)/API',
+      'Components/DS Button (Beta)/Testing/React Fidelity',
+      'Components/DS Button (Beta)/Testing/Web component Changes',
+      'Components/DS Button (Beta)/Variants',
+    ]);
+  });
+
+  it('names the component in every page heading, which the sidebar entry does not', async () => {
+    const pages = await pagesByTitle(
+      workspace({ react: true, webcomponents: true, reports: ['fidelity.react'] }),
+    );
+    expect(pages.get('Components/DS Button (Beta)/API')).toContain('"DS Button (Beta) / API"');
+    expect(pages.get('Components/DS Button (Beta)/Testing/React Fidelity')).toContain(
+      '"DS Button (Beta) / React Fidelity"',
+    );
+  });
+
+  /**
+   * `api` and `variants` every run generates. `supplemental` and `guidelines`
+   * are authored by hand and most components have neither, so a view that
+   * exists only to report its own emptiness is noise on every component.
+   */
+  it('publishes an authored spec view only for a component that has the document', async () => {
+    const ws = workspace({ react: true, webcomponents: true, reports: [] });
+    expect([...(await pagesByTitle(ws)).keys()]).not.toContain('Components/DS Button (Beta)/Supplemental');
+
+    fs.writeFileSync(
+      path.join((ws as unknown as { root: string }).root, 'specs', 'components', 'dsButton', 'supplemental.yaml'),
+      'entries: []\n',
+    );
+    const after = [...(await pagesByTitle(ws)).keys()];
+    expect(after).toContain('Components/DS Button (Beta)/Supplemental');
+    expect(after).not.toContain('Components/DS Button (Beta)/Guidelines');
+  });
+
+  it('publishes a testing page only for a platform-and-baseline that has a report', async () => {
+    const pages = await pagesByTitle(workspace({ react: true, webcomponents: true, reports: [] }));
+    expect([...pages.keys()].sort()).toEqual([
+      'Components/DS Button (Beta)/API',
+      'Components/DS Button (Beta)/Variants',
+    ]);
+  });
+
+  /**
+   * Gating on the report FILE published a testing page for every component and
+   * most of them read "this spec isn't in the visual manifest" — a page whose
+   * only content is that it has none.
+   */
+  it('publishes no testing page for a spec the report does not cover', async () => {
+    const pages = await pagesByTitle(
+      workspace({ react: true, webcomponents: true, reports: [], reportsWithoutTheSpec: ['fidelity.react'] }),
+    );
+    expect([...pages.keys()].sort()).toEqual([
+      'Components/DS Button (Beta)/API',
+      'Components/DS Button (Beta)/Variants',
+    ]);
+  });
+
+  it('reads an untargeted report as React results, never as Web Components', async () => {
+    const pages = await pagesByTitle(workspace({ react: true, webcomponents: true, reports: ['fidelity'] }));
+    expect(pages.has('Components/DS Button (Beta)/Testing/React Fidelity')).toBe(true);
+    expect(pages.has('Components/DS Button (Beta)/Testing/Web component Fidelity')).toBe(false);
+  });
+
+  /**
+   * Only the first report that exists is consulted, because that is the one the
+   * page will read. A later candidate it never reaches must not decide whether
+   * the page publishes.
+   */
+  it('ignores the legacy report when the targeted one exists and omits the spec', async () => {
+    const pages = await pagesByTitle(
+      workspace({
+        react: true,
+        webcomponents: false,
+        reports: ['fidelity'],
+        reportsWithoutTheSpec: ['fidelity.react'],
+      }),
+    );
+    expect(pages.has('Components/DS Button (Beta)/Testing/React Fidelity')).toBe(false);
+  });
+
+  it('renders every page to TSX that parses, with no placeholder left behind', async () => {
+    const esbuild = await import('esbuild');
+    const pages = await pagesByTitle(
+      workspace({ react: true, webcomponents: true, reports: ['fidelity.react', 'fidelity.webcomponents'] }),
+    );
+    expect(pages.size).toBeGreaterThan(0);
+    for (const [title, content] of pages) {
+      expect(content, title).not.toMatch(/\{\{[A-Z_]+\}\}/);
+      expect(() => esbuild.transformSync(content, { loader: 'tsx' }), title).not.toThrow();
+    }
   });
 });

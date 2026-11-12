@@ -108,7 +108,9 @@ export function migrateConfigV1(parsed: unknown): MigratedConfig {
     }
     if (proc.images && typeof proc.images === 'object') {
       figma.images = {
-        ...(proc.images.imageComponent !== undefined && { match: proc.images.imageComponent }),
+        // `component`, not `match`: the legacy key named the designated image
+        // component, and `match` is now a naming pattern (ADR-117).
+        ...(proc.images.imageComponent !== undefined && { component: proc.images.imageComponent }),
         ...(proc.images.backgroundImage !== undefined && { backgroundImage: proc.images.backgroundImage }),
         ...(proc.images.sourceProps !== undefined && { sourceProps: proc.images.sourceProps }),
       };

@@ -88,6 +88,20 @@ This is destructive — the existing component is removed, not merged into. When
 specs render specs/components/deButton.yaml --overwrite
 ```
 
+### `--grid`
+
+Arrange everything `render` has placed on the page into rows approximating a 4:3 block, spaced 100px apart horizontally and vertically. Off by default.
+
+Without it, each component lands 100px to the right of whatever is already on the page, so rendering a catalogue walks the output into a single row running off to arbitrary x. With it, the arrangement runs after each component lands — one render and a whole catalogue both end in a correct block, and a `--watch` rebuild returns its component to its own place in the block rather than beside it.
+
+The rows read in canvas order, which is the order the components were rendered in. Each row is as tall as its tallest member and its items sit at the row's top. The block is at least as wide as 4:3 and never taller; where the component sizes admit no such arrangement, a single row is used.
+
+Only nodes `render` created are moved. Anything else on the page stays exactly where it is, and the block anchors 100px to the right of it. The components stay direct children of the canvas — nothing is re-parented and no containing frame is created, so each one remains independently selectable.
+
+```bash
+specs render --grid
+```
+
 ### `--watch`
 
 Watch the spec path and re-render on every change. Implies `--overwrite`, since each re-render replaces the component produced by the last one.
@@ -153,7 +167,21 @@ The node id is the component that was created or updated — open it directly at
 
 An instance element that can't be resolved is content the component was supposed to contain, so this is called out as a count rather than left to a per-element warning that scrolls past in a batch. It's still a success — the component exists — unless you pass [`--strict`](#--strict).
 
-The usual cause is a cache that doesn't know the referenced component: run [`specs fetch`](/cli/commands/fetch/) to refresh it.
+The cause is a cache that doesn't know the referenced component. For a library component, refresh it with [`specs fetch`](/cli/commands/fetch/). For a component this workspace authored, render that component once — a render records itself, and the record is what makes it placeable.
+
+### What a render records
+
+A successful render writes the node it produced into the components cache, so the next render can place it. Two authored components can then reference each other with no fetch, no scan and no generate — the round trip that overwrites authored specs.
+
+The entry carries the node id, the spec key, and the Figma file the node lives in. It carries **no published key**, because a component you rendered isn't published: enough to place it in the same file, not enough to import it elsewhere. Render into a second file and the record names that file instead, so a reference the current file can't reach reports itself as incomplete rather than resolving to the wrong node.
+
+Recording is best-effort. If it fails, the render still succeeded and says so:
+
+```
+  ⚠ Rendered, but could not record it for reuse: <reason>
+```
+
+The cost of a miss is the next render not finding this component, which surfaces as an incomplete render rather than as silence. See [`cache`](/cli/commands/cache/#what-a-render-adds) for where the entry lives and how a fetch repairs it.
 
 ### A batch
 

@@ -201,6 +201,146 @@ describe('loadFoundations', () => {
     });
   });
 
+  describe('File-seeded styles', () => {
+    // A library file that consumes its own published library holds several document
+    // entries per published key: the local style, plus one copy for every place a
+    // component was pasted from a published version.
+    const publishedTextStyle = {
+      meta: {
+        styles: [
+          {
+            key: 'key-hash-1',
+            node_id: 'local:1',
+            name: 'Typography/Body/Medium',
+            style_type: 'TEXT',
+            $custom: { token: 'body.medium' }
+          }
+        ]
+      }
+    };
+
+    const writeStyles = (data: unknown): string => {
+      const stylesPath = path.join(testDir, 'styles.json');
+      fs.writeJSONSync(stylesPath, data);
+      return stylesPath;
+    };
+
+    it('should give $custom to every document entry sharing one key', async () => {
+      const stylesPath = writeStyles(publishedTextStyle);
+      const fileJson = {
+        styles: {
+          'local:1': { key: 'key-hash-1', name: 'Typography/Body/Medium', styleType: 'TEXT' },
+          'copy:2': { key: 'key-hash-1', name: 'Body/Medium', styleType: 'TEXT' },
+          'copy:3': { key: 'key-hash-1', name: 'Body/Medium', styleType: 'TEXT' }
+        }
+      };
+
+      const result = await loadFoundations([], [stylesPath], fileJson);
+
+      for (const id of ['local:1', 'copy:2', 'copy:3']) {
+        expect(result.styles.get(id)?.$custom).toEqual({ token: 'body.medium' });
+      }
+    });
+
+    it('should give $custom to a local entry whose id equals the published node_id', async () => {
+      const stylesPath = writeStyles(publishedTextStyle);
+      const fileJson = {
+        styles: {
+          'local:1': { key: 'key-hash-1', name: 'Typography/Body/Medium', styleType: 'TEXT' }
+        }
+      };
+
+      const result = await loadFoundations([], [stylesPath], fileJson);
+
+      expect(result.styles.get('local:1')?.$custom).toEqual({ token: 'body.medium' });
+    });
+
+    it('should not overwrite a $custom already on the document entry', async () => {
+      const stylesPath = writeStyles(publishedTextStyle);
+      const fileJson = {
+        styles: {
+          'copy:2': {
+            key: 'key-hash-1',
+            name: 'Body/Medium',
+            styleType: 'TEXT',
+            $custom: { token: 'authored.in.file' }
+          }
+        }
+      };
+
+      const result = await loadFoundations([], [stylesPath], fileJson);
+
+      expect(result.styles.get('copy:2')?.$custom).toEqual({ token: 'authored.in.file' });
+    });
+
+    it('should leave an entry whose key matches no published style alone', async () => {
+      const stylesPath = writeStyles(publishedTextStyle);
+      const fileJson = {
+        styles: {
+          'orphan:9': { key: 'key-hash-unknown', name: 'Orphan', styleType: 'EFFECT' }
+        }
+      };
+
+      const result = await loadFoundations([], [stylesPath], fileJson);
+
+      expect(result.styles.get('orphan:9')?.name).toBe('Orphan');
+      expect(result.styles.get('orphan:9')?.$custom).toBeUndefined();
+    });
+
+    it('should skip a document entry with no key, and one with no type', async () => {
+      const stylesPath = writeStyles(publishedTextStyle);
+      const fileJson = {
+        styles: {
+          'nokey:7': { name: 'No Key', styleType: 'FILL' },
+          'notype:8': { key: 'key-hash-1', name: 'No Type' }
+        }
+      };
+
+      const result = await loadFoundations([], [stylesPath], fileJson);
+
+      expect(result.styles.get('nokey:7')?.$custom).toBeUndefined();
+      expect(result.styles.has('notype:8')).toBe(false);
+    });
+
+    it('should seed from several file JSONs, first definition of an id winning', async () => {
+      const stylesPath = writeStyles(publishedTextStyle);
+      const first = {
+        styles: {
+          'copy:2': { key: 'key-hash-1', name: 'From First', styleType: 'TEXT' }
+        }
+      };
+      const second = {
+        styles: {
+          'copy:2': { key: 'key-hash-1', name: 'From Second', styleType: 'TEXT' },
+          'copy:3': { key: 'key-hash-1', name: 'Only In Second', styleType: 'TEXT' }
+        }
+      };
+
+      const result = await loadFoundations([], [stylesPath], [first, second]);
+
+      expect(result.styles.get('copy:2')?.name).toBe('From First');
+      expect(result.styles.get('copy:2')?.$custom).toEqual({ token: 'body.medium' });
+      expect(result.styles.get('copy:3')?.$custom).toEqual({ token: 'body.medium' });
+    });
+
+    it('should seed styles with no styles endpoint present', async () => {
+      const fileJson = {
+        styles: {
+          'copy:2': { key: 'key-hash-1', name: 'Body/Medium', styleType: 'TEXT', description: 'A copy' }
+        }
+      };
+
+      const result = await loadFoundations([], [], fileJson);
+
+      expect(result.styles.get('copy:2')).toEqual({
+        id: 'copy:2',
+        name: 'Body/Medium',
+        type: 'TEXT',
+        description: 'A copy'
+      });
+    });
+  });
+
   describe('Combined loading', () => {
     it('should load both variables and styles together', async () => {
       const variablesPath = path.join(testDir, 'variables.json');

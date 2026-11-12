@@ -20,6 +20,9 @@ import { ConfigLoader } from '../config/ConfigLoader.js';
 import type { CLIConfig } from '../config/types.js';
 import { loadFoundations } from '../utilities/loadFoundations.js';
 import { resolveFileSourceAlias } from '../generate/fileSourceAlias.js';
+import { collectComponentImages, mergeComponentImages, readComponentImages, writeComponentImages } from '../generate/componentImages.js';
+import { refreshCache } from '../cache/cache.js';
+import { reportCache } from '../cache/report.js';
 import { ManifestParser } from '../generate/manifestParser.js';
 import { ManifestParserV2 } from '../utilities/manifestParserV2.js';
 import { writeLayout, type SpecKind } from '../utilities/specsLayout.js';
@@ -297,6 +300,14 @@ async function writeGeneratedOutput(
   // reconstructed for free.
   // -------------------------------------------------------------------
   {
+    // The data directory, needed both for the file key below and for the record
+    // this pass writes — so it is resolved once, outside the download branch.
+    const sourceDir = options.dataDir
+      ? path.resolve(options.dataDir)
+      : config.settings.data?.directory
+        ? path.resolve(config.settings.data.directory)
+        : path.join(process.cwd(), 'data');
+
     const hashes = ImageFillsResolver.collectUnresolvedHashes(processedComponents);
     if (hashes.size === 0) {
       if (options.getImages) {
@@ -316,11 +327,6 @@ async function writeGeneratedOutput(
           console.error('Error: --get-images requires the FIGMA_TOKEN environment variable (same token as `specs fetch`)');
           stop(ERROR_CODES.INVALID_ARGS);
         }
-        const sourceDir = options.dataDir
-          ? path.resolve(options.dataDir)
-          : config.settings.data?.directory
-            ? path.resolve(config.settings.data.directory)
-            : path.join(process.cwd(), 'data');
         const resolved = resolveImageFileKey(config, sourceDir, payloadPath);
         if ('error' in resolved) {
           console.error(resolved.error);
@@ -357,6 +363,52 @@ async function writeGeneratedOutput(
       const unresolved = options.getImages ? 0 : missing.size;
       if (unresolved > 0) {
         console.log(`Note: ${unresolved} image(s) have no file under ${IMAGES_DIR_NAME}/ — re-run with --get-images to download them`);
+      }
+    }
+
+    // Record what this pass found on components, so the images lookup covers
+    // the third origin (specs#902). Gated on --get-images because that is the
+    // flag that makes images this run's business: a plain regenerate then never
+    // dirties a cache it does not refresh.
+    //
+    // Read after resolution, and over every registry rather than the unresolved
+    // ones: once an image has a `src`, `collectUnresolvedHashes` stops seeing it,
+    // so recording from that set would record nothing on the second run.
+    if (options.getImages) {
+      const alias = resolveFileSourceAlias(config.settings.data?.sources);
+      if (!alias) {
+        console.warn('⚠ --get-images found no configured source alias to attribute images to — nothing recorded for the images cache');
+      } else {
+        const imagesDirRelativeToConfig = path.relative(
+          config.configDir ?? process.cwd(),
+          path.join(baseDir, IMAGES_DIR_NAME),
+        );
+        const found = collectComponentImages(
+          processedComponents,
+          imagesDirRelativeToConfig,
+          name => formatKey(name, config.settings.spec.keys),
+        );
+        const merged = mergeComponentImages(await readComponentImages(sourceDir, alias), found);
+        // Provenance only — an unresolvable key is not worth failing a recorded
+        // payload for, since the cache never reads it.
+        const keyResult = resolveImageFileKey(config, sourceDir, payloadPath);
+        await writeComponentImages(sourceDir, alias, 'key' in keyResult ? keyResult.key : undefined, merged);
+
+        // Refresh the cache here, as `fetch` and `applyCustomTokens` do, so a
+        // render straight after a generate never meets a cache this command
+        // just invalidated.
+        const report = refreshCache({
+          dataDir: sourceDir,
+          aliases: Object.keys(config.settings.data?.sources ?? {}),
+          glyphs: figmaOf(config.conventions).glyphs,
+        });
+        reportCache(report, []);
+
+        const carried = merged.length - found.length;
+        console.log(
+          `✓ Recorded ${found.length} component image(s) for the images cache`
+          + (carried > 0 ? ` (${carried} kept from an earlier pass)` : '')
+        );
       }
     }
   }

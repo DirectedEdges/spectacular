@@ -25,7 +25,9 @@ data:
   sources:
     library:
       key: YOUR_FIGMA_FILE_KEY
-      # Add icons once a glyphs convention is declared in conventions/figma.yaml
+      # Add icons once a glyphs convention is declared in conventions/figma.yaml,
+      # and images to download the library's own images — those on published fill
+      # styles, plus any laid out on a page once images.match is declared there
       fetch: [file, variables, styles]
 
 # Icons, images, generated CSS, fonts — https://spectacular.systems/settings/folders/

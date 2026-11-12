@@ -4,6 +4,7 @@
 **Created**: 2026-03-05
 **Status**: ACCEPTED
 **Summary**: An `ElementTypeRef` widens `AnatomyElement.type`, letting an element type point at a shared definition.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

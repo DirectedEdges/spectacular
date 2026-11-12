@@ -1,13 +1,13 @@
 // `specs storybook init` — scaffold the host, once. Writes package.json,
 // tsconfig.json and .storybook/*, creates content-overrides/, and seeds
-// content/components/tabs.json so the manager's build-time import resolves
+// content/components/modes.json so the preview's build-time import resolves
 // before the first publish. Prints the install step; the customer installs
 // Storybook — we never ship or vendor it (ADR A decision 1).
 import fs from 'fs-extra';
 import path from 'path';
 import type { Workspace } from './workspace.js';
 import { readTemplate, renderTemplate, templatesHash, STORYBOOK_VERSION, STORYBOOK_MAJOR } from './templates.js';
-import { deriveTabs, deriveModes } from './concerns/components/index.js';
+import { deriveModes } from './concerns/components/index.js';
 import { resolveStorybookPort, type PortSource } from './port.js';
 
 declare const __SPECS_CLI_VERSION__: string;
@@ -31,6 +31,8 @@ export interface InitResult {
    * main.ts imports packages the old install never held.
    */
   staleInstall: string[];
+  /** Host files on disk this CLI no longer scaffolds and nothing imports. */
+  orphaned: string[];
 }
 
 /** Files init owns. `--force` rewrites exactly these — never content/ or content-overrides/. */
@@ -41,8 +43,16 @@ const HOST_FILES: Array<{ out: string; template: string }> = [
   { out: '.storybook/preview.tsx', template: 'preview.tsx.tpl' },
   { out: '.storybook/manager.tsx', template: 'manager.tsx.tpl' },
   { out: '.storybook/manager-head.html', template: 'manager-head.html.tpl' },
-  { out: '.storybook/ComponentDocs.tsx', template: 'ComponentDocs.tsx.tpl' },
+  { out: '.storybook/PlatformDocs.tsx', template: 'PlatformDocs.tsx.tpl' },
 ];
+
+/**
+ * Host files this CLI used to scaffold and no longer does. An existing scaffold
+ * keeps them, and nothing imports them any more — but they are the customer's
+ * files, possibly edited, so init says they are orphaned rather than deleting
+ * them.
+ */
+const RETIRED_HOST_FILES = ['.storybook/ComponentDocs.tsx'];
 
 export function init(ws: Workspace, options: InitOptions): InitResult {
   const dotStorybook = path.join(ws.storybookDir, '.storybook');
@@ -55,7 +65,16 @@ export function init(ws: Workspace, options: InitOptions): InitResult {
   }
 
   const workspaceName = path.basename(ws.root);
+  // The import ships live against a stub stylesheet the first publish
+  // overwrites. The old commented-out import waited on a human to notice the
+  // "uncomment after first emit" moment; nobody did, every token-driven
+  // declaration was an invalid var() (CSS drops the declaration), and a fresh
+  // workspace's first components rendered as 0×0 transparent boxes.
   const cssvarsPath = path.join(ws.assetsDir, 'cssvars', 'cssvars.css');
+  if (!fs.existsSync(cssvarsPath)) {
+    fs.ensureDirSync(path.dirname(cssvarsPath));
+    fs.writeFileSync(cssvarsPath, '/* Placeholder written by `specs storybook init` — the first `specs react` or `specs webcomponents` publish overwrites it. */\n');
+  }
   // The port is resolved, not defaulted: a `--force` that defaulted the flag
   // to 6006 rewrote the npm script and moved an already-running workspace off
   // its own address — including for the screenshot runner, which reads the
@@ -67,11 +86,7 @@ export function init(ws: Workspace, options: InitOptions): InitResult {
     PORT: String(resolvedPort.port),
     STORYBOOK_VERSION,
     STORYBOOK_MAJOR,
-    // Only asset kinds present produce config entries (specs#610): a workspace
-    // that never emitted a platform gets the import commented, not broken.
-    CSSVARS_IMPORT: fs.existsSync(cssvarsPath)
-      ? "import '../../assets/cssvars/cssvars.css';"
-      : "// No generated stylesheet yet — after `specs react` or `specs webcomponents`, uncomment:\n// import '../../assets/cssvars/cssvars.css';",
+    CSSVARS_IMPORT: "import '../../assets/cssvars/cssvars.css';",
   };
 
   const written: string[] = [];
@@ -103,18 +118,19 @@ export function init(ws: Workspace, options: InitOptions): InitResult {
   // The override tree: the customer's, from the start. No command writes into it.
   fs.ensureDirSync(path.join(ws.storybookDir, 'content-overrides'));
 
-  // Seed tabs.json: the manager imports it at build time, so it must exist
-  // before the first publish. Publish rewrites it from the same derivation.
-  const tabsFile = path.join(ws.storybookDir, 'content', 'components', 'tabs.json');
-  if (!fs.existsSync(tabsFile)) {
-    fs.ensureDirSync(path.dirname(tabsFile));
-    fs.writeFileSync(tabsFile, JSON.stringify(deriveTabs(ws), null, 2) + '\n');
-    written.push(path.join('storybook', 'content', 'components', 'tabs.json'));
+  // The platform story trees main.ts globs over, before anything is emitted.
+  // The globs are unconditional so a server started before the first emit still
+  // picks the stories up when they appear; that only works if the directories
+  // exist when the server boots.
+  for (const dir of ['react/src/components', 'react/src/compositions', 'webcomponents/src/components', 'webcomponents/src/compositions']) {
+    fs.ensureDirSync(path.join(ws.root, dir));
   }
 
-  // Seed modes.json for the same reason: the scaffolded preview imports it.
+  // Seed modes.json: the scaffolded preview imports it at build time, so it must
+  // exist before the first publish. Publish rewrites it from the same derivation.
   const modesFile = path.join(ws.storybookDir, 'content', 'components', 'modes.json');
   if (!fs.existsSync(modesFile)) {
+    fs.ensureDirSync(path.dirname(modesFile));
     fs.writeFileSync(modesFile, JSON.stringify(deriveModes(ws, ws.config.conventions.storybook?.modes), null, 2) + '\n');
     written.push(path.join('storybook', 'content', 'components', 'modes.json'));
   }
@@ -124,6 +140,9 @@ export function init(ws: Workspace, options: InitOptions): InitResult {
     port: String(resolvedPort.port),
     portSource: resolvedPort.source,
     staleInstall: staleInstall(ws, packageJson),
+    orphaned: RETIRED_HOST_FILES.filter((f) => fs.existsSync(path.join(ws.storybookDir, f))).map((f) =>
+      path.join('storybook', f),
+    ),
   };
 }
 

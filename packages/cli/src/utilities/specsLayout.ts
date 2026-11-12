@@ -18,6 +18,17 @@ export type SpecKind = 'component' | 'composition';
 export const COMPONENTS_DIR = 'components';
 export const COMPOSITIONS_DIR = 'compositions';
 export const ANALYSIS_DIR = 'analysis';
+/**
+ * Where a library's foundation material sits: the fetched `variables.json` and
+ * `styles.json`, and one directory per foundation concern holding the authored
+ * documents for it (ADR-118).
+ *
+ * Named here because three callers reached for the literal independently — the
+ * authored-document validator and both authored-input analyzers — and a fourth
+ * would have made the drift permanent. It is not a `SpecKind`: nothing under it
+ * describes a component or a composition.
+ */
+export const FOUNDATIONS_DIR = 'foundations';
 
 export const SPEC_KINDS: readonly SpecKind[] = ['component', 'composition'];
 

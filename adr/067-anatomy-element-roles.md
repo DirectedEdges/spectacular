@@ -5,6 +5,7 @@
 **Status**: ACCEPTED
 **Deciders**: Nathan Curtis (author)
 **Summary**: A `role` field on an anatomy element records the interaction semantic that element carries, read from Figma Dev Mode annotations, so transforms emit each platform's native control instead of a styled container.
+**Decides**: none
 **Supersedes**: *(none; companion to ADR 055)*
 
 ---

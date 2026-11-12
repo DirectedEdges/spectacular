@@ -5,13 +5,7 @@ description: "A $slotContent JSON Pointer to a SlotContent or Composition entry"
 
 A `SlotContentRef` names the act of filling a slot. It is a single-key object whose `$slotContent` value is a JSON Pointer to the fill, so the same content can be authored once and referenced from many places.
 
-```ts
-interface SlotContentRef {
-  $slotContent: string;
-}
-```
-
-## Properties
+## Members
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
@@ -28,6 +22,8 @@ The pointer resolves to one of three targets — all yielding an `anatomy + elem
 | [`Composition.slotContent`](/schema/composition/) entry | `#/compositions/filterResultsPage/slotContent/pageHeader` | that [`SlotContent`](/schema/slot-content/) |
 
 The `$slotContent` key discriminates the reference — it names the *act of filling a slot*, not the target type.
+
+The `components` segment names the whole spec-key space, not the components directory: a composition spec addresses `slotContentExamples` — other specs' and its own — through the same `#/components/<spec key>/slotContentExamples/<name>` form, optionally with `/subcomponents/<sub>/` before `slotContentExamples` for a subcomponent-owned fill. Those two forms are the only ones the emitters resolve today; the `#/compositions/…` forms above are declared by the schema but not yet resolved by any consumer, so generated and authored specs alike use the `#/components/…` form.
 
 ## Where it appears
 

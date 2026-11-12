@@ -10,8 +10,41 @@ import type {
   Sides, Corners, ItemSpacing, LayoutMode, WrapAlignment,
   MainAxisAlignment, CrossAxisAlignment, Position, PositionOffset,
   StrokeDashPattern, TextAlignHorizontal, TextOverflow,
-  ContentStyles, TextContentStyles, GlyphContentStyles,
+  ContentStyles, TextContentStyles, GlyphContentStyles, UnitIntervalStyle,
 } from '../types/index.js';
+
+// ─── UnitIntervalStyle — opacity and cornerSmoothing ───────────────────────
+
+// The three arms: a number, a token reference, null
+const uiNumber: UnitIntervalStyle = 0.72;
+const uiZero: UnitIntervalStyle = 0;
+const uiOne: UnitIntervalStyle = 1;
+const uiToken: UnitIntervalStyle = { $token: 'Constants/Opacity/72', $type: 'number' };
+const uiNull: UnitIntervalStyle = null;
+
+// Both properties take it
+const opacityNumber: Styles = { opacity: 0.5 };
+const opacityToken: Styles = { opacity: { $token: 'Constants/Opacity/56', $type: 'number' } };
+const smoothingNumber: Styles = { cornerSmoothing: 0.6 };
+
+// The range itself is the schema's to enforce — TypeScript cannot express it, so an
+// out-of-range literal still compiles here and is rejected by `specs validate`.
+const uiOutOfRange: UnitIntervalStyle = 76;
+
+// A string is no longer assignable to either property. Both were typed as the
+// generic `Style` union before, which accepted this while the schema rejected it.
+// @ts-expect-error: a unit-interval style is never a string
+const _opacityString: Styles = { opacity: '0.5' };
+
+// @ts-expect-error: a unit-interval style is never a boolean
+const _opacityBoolean: Styles = { opacity: true };
+
+// @ts-expect-error: a unit-interval style is never a string
+const _smoothingString: Styles = { cornerSmoothing: 'squircle' };
+
+// Neither property is prop-bindable or conditional — the schema never admitted either
+// @ts-expect-error: a unit-interval style carries no prop binding
+const _opacityBound: Styles = { opacity: { $binding: '#/props/fade' } };
 
 // ─── ColorStyle ────────────────────────────────────────────────────────────
 
@@ -252,8 +285,10 @@ const fullTypographyToken: Typography = {
   fontStyle: { $token: 'Typography.Body.FontStyle', $type: 'string' } satisfies TokenReference,
   lineHeight: { $token: 'Typography.Body.LineHeight', $type: 'dimension' } satisfies TokenReference,
   letterSpacing: { $token: 'Typography.Body.LetterSpacing', $type: 'dimension' } satisfies TokenReference,
-  textCase: { $token: 'Typography.Body.TextCase', $type: 'string' } satisfies TokenReference,
-  textDecoration: { $token: 'Typography.Body.Decoration', $type: 'string' } satisfies TokenReference,
+  // `textCase` and `textDecoration` no longer accept a TokenReference — neither
+  // is in the transform's VARIABLE_PROPERTIES, so no variable can bind to them.
+  textCase: 'UPPER',
+  textDecoration: 'UNDERLINE',
   paragraphIndent: { $token: 'Typography.Body.Indent', $type: 'dimension' } satisfies TokenReference,
   paragraphSpacing: { $token: 'Typography.Body.ParaSpacing', $type: 'dimension' } satisfies TokenReference,
   // leadingTrim no longer accepts TokenReference — it is a string enum ('NONE' | 'CAP_HEIGHT' | 'mixed')
@@ -545,7 +580,7 @@ const withLayoutNone: Styles = { layoutMode: 'NONE' };
 const withLayoutHorizontal: Styles = { layoutMode: 'HORIZONTAL' };
 const withLayoutVertical: Styles = { layoutMode: 'VERTICAL' };
 
-// null is valid
+// @ts-expect-error: null is not a value a closed set carries — an unset key is omitted
 const withLayoutNull: Styles = { layoutMode: null };
 
 // @ts-expect-error: TokenReference is not valid for layoutMode (not token-bindable)
@@ -578,11 +613,13 @@ const _waLowercase: WrapAlignment = 'start';
 const withWrapTrue: Styles = { wrap: true };
 const withWrapFalse: Styles = { wrap: false };
 
-// null is valid (Style includes null)
+// @ts-expect-error: a boolean style is true or false; an unset key is omitted
 const withWrapNull: Styles = { wrap: null };
 
-// TokenReference is valid (Style includes TokenReference)
+// Not token-bindable: capture never reads a variable for it, and render
+// discards a token reference reaching it.
 const withWrapToken: Styles = {
+  // @ts-expect-error: see above
   wrap: { $token: 'Layout.Wrap', $type: 'boolean' } satisfies TokenReference,
 };
 
@@ -592,11 +629,13 @@ const withWrapToken: Styles = {
 const withClipsContentTrue: Styles = { clipsContent: true };
 const withClipsContentFalse: Styles = { clipsContent: false };
 
-// null is valid (Style includes null)
+// @ts-expect-error: a boolean style is true or false; an unset key is omitted
 const withClipsContentNull: Styles = { clipsContent: null };
 
-// TokenReference is valid (Style includes TokenReference)
+// Not token-bindable: capture never reads a variable for it, and render
+// discards a token reference reaching it.
 const withClipsContentToken: Styles = {
+  // @ts-expect-error: see above
   clipsContent: { $token: 'Layout.ClipsContent', $type: 'boolean' } satisfies TokenReference,
 };
 
@@ -610,7 +649,7 @@ const withOldClipName: Styles = { clipContent: true };
 const withWrapAlignStart: Styles = { wrapAlignment: 'START' };
 const withWrapAlignSpace: Styles = { wrapAlignment: 'SPACE_BETWEEN' };
 
-// null is valid
+// @ts-expect-error: a closed set with no writer of null does not carry it
 const withWrapAlignNull: Styles = { wrapAlignment: null };
 
 // @ts-expect-error: TokenReference is not valid for wrapAlignment (not token-bindable)
@@ -756,7 +795,7 @@ const _poToken: PositionOffset = { $token: 'Space.4', $type: 'dimension' } satis
 const withPositionAuto: Styles = { position: 'AUTO' };
 const withPositionAbsolute: Styles = { position: 'ABSOLUTE' };
 
-// null is valid
+// null is valid — a variant writes it to drop the value its base element carried
 const withPositionNull: Styles = { position: null };
 
 // @ts-expect-error: TokenReference is not valid for position (not token-bindable)
@@ -891,7 +930,7 @@ const withAlignCenter: Styles = { textAlignHorizontal: 'CENTER' };
 const withAlignEnd: Styles = { textAlignHorizontal: 'END' };
 const withAlignJustify: Styles = { textAlignHorizontal: 'JUSTIFY' };
 
-// null is valid
+// @ts-expect-error: null is not a value a closed set carries — an unset key is omitted
 const withAlignNull: Styles = { textAlignHorizontal: null };
 
 // absent is valid (all Styles fields optional)
@@ -933,7 +972,7 @@ const _toLowercase: TextOverflow = 'clip';
 const withOverflowClip: Styles = { textOverflow: 'CLIP' };
 const withOverflowEllipsis: Styles = { textOverflow: 'ELLIPSIS' };
 
-// null is valid
+// @ts-expect-error: a closed set with no writer of null does not carry it
 const withOverflowNull: Styles = { textOverflow: null };
 
 // absent is valid (all Styles fields optional)

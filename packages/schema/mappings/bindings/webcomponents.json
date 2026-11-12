@@ -1,0 +1,396 @@
+{
+  "platform": "webcomponents",
+  "role": "Emits Lit custom elements; styling delegated to CSS",
+  "dependsOn": [
+    "css"
+  ],
+  "realises": "Emits Lit custom elements. Styling is delegated wholly to the CSS binding.",
+  "note": "Declares only what this platform adds to or changes from the CSS binding. A style key absent here is bound exactly as css.json states; this file never restates one. Props are NOT inherited: how a prop becomes a property or attribute is this platform's own surface, declared in full below.",
+  "concepts": {
+    "styles": {},
+    "styleRules": {},
+    "props": {
+      "boolean": {
+        "disposition": "bound",
+        "realises": "a `boolean` member of the element's contract, reflected as an attribute",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "rule": "statesToContract",
+        "notes": "The contract types and defaults are the shared platform-neutral derivation — the same module React uses. Reflection follows the shared attribute rule: the bare attribute where the name is free, the `data-` form where it collides with a global attribute that already has behaviour."
+      },
+      "string": {
+        "disposition": "bound",
+        "realises": "a `string` member of the element's contract, nullable-widened with `null`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Widened to admit `null` by the shared nullability rule (ADR-065). `examples` feed stories; they never become a contract default."
+      },
+      "enum": {
+        "disposition": "bound",
+        "realises": "a named union type, reflected as an attribute the stylesheet selects on",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "rule": "statesToContract",
+        "notes": "Values are lowercased by the enumCase contract. The element reflects the prop so the stylesheet can select `:host([<attr>=\"<value>\"])`; the attribute spelling comes from the one shared function the emitter and the stylesheet both call, so the two cannot disagree. Reserved global names (`hidden`, `title`, `id`, every `aria-*`) fall back to `data-<attr>`."
+      },
+      "number": {
+        "disposition": "bound",
+        "realises": "a `number` member of the element's contract",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Shared contract derivation. A closed `enum` of numbers reflects and selects like an enum does, on the numeric spelling."
+      },
+      "slot": {
+        "disposition": "bound",
+        "realises": "a native `<slot>` projection point",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "rule": "slotsToProjection",
+        "notes": "A slot prop never reaches the platform-neutral contract and never becomes a reactive property — it surfaces as a `<slot>`, whether or not it also accepts a primitive fill (a `$text`/`$glyph` marker widens what the slot can take, never turns it into a scalar property)."
+      },
+      "image": {
+        "disposition": "bound",
+        "realises": "a URL-valued property",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Registry pointers resolve to served asset URLs under the emitted assets base, from the registry entry's own `src` — an entry without one is unresolved and nothing further is tried (ADR-063)."
+      },
+      "object": {
+        "disposition": "bound",
+        "realises": "a named member interface; values as object literals",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "The contract spells the object shape as its own interface (ADR-111), from the same shared derivation as React. Stories and controls work on the flat dotted-arg-key view and reassemble the object in this emitter's idiom."
+      }
+    },
+    "propRules": {
+      "slotsToProjection": {
+        "disposition": "bound",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["slot"],
+        "inputs": [
+          { "ref": "prop.defaultSlot", "from": "spec document (ADR-099)" },
+          { "ref": "prop.key", "from": "spec document — kebab-cased for the attribute" }
+        ],
+        "cases": [
+          {
+            "when": { "operation": "equals", "args": { "value": "prop.defaultSlot", "compareTo": true } },
+            "emit": ["an unnamed `<slot>` — the component's bare light DOM projects here"],
+            "why": "The authored `defaultSlot` is the only answer, by whatever prop name it carries; a prop's spelling never nominates a default slot"
+          },
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "prop.key" } },
+            "emit": ["`<slot name=\"<kebab>\">` — including a slot whose prop happens to be spelled `children`"],
+            "why": "A component declaring no default slot has no unnamed `<slot>` at all"
+          }
+        ],
+        "otherwise": { "emit": [], "why": "A prop that is not a slot projects nothing" },
+        "notes": "A primitive-accepting slot keeps its `<slot>` exactly like any other, empty included — the string default a `$text` slot records is example content, not something the component renders on its own. A collapsed slot wrapper (ADR-083) puts the children binding on a `container` root, which still projects. An unfilled slot is marked so the shared stylesheet collapses the gap a flex parent would otherwise paint around nothing."
+      },
+      "statesToContract": {
+        "disposition": "bound",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["boolean", "enum"],
+        "inputs": [
+          { "ref": "conventions.specs.states", "from": "declared conventions" },
+          { "ref": "concept.contract", "from": "the shared state-concept table (from-specs states.ts)" }
+        ],
+        "cases": [
+          {
+            "when": { "operation": "equals", "args": { "value": "concept.contract", "compareTo": "omit" } },
+            "emit": ["nothing — the prop leaves the contract; the CSS binding selects on the browser pseudo-class"],
+            "why": "Hover, focus, active are the browser's to drive; a consumer cannot meaningfully set them"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "concept.contract", "compareTo": "keep" } },
+            "emit": ["the prop stays a property; the element writes the concept's aria attribute when it is set"],
+            "why": "Disabled, selected, invalid are consumer-set facts the DOM should also state"
+          }
+        ],
+        "otherwise": { "emit": ["the prop is an ordinary property"], "why": "A prop no state entry names is not a state" },
+        "notes": "Identical rule to the React binding by construction: the concept table — selector and contract disposition per concept — is one shared module, so the two emitters and the CSS transform cannot disagree."
+      }
+    },
+    "anatomy": {
+      "text": {
+        "disposition": "bound",
+        "realises": "a `span` in the shadow tree carrying the element's content",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "rule": "semanticsAndTags",
+        "notes": "`span` by default — or the tag a role decides, through the same shared precedence module React uses."
+      },
+      "glyph": {
+        "disposition": "approximated",
+        "realises": "a mask-painted box via the shared glyph runtime",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "The asset paints as a CSS mask through the runtime's `glyphUrl`, which builds the URL from a settable base so an app not served from the site root still loads its icons. Approximated for the same reason as React: a decorative box, not an SVG a consumer can reach into."
+      },
+      "vector": {
+        "disposition": "approximated",
+        "realises": "a styled `div` occupying the vector's box",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Path geometry is not in the spec on any platform; the box emits, the shape is lost."
+      },
+      "container": {
+        "disposition": "bound",
+        "realises": "a `div` in the shadow tree — or the tag its role decides",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "rule": "semanticsAndTags",
+        "notes": "The host element is the component root (`:host` in the stylesheet); containers are shadow-tree structure beneath it."
+      },
+      "slot": {
+        "disposition": "bound",
+        "realises": "a native `<slot>` — unnamed for the declared default slot, `name=\"<kebab>\"` otherwise",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "The element side of the props surface's slotsToProjection rule. A collapsed slot wrapper (ADR-083) carries the children binding on a `container` root and still projects."
+      },
+      "instance": {
+        "disposition": "bound",
+        "realises": "the composed custom element, configured",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "`instanceOf` resolves through the same instance-target resolution React uses — subcomponent refs included — and composed content walks the shared recursion. Role ROUTING on an instance remains the one unconfirmed corner, noted on the semanticsAndTags rule."
+      },
+      "line": {
+        "disposition": "approximated",
+        "realises": "a styled `div`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Stroke styling on a box."
+      },
+      "ellipse": {
+        "disposition": "approximated",
+        "realises": "a fully-rounded `div`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Box plus full corner rounding."
+      },
+      "rectangle": {
+        "disposition": "bound",
+        "realises": "a styled `div`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "The one shape the platform speaks natively."
+      },
+      "polygon": {
+        "disposition": "unsupported",
+        "realises": "a styled `div` — box only, no shape",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Point data is not in the spec; declared lost, as on React."
+      },
+      "star": {
+        "disposition": "unsupported",
+        "realises": "a styled `div` — box only, no shape",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Same as polygon."
+      }
+    },
+    "anatomyRules": {
+      "layoutWalk": {
+        "disposition": "bound",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["container", "text", "glyph", "instance", "slot"],
+        "inputs": [
+          { "ref": "layout", "from": "spec document — ordered LayoutNodes: a leaf is an element name, a branch is one name over ordered children" },
+          { "ref": "variants[].layout", "from": "spec document — a variant's layout is a WHOLE structure layered over the default" },
+          { "ref": "element.instanceOf", "from": "spec document" },
+          { "ref": "element.type", "from": "spec document" }
+        ],
+        "derived": {
+          "conditions": {
+            "expression": { "operation": "equals", "args": { "value": "node.conditions", "compareTo": "the variant configurations that place this element here, state-classified props stripped; entries OR'd, each entry a conjunction" } },
+            "source": "shared layout-tree analysis"
+          }
+        },
+        "cases": [
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "node.excludeConditions" } },
+            "emit": ["the element, guarded to NOT render here under the configurations where a variant re-parents it"],
+            "why": "A re-parented element renders in the variant's position when it matches and in its default position otherwise — never both"
+          },
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "derived.conditions" } },
+            "emit": ["the element wrapped in its render condition in the lit template"],
+            "why": "An element only some variants place exists in the shadow tree exactly when a placing configuration matches"
+          },
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "node.key" } },
+            "emit": ["the element at its tree position, children recursed in authored order — slots project, instances compose, everything else a shadow-tree node whose tag the semanticsAndTags rule decides"],
+            "why": "The walk is the structure; order is the spec's"
+          }
+        ],
+        "otherwise": { "emit": [], "why": "An element absent from every layout renders nowhere" },
+        "notes": "The tree operations are the same shared module React walks, so the two emitters cannot diverge on structure — only on what each node becomes."
+      },
+      "semanticsAndTags": {
+        "disposition": "bound",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "form": "cases",
+        "keys": ["text", "container"],
+        "inputs": [
+          { "ref": "element.type", "from": "spec document" },
+          { "ref": "element.role", "from": "spec anatomy (ADR-067)" },
+          { "ref": "conventions.specs.states", "from": "declared conventions, through the shared concept table" }
+        ],
+        "tagCases": [
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "element.role" } },
+            "emit": ["the role's tag, inside the shadow tree"],
+            "why": "A role names a control the platform has a native element for"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "element.type", "compareTo": "text" } },
+            "emit": ["`span`"],
+            "why": "Text is phrasing content"
+          },
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "element.type" } },
+            "emit": ["`div`"],
+            "why": "The structural default — no phrasing-context arm here; the shadow tree starts its own content model"
+          }
+        ],
+        "ariaCases": [
+          {
+            "when": { "operation": "equals", "args": { "value": "concept", "compareTo": "claimed by this element's role" } },
+            "emit": ["nothing from the generic path — the role emits the platform-native mechanism"],
+            "why": "Role over states for the mechanism, from the same shared module as React"
+          },
+          {
+            "when": { "operation": "equals", "args": { "value": "concept.prop", "compareTo": "shared with a concept the role claimed" } },
+            "emit": ["nothing"],
+            "why": "One prop cannot announce two ways at once"
+          },
+          {
+            "when": { "operation": "isNotNull", "args": { "value": "concept" } },
+            "emit": ["the concept's aria attribute inside the shadow tree, when the driving prop is set"],
+            "why": "The generic path; selection attributes land on `:host` while a role's attributes land in the shadow tree"
+          }
+        ],
+        "otherwise": { "emit": ["the default tag, no ARIA"], "why": "An element with no role and no state entry keeps the pre-roles behavior" },
+        "notes": "Event-handler composition is expected to mirror the React binding's handlerCases through the shared events model, and `instance` role routing the same — both left undeclared here until confirmed against this emitter. The precedence module is shared, so suppression cannot diverge."
+      }
+    },
+    "roles": {
+      "$comment": "Role concept dispositions for this platform — implemented (the emitter realises the concept) or inert (recognized vocabulary that currently renders as if unannotated). The implemented set mirrors the emitter's role registry plus the shared part concepts; a registry change must update this block.",
+      "alert": { "disposition": "implemented", "module": "Roles/announcement.ts", "basis": "implementation" },
+      "button": { "disposition": "implemented", "module": "Roles/button.ts", "basis": "implementation" },
+      "checkbox": { "disposition": "implemented", "module": "Roles/checkbox.ts", "basis": "implementation" },
+      "decoration": { "disposition": "implemented", "module": "Roles/decoration.ts", "basis": "implementation" },
+      "decrement": { "disposition": "inert", "basis": "implementation", "notes": "Vocabulary concept only; no docs page worked through and no emitter — the annotation rides inert." },
+      "description": { "disposition": "implemented", "module": "Roles/description.ts", "basis": "implementation" },
+      "disclosure": { "disposition": "implemented", "module": "Roles/disclosure.ts", "basis": "implementation" },
+      "errormessage": { "disposition": "implemented", "module": "Roles/errormessage.ts", "basis": "implementation" },
+      "group": { "disposition": "inert", "basis": "implementation", "notes": "Vocabulary concept with a docs page; no emitter yet — the annotation rides inert and the element renders as if unannotated." },
+      "image": { "disposition": "implemented", "module": "Roles/image.ts", "basis": "implementation" },
+      "increment": { "disposition": "inert", "basis": "implementation", "notes": "Vocabulary concept only; no docs page worked through and no emitter — the annotation rides inert." },
+      "indicator": { "disposition": "implemented", "module": "Roles/indicator.ts", "basis": "implementation" },
+      "label": { "disposition": "implemented", "module": "Roles/label.ts", "basis": "implementation" },
+      "link": { "disposition": "implemented", "module": "Roles/link.ts", "basis": "implementation" },
+      "panel": { "disposition": "implemented", "module": "Roles/panel.ts", "basis": "implementation" },
+      "password": { "disposition": "inert", "basis": "implementation", "notes": "Vocabulary concept with a docs page; no emitter yet — the annotation rides inert and the element renders as if unannotated." },
+      "placeholder": { "disposition": "implemented", "module": "from-specs partConcepts (shared core)", "basis": "implementation" },
+      "progressbar": { "disposition": "implemented", "module": "Roles/announcement.ts", "basis": "implementation" },
+      "radio": { "disposition": "inert", "basis": "implementation", "notes": "Vocabulary concept with a docs page; no emitter yet — the annotation rides inert and the element renders as if unannotated." },
+      "searchbox": { "disposition": "inert", "basis": "implementation", "notes": "Vocabulary concept with a docs page; no emitter yet — the annotation rides inert and the element renders as if unannotated." },
+      "slider": { "disposition": "inert", "basis": "implementation", "notes": "Vocabulary concept only; no docs page worked through and no emitter — the annotation rides inert." },
+      "spinbutton": { "disposition": "inert", "basis": "implementation", "notes": "Vocabulary concept only; no docs page worked through and no emitter — the annotation rides inert." },
+      "status": { "disposition": "implemented", "module": "Roles/announcement.ts", "basis": "implementation" },
+      "switch": { "disposition": "implemented", "module": "Roles/switch.ts", "basis": "implementation" },
+      "textarea": { "disposition": "inert", "basis": "implementation", "notes": "Vocabulary concept with a docs page; no emitter yet — the annotation rides inert and the element renders as if unannotated." },
+      "textbox": { "disposition": "implemented", "module": "Roles/textbox.ts", "basis": "implementation" },
+      "togglebutton": { "disposition": "implemented", "module": "Roles/togglebutton.ts", "basis": "implementation" },
+      "value": { "disposition": "implemented", "module": "from-specs partConcepts (shared core)", "basis": "implementation" }
+    },
+    "references": {
+      "token": {
+        "disposition": "bound",
+        "realises": "nothing directly — styling is the CSS binding's",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "As on React: the emitter never reads a `$token`."
+      },
+      "binding": {
+        "disposition": "bound",
+        "realises": "property access on the element",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Bindings resolve through the same shared pointer machinery React uses; the lit-side spelling lives in this emitter's own props module."
+      },
+      "slotContent": {
+        "disposition": "bound",
+        "realises": "recursive lit-template composition from the registries",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "The composition walker mirrors React's by declared intent — same contentStyles rule, same wording, the two targets move together. Instances of real custom elements where `instanceOf` names one; raw elements otherwise."
+      },
+      "subcomponent": {
+        "disposition": "bound",
+        "realises": "the sibling subcomponent's emitted custom element",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "`#/subcomponents/<key>` resolves through the same instance-target resolution React uses."
+      },
+      "elementType": {
+        "disposition": "unsupported",
+        "realises": "—",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "External type references are a consumer concern (ADR-012)."
+      },
+      "image": {
+        "disposition": "bound",
+        "realises": "a served asset URL",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "An `$image` pointer resolves from the registry entry's own `src` under the emitted assets base; an entry without one is unresolved and nothing further is tried (ADR-063)."
+      },
+      "nested": {
+        "disposition": "unsupported",
+        "realises": "—",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "As on React: never read; deep configuration arrives through the slot-content graph."
+      },
+      "literal": {
+        "disposition": "bound",
+        "realises": "through the CSS binding's stylesheet",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Style values are the CSS binding's; the emitter never reads them."
+      },
+      "mixed": {
+        "disposition": "unsupported",
+        "realises": "—",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "As the CSS binding declares: nothing is emitted for the sentinel."
+      },
+      "conditional": {
+        "disposition": "unsupported",
+        "realises": "—",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "As the CSS binding declares: the condition is discarded on the way to a stylesheet."
+      }
+    },
+    "referenceRules": {}
+  },
+  "surfaces": {
+    "note": "The platform-shaped questions this binding owes, none of which are CSS. propsToParameters, slotsToChildren and variantsToSelection graduated into concepts.props and concepts.propRules above; variant selection itself is the CSS binding's propsToSelectors rule.",
+    "styleAttachment": "unverified"
+  }
+}

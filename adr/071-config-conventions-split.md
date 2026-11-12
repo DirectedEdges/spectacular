@@ -4,6 +4,7 @@
 **Created**: 2026-08-18
 **Status**: ACCEPTED
 **Summary**: `Conventions`, `Settings` and `Pipeline` replace `Config`, separating library facts from run choices and declared work.
+**Decides**: none
 
 ---
 

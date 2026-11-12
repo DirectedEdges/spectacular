@@ -27,7 +27,7 @@ storybook/
 ├── package.json          declares Storybook (Node 20.19+); you run `npm install`
 ├── tsconfig.json
 ├── .storybook/           main.ts, preview.tsx, manager.tsx, scaffold.json
-├── content/components/   tabs.json + modes.json, seeded so the host compiles
+├── content/components/   modes.json, seeded so the host compiles
 └── content-overrides/    yours — no command ever writes here
 ```
 
@@ -92,24 +92,33 @@ instance. Always publishes.
 
 ### `foundations`
 
-The generated [Color, Icons, and Typography pages](/storybook/foundations/)
-and the data files they read (`data/colors.json`, `icons.json`,
+The generated [Color, Icons, Images, and Typography pages](/storybook/foundations/)
+and the data files they read (`data/colors.json`, `icons.json`, `images.json`,
 `typography.json`). Reads the fetched library payloads — variables, the style
-map, the glyph directory — plus the specs for glyph references, and applies
+map, the glyph directory, the image directory — plus the specs for glyph and
+image references, and applies
 the author's [`conventions/storybook.yaml`](/storybook/customization/)
 choices. Publishes when the workspace has the data; a workspace that never
 ran `fetch` gets no Foundations section rather than empty pages.
 
 ### `components`
 
-Not the component stories — those come from
+Not the component stories — the React and Web component views come from
 [`react`](/cli/commands/react/) and
-[`webcomponents`](/cli/commands/webcomponents/). This concern writes the
-navigation contract the host reads at build time: `tabs.json` (which
-framework tabs exist, derived from which trees you emitted — Specs is always
-present) and `modes.json` (which variable collections get toolbar mode
-controls, from `conventions/storybook.yaml`). Always publishes, because the
-scaffolded host cannot compile without them.
+[`webcomponents`](/cli/commands/webcomponents/). This concern writes the rest of
+what sits under a component in the sidebar, plus the navigation contract the host
+reads at build time:
+
+- One page per component per view it owns — **API**, **Variants**, and a
+  **Testing** page for each platform and baseline that has a report to read.
+- `modes.json` — which variable collections get toolbar mode controls, from
+  `conventions/storybook.yaml`.
+- `compositions.json` — which compositions exist and what each is built from.
+
+Always publishes, because the scaffolded host cannot compile without the two
+JSON files. The order the views read in is not published — it lives in the
+`storySort` parameter in `.storybook/preview.tsx`, which Storybook requires to be
+self-contained.
 
 ### `analysis`
 

@@ -4,6 +4,7 @@
 **Created**: 2026-08-30
 **Status**: ACCEPTED
 **Summary**: Primitive layers in composed example content promote to design system component instances during capture, not at emit.
+**Decides**: anatomy.instance
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

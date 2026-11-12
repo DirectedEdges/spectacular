@@ -34,6 +34,9 @@ export interface RenderRequestBody {
   fileKey?: string;
   /** Delete a same-titled page node before rendering, instead of erroring on the collision. */
   overwrite?: boolean;
+  /** Re-arrange everything render has placed on the page into a compact block of rows, once
+   *  this component has landed. Without it, output keeps marching right at 100px apiece. */
+  grid?: boolean;
   /**
    * The workspace conventions and settings, as a fallback for a spec that carries no
    * `metadata.conventions`/`metadata.settings` — a hand-authored one, say. The spec's
@@ -56,6 +59,9 @@ export interface RenderRequestBody {
 export interface RenderResponse {
   success: boolean;
   nodeId?: string;
+  /** The Figma file the render landed in. Resolved by the bridge, since a non-interactive
+   *  run passes no `--file` and so never learns which connection served it. */
+  fileKey?: string;
   /** Non-fatal render degradations reported by the plugin (font fallbacks, skipped keys). */
   warnings?: string[];
   error?: unknown;

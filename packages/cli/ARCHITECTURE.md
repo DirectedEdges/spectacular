@@ -120,7 +120,8 @@ hook blocks it).
   `clearTimeout` would silently start killing slow downloads. Giving up also
   discards the build — Figma starts over on the next request — so nothing here
   retries, and the failure says so rather than implying a cheap retry.
-- `src/fetch/` holds what only `fetch` uses — `estimate.ts`, `fileKey.ts`. A second
+- `src/fetch/` holds what only `fetch` uses — `estimate.ts`, `fileKey.ts`,
+  `styleImages.ts`. A second
   caller moves it out, by the entry rule above — to the one feature that imports it,
   or to `utilities/` when several do. That is why the payload split and its reader do
   not live here: `sectionedFile.ts` imports `payloadSplit.ts` and shares its format
@@ -131,6 +132,23 @@ hook blocks it).
   payload's size on disk), and deliberately answers in bands rather than
   figures — the measured rate spans a wide enough range that a number would
   claim precision the data does not support.
+- **A cache concern's provenance is one record per payload file, not per alias.**
+  The partition key is the alias for every concern built from a single payload per
+  source; `images.yaml` is built from two — `fetch` records the images a library
+  carries on fill styles, `generate --get-images` the ones placed on components —
+  so its keys are `<alias>:styles` and `<alias>:components`. That keeps one
+  producer's rebuild from reporting the other as stale. Images also always rebuild
+  from their payloads rather than carrying entries forward: the payloads are
+  kilobytes where a file payload is hundreds of megabytes, and an entry can be
+  co-owned by both producers, so carrying one half forward while rebuilding the
+  other would duplicate or drop it.
+- **Two fetch kinds are derived from another kind's payload and so run last**:
+  `icons` needs `file`, `images` needs `styles`. Either prerequisite may have
+  landed this run or a previous one, which is why the check is for the payload on
+  disk rather than for the kind being in the same `fetch` list. Both write assets
+  into the spec workspace — `assets/icons/`, `assets/images/` — because an asset
+  is consumed by every target and produced by none, so it outlives the
+  regenerable data cache.
 - **`fetch` is the only consumer of a source's file key**, which is why
   `normalizeSources` validates and resolves every `data.sources.*.key` instead of
   `ConfigLoader` doing it: the bridge and Storybook read aliases and `fetch`
@@ -155,7 +173,7 @@ the work lives in the feature folder.
 | `build`, `run` | The whole chain over `src/pipeline/` — `build` once then exits, `run` once then watches. What they share as commands is `pipeline/chainCommand.ts` (ADR-101) |
 | `generate` | Figma file / manifest / bridge → specs |
 | `scan` | Discover components → `<alias>.manifest.md` |
-| `fetch` | Figma REST download (file, variables, styles, icons); `--from-bridge` reads variables through the plugin instead (non-Enterprise path) |
+| `fetch` | Figma REST download (file, variables, styles, icons, images); `--from-bridge` reads variables through the plugin instead (non-Enterprise path) |
 | `cache` | Render lookup caches |
 | `applyCustomTokens` | Inject custom tokens into foundations |
 | `react`, `webcomponents` | Emit one platform target whole — component, contract, stylesheet, stories. Both are four lines over `emit/targets.ts`, which also holds the `emitTarget()` the chain calls in-process |
@@ -185,6 +203,25 @@ the work lives in the feature folder.
   `perComponentOutput` (basename, extension follows the run's format) so the
   command can name those files — output appearing unannounced in a spec folder
   reads as corruption.
+- **A component is a folder in the Storybook sidebar, and `storybook/concerns/components/navTitle.ts`
+  has to name that folder exactly the way the emitters do.** A disagreement with
+  `storyTitle` in the other repo's `from-specs` splits one component into two
+  sidebar folders, with the platform pages in one and the spec and testing pages
+  in the other, and nothing errors. Both sides have tests naming the same cases;
+  the normalization is three rules — collapse `" / "`, drop a segment that
+  sanitizes to an empty id part, fall back to the folder key. The visual
+  manifest's story join is the second place that agreement matters:
+  `testing/visual/shoot.ts`'s `titleCandidates` matches the platform leaf first
+  and keeps the pre-leaf spellings, because a workspace's emitted trees are only
+  as new as its last transform run.
+- **The sidebar order cannot be published, so the preview template carries its own
+  copy.** Storybook's indexer pulls `options.storySort` out of the preview file's
+  AST and `eval`s the function on its own, which means an identifier, an import, a
+  module constant or a TypeScript annotation all fail — the first two with
+  `Parameter 'options.storySort' should be defined inline`, at boot, taking the
+  whole instance with them. The order is a literal inside that function, and
+  `concerns/components/index.ts` exports `viewLeaves()` for no reason except to
+  let a test hold the two copies to the same names.
 
 ## Key nodes
 
@@ -201,6 +238,7 @@ the work lives in the feature folder.
 | `src/utilities/` | The 15 modules more than one feature imports — the layout seam, the payload format (`sectionedFile` + `payloadSplit` + `payloadRead`, one on-disk format in three files), the key derivations, the exit-code contract, the watch loop, the dev-status vocabulary. Entry rule above; it is not a catch-all |
 | `src/transforms/` | Open counterparts of transform modules (see drift note below). Root holds what more than one transformer or a command uses — `states.ts`, `naming.ts`, `writeAtomic.ts`, `examples.ts`, `externalWrites.ts`, the registry; everything only the stylesheet needs is under `css/` |
 | `src/transforms/css/` | The stylesheet transformer, in four stages: `values/` (spec value → CSS value), `style/` (spec style key → declarations, one module per property family), `analysis/` (what the spec says about its elements), `sheet/` (declarations → a stylesheet). A module imports from a stage above it, never below. `css/README.md` is the map (specs#691) |
+| `src/storybook/` | The host and what it shows. `templates/` is inert text — never imported, read off disk and written into the customer's workspace — and `init` owns `.storybook/`, which publish never touches. `concerns/` is one folder per sidebar section, each declaring `detect` and `build`, iterated in registry order by `publish.ts`, which rewrites a concern's folder wholesale and withholds any page a `content-overrides/` twin shadows. `concerns/components/` is the only concern that writes pages for specs rather than for a section: the views under a component the emitters do not emit — API, Variants, and a testing page per platform per baseline |
 | `skills/` | Procedures a customer's agent runs. Holding place until #592 makes skills canonical and ships them from the CLI package; `skills/README.md` says what is provisional |
 | `src/pipeline/` | **The chain seam** (ADR-101). `steps.ts` is the single place the order lives — each step declares `inputs`, `outputs`, `active` and a `run` that calls a command's `runX()` function in-process, never a subprocess, which is what holds the license to one check per run. `plan.ts` answers which steps a workspace has and which step a changed file enters at; `drive.ts` is the two drivers; `chainCommand.ts` is the flags, option mapping and failure report `build` and `run` share, so the pair cannot drift on what they accept. A step runs whole or scoped by `--components`, except `analyze`, which always reads the whole catalogue because every analyzer's `finalize()` writes a catalogue-wide report |
 | `src/utilities/specsLayout.ts` | **The layout seam.** `resolveSpecsLayout` (reads, legacy-aware) / `writeLayout` (always current) / `specFolderNames` / `dirFor(kind)` / `analysisDir()`. Emitted trees mirror it: `<tree>/src/<kind-dir>/<Name>` |

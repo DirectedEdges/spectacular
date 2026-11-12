@@ -78,33 +78,33 @@ props:
     default: false
 ```
 
-The `states` convention acts on these props during `specs react` — to determine CSS selector strategy and contract inclusion. The `api.yaml` itself is not modified.
+The `states` convention acts on these props during `specs react` — to determine CSS selector strategy and which props the contract keeps. The `api.yaml` itself is not modified.
 
 ### State concepts
 
-Each concept resolves to a canonical CSS selector and determines whether the prop is included in or omitted from the generated Props interface.
+Each concept resolves to a canonical CSS selector and carries a default contract behavior — `omit` drops the prop from the generated Props interface, `keep` retains it.
 
 | Concept | CSS selector(s) | Contract |
 |---------|----------------|----------|
-| `hover` | `:hover` | omitted |
-| `active` | `:active` | omitted |
-| `focus` | `:focus-visible` | omitted |
-| `focus-visible` | `:focus-visible` | omitted |
-| `focus-within` | `:focus-within` | omitted |
-| `placeholder-shown` | `:placeholder-shown` | omitted |
-| `disabled` | `:disabled, [aria-disabled="true"]` | included |
-| `readonly` | `[readonly], [aria-readonly="true"]` | included |
-| `required` | `[required], [aria-required="true"]` | included |
-| `invalid` | `[aria-invalid="true"]` | included |
-| `valid` | `[aria-invalid="false"]` | included |
-| `selected` | `[aria-selected="true"]` | included |
-| `checked` | `:checked, [aria-checked="true"]` | included |
-| `indeterminate` | `:indeterminate, [aria-checked="mixed"]` | included |
-| `expanded` | `[aria-expanded="true"]` | included |
-| `collapsed` | `[aria-expanded="false"]` | included |
-| `pressed` | `[aria-pressed="true"]` | included |
-| `busy` | `[aria-busy="true"]` | included |
-| `current` | `[aria-current="true"]` | included |
+| `hover` | `:hover` | `omit` |
+| `active` | `:active` | `omit` |
+| `focus` | `:focus-visible` | `omit` |
+| `focus-visible` | `:focus-visible` | `omit` |
+| `focus-within` | `:focus-within` | `omit` |
+| `placeholder-shown` | `:placeholder-shown` | `omit` |
+| `disabled` | `:disabled, [aria-disabled="true"]` | `keep` |
+| `readonly` | `[readonly], [aria-readonly="true"]` | `keep` |
+| `required` | `[required], [aria-required="true"]` | `keep` |
+| `invalid` | `[aria-invalid="true"]` | `keep` |
+| `valid` | `[aria-invalid="false"]` | `keep` |
+| `selected` | `[aria-selected="true"]` | `keep` |
+| `checked` | `:checked, [aria-checked="true"]` | `keep` |
+| `indeterminate` | `:indeterminate, [aria-checked="mixed"]` | `keep` |
+| `expanded` | `[aria-expanded="true"]` | `keep` |
+| `collapsed` | `[aria-expanded="false"]` | `keep` |
+| `pressed` | `[aria-pressed="true"]` | `keep` |
+| `busy` | `[aria-busy="true"]` | `keep` |
+| `current` | `[aria-current="true"]` | `keep` |
 
 ### Mapping Props to Concepts
 
@@ -145,7 +145,7 @@ For the `focus` and `focus-visible` concepts, the emitted selector is narrowed t
 
 ### Contract transform
 
-Browser-driven concepts (`hover`, `active`, `focus`, `focus-within`, etc.) are omitted from generated Props interfaces — the browser fires these without the application setting anything. Consumer-controlled concepts (`disabled`, `readOnly`, `validation`, etc.) are included — the consumer sets them and the component bridges them to the appropriate HTML or ARIA attribute.
+Browser-driven concepts (`hover`, `active`, `focus`, `focus-within`, etc.) default to `omit` — the browser fires these without the application setting anything, so they never reach the generated Props interface. Consumer-controlled concepts (`disabled`, `readOnly`, `validation`, etc.) default to `keep` — the consumer sets them and the component bridges them to the appropriate HTML or ARIA attribute.
 
 ```typescript
 // state and focused omitted — browser-driven, never set by consumers

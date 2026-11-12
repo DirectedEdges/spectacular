@@ -75,6 +75,37 @@ describe('collectSpecFiles', () => {
   it('names the directory it cannot read', async () => {
     expect(() => collectSpecFiles(path.join(dir, 'nope'))).toThrow(/Cannot read specs directory/);
   });
+
+  // ADR-096 put components under `components/` and compositions under `compositions/`.
+  // This reader derived the layout itself and only ever looked for `specs/<key>/`, so on
+  // every current workspace it collected nothing: the instance manifest's spec layer was
+  // empty, and a component the workspace authored and rendered could not be nested in
+  // another — every lookup fell through to the fetched cache.
+  it('reads components under components/, keyed by folder', async () => {
+    await writeSpec(path.join('components', 'link'), 'api', { title: 'Link' });
+    await writeSpec(path.join('components', 'link'), 'variants', { default: {} });
+    const found = await collectSpecFiles(specsDir());
+    expect(found.map((f) => f.key)).toEqual(['link', 'link']);
+  });
+
+  it('reads compositions alongside components', async () => {
+    await writeSpec(path.join('components', 'link'), 'api', { title: 'Link' });
+    await writeSpec(path.join('compositions', 'signUp'), 'api', { title: 'Sign up' });
+    expect((await collectSpecFiles(specsDir())).map((f) => f.key).sort()).toEqual(['link', 'signUp']);
+  });
+
+  it('does not treat analysis or foundations as specs', async () => {
+    await writeSpec(path.join('components', 'link'), 'api', { title: 'Link' });
+    await writeSpec('analysis', 'props', { props: {} });
+    await writeSpec(path.join('foundations', 'color'), 'guidelines', { statements: [] });
+    expect((await collectSpecFiles(specsDir())).map((f) => f.key)).toEqual(['link']);
+  });
+
+  it('returns nothing for a workspace with no specs, rather than failing', async () => {
+    // Legal: every instance can resolve from the fetched cache alone.
+    await fs.ensureDir(path.join(specsDir(), 'components'));
+    expect(await collectSpecFiles(specsDir())).toEqual([]);
+  });
 });
 
 describe('buildManifest — layer 1, a spec key to its own node', () => {
@@ -137,6 +168,33 @@ describe('buildManifest — layer 2, a subcomponent reference', () => {
   it('reads subcomponents from a library-shaped spec', async () => {
     const spec = { components: { checkbox: { subcomponents: { icon: { source: { nodeId: '7:7' } } } } } };
     expect(buildManifest(spec, specsDir(), dataDir()).icon).toEqual({ id: '7:7' });
+  });
+});
+
+describe('buildManifest — layer 3, a component this workspace rendered', () => {
+  // `specs render` records the node it produced in the components cache, with no published
+  // key — it is not published — and the entry's name is the spec key, already in the
+  // configured format, so formatting it again is identity. This is what lets one authored
+  // component be nested in another without capturing the file back.
+  it('resolves a rendered entry by node id alone', async () => {
+    await writeCache('components', { '84021:19488': { name: 'egdsLink', file: 'lib', fileKey: 'abc123' } });
+    const spec = { anatomy: { thing: { type: 'instance', instanceOf: 'egdsLink' } } };
+    expect(buildManifest(spec, specsDir(), dataDir(), 'CAMEL').egdsLink).toEqual({ id: '84021:19488' });
+  });
+
+  it('omits key entirely rather than sending it as undefined', async () => {
+    // A `key: undefined` serializes into the render payload as a published key, which the
+    // plugin would try to import — for a component that was never published.
+    await writeCache('components', { '84021:19488': { name: 'egdsLink', file: 'lib' } });
+    const spec = { anatomy: { thing: { type: 'instance', instanceOf: 'egdsLink' } } };
+    const entry = buildManifest(spec, specsDir(), dataDir(), 'CAMEL').egdsLink;
+    expect('key' in entry).toBe(false);
+  });
+
+  it('still carries the published key when the entry has one', async () => {
+    await writeCache('components', { '9:9': { key: 'pub9', name: 'egdsLink', file: 'lib' } });
+    const spec = { anatomy: { thing: { type: 'instance', instanceOf: 'egdsLink' } } };
+    expect(buildManifest(spec, specsDir(), dataDir(), 'CAMEL').egdsLink).toEqual({ id: '9:9', key: 'pub9' });
   });
 });
 

@@ -1,5 +1,5 @@
 ---
-title: "Overview"
+title: "Schema"
 description: "How the parts of the Spectacular schema relate — components and compositions, the files a spec is written as, variants and styles, slots, content, references, conventions, and the reports derived from them"
 ---
 
@@ -180,10 +180,10 @@ Styles and content work the same way for an element in either kind — [`Element
 [Styles](/schema/styles/) are organized per [element](/schema/elements/) and take different shapes:
 
 - **Flat and wide** — dozens like [`width`](/schema/styles/width/), [`layoutSizingHorizontal`](/schema/styles/layout-sizing-horizontal/), [`textColor`](/schema/styles/text-color/) and [`backgroundColor`](/schema/styles/background-color/).
-- **Deep** — [`typography`](/schema/typography/) gathers the text properties under one node that corresponds to a text style, while [`effects`](/schema/effects/) and [`GradientValue`](/schema/gradient-value/) also have deep, sophisticated shapes.
-- **Side- and corner-shaped** — [`padding`](/schema/styles/padding/) and [`strokeWeight`](/schema/styles/stroke-weight/) as [`Sides`](/schema/sides/); [`cornerRadius`](/schema/styles/corner-radius/) is [`Corners`](/schema/corners/) that can be single value or several addressable parts (like `{ start:, end:, top:, bottom: }`).
+- **Deep** — [`typography`](/schema/styles/typography/) gathers the text properties under one node that corresponds to a text style, while [`effects`](/schema/styles/effects/) and [`GradientValue`](/schema/styles/gradient-value/) also have deep, sophisticated shapes.
+- **Side- and corner-shaped** — [`padding`](/schema/styles/padding/) and [`strokeWeight`](/schema/styles/stroke-weight/) as [`Sides`](/schema/styles/sides/); [`cornerRadius`](/schema/styles/corner-radius/) is [`Corners`](/schema/styles/corner-radius/) that can be single value or several addressable parts (like `{ start:, end:, top:, bottom: }`).
 
-Style values can be a literal, a [`TokenReference`](/schema/token-reference/), a [`PropBinding`](/schema/prop-binding/), or a [`Conditional`](/schema/conditional/). A composite token can be bound to [`typography`](/schema/typography/) and [`effects`](/schema/effects/) (Figma's text and effect styles, respectively).
+Style values can be a literal, a [`TokenReference`](/schema/token-reference/), a [`PropBinding`](/schema/prop-binding/), or a [`Conditional`](/schema/conditional/). A composite token can be bound to [`typography`](/schema/styles/typography/) and [`effects`](/schema/styles/effects/) (Figma's text and effect styles, respectively).
 
 Content surfaces directly through primitives as well as nested components that wrap primitives in an API. Content is mostly two things: [text](/schema/anatomy/#elementtype) strings and [glyph](/schema/anatomy/#elementtype) by name, reaching an element through [`content`](/schema/elements/) as a literal or a [`$binding`](/schema/prop-binding/) to a prop. Image content flows through as both [`backgroundImage`](/schema/styles/background-image/) properties on elements and source properties on components. References to image files are declared in [`examples.yaml`](/schema/documents/component-examples).
 

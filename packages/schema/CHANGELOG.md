@@ -5,6 +5,106 @@ All notable changes to the Specs schema will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.0] - 2026-11-12
+
+This release moves meaning into the contract, in three places where a consumer used to supply it:
+
+- **Every `Styles` property now declares what it means when absent or out of range**, so no transform decides: each property carries a `default`, five keys that inherited an open string wrapper become closed value sets, and the two fraction-valued properties bound their literal to the unit interval.
+- **Two hand-authored documents sit beside a spec** — `supplemental.yaml` for whoever builds a component and `guidelines.yaml` for whoever uses it — each with its own schema and its own shape check.
+- **A library's images are the assets it lays out, found by a naming pattern**, with the designated image component declared separately rather than sharing that key.
+
+### Breaking
+
+- `Styles.opacity` and `Styles.cornerSmoothing` — typed as `UnitIntervalStyle` (`number | TokenReference | null`), literal bounded to 0–1; a string, boolean, `PropBinding` or `Conditional` no longer compiles, and `opacity: 76` no longer validates (ADR-121)
+- `PlatformConventions.images.match` — a naming pattern over laid-out image assets, previously a component name (ADR-117)
+- `PlatformConventions.images.component` — this platform's own name for the designated image component (ADR-117)
+
+### Added
+
+- **Role concept dispositions in the platform bindings** — `mappings/bindings/react.json` and `webcomponents.json` gain a `concepts.roles` block: every vocabulary concept with `disposition: implemented | inert` and, for implemented ones, the realising module. Closes the one key class where the bindings' "does platform X realise this?" promise broke — the fact previously lived only in the emitters' own registries, which nothing downstream may read
+- `UnitIntervalStyle` — a style value on the unit interval [0, 1]; the bound is the schema's, since a `TokenReference` resolves on the token's own scale (ADR-121)
+- `UnitInterval` — the bounded number as its own schema definition, so the constraint has one home (ADR-121)
+- `SupplementalDocument` — the `supplemental.yaml` contract: what a component needs beyond the spec, for whoever builds it (ADR-118)
+- `GuidelinesDocument` — the `guidelines.yaml` contract: the rules whoever uses a component or foundation must observe (ADR-118)
+- `SupplementalEntry` — carries `intent`, a required `SchemaGap`, optional `platforms`, `checkedBy` and `checks`
+- `GuidelineEntry` — a DSDS 0.23.1 guideline item: `statement`, `level`, `alternatives`, `instead`, `refines`, `evidence`, `checkedBy`, `checks`
+- `SchemaGap` — typed as `{ path, need }`; `path` takes a JSON Schema pointer or any workspace-relative target
+- `ObligationLevel` — `'must' | 'should' | 'should-not' | 'must-not' | 'may'`, RFC 2119 semantics, each option naming the colloquial word it stands for
+- `SupplementalConcern` and `GuidelinesConcern` — the eleven component section keys each document admits, adding `overrides` and `naming`
+- `FoundationSupplementalDocument` and `FoundationGuidelinesDocument` — the foundation scope's own shape, keyed by `FoundationConcern` rather than the component concerns; only `layout` and `motion` are in both vocabularies
+- `SupplementalMeta` and `GuidelinesMeta` — each document's own `concern`, `status`, `author`, `updated` and `sources`
+- `FoundationConcern` — `'color' | 'typography' | 'layout' | 'space' | 'shape' | 'elevation' | 'motion' | 'brand'`
+- `Platform` — `'react' | 'webcomponents' | 'web' | 'ios' | 'android'`; `web` expands and may not sit beside either web leaf
+- `SupplementalCheckedBy` and `GuidelinesCheckedBy` — `'automated' | 'assisted' | 'manual'`; `checks` is required under `automated`
+- `SupplementalCheck` and `GuidelineReference` — each document's own reference shape: `to` inside the workspace or `href` outside it, never both
+- `schema/supplemental` and `schema/guidelines` export subpaths
+- `DSPEC-54` — an image asset is a pattern-matching frame on a page or in one of its sections
+- `DSPEC-55` — a declared `images.component` requires a non-empty `images.sourceProps`
+- `DSPEC-56` — authored-document entries at the catalogue and component scopes are additive, not overriding
+- `DSPEC-57` — a reference's `to` names something that exists; `unenforced`, and an unresolved target is a warning rather than an error when resolution arrives
+- `DSPEC-58` — a `schemaGap.path` that is a JSON Schema pointer resolves against the file it names
+- `DSPEC-59` — a DSDS exporter appends a guideline's `instead` to its `statement` rather than dropping it
+- `DSPEC-60` — a DSDS exporter derives a token's `id` from the workspace's `spec.tokens` profile
+- `DSPEC-61` — a DSDS exporter emits a token's original path as `name`, unmodified
+- `DSPEC-62` — a directory under `foundations/` is named from the foundation concern vocabulary
+- `DSPEC-63` — a guidelines document carries rules only, and no per-token description table
+- `DSPEC-64` — an authored document is keyed for one concern vocabulary or the other, never both
+- `mappings/bindings/` is published. The binding data states which platform realises each style key and how, which is a fact about the contract and belongs with it. A consumer can now read it from the package rather than the repo (#837)
+- Every option of all 31 closed value sets — a description of what choosing it does (ADR-114)
+- `Styles` — `examples` on all 46 properties, each valid against its own property
+- `ColorObject.colorSpace`, `Settings.spec.tokens`, `Settings.spec.color` — per-option descriptions, previously only a value list
+- `Settings.spec.variantDepth` — `9999` titled "Unlimited", naming a sentinel the value could not
+- `DSPEC-48`, `DSPEC-49`, `DSPEC-50` — closed value sets declare `oneOf` of `const`, describe every option, and keep branches disjoint
+- `Sides.top`, `Sides.end`, `Sides.bottom`, `Sides.start` — `default: 0`, agreeing with `padding` and `strokeWeight` (ADR-116)
+- `Corners.topStart`, `Corners.topEnd`, `Corners.bottomEnd`, `Corners.bottomStart` — `default: 0`, agreeing with `cornerRadius`
+- `ItemSpacing.horizontal`, `ItemSpacing.vertical` — `default: 0`, agreeing with `itemSpacing`
+- `ColorObject.alpha` — `default: 1`, fully opaque per DTCG Color §4.1
+- `ImageValue.objectFit` — `default: "COVER"`
+- `Shadow.inset` — `default: false`, a drop shadow rather than an inner one
+- `Typography.letterSpacing`, `Typography.paragraphIndent`, `Typography.paragraphSpacing`, `Typography.listSpacing` — `default: 0`
+- `Typography.textCase` — `default: "ORIGINAL"`; `Typography.textDecoration` and `Typography.leadingTrim` — `default: "NONE"`
+- `Typography.hangingPunctuation`, `Typography.hangingList` — `default: false`
+- `DSPEC-52`, `DSPEC-53` — an optional composite member declares a default; a required one declares none
+- `ColorString` — a colour as one string, naming every notation it may take with an example of each, and the setting that selects between them. Admits exactly what the untyped `string` arm admitted
+- `ColorObject`, `TokenReference` — titles showing the shape rather than naming it: a `colorSpace` with its `components`, a `$token` path with its `$type`
+
+### Changed
+
+- **The JSON Schema now accepts exactly what the types declare for prop unions** — `EnumProp` requires `type`/`default`/`enum` and `SlotProp` requires `type` (restoring the discrimination `AnyProp`'s `oneOf` depends on, which wrongly failed every plain string prop), and `PropConfigurationValue` is `anyOf` because `ImageBinding` extends `PropBinding`, so a bare `$binding` pass-through legally matches both (ADR-105)
+- Closed value sets — declared as `oneOf` branches of `const` rather than a bare `enum`; admits the same values (ADR-114)
+- `Styles.position`, `Styles.layoutMode`, `Styles.textOverflow`, `Styles.textAlignHorizontal` — descriptions no longer restate their own option meanings
+- `TokenReference.$token` — described as the slash-separated path the corpus uses, not a dot-separated one
+- `Element.contentStyles` / `ContentStyles` — the eleven-line property description split per the constitution's documentation rules: one sentence on the property, the mechanics (keying, capture, per-variant override, component-fill discard) on the definition every reference shares, and the two declared independent of `SlotProp.anyOf`. Two authoring sessions re-read the old paragraph five times between them
+- `SlotProp` — described as the component's composable region, naming the request language ("composable", "consumers supply") that means one; `SlotBinding.examples` states that the default fill carries the slot's default state, hidden-by-default content included
+- `SlotProp.anyOf` — the description now states that no entry kind is ever required and that a slot with nothing to list omits the member; `minItems: 1` stays, so an empty list is invalid rather than a second spelling of absence
+- `PositionOffset` — its description now states how offsets combine per axis: one edge pins at the element's own size, opposite edges stretch it between them (`top: 0` + `bottom: 0` spans the parent's height), a centre offset centres its axis. Stated once on the shared definition every edge references, per the constitution's documentation rules; the combination semantics previously existed only in the render bindings, so an author asking "can I pin four edges" found no answer where the value is declared. Description and examples only — no validation change
+- `ColorStyleValue`, `GradientStop.color`, `Shadow.color` — every arm is a bare `$ref` taking its description from the type it refers to, so the three colour forms read the same across all eight properties that admit them. Validates identically
+
+### Migration
+
+- `images.match` → `images.component`: move a designated image component's name to `component`, and read `match` as a `{i}` naming pattern for the images a library lays out on a page. A declaration left on `match` fails validation, since the block admits no additional properties
+- `Styles.opacity`, `Styles.cornerSmoothing`: write the literal on the 0–1 scale, or bind a token and let it resolve on its own scale. A percentage written as a whole number — `opacity: 76` — now fails validation instead of failing at the canvas write; use `0.76`, or the token whose rung matches
+
+### ADRs
+
+#### Accepted
+
+- [105](../../adr/105-type-schema-parity.md) — Type–Schema Parity for Overlapping Prop Unions
+- [113](../../adr/113-style-defaults-in-the-schema.md) — Style defaults belong to the schema
+- [114](../../adr/114-enum-option-descriptions.md) — Describe Enum Options Where They Are Declared
+- [115](../../adr/115-closed-style-value-sets.md) — Closed Style Value Sets
+- [116](../../adr/116-nested-style-defaults.md) — Nested style members declare their own defaults
+- [117](../../adr/117-library-image-assets.md) — A Library's Images Are Assets It Lays Out, Named by a Pattern
+- [118](../../adr/118-supplemental-and-guidelines-sidecars.md) — Two Authored Documents Beside a Spec — `supplemental.yaml` for Builders, `guidelines.yaml` for Consumers
+- [121](../../adr/121-unit-interval.md) — A unit-interval style type for `opacity` and `cornerSmoothing`
+
+#### New drafts
+
+- [106](../../adr/106-authored-provenance.md) — Spec Provenance Beyond Figma Capture
+- [107](../../adr/107-schema-file-identity.md) — Schema File Identity and Packaging
+- [108](../../adr/108-slot-content-pointer-namespace.md) — The `$slotContent` Pointer Namespace
+
+
 ## [0.39.0] - 2026-10-29
 
 ### Breaking
@@ -35,10 +135,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PropConfigurationValue` — accepts a member-keyed `ObjectPropValue` under an object-prop key (ADR-111)
 - `InstanceExample.propConfigurations` — accepts `ObjectPropValue` for object props (ADR-111)
 - `platforms.<platform>.objectProps` — opt-in folding of separator-named flat props into object props (ADR-111)
+- `Scalar` — a string, number or boolean value. Excludes `null`, which means *unset* (ADR-080) wherever it appears beside a scalar
+- `ComponentName` — the name of a component or component set, as written in this spec's `format.keys`
+- `LayoutBranch` — a parent layout node, element name as key and ordered child `LayoutNode`s as value. `LayoutNode` is now written as `string | LayoutBranch`, the same structural type it already was
+- `SlotContentMap` — named `SlotContent` entries, keyed by a name of letters, digits, underscore or hyphen
+- `ElementRole` — a semantic behavior role concept, or a non-empty list of them
+- `InstanceExampleConfigurationValue` — the value of one prop in an `InstanceExample`; a deliberate subset of `PropConfigurationValue` with no `PropBinding` and no `ImageBinding`
+- `AnatomyElementExtensions` and `FigmaAnatomyElementExtension` are now exported from the package root. Both already existed as types; only the export is new
+
+These six types name shapes TypeScript carried only inline. Every one of them is new. No existing type was renamed, and no existing declaration changed its structural type.
+
+Their JSON Schema counterparts are named definitions arriving separately; until that lands, these six are the type side of a pairing whose schema side is still inline. Parity closes when both are in (`CONSTITUTION.md` §I, `SPECIFICATION.md` DSPEC-22).
 
 ### Changed
 
 - `$extensions['com.figma'].name` — documented rule corrected on props, anatomy elements and `platforms.<platform>.naming`. The field was described as absent under `naming: NONE`; NONE declares no source convention, which means nothing can be re-derived from a key, not that no name is kept. The field is recorded wherever formatting changed the name (ADR-066). Description only — no type or validation change
+- **The component schema names its previously inline shapes as definitions**, so docs and tools link to `Layout`, `Scalar` and `ComponentName` instead of showing anonymous objects. Validation is unchanged, and no TypeScript type changed.
+- The condition definitions — `Conditional`, `ConditionExpression`, `ConditionArgs` — are now declared only in `styles.schema.json`; the unused duplicates in `component.schema.json` were removed. `PropBinding` moves the other way: declared only in `component.schema.json`, referenced from `styles.schema.json`.
 
 ### Migration
 
@@ -51,6 +164,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - [ADR-111](../../adr/111-object-props.md) — Object-Typed Props
 - [ADR-112](../../adr/112-scaffolded-defaults.md) — Settings defaults adopt their scaffolded values
+
 
 
 ## [0.38.0] - 2026-10-21

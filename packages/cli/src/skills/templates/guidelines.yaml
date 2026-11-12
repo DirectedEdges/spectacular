@@ -1,0 +1,47 @@
+# guidelines.yaml — the rules someone USING this component must observe
+# Contract: @directededges/specs-schema/schema/guidelines (ADR-118)
+#
+# Audience: a consumer, not a builder. What the builder must implement goes in
+# supplemental.yaml beside this file.
+#
+# Rules only. An entry carries an obligation level and no schemaGap — that gate
+# belongs to the other document. At a foundation's scope, rules are about how
+# tokens, themes and raw values are APPLIED across the catalogue; a table of
+# what each individual token is for is a description rather than a rule, and the
+# schema rejects it here.
+#
+# Sections (all optional, nothing else allowed): the same eleven the
+# supplemental document uses — anatomy, props, styles, slotComposition, events,
+# accessibility, behavior, motion, layout, overrides, naming.
+#
+# An entry is a DSDS 0.23.1 guideline item. Fields:
+#   statement     required — the rule, as a sentence a reader can act on
+#   level         required — must | should | should-not | must-not | may
+#                 The colloquial words map onto these: always → must,
+#                 never → must-not, avoid → should-not, optional → may
+#   alternatives  optional — what to use instead, when the remedy is a THING
+#                 this can point at: [{ to: "iconButton" }]. Preferred over
+#                 `instead` whenever the remedy can be named, because a pointer
+#                 resolves and a sentence does not
+#   instead       optional — what to do instead, when the remedy is a RULE
+#                 rather than a thing ("style from the semantic layer" names no
+#                 single token)
+#   refines       optional — a broader guideline this one narrows
+#   evidence      optional — source material supporting the rule
+#   checkedBy     optional — automated | assisted | manual
+#   checks        optional — what does the checking. Required under `automated`
+#
+# An optional `meta` block takes concern, status (proposed | ratified |
+# deprecated), author, updated and sources. `status: proposed` is how a
+# ratifier knows this is a draft rather than the system's settled position.
+
+accessibility:
+  - statement: <the rule, e.g. "Set accessibilityLabel on a badge whose slot holds no text child.">
+    level: must
+    instead: <optional, e.g. "Give the badge a text child, if the design permits one.">
+    checkedBy: manual
+
+slotComposition:
+  - statement: <a prohibition whose remedy is a thing, e.g. "Use a badge for a value that changes while on screen.">
+    level: must-not
+    alternatives: [{ to: <e.g. liveRegion> }]

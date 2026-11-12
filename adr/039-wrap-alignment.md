@@ -4,6 +4,7 @@
 **Created**: 2026-04-20
 **Status**: ACCEPTED
 **Summary**: `wrap` and `wrapAlignment` with a `WrapAlignment` enum replace `layoutWrap` and `counterAxisAlignContent`.
+**Decides**: styles.wrap, styles.wrapAlignment
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

@@ -4,6 +4,7 @@
 **Created**: 2026-09-15
 **Status**: ACCEPTED
 **Summary**: A `RunMetadata` type and `metadata.schema.json` carry the run's facts once, leaving `metadata.source` required per component.
+**Decides**: none
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

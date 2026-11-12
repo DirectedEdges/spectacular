@@ -4,23 +4,12 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
-| 121 | A Normalized Fraction Style Type for `opacity` and `cornerSmoothing` | |
 | 119 | Overrides on Instance Elements | (reserved, draft in PR #915) |
-| 118 | Two Authored Documents Beside a Spec — `supplemental.yaml` for Builders, `guidelines.yaml` for Consumers | (reserved, accepted on `118-supplemental-and-guidelines-sidecars`) |
-| 117 | A Library's Images Are Assets It Lays Out, Named by a Pattern | (reserved, draft on `117-library-image-assets`) |
-| 115 | Closed Style Value Sets | |
-| 114 | Describe Enum Options Where They Are Declared | (reserved, draft in PR #799) |
-| 113 | Style defaults belong to the schema | (reserved, draft in PR #799) |
-| 112 | Settings Defaults Adopt Their Scaffolded Values | |
-| 111 | Object-Typed Props | |
-| 108 | The `$slotContent` Pointer Namespace | (reserved, draft in PR #767) |
-| 107 | Schema File Identity and Packaging | (reserved, draft in PR #767) |
-| 106 | Spec Provenance Beyond Figma Capture | (reserved, draft in PR #767) |
-| 105 | Type–Schema Parity for Overlapping Prop Unions | (reserved, draft in PR #767) |
-| 104 | Roles on a Collapsed Root — `childRole` Says Which Layer Was Annotated | (reserved, draft on `feat/states-setup-skill`) |
-| 093 | Composed Dependency Selection Is a Setting | |
-| 092 | `invalidPropCombinations` — Renamed and Relocated to the Api Concern | |
+| 108 | The `$slotContent` Pointer Namespace | |
+| 107 | Schema File Identity and Packaging | |
+| 106 | Spec Provenance Beyond Figma Capture | |
 | 082 | `Component.description` — The Authored Figma Description, Plain Text and Opt-In | (reserved, draft in PR #375) |
+| 061 | Schema Entry Points for Concern-Split Output | (reserved, draft on `061-concern-split-schemas`) |
 | 045 | Processing Provenance Signals | (reserved, draft in PR #60) |
 | 044 | Duplicate Layer Name Disambiguation | (reserved, draft in PR #60) |
 | 024 | Component Extends Relationship | Add `extends` field to express base/derived component relationships and prop/variant inheritance |
@@ -31,11 +20,18 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
+| 121 | A Unit-Interval Style Type for `opacity` and `cornerSmoothing` | `UnitIntervalStyle` over a `UnitInterval` primitive; the bound is on the literal, since a token resolves on its own scale — often 0–100 |
+| 118 | Two Authored Documents Beside a Spec — `supplemental.yaml` for Builders, `guidelines.yaml` for Consumers | Two hand-authored documents carrying `meta` rather than Figma provenance; guidelines entries are DSDS 0.23.1 items; each schema self-contained |
+| 117 | A Library's Images Are Assets It Lays Out, Named by a Pattern | `images.match` becomes a `{i}` naming pattern over laid-out image assets; `images.component` alone names the designated image component |
 | 116 | Nested style members declare their own defaults | 23 of 30 optional composite members declare a `default`; required members declare none; `lineHeight` settles on `'AUTO'` |
+| 115 | Closed Style Value Sets | Five keys that inherited an open string wrapper become named closed sets, each dropping three value forms nothing writes |
+| 114 | Describe Enum Options Where They Are Declared | A closed value set declares `oneOf` branches of `const` with a description, so every option documents itself |
+| 113 | Style defaults belong to the schema | Every `Styles` property declares a `default`, making what an absent style key means a fact of the contract rather than of one transform |
 | 112 | Settings Defaults Adopt Their Scaffolded Values | `format`, `keys`, `color`, `preserveManualSelections` and `collapsePrimitiveWrapper` default to the values every scaffolded workspace writes |
 | 111 | Object-Typed Props | A prop whose value is an object of named scalar members; an opt-in convention folds separator-named Figma properties into one |
 | 110 | Rename `Spec*Document` to `Component*Document` | `Spec*Document` renamed to `Component*Document`, matching `CompositionApiDocument`'s naming now that a second spec kind exists |
 | 109 | Composition Concern Documents | Compositions get their own exact `splitConcerns` documents — never a loosened form of a component's, since a composition has no props to vary by |
+| 105 | Type–Schema Parity for Overlapping Prop Unions | `EnumProp`/`SlotProp` gain the types' `required` sets; `PropConfigurationValue` becomes `anyOf` — overlap-by-extension never compiles to `oneOf` |
 | 104 | Roles on a Collapsed Root — `childRole` Says Which Layer Was Annotated | A collapsed element records which of its two Figma layers carried a role: `role` the component node, `childRole` the collapsed child, both means both |
 | 103 | Structural Glyph Membership — `glyphs.structure` Convention | `glyphs` gains a structural membership form — child shapes + stored fill, named from the component name; a glyph cannot have properties |
 | 102 | Slots That Accept Primitive Content — `$text` and `$glyph` in `anyOf` | A slot states the primitives it accepts alongside components, and `Element.contentStyles` records how each primitive fill is formatted per variant |
@@ -78,7 +74,6 @@
 | 064 | Tighten `textAlignHorizontal` to a Logical-Direction String Enum | Narrow from `Style` to `TextAlignHorizontal \| null` (`'START' \| 'CENTER' \| 'END' \| 'JUSTIFY'`); Figma `LEFT`/`RIGHT`/`JUSTIFIED` remapped |
 | 063 | Image Content — `backgroundImage` fill, an `images` registry, `ImageProp`, and `ImageBinding` | Add `backgroundImage` fills, a `Component.images` registry (Figma identity + optional `src`), `ImageProp`/`ImageBinding`, and presence-switched `processing.images` |
 | 062 | Text Overflow & Max Lines — `textOverflow` and `maxLines` on `Styles` | Add `textOverflow` (`TextOverflow \| null`) and `maxLines` to `Styles`; not token-bindable |
-| 061 | Schema Entry Points for Concern-Split Output | Split output across `root`, `components`, `component`, and `styles` schema entry points |
 | 060 | Subcomponent Figma Source Identity — `Subcomponent.source` | Add optional `SubcomponentSource` (`pageId`, `nodeId`, `nodeType`) to `Subcomponent`; enables reverse-direction tools to resolve `SubcomponentRef` to Figma nodes |
 | 059 | Stroke Dash Pattern — `strokeDashPattern` on `Styles` | Add `StrokeDashPattern { dash, gap }` structural type; presence = dashed stroke, null/absent = solid; not token-bindable |
 | 058 | Collapsing Wrapped Primitives — `processing.collapsePrimitiveWrapper` | Add optional boolean to `Config.processing` (default false); strips plain container wrappers around a single text/glyph child and promotes the leaf to spec root |

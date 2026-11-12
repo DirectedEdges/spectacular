@@ -4,6 +4,7 @@
 **Created**: 2026-08-31
 **Status**: ACCEPTED
 **Summary**: `defaultFillWidth` states the container width a platform gives a component whose root resizes to fill its parent.
+**Decides**: styles.layoutSizingHorizontal, styles.maxWidth, styles.width
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

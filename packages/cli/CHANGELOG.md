@@ -5,6 +5,109 @@ All notable changes to `@directededges/specs-cli` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.0] - 2026-11-12
+
+### Breaking
+
+- **The designated image component is declared on `images.component`, not `images.match`** (ADR-117). Move the component's name to `component`; `match` now takes a `{i}` naming pattern for laid-out image assets, and a `match` without `{i}` is reported and ignored
+
+### Added
+
+- `specs analyze foundations` — the workspace's token language as one authoring-facing manifest (`analysis/foundations.yaml`): variables and named styles consolidated as ready-to-paste `{$token, $type}` objects carrying names only (alias targets by name, descriptions where the library wrote one, platform code-name presence — never resolved values), plus every icon glyph with its formatted key spelling beside the raw name. Each variable also carries its default-mode `defaultValue` (alias chains resolved, colors as hex) — for understanding a token, never for authoring. Reads the fetched data, not the catalogue, so it runs on a workspace with zero specs (#881)
+
+- **An element annotated `role: image` emits a real image element**, with its fill carried on `src` and its fit stated as `object-fit` instead of painted as a background.
+
+- **An element annotated `role: decoration` is hidden from assistive technology**, and both concepts are now recognised by `specs analyze roles`.
+
+- **`specs fetch` downloads the images a library carries on published fill styles**, with a new `images` kind for a source's `fetch` list and for `--only`. Files land in `assets/images/` alongside what `generate --get-images` downloads, and neither path re-fetches the other's
+
+- **`data/cache/images.yaml` lists every image the workspace holds**, keyed by image hash and carrying the file path, the Figma style name where there is one, and whether the image lives on a fill style, on a component, or both — so you can use any library image in a spec you write by hand without reading the spec tree to find it
+
+- **Storybook gains a Foundations Images page** showing every image in the workspace in a grid, named by its fill style where it has one, with the components that reference each and a list of any a spec references but nothing has downloaded
+
+- **`specs fetch` also downloads the images a library lays out on a page**, declared with `images.match: 'Image / {i}'` in `config/conventions/figma.yaml` — the way `glyphs.match` declares icons. A qualifying frame is a direct page child, or a direct child of a section that is one, so a placeholder inside a component is never taken for a library asset
+
+- **`specs generate --get-images` records the images it finds on components**, so one lookup covers all three ways a library holds an image. A scoped run never removes what a fuller run recorded, and the cache is rebuilt as the command's last step so a render straight after needs no manual refresh
+
+- **`specs skills install` emits `specs-cli.images.setup`**, which finds a library's images, writes the `images` convention, refetches, and proves what resolved — the images counterpart to `icons.setup`. Workspace setup offers it as a fourth improvement pass
+
+- **`specs render --grid` arranges the rendered components into a 4:3 block instead of a row running off the canvas.** Each render lands 100px to the right of whatever is already on the page, so rendering a catalogue walked the output into one very wide row that no zoom-to-fit could show usefully. With the flag, everything `render` has placed on that page is laid into rows 100px apart in canvas order — the block at least as wide as 4:3 and never taller — after each component lands, so a single render, a `--watch` rebuild and a full catalogue all end in the same correct arrangement. Only nodes `render` created are moved; anything else on the page keeps its position and the block anchors clear of it, and the components stay direct children of the canvas rather than being gathered into a frame. Off by default.
+
+### Changed
+
+- Authoring rules and `component.author` sharpened from the first eg marathon round: prop-shaped requirements (semantic tag, accessibility label) route to **code-only props**, never hand-authored platform files, with closed vocabularies as enums; code-only container and sub-layer names are config lookups (`figma.yaml` `codeOnlyProps.match` + `naming`), not judgment; `default` vs `examples` purposes stated (Figma renders `examples`; `default` is encoded in the component); FILL on a component root documented as consumer-context intent (captured via the `sizingHorizontal`/`sizingVertical` Dev Mode annotations); conventions lead the correlation step; a foundations-guideline-shaped guess may be drafted via `guidelines.propose` in the same pass
+
+- **A component expands in the Storybook sidebar to one entry per view**, with React, Web component, API and Variants replacing the two rows of in-page tabs, plus Supplemental and Guidelines where those documents exist and a Testing entry per platform once a diff report exists
+
+- **Web Components no longer has a top-level Storybook section.** Each platform's docs page is an entry under the component it documents, so a workspace emitting both platforms lists each component once
+
+- **A component's docs page names the component in its heading**, not just the view — `DS Button / React` rather than a bare `React`, which read identically on every component
+
+- **A component's visual diffs sit in a Testing folder under it**, as `React Fidelity`, `React Changes` and the Web Component pair, and a page publishes only when that component has results in the report — where every component used to get a page and most of them said it had none
+
+- **`supplemental.yaml` and `guidelines.yaml` are sidebar views under the component**, below API and Variants, and only for a component that has the document
+
+### Fixed
+
+- **A custom token mapped to a published style now reaches every node bound to it**, including nodes bound to copies of that style pasted in from the published library — where only one copy per style resolved and the rest fell back to the Figma style name
+
+- **The stylesheet now states a slot's `contentStyles` for component-admitting slots too — glyph rules included.** The emitters stamp primitive fills with `data-content="text"` / `data-content="glyph"` markers a composed component's root never carries, so the CSS transform's withholding gates are gone: glyph box/tint rules emit for every slot, and a mixed slot's box-level text properties (truncation, line-clamp) land on the text fill's own marker instead of being dropped. Pairs with the emitters ceasing to inline any governed formatting — the badge's label and icon now recolor per variant from the sheet, for stories and consumer fills alike
+
+- **The posture no longer includes a render watch.** A render per save on a many-variant component cannot finish before the next save triggers the next render, and the loop breaks Figma. `specs-cli.posture` brings up `specs run` alone; `component.author` renders once per component (`specs render specs/components/<key> --overwrite`) after `api`, `variants`, and `examples` validate
+
+- `specs skills install` now ships `templates/guidelines.yaml` with the component-author skill — the skill's step 8 referenced it, the file existed in source, and the installer never emitted it
+- The images-convention migration warning (`images.match` without `{i}`, ADR-117) no longer prints on every command — it is deferred at config load and surfaces where the convention is consumed (`specs fetch`), so a declared-but-unused convention stays quiet on validate and analyze
+- **Storybook shows components emitted after the server started.** The scaffold's story globs were guarded by `fs.existsSync` on the platform trees, so a server that booted before the first emit silently never registered any component — `storybook publish` reported current and validation passed while the sidebar stayed empty. The globs are now unconditional and `specs storybook init` creates the platform story directories so they are valid at boot. Re-run `specs storybook init --force` in an existing workspace to pick up the new `main.ts`
+
+- `specs validate` no longer prints "unknown format" lines — the schemas' standard formats (`date-time`, `uri`) are now registered via `ajv-formats` and actually validate, instead of being ignored with a warning on every compile (~30 lines per run)
+
+- The unreachable-authored-file warning names the platform file it is about, as a workspace-relative path, instead of attributing it to `supplemental.yaml /checks` — a location that was fabricated when no supplemental file existed. It also no longer fires on generated files: `metadata.ts` joined the emitters' output after the validator's roster was written, and any file stamped with the emitters' "Generated. Do not edit" header is now recognized regardless of the roster
+
+- `--authored` no longer reports the missing `metadata.source` it exists to forgive — three guaranteed warnings per spec on every clean run trained sessions to filter warnings, which is how a real one gets lost. The durable fix is authored provenance (ADR-106, #873); this removes the noise until it lands
+
+- `analysis/foundations.yaml` lists each variable collection's modes — the library's theming axes, previously discoverable only by accident in emitted CSS
+
+- `specs validate` reports what each used dimension token resolves to in the default mode (`strokeWeight: …/2x → 16`) — a multiplier name read as pixels shipped a 16px outline with 0 errors. Orientation only: values are themed, and nothing passes or fails on them
+
+- `specs validate` warns when an authored platform file sits beside the scaffold that no supplemental entry mentions — the emitters load an authored `component.*` only when `platforms.<tree>` names it, so an unmentioned file is dead while everything reports clean
+
+- `specs validate` resolves image pointers against the spec's own `images` registry — a dangling `#/images/<key>`, or a file-qualified spelling the schema doesn't define, previously shipped a grey image with 0 errors
+
+- `specs validate` checks `instanceExamples` configurations against the contract — declared props, boolean types, enum membership — exactly as it already checked a variant's `configuration`. Unchecked, a stale example (`size: Large` after the enum dropped it) validated clean and reached Storybook as a silently wrong story
+
+- `specs render --watch` over a directory re-renders **only the specs whose files changed** — it previously re-rendered the whole catalogue on every event, onto whatever page the plugin had open. The start-up pass now renders nothing (a watch means re-render *on change*), and only concern-file events trigger at all, so `specs analyze` writing its reports no longer causes renders (#884)
+
+- **A variant that sets an aspect ratio now changes the element's shape.** The ratio was emitted alongside the width and height the default block fixed, which CSS ignores, so every ratio option rendered as the default.
+
+- **`specs analyze` runs on a workspace with no specs in it**, writing every report with zero counts and empty collections rather than failing — so a catalogue you are authoring from scratch has an analysis surface before it has a spec, and `specs build` and `specs run` get through
+
+- **Analysis reports take the format `spec.format` declares even when the run read no specs**, where an empty catalogue in a YAML workspace previously wrote all seven as `.json`
+
+- **`specs analyze keys` now measures the Figma name behind each object-prop member** (ADR-111), under a `margin.compact` key and one segment at a time, so a declared separator is never flagged. A divergent row carries `segment`, naming the half to fix
+
+- **`specs analyze keys` reports every bad half of a folded name, not just the first.** A group name and a member name are two edits in two places, so a cleanup no longer takes one pass per bad segment. `summary.detections` counts edits where `divergentNames` counts names
+
+- **`specs analyze keys` groups `byName` by name and cause**, so a name that folds in one component and stays flat in another gets a row for each rather than one row carrying whichever cause was reached first
+
+### Removed
+
+- **A component's Storybook views no longer include Examples**
+
+- **`storybook/.storybook/ComponentDocs.tsx` is no longer part of the scaffold**, and nothing imports it; `specs storybook init --force` reports an existing copy as orphaned instead of deleting it, since the file is yours
+
+- **`content/components/tabs.json` is gone**, and no `views.json` replaces it. The order the views read in lives in the `storySort` parameter in `.storybook/preview.tsx`, which Storybook requires to be self-contained — edit the `VIEWS` list there to change it
+
+### Dependency updates
+
+- **Every style property now says what it means when you leave it out.** Via `@directededges/specs-schema` 0.40.0, each `Styles` property declares a default, five properties that took any string now take a closed set of values, and the two fraction-valued properties are bounded to 0–1 — so no transform decides on your behalf, and `specs validate` tells you when a value is outside what the property allows. The same release adds the schemas behind the two hand-authored documents this CLI now shows in Storybook, `supplemental.yaml` and `guidelines.yaml`, and moves the designated image component to `images.component`.
+
+- **A component root can state how it sizes itself.** Via `@directededges/specs-from-figma` 0.39.0, a `sizingHorizontal:` / `sizingVertical:` Dev Mode annotation on the root is read into the spec, which is the only way a FILL root can be recorded at all — Figma cannot report it for a node whose parent is the page. A value outside Figma's three warns rather than being dropped in silence.
+
+- **Render writes that sizing back, and arranges a catalogue instead of marching it off-canvas.** Via `@directededges/figma-from-specs` 0.7.0, which also carries the fixes behind `specs render` in this release: a slot's formatting reaching its primitive content, a rounded rectangle arriving rounded, an unmatched glyph name warning instead of vanishing, and an overwrite re-render reclaiming the position it replaced.
+
+- **The emitted code for the image and decoration roles.** Via `@directededges/react-from-specs` 0.7.0 and `@directededges/webcomponents-from-specs` 0.7.0, which produce the real image elements and `aria-hidden` output described above, and the per-view story titles the new Storybook sidebar reads. Story ids are pinned to their previous spelling, so your visual diff reports keep matching.
+
+
 ## [0.36.0] - 2026-10-29
 
 ### Breaking
