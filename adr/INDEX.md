@@ -4,6 +4,7 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
+| 122 | Layout Grid — `layoutMode: GRID` and a Single Templated Axis | |
 | 119 | Overrides on Instance Elements | (reserved, draft in PR #915) |
 | 108 | The `$slotContent` Pointer Namespace | |
 | 107 | Schema File Identity and Packaging | |
