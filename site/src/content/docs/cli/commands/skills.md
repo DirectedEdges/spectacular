@@ -43,8 +43,8 @@ Thirteen skills, in three groups. `specs-cli.workspace.setup` is the one a new w
 | [`specs-cli.component.author`](/cli/skills/component-author/) | [`specs author start`](/cli/commands/author/) → split the requirements → correlate against the catalogue → `api` → [`validate`](/cli/commands/validate/) → `variants` → validate → `examples` → validate → [`render`](/cli/commands/render/) once and observe → the two authored documents → a structured report |
 | [`specs-cli.guidelines.propose`](/cli/skills/guidelines-propose/) | [`specs analyze`](/cli/commands/analyze/) → synthesize one foundations concern's rules from its own evidence → write `specs/foundations/<concern>/guidelines.yaml` at `status: proposed` plus dated ratifier notes → human ratifies |
 | [`specs-cli.posture`](/cli/skills/posture/) | Read the pinned Storybook port → check it → start [`specs run`](/cli/commands/run/) detached if it is down → verify. Idempotent; the canvas is deliberately not watched |
-| `specs-cli.premerge` | [`specs version figmapremerge`](/cli/commands/version/#specs-version-figmapremerge) fetches, generates, and reports → human reviews the report → merge proceeds or not |
-| `specs-cli.release` | [`specs version report`](/cli/commands/version/#specs-version-report) → human review → [`specs version cut`](/cli/commands/version/#specs-version-cut) → [`specs version tag`](/cli/commands/version/#specs-version-tag) → publish |
+| `specs-cli.version.figmapremerge` | [`specs version figmapremerge`](/cli/commands/version/#specs-version-figmapremerge) fetches, generates, and reports → human reviews the report → merge proceeds or not |
+| `specs-cli.version.release` | [`specs version report`](/cli/commands/version/#specs-version-report) → human review → [`specs version cut`](/cli/commands/version/#specs-version-cut) → [`specs version tag`](/cli/commands/version/#specs-version-tag) → publish |
 
 ## The skills that author rather than sequence
 
@@ -59,6 +59,13 @@ So each one carries the evidence behind its proposal and a human gate: before an
 ## Refreshing
 
 The emitted files are **canonical and overwritten on every install** — re-running after a CLI upgrade refreshes them to match the commands they orchestrate. Keep local customization in your own separate skills rather than editing the emitted ones.
+
+Install writes by name and removes nothing, so a skill that is renamed between releases leaves its old directory behind. Two were renamed to sit under the command namespace they orchestrate — delete the old directories after upgrading:
+
+| Was | Now |
+|-----|-----|
+| `specs-cli.premerge` | `specs-cli.version.figmapremerge` |
+| `specs-cli.release` | `specs-cli.version.release` |
 
 ## See Also
 
