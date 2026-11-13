@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `Element.themes` — typed as `Themes` (`Record<string, string>`): the theme selected per token group, keyed by verbatim group name, written where selected and inherited by descendants (ADR-123)
+
 ### Changed
 
 ### Removed

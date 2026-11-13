@@ -15,6 +15,14 @@ export const PATH_ROOT = '[`component-api`](/schema/documents/component-api/):[`
 
 export const CARRIES_INTRO = "The style keys an element of this type may carry, from the transforms' declared key tables:";
 
+/**
+ * On every element type, because the theme in force is a fact of the element
+ * rather than of what the element is: any element may select one, and any
+ * element inherits one from the nearest ancestor that did.
+ */
+export const THEMES_INTRO =
+  'An element of any type may select a theme for a token group, and inherits one from the nearest ancestor that did. The selection decides what every token reference in its subtree resolves to — see [`themes`](/schema/themes/).';
+
 /** Said rather than left blank — a missing section reads as a failed render. */
 export const DECISIONS_NONE = 'None.\n';
 

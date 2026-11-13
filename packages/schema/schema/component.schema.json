@@ -847,6 +847,15 @@
         "$ref": "#/definitions/Element"
       }
     },
+    "Themes": {
+      "type": "object",
+      "description": "The theme this element selects for each token group, keyed by the group name as the token source spells it. A key is written only on the element that selects it, so descendants inherit it and the map is never the effective selection.",
+      "examples": [{ "DE Color": "Dark" }],
+      "additionalProperties": {
+        "type": "string",
+        "description": "The theme selected for this token group, named as the token source spells it."
+      }
+    },
     "SlotContent": {
       "type": "object",
       "description": "The anonymous structural triplet — anatomy, elements, layout — used as a named slot fill (ADR-046). Carries no metadata of its own; identity lives at the key under which it is stored (Component.slotContentExamples or Composition.slotContent).",
@@ -992,6 +1001,10 @@
         },
         "propConfigurations": {
           "$ref": "#/definitions/PropConfigurations"
+        },
+        "themes": {
+          "$ref": "#/definitions/Themes",
+          "description": "The theme this element selects for each token group."
         },
         "$extensions": {
           "$ref": "#/definitions/ElementExtensions",

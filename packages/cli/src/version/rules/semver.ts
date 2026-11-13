@@ -451,6 +451,17 @@ rules:
     grade: ignore
     why: The variant changed position relative to the variants around it; nothing else moved.
 
+  # A theme selection is manifestation like everything else under variants, so the
+  # grade is the one the broad rule below would already give it. It earns a rule of
+  # its own for visibility: one key decides what every token reference in a subtree
+  # resolves to, and under the broad rule that arrives as a scatter of style diffs
+  # with the cause named nowhere (ADR-123).
+  - id: themes-selection
+    concern: variants
+    path: '(^|\.)themes(\.|$)'
+    grade: patch
+    why: The theme an element selects for a token group changed; every token reference in its subtree resolves differently.
+
   - id: variants-all
     concern: variants
     grade: patch

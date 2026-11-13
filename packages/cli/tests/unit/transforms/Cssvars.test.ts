@@ -162,7 +162,12 @@ describe('CssvarsTransformer', () => {
 
   it('emits mode override blocks and a modes manifest for local multi-mode collections', async () => {
     const out = await runFinalize();
-    expect(out).toContain(':root[data-theme="dark"] {');
+    expect(out).toContain('[data-theme="dark"] {');
+    // Not anchored to `:root`. An element selects a theme for its own subtree
+    // (ADR-123), and a `:root`-anchored block can only ever match the document —
+    // so a card selecting a dark theme would carry the attribute and render
+    // unchanged, with every test still passing.
+    expect(out).not.toContain(':root[data-theme=');
     expect(out).toContain('--theme-surface-primary: #000000;');
     const manifest = await fs.readJSON(path.join(outDir, '..', 'assets', 'cssvars', 'modes.json'));
     expect(manifest['Theme']).toMatchObject({ attr: 'data-theme', modes: ['Light', 'Dark'], default: 'Light' });

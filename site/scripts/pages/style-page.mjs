@@ -30,7 +30,7 @@ import { exampleParts } from './style-sections/examples.mjs';
 import { valueSection as buildValueSection } from './style-sections/value.mjs';
 import {
   bindingSections, carriedContent, elementsSupported, resolvedJointlyWith,
-  decisionRecords, usedBy, pathSection,
+  decisionRecords, usedBy, pathSection, themeContext,
 } from './style-sections/context.mjs';
 
 export const renderStylePage = (node, ctx) => {
@@ -75,6 +75,7 @@ export const renderStylePage = (node, ctx) => {
   const decisions = decisionRecords(unit, ctx);
   const reachedBy = usedBy(unit, ctx);
   const pathLine = pathSection(unit, ctx);
+  const themeNote = themeContext(unit, ctx);
 
   return `${frontmatter({
     title: key,
@@ -110,7 +111,7 @@ ${
     kids.length && !valueSection
       ? `\n## Contains\n\n${kids.map((c) => `- [\`${c.path[c.path.length - 1]}\`](${urlOf(c.path)})`).join('\n')}\n`
       : ''
-  }${reachedBy ? `\n## Used by\n\n${reachedBy}\n` : ''}${bindingRows ? `\n## Platform bindings\n\n${bindingRows}\n` : ''}${
+  }${themeNote ? `\n## Themes\n\n${themeNote}\n` : ''}${reachedBy ? `\n## Used by\n\n${reachedBy}\n` : ''}${bindingRows ? `\n## Platform bindings\n\n${bindingRows}\n` : ''}${
     siblingList
       ? `\n## Resolved jointly with\n\n${JOINTLY_INTRO}\n\n${siblingList}\n`
       : ''

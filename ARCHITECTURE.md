@@ -95,6 +95,11 @@ came to describe a gradient-stroke mechanism, a `FILL` translation and a
   **names that module**, which is what makes the pair checkable
 - `site/src/content/docs/code/styles.mdx` — the *Mapping Specs to CSS* table,
   when a style key is added or removed
+- `packages/cli/src/transforms/Cssvars.ts` ↔
+  `site/src/content/docs/code/cssvars.md` — the same pair one level up, for the
+  custom properties and theme override blocks every emitted stylesheet reads.
+  The page quotes those selectors verbatim, so a change to their shape leaves it
+  describing a mechanism nothing emits
 
 Changing a module's output without the appendix is drift. The appendix names its
 owning module in every section, so the changed file identifies the section to

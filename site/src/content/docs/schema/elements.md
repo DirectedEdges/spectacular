@@ -18,6 +18,7 @@ type Elements = Record<string, Element>;
 | `styles` | [`Styles`](/schema/styles/) | No | Visual style properties — the element's own |
 | `contentStyles` | [`ContentStyles`](/schema/styles/#contentstyles) | No | Styles applied to primitive content *filling* this element, keyed by primitive, as distinct from its own (since 0.35.0) |
 | `propConfigurations` | [`PropConfigurations`](/schema/prop-configurations/) | No | Prop values that must hold for this element to appear |
+| `themes` | [`Themes`](/schema/themes/) | No | The theme this element selects per token group, keyed by group name and inherited by its descendants (since 0.41.0) |
 | `instanceOf` | `string \| PropBinding \| SubcomponentRef` | No | Component name, binding, or subcomponent ref |
 | `content` | `string \| PropBinding` | No | Text content or glyph name, or a binding to a prop |
 | `$extensions` | `object` | No | Platform extensions. `com.figma` carries capture provenance for a [promoted](/settings/promote-primitives/) element — `promotedPrimitive`, the `styles` the promotion consumed, the `content` a promoted leaf carried, and the hoisted `children` fill a promoted container held (a `SlotContentRef`) |
@@ -58,6 +59,27 @@ Each entry is captured from the **first top-level primitive of that kind** in th
 **`contentStyles` applies to a primitive fill only.** When the slot is filled with a component instead, that component brings its own formatting — apply `styles` and discard `contentStyles` rather than applying it to the instance.
 
 `contentStyles` is meaningful only on a slot element, and its keys should agree with that slot's `anyOf` markers. Both are authoring and generator contracts: the schema cannot relate a prop to an element, so neither is validated.
+
+## Themes
+
+`themes` states the theme in force for this element and everything beneath it. Keys name a token group, values name one of that group's themes, and a key is written only on the element that selects it — descendants inherit it.
+
+```yaml
+default:
+  elements:
+    root:
+      themes:
+        DE Color: Dark
+      styles:
+        backgroundColor: { $token: "DE Color/Surface/Primary", $type: color }
+    decorativeIcon:
+      styles:
+        fillColor: { $token: "DE Color/Alert/Info/Element", $type: color }
+```
+
+`decorativeIcon` carries no `themes` key, so its fill resolves under `root`'s `Dark` selection.
+
+See [Themes](/schema/themes/) for the spelling rules, how selections layer across variants, and what each platform turns one into.
 
 ## Further Reading
 

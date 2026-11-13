@@ -4,7 +4,7 @@
  * These files are intentionally never executed — they are compiled with tsc
  * to assert that the type shape is correct.
  */
-import type { Element, PropBinding, SubcomponentRef } from '../types/index.js';
+import type { Element, PropBinding, SubcomponentRef, Themes } from '../types/index.js';
 
 // ─── Element.content accepts string | PropBinding ───────────────────────────
 
@@ -159,3 +159,38 @@ const _fillInText: Element = { contentStyles: { $text: { fillColor: '#FF0000' } 
 
 // @ts-expect-error: width is not a text content-formatting property
 const _widthInText: Element = { contentStyles: { $text: { width: 100 } } };
+
+// ─── Element.themes — the modes an element pins (ADR-123) ─────────────────────
+
+// One collection, pinned by name; the key is the collection as the source spells it
+const pinned: Element = { themes: { 'DE Color': 'Dark' } };
+
+// Several collections at once, alongside the styles the pin governs
+const multiplePins: Element = {
+  themes: { 'DE Color': 'Dark', 'DE Space': 'Compact' },
+  styles: { backgroundColor: { $token: 'DE Color/Surface/Primary', $type: 'color' } },
+};
+
+// A pin equal to the collection's default mode is still a pin
+const explicitDefault: Element = { themes: { 'DE Color': 'Light' } };
+
+// themes is optional, and an empty map is valid — an element that pins nothing omits it
+const noPins: Element = { styles: { padding: 8 } };
+const emptyThemes: Element = { themes: {} };
+
+// The map stands alone — an element whose only authored fact is a pin
+const pinOnly: Element = { themes: { 'DE Color': 'Dark' } };
+
+// Themes is exported in its own right, for a consumer resolving pins across a tree
+const themesAlone: Themes = { 'DE Shape': 'Subtle round' };
+
+// A value is a mode name, never a binding — configuration-driven pins are deferred
+// @ts-expect-error: a themes value is a string, not a PropBinding
+const _boundPin: Element = { themes: { 'DE Color': { $binding: '#/props/theme' } } };
+
+// ...and never an object carrying its own provenance: keys are names, nothing more
+// @ts-expect-error: a themes value is a string, not an object
+const _wrappedPin: Element = { themes: { 'DE Color': { mode: 'Dark' } } };
+
+// @ts-expect-error: a themes value is a string, not a nested map of modes
+const _nestedPins: Element = { themes: { 'DE Color': { Dark: true } } };

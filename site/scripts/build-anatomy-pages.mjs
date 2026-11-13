@@ -18,7 +18,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 // All page copy lives in content/ — this script holds structure only.
 import {
-  BANNER, PATH_ROOT, CARRIES_INTRO, DECISIONS_NONE, SOURCE_SECTION,
+  BANNER, PATH_ROOT, CARRIES_INTRO, DECISIONS_NONE, SOURCE_SECTION, THEMES_INTRO,
 } from './content/anatomy-pages.mjs';
 import { loadAdrs, decisionBullets } from './lib/adr.mjs';
 import { frontmatter } from './lib/markdown.mjs';
@@ -125,7 +125,11 @@ ${description}${kept.intro ? ` ${kept.intro}` : ''}
 
 ${PATH_ROOT}.\`<element>\`.\`type: ${type}\`
 
-${carries ? `## Styles\n\n${CARRIES_INTRO}\n\n${carries}\n` : ''}${keptSections}
+${carries ? `## Styles\n\n${CARRIES_INTRO}\n\n${carries}\n` : ''}
+## Themes
+
+${THEMES_INTRO}
+${keptSections}
 ## Platform bindings
 
 ${bindingRows}

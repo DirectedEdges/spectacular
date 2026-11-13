@@ -248,6 +248,20 @@ The sentinel is not a value. **A consumer MUST apply nothing for it, and MUST NO
 
 Its purpose is to be visible. A `mixed` value reports that the source design mixes values within one layer, which is a thing to fix in the design rather than a thing to render. A producer SHOULD warn when it records one (`producer`, `unenforced`).
 
+### 4.7 A theme selection is recorded where it was made and inherits down the element tree
+
+`Element.themes` maps a token group name to the theme selected for that group (`schema: component.schema.json`; ADR-123). A token resolves to a different value under a different theme, and which theme applies is a fact of the element rather than of the token. The key names the group and the value names the theme, both as the token source spells them: a group name is not a key under §3 and is not formatted to `spec.keys`, because it must match the group segment of the `TokenReference.$token` paths the selection governs (DSPEC-65).
+
+A producer MUST write a key only on the element that explicitly selected a theme for that group, and MUST NOT write the effective selection onto descendants (DSPEC-66). An absent key therefore means *inherit*, which is distinct from both §4.1a's *declared default* and §4.2's *unset* — there is no default at this site to fall back to.
+
+A consumer MUST resolve an element's effective themes by merging its own keys over those of its ancestors, through nested instance boundaries, with the nearest selection winning per group (DSPEC-67). No document states the effective set.
+
+A producer MUST write an explicit selection even where the selected theme is the group's default theme (DSPEC-68). The two are not equivalent: an explicit selection holds inside a differently themed ancestor, where an absent key would inherit.
+
+A producer MUST NOT write a key that is not a group name — a group identifier that resolves to no name is omitted rather than recorded raw (DSPEC-69), which is what makes the match against `$token` paths total rather than conditional. Group and theme names are open strings; the token source owns that vocabulary, and no validator checks a value against it (§10).
+
+In a Figma-sourced spec a token group is a variable collection and a theme is one of its modes. That reading is provenance, in the sense of §7.2, and binds no consumer: a `themes` entry names a group and a theme, and resolving one requires nothing from any one design tool.
+
 ---
 
 ## 5. Pointers
@@ -451,6 +465,11 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-62 | A directory under `foundations/` is named from the foundation concern vocabulary; a document schema validates contents and cannot validate the path that selects it | validator | §2.1, ADR-118 |
 | DSPEC-63 | A guidelines document carries rules only, and no table describing what each token is for | validator | §2.3, ADR-118 |
 | DSPEC-64 | An authored document is keyed for one concern vocabulary or the other, never both; `layout` and `motion` are in each and discriminate neither, so the scope is the path | schema: `supplemental.schema.json`, `guidelines.schema.json` | §2.1, ADR-118 |
+| DSPEC-65 | A `themes` key is a token group name as the token source spells it, unformatted by `spec.keys`, so it matches the group segment of the token paths the selection governs | producer | §4.7, ADR-123 |
+| DSPEC-66 | A `themes` key is written only on the element that explicitly selected a theme for that group, never as the effective selection on descendants | producer | §4.7, ADR-123 |
+| DSPEC-67 | An element's effective themes are its own `themes` keys merged over its ancestors', through nested instance boundaries, nearest selection winning per group | consumer | §4.7, ADR-123 |
+| DSPEC-68 | An explicit selection is written even where it equals the group's default theme, because it holds inside a differently themed ancestor where an absent key would inherit | producer | §4.7, ADR-123 |
+| DSPEC-69 | A token group whose identifier resolves to no name is omitted from `themes` rather than recorded as a raw identifier | producer | §4.7, ADR-123 |
 
 Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.
 

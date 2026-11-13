@@ -3,7 +3,7 @@
 **Branch**: `123-element-themes`
 **Created**: 2026-11-13
 **Status**: DRAFT
-**Summary**: *(written at implementation — see `/specs.adr.implement`)*
+**Summary**: A `themes` map selects a token group's theme on an element, beside `styles` and inherited by its descendants.
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

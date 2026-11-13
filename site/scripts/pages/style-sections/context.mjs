@@ -12,7 +12,18 @@
 import { deref } from '../../lib/schema.mjs';
 import { kebab, PLATFORM_TITLE } from '../../lib/naming.mjs';
 import { decisionBullets } from '../../lib/adr.mjs';
-import { DECISIONS_NONE, NO_ELEMENT_TYPE, PATH_ROOT, TYPE_PAGE_HOME } from '../../content/style-pages.mjs';
+import { DECISIONS_NONE, NO_ELEMENT_TYPE, PATH_ROOT, THEMES_NOTE, TYPE_PAGE_HOME } from '../../content/style-pages.mjs';
+
+/**
+ * Whether this node's value can be a token, and so whether the mode in force
+ * on the element decides what it resolves to.
+ *
+ * Asked of the schema, not of a list: `refsOf` already reports the named
+ * definitions a node reaches through its wrappers and unions, so a key that
+ * gains or loses the form gains or loses the section with it.
+ */
+export const themeContext = ({ spec }, { tree }) =>
+  tree.refsOf(spec).has('TokenReference') ? THEMES_NOTE : null;
 
 /**
  * One `###` subsection per platform rather than a table: the binding's `notes`

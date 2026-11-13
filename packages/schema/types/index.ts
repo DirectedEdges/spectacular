@@ -27,7 +27,7 @@ export type { Subcomponent, Subcomponents, SubcomponentSource } from './Subcompo
 export type { InstanceExample, InstanceExamples, InstanceExampleConfigurationValue } from './InstanceExample.js';
 
 // Element and structure types
-export type { Element, Elements, ElementType, ElementExtensions, FigmaElementExtension } from './Element.js';
+export type { Element, Elements, ElementType, ElementExtensions, FigmaElementExtension, Themes } from './Element.js';
 export type { Layout, LayoutNode, LayoutBranch } from './Layout.js';
 export type { Children, SlotBinding } from './Children.js';
 export type { SlotContent, SlotContentMap } from './SlotContent.js';

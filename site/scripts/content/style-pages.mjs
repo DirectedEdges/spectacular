@@ -93,6 +93,17 @@ export const NO_ELEMENT_TYPE = '*No element type carries this key.*';
 
 export const JOINTLY_INTRO = "This key does not map on its own. Its rule's ordered case table is linked above.";
 
+/**
+ * The resolution context a token-bound value sits in.
+ *
+ * Shown on every style key whose value admits a `TokenReference`, derived from
+ * the schema rather than from a list of the keys someone thought of: the theme
+ * in force changes what a token resolves to, so the question arises wherever a
+ * token can be written.
+ */
+export const THEMES_NOTE =
+  "A [`TokenReference`](/schema/token-reference/) written here resolves under the theme in force on this element — the one it selects in [`themes`](/schema/themes/), or the nearest ancestor's. The same token path yields a different value under a different theme.";
+
 /** Said rather than left blank — a missing section reads as a failed render. */
 export const DECISIONS_NONE = 'None.\n';
 

@@ -11,6 +11,22 @@ import { SlotContentRef } from "./SlotContentRef.js";
 export type Elements = Record<string, Element>;
 
 /**
+ * The theme an element selects for each token group, keyed by the group name as the
+ * token source spells it (ADR-123).
+ *
+ * A token resolves to a different value under a different theme, and which theme
+ * applies is a fact of the element rather than of the token.
+ *
+ * The key is verbatim rather than formatted to `spec.keys`, because a group name is
+ * already verbatim everywhere else it appears — it leads a `TokenReference.$token`
+ * path. A key spelled otherwise could not be matched against the references the
+ * selection governs.
+ *
+ * @since 0.41.0
+ */
+export type Themes = Record<string, string>;
+
+/**
  * Represents a single element within a component.
  */
 export type Element = {
@@ -25,6 +41,13 @@ export type Element = {
    */
   contentStyles?: ContentStyles;
   propConfigurations?: PropConfigurations;
+  /**
+   * The theme this element selects for each token group. Written only on the element
+   * that selects it, so descendants inherit it and a key is never the effective
+   * selection (ADR-123).
+   * @since 0.41.0
+   */
+  themes?: Themes;
   /** The component or component set name, a prop binding for instance swaps, or a subcomponent reference. */
   instanceOf?: string | PropBinding | SubcomponentRef;
   /** The content for content-bearing elements: text string for text elements, glyph name for glyph elements, or a PropBinding reference. */

@@ -133,13 +133,22 @@ export class CssvarsTransformer implements Transformer {
     }
 
     // ── Collection modes (local multi-mode collections) ──────────────────────
-    // Each non-default mode gets an attribute-scoped override block the
-    // consumer switches by stamping data attributes on the root element.
+    // Each non-default mode gets an attribute-scoped override block, which an
+    // element selects by carrying the attribute — the document root, or any
+    // element with an `Element.themes` entry (ADR-123).
     const modeBlocks: string[] = [];
     const modesManifest: Json = {};
+    const unthemedRemote: string[] = [];
     for (const coll of foundations.collections.values()) {
-      if (coll.remote) continue;
       if (!Array.isArray(coll.modes) || coll.modes.length < 2) continue;
+      // A subscribed collection's per-mode values are not in this workspace's
+      // fetched data, so there is nothing to write an override block from. Named
+      // rather than skipped silently: a spec may select one of its themes, and the
+      // selection would then have no block to match (ADR-123).
+      if (coll.remote) {
+        unthemedRemote.push(coll.name);
+        continue;
+      }
       const attr = `data-${kebabizePath(coll.name)}`;
       const defaultMode = coll.modes.find((m: Json) => m.modeId === coll.defaultModeId);
       modesManifest[coll.name] = {
@@ -160,7 +169,11 @@ export class CssvarsTransformer implements Transformer {
           overrides.push(`  ${varName(fullName(v, foundations))}: ${rendered};`);
         }
         if (overrides.length) {
-          modeBlocks.push(`:root[${attr}="${kebabizePath(mode.name)}"] {\n${overrides.sort().join('\n')}\n}`);
+          // Selector-agnostic, not `:root[…]`. An element selects a theme for its
+          // own subtree (ADR-123), and a block anchored to `:root` can only ever
+          // match the document — so a card that selects a dark theme would carry
+          // the attribute, pass every test, and render unchanged.
+          modeBlocks.push(`[${attr}="${kebabizePath(mode.name)}"] {\n${overrides.sort().join('\n')}\n}`);
         }
       }
     }
@@ -275,9 +288,17 @@ ${effectLines.sort().join('\n')}
 ${fillLines.sort().join('\n')}
 }
 
-/* ── Collection modes (switch by stamping the data attribute on :root) ── */
+/* ── Collection modes (switch by carrying the data attribute on any element) ── */
 ${modeBlocks.join('\n\n')}
 `;
+
+    if (unthemedRemote.length) {
+      console.warn(
+        `[cssvars] no theme override blocks for subscribed collection${unthemedRemote.length === 1 ? '' : 's'} ` +
+        `${unthemedRemote.join(', ')} — their per-mode values are not in this workspace's data, so a spec ` +
+        `selecting one of their themes renders under the default.`
+      );
+    }
 
     // Library-level, platform-neutral CSS custom properties: an asset by the test
     // that it would be byte-identical in a React-only and a Lit-only world
