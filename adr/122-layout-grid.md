@@ -3,7 +3,7 @@
 **Branch**: `122-layout-grid`
 **Created**: 2026-11-13
 **Status**: DRAFT
-**Summary**: *(written at implementation — see `/specs.adr.implement`)*
+**Summary**: `gridColumns` and `gridRows` template one axis of a `GRID` container, joining `layoutMode` and `itemSpacing`.
 **Decides**: styles.layout, anatomy.slot
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none — amends ADR-083)*

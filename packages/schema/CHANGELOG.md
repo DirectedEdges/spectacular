@@ -7,11 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.41.0] - Unreleased
 
+**A container can now lay its children out as a grid.** `layoutMode` takes a fourth value, and one axis is templated into equal tracks by a fixed count or by a minimum track size the container divides itself against.
+
 ### Added
 
-### Changed
+- **A `GRID` container templates one axis into equal tracks and fills cells in source order**, with `gridColumns` or `gridRows` setting that axis and the existing `itemSpacing` holding the gap on both (ADR-122)
+- `Styles.gridColumns` and `Styles.gridRows` — typed as `GridTracks` (`number | AdaptiveGridTracks | null`); an integer fixes the count, and at most one of the two is non-null (ADR-122)
+- `AdaptiveGridTracks` — `{ minSize, collapseUnusedTracks? }`, fitting as many tracks as the container allows at that minimum; `collapseUnusedTracks` drops empty tracks so a short row stretches, and defaults to `false` (ADR-122)
+- `LayoutMode` — gains `'GRID'` alongside `'NONE'`, `'HORIZONTAL'` and `'VERTICAL'` (ADR-122)
+- DSPEC-65 to DSPEC-69 — one templated axis, a variant layer clearing the other, which axis wins when both are set, and the two collapse rules a grid changes (ADR-122)
 
-### Removed
+### ADRs
+
+#### New drafts
+
+- [122](../../adr/122-layout-grid.md) — Layout Grid — `layoutMode: GRID` and a Single Templated Axis
 
 
 ## [0.40.0] - 2026-11-12

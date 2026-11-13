@@ -7,7 +7,7 @@ import type {
   Styles, Shadow, Blur, Effects, Typography,
   TokenReference, ColorStyle, ColorObject, GradientStop, GradientCenter, LinearGradient, RadialGradient,
   AngularGradient, GradientValue, AspectRatioValue, AspectRatioStyle,
-  Sides, Corners, ItemSpacing, LayoutMode, WrapAlignment,
+  Sides, Corners, ItemSpacing, LayoutMode, GridTracks, AdaptiveGridTracks, WrapAlignment,
   MainAxisAlignment, CrossAxisAlignment, Position, PositionOffset,
   StrokeDashPattern, TextAlignHorizontal, TextOverflow,
   ContentStyles, TextContentStyles, GlyphContentStyles, UnitIntervalStyle,
@@ -566,9 +566,10 @@ const _oldCounterAxisSpacing: Styles = { counterAxisSpacing: 8 };
 const _lmNone: LayoutMode = 'NONE';
 const _lmHorizontal: LayoutMode = 'HORIZONTAL';
 const _lmVertical: LayoutMode = 'VERTICAL';
+const _lmGrid: LayoutMode = 'GRID';
 
 // @ts-expect-error: arbitrary string is not valid LayoutMode
-const _lmBad: LayoutMode = 'GRID';
+const _lmBad: LayoutMode = 'MASONRY';
 
 // @ts-expect-error: number is not valid LayoutMode
 const _lmNumber: LayoutMode = 0;
@@ -579,6 +580,7 @@ const _lmNumber: LayoutMode = 0;
 const withLayoutNone: Styles = { layoutMode: 'NONE' };
 const withLayoutHorizontal: Styles = { layoutMode: 'HORIZONTAL' };
 const withLayoutVertical: Styles = { layoutMode: 'VERTICAL' };
+const withLayoutGrid: Styles = { layoutMode: 'GRID' };
 
 // @ts-expect-error: null is not a value a closed set carries — an unset key is omitted
 const withLayoutNull: Styles = { layoutMode: null };
@@ -591,6 +593,42 @@ const _lmStyleNumber: Styles = { layoutMode: 1 };
 
 // @ts-expect-error: arbitrary string is not valid for layoutMode
 const _lmArbitrary: Styles = { layoutMode: 'ROW' };
+
+// ─── GridTracks and AdaptiveGridTracks ──────────────────────────────────────
+
+// The three arms: a fixed count, the adaptive form, null
+const _gtFixed: GridTracks = 3;
+const _gtAdaptive: GridTracks = { minSize: 200 };
+const _gtNull: GridTracks = null;
+
+// collapseUnusedTracks is optional
+const _agtMinimal: AdaptiveGridTracks = { minSize: 200 };
+const _agtFull: AdaptiveGridTracks = { minSize: 200, collapseUnusedTracks: true };
+
+// @ts-expect-error: minSize is required
+const _agtNoMin: AdaptiveGridTracks = { collapseUnusedTracks: true };
+
+// @ts-expect-error: the axis-specific spellings are not members — the owning key names the axis
+const _agtMinWidth: AdaptiveGridTracks = { minWidth: 200 };
+
+// @ts-expect-error: a track count is structural — not token-bindable
+const _gtToken: GridTracks = { $token: 'Layout.Columns', $type: 'number' } satisfies TokenReference;
+
+// ─── Styles.gridColumns / Styles.gridRows ───────────────────────────────────
+
+const _gcFixed: Styles = { gridColumns: 3 };
+const _gcAdaptive: Styles = { gridColumns: { minSize: 200, collapseUnusedTracks: true } };
+const _grFixed: Styles = { gridRows: 2 };
+const _grAdaptive: Styles = { gridRows: { minSize: 120 } };
+
+// null clears an inherited value — the form a variant uses to switch axis
+const _gcNull: Styles = { gridColumns: null };
+
+// Both keys compile; "at most one is non-null" is a semantic rule (DSPEC-65), not a type-level one
+const _gcBothAxes: Styles = { gridColumns: 3, gridRows: null };
+
+// @ts-expect-error: a string is not a track count
+const _gcString: Styles = { gridColumns: '3' };
 
 // ─── WrapAlignment ──────────────────────────────────────────────────────────
 

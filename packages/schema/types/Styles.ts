@@ -68,6 +68,10 @@ export type Styles = Partial<{
   crossAxisAlignment: CrossAxisAlignment | null;
   /** Auto-layout direction. Structural property — not token-bindable. @since 0.18.0 */
   layoutMode: LayoutMode;
+  /** The columns a `GRID` templates, when the column axis is the templated one. Non-null on at most one of `gridColumns` and `gridRows`. Structural property — not token-bindable. @since 0.41.0 */
+  gridColumns: GridTracks;
+  /** The rows a `GRID` templates, when the row axis is the templated one. Non-null on at most one of `gridColumns` and `gridRows`. Structural property — not token-bindable. @since 0.41.0 */
+  gridRows: GridTracks;
   /** Whether auto-layout wrapping is enabled (default: false). @since 0.18.0 */
   wrap: boolean;
   /** Space distribution between wrapped lines. Only meaningful when `wrap` is true. Structural property — not token-bindable. @since 0.18.0 */
@@ -375,9 +379,35 @@ export type PositionOffset = number | string | null;
 
 /**
  * Auto-layout direction mode. Structural property that cannot be token-bound.
+ * `'GRID'` templates one axis into equal tracks and fills cells in source order (ADR-122).
  * @since 0.18.0
  */
-export type LayoutMode = 'NONE' | 'HORIZONTAL' | 'VERTICAL';
+export type LayoutMode = 'NONE' | 'HORIZONTAL' | 'VERTICAL' | 'GRID';
+
+/**
+ * A track count derived from the container rather than declared: as many tracks as fit
+ * at `minSize`, with the remaining space shared equally.
+ *
+ * Named for Jetpack Compose's `GridCells.Adaptive(minSize:)`; SwiftUI's `GridItem.adaptive(minimum:)`
+ * and CSS `repeat(auto-fill, minmax(…))` are the same concept (ADR-122).
+ * @since 0.41.0
+ */
+export interface AdaptiveGridTracks {
+  /** The smallest size a track may take, in pixels. Measured on the axis its owning key names. */
+  minSize: number;
+  /** Whether tracks holding no child are dropped, letting the remaining children fill the row (default: false). */
+  collapseUnusedTracks?: boolean;
+}
+
+/**
+ * Track count for one axis of a `GRID` container. An integer is a fixed count of equal tracks;
+ * {@link AdaptiveGridTracks} derives the count from the container; `null` means the axis is not templated.
+ *
+ * Narrower than `Style` — a track count is computed layout structure, not a design value a token
+ * carries, which is the same reasoning that keeps `LayoutMode` and `PositionOffset` outside `Style`.
+ * @since 0.41.0
+ */
+export type GridTracks = number | AdaptiveGridTracks | null;
 
 /**
  * Wrap alignment mode for multi-line auto-layout. Structural property that cannot be token-bound.
@@ -507,6 +537,8 @@ export type StyleKey =
   | 'primaryAxisSizingMode'
   | 'crossAxisAlignment'
   | 'layoutMode'
+  | 'gridColumns'
+  | 'gridRows'
   | 'wrap'
   | 'wrapAlignment'
   | 'itemReverseZIndex'
