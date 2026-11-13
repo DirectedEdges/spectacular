@@ -17,13 +17,13 @@ A spec records *which token* a style uses. It never records *which mode that tok
 
 ```yaml
 backgroundColor:
-  $token: DS Color.Surface.Default
+  $token: DE Color/Surface/Primary
   $type: color
   $extensions:
     com.figma:
-      id: 'VariableID:1:23'
-      collectionName: DS Color
-      rawValue: '#1B1B1BFF'
+      id: 'VariableID:4668:33926'
+      collectionName: DE Color
+      rawValue: '#FFFFFFFF'
 ```
 
 The collection is named. The mode is not. `rawValue` is the value Figma resolved at extraction time, so it was resolved *under some mode* — and the spec keeps the answer while discarding the question.
@@ -69,10 +69,10 @@ default:
   elements:
     root:
       themes:
-        DS Color: Dark
+        DE Color: Dark
       styles:
         backgroundColor:
-          $token: DS Color.Surface.Default
+          $token: DE Color/Surface/Primary
           $type: color
 ```
 
@@ -116,8 +116,8 @@ A pinned mode nested inside the element's style object.
 
 ```yaml
 themes:
-  DS Color: Dark
-  Density: Compact
+  DE Color: Dark
+  DE Space: Compact
 ```
 
 **Pros**:
@@ -135,7 +135,7 @@ themes:
 
 ```yaml
 themes:
-  - collection: DS Color
+  - collection: DE Color
     mode: Dark
 ```
 
@@ -157,7 +157,7 @@ One pinned mode per element, unqualified by collection.
 
 ```yaml
 themes:
-  DS Color: Dark
+  DE Color: Dark
 ```
 
 **Pros**:
@@ -166,7 +166,7 @@ themes:
 - It leaves "mode" free for the environment-resolved sense every platform already uses it in — OS light/dark — which this property is not.
 
 **Cons / Trade-offs**:
-- Not every collection reads as a theme; a `Density` collection is a theme only under a generalized sense of the word.
+- Not every collection reads as a theme. A spacing collection whose modes are `Cozy`, `Comfortable` and `Compact` is a theme only under a generalized sense of the word.
 - Plural keyed by collection means `themes` holds one theme per axis, not a list of themes — accurate but worth one sentence in the description.
 
 ---
@@ -187,28 +187,45 @@ themes:
 
 #### Option A: The collection name verbatim *(Selected)*
 
-The key is the collection's `name` as the source file spells it, unmodified by `spec.keys`.
+The key is the collection's `name` as the source file spells it, unmodified by `spec.keys`. The mode name is likewise verbatim.
 
 ```yaml
 themes:
-  DS Color: Dark
+  DE Color: Dark
+  DE Shape: Subtle round
 ```
 
 **Pros**:
-- Joinable to the references it governs. `TokenReference.$extensions['com.figma'].collectionName` is already the verbatim collection name, and under the default `TOKEN` profile the `$token` path leads with it (`DS Color.Surface.Default`). A matching key is what lets a consumer tell which references a pin applies to.
-- Stable across both serialization settings. `spec.keys` governs "anatomy keys, prop keys, and every reference to them" — a collection is neither — and `spec.tokens` reshapes values, not this.
-- Mode names are likewise verbatim, because the mode vocabulary is owned by the token source and not by this schema.
+- **A collection name is already a verbatim string in this schema, in both places it appears.** It leads the `$token` path (`DE Color/Surface/Primary`) and it is `TokenReference.$extensions['com.figma'].collectionName`. Neither is key-cased. A keyed `themes` key would be the first and only place the spec spells a collection name differently from every reference it governs.
+- **The projection would be lossy for real library names.** `spec.keys` is documented as lossy for every value but `SAFE`, and the safe-key grammar admits one leading capital per word — so `DE Color`, `DE Space`, `DE Shape` and `DE Sizing` fail it. Every setting value, `SAFE` included, would have to project them and record the original somewhere.
+- **Values in this schema keep their source spelling; keys are projected.** Enum prop values (`Low contrast`), text content and mode-like strings are all verbatim, while anatomy and prop keys are cased. A collection name has only ever appeared on the value side.
+- Stable across both serialization settings — `spec.keys` governs "anatomy keys, prop keys, and every reference to them", and `spec.tokens` reshapes token values, not the resolution context.
 
 **Cons / Trade-offs**:
-- A key may contain spaces, which is awkward as an object key in emitted code. Emitters already carry `$token` paths with spaces, so the problem is not new.
+- The key may contain spaces, which is awkward as an object key in emitted code. Emitters already carry `$token` paths with the same spaces, so this is not a new obligation.
+- Open keys cannot be validated, and a verbatim key cannot be validated against the safe-key grammar either.
 
 ---
 
 #### Option B: Keyed per `spec.keys`, Figma name in `$extensions` *(Rejected)*
 
-`DS Color` becomes `dsColor` under the default `CAMEL`, with the original preserved as provenance.
+`DE Color` becomes `deColor` under the default `CAMEL`. Because that is lossy, each entry has to carry its own provenance, so the value stops being a string:
 
-**Rejected because**: it breaks the join. The pin would be spelled one way and every token reference it governs another, so matching them requires a lossy projection to be inverted — and `spec.keys` is documented as lossy. It also makes the spelling of a pin depend on a setting, so two specs of the same library disagree about the name of the same collection.
+```yaml
+themes:
+  deColor:
+    mode: Dark
+    $extensions:
+      com.figma:
+        collectionName: DE Color
+```
+
+**Rejected on three counts**:
+- **It costs the shape.** A flat `Record<string, string>` becomes a map of objects, which means a `Theme` type and a `ThemeExtensions` type beside `Themes` — three exported types and three schema definitions where one of each will do (constitution III).
+- **It breaks the join, and pays for provenance to restore it.** The pin reads `deColor` while every reference it governs reads `DE Color/Surface/Primary`. Matching them means reading back the extension the keying made necessary — so the surface grows in order to recover a fact the verbatim form never lost.
+- **It makes a collection's name depend on a setting.** Two specs generated from one library under different `spec.keys` values would disagree about what the same collection is called, in a map whose keys are the only thing identifying it.
+
+This is the closer call of the two, and the precedent genuinely cuts both ways: keying is what the schema does to *keys*, and verbatim is what it does to *collection names*. It resolves on which of those a `themes` key is, and a key that must match a `$token` path segment to be useful is the second.
 
 ---
 
@@ -269,7 +286,7 @@ No id travels with a pin.
 
 Record the `{ collectionId: modeId }` map alongside the named pins.
 
-**Rejected because**: `TokenReference` records a variable `id` because a variable is *resolved* — the id is the only stable handle to a value whose name may be duplicated across collections. A mode is *selected*, and the selection is identified by the pair of names, which is unique by construction: one mode name per collection, one collection per key. Recording an unresolvable id to re-derive a name the spec already holds adds surface without adding information.
+**Rejected because**: `TokenReference` records a variable `id` because a variable is *resolved* — the id is the only stable handle to a value whose name may be duplicated across collections. A mode is *selected*, and the pair of names identifies it uniquely by construction: one mode name per collection, one collection per key. A mode id buys no uniqueness the names lack, and a library bears that out — two distinct collections in one file carry modes under the same ids (`4668:0`, `4668:2`), so a mode id is meaningful only alongside the collection that scopes it, exactly like the name. Recording an unresolvable id to re-derive a name the spec already holds adds surface without adding information.
 
 ---
 
@@ -327,7 +344,7 @@ Themes:
   additionalProperties:
     type: string
   examples:
-    - { DS Color: Dark }
+    - { DE Color: Dark }
 
 # New property under #/definitions/Element/properties
 themes:
@@ -340,37 +357,38 @@ themes:
 ### Example — a component spec
 
 ```yaml
-title: Card
+title: DE Alert
 anatomy:
   root:
     type: container
-  panel:
-    type: container
+    role: alert
+  decorativeIcon:
+    type: glyph
 default:
   elements:
     root:
       themes:
-        DS Color: Dark
+        DE Color: Dark
       styles:
         backgroundColor:
-          $token: DS Color.Surface.Default
+          $token: DE Color/Alert/Info/Background
           $type: color
-    panel:
+    decorativeIcon:
       styles:
-        backgroundColor:
-          $token: DS Color.Surface.Raised
+        fillColor:
+          $token: DE Color/Alert/Info/Element
           $type: color
 variants:
   - configuration:
-      emphasis: promotional
+      appearance: Warning
     elements:
       root:
         themes:
-          DS Color: Bright
-          Density: Compact
+          DE Color: Dark
+          DE Space: Compact
 ```
 
-`panel` carries no `themes` key and resolves against `root`'s pin. Under the `promotional` variant, `root` pins two collections and `panel` inherits both.
+`decorativeIcon` carries no `themes` key, so its `DE Color/...` fill resolves against `root`'s `Dark` pin. Under the `Warning` variant, `root` pins two collections and `decorativeIcon` inherits both.
 
 ### Notes
 
