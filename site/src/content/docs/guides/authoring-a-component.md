@@ -49,15 +49,22 @@ Nothing there names a token, a schema property or a file. It names outcomes, and
 
 ## Priming
 
-Nothing is written until the agent has loaded the request's context, and every tool in this part of the system exists to make that loading short. The time between your prompt and the first written line is the cost that compounds across a component, and it is the one the tooling is tuned against.
+Nothing is written until the request's context is loaded, and every tool here is tuned to make that loading short. The time between your prompt and the first written line is the cost that compounds across a component.
 
-The round opens with [`specs author start`](/cli/commands/author/), which writes the component folder from templates — valid as shipped — and prints a startup digest. The digest is an index rather than a context dump: it names your catalogue, the paths and dates of your [analysis reports](/cli/analyze/), your conventions files, and whether Storybook is answering. It carries no token names and no prop vocabularies, because its job is to say what to read and whether it is current, not to pay for reading it.
+[`specs author start`](/cli/commands/author/) opens the round. It writes the component folder from templates — valid as shipped — and prints a startup digest: your catalogue, your [analysis reports](/cli/analyze/) and their dates, your conventions files, and whether Storybook is answering. An index, not a context dump.
 
-What is then read arrives in two batches, each loaded once and never reopened. The **contract batch** comes before `api.yaml`: the [authoring primer](/cli/skills/authoring-primer/) and the rules files for the concepts this request touches, your `config/conventions/` files, [`analysis/props.yaml`](/cli/analyze/props/) for the prop vocabulary your system already uses, and [`analysis/dependencies`](/cli/analyze/dependencies/) for what nests inside what. The **styling batch** comes later, at `variants.yaml`, and holds the style reference, [`analysis/foundations/<type>.yaml`](/cli/analyze/foundations/) for the token types this component needs, and [`analysis/styling.byToken.yaml`](/cli/analyze/styling/). Styling context read before the contract work would sit idle through it, so it is not read yet.
+What follows arrives in two batches, each read once and never reopened:
 
-Several structures exist only to keep these batches small. The foundations analysis is split one file per token type behind an index, so a question about a corner radius reads one small file rather than scanning a library-wide manifest. The rules files are keyed to mirror the schema node they govern — `anatomy`, `styles`, `props`, `slots`, `variants` — so a component with no slots never loads the slot rules. And [`specs-cli.primer`](/cli/commands/skills/) is named as a prerequisite by every other skill rather than copied into each one, so a session that touches three skills pays for it once.
+- **Contract batch**, before `api.yaml` — the [authoring primer](/cli/skills/authoring-primer/) and the rules files for the concepts this request touches, your `config/conventions/` files, [`analysis/props.yaml`](/cli/analyze/props/) for the prop vocabulary you already use, and [`analysis/dependencies`](/cli/analyze/dependencies/) for what nests inside what.
+- **Styling batch**, at `variants.yaml` — the style reference, [`analysis/foundations/<type>.yaml`](/cli/analyze/foundations/) for the token types this component needs, and [`analysis/styling.byToken.yaml`](/cli/analyze/styling/). It comes later because styling context would sit idle through the contract work.
 
-The effect you see is that the result looks like your system. The image component reuses your shape token names, your prop spelling, and the source-prop name your `config/conventions/figma.yaml` already declares — none of which you had to say.
+Three structures keep those batches small:
+
+- Foundations analysis is split one file per token type behind an index, so a corner-radius question reads one small file.
+- Rules files are keyed per schema concept, so a component with no slots never loads the slot rules.
+- [`specs-cli.primer`](/cli/commands/skills/) is a prerequisite every skill names, not a copy each one carries.
+
+The effect you see is that the result looks like your system: your shape token names, your prop spelling, and the source-prop name your `config/conventions/figma.yaml` already declares.
 
 ## The first round
 
@@ -89,25 +96,23 @@ Everything except the canvas is driven by [`specs run`](/cli/commands/run/), whi
 
 ## Decisions, gaps and suggestions
 
-Every round closes with a report. Three of its sections want something from you, and they mean different things.
+Every round closes with a report. Three of its sections want something from you.
 
 **Decisions** are judgment calls made where your prompt left room. They stand unless you change them.
 
-> **D1 — `cornerRadius` takes four rungs, not the whole scale.** `None`, `L`, `XL` and `Max`, named as your shape tokens name them, with `None` as the default you asked for. Your scale has eleven rungs; "a few most relevant options" reads as the four that change the silhouette.
+> **D1 — `cornerRadius` takes four rungs, not the whole scale.** `None`, `L`, `XL` and `Max`, named as your shape tokens name them, defaulting to `None`. Your scale has eleven rungs; "a few most relevant options" reads as the four that change the silhouette.
 >
 > **D2 — `ratio` is ordered widest to tallest, `None` last.** `21:9`, `16:9`, `3:2`, `4:3`, `1:1`, `2:3`, `None`, defaulting to `None`.
 >
-> **D3 — the source prop is named from your conventions.** `config/conventions/figma.yaml` declares the Figma-side name, so the prop follows it rather than a name chosen here.
->
-> **D4 — the root takes `role: image`.** A recognised role concept, previously unused in this catalogue, and it is what the element is.
+> …
 
-**Gaps** are requirements the specification format could not carry. A requirement reaches this section only once the agent can name where it would have lived and why it does not fit — most then land in the extended requirements rather than being dropped.
+**Gaps** are requirements the format could not carry. A requirement reaches this section only once the agent can name where it would have lived and why it does not fit.
 
-> **G1 — no spec key binds an image prop to a painted fill.** `backgroundImage` accepts an image value or a token, never a binding, so a code-settable source has no surface in the spec. Carried in extended requirements, implemented in both platform files.
+> **G1 — no spec key binds an image prop to a painted fill.** `backgroundImage` accepts an image value or a token, never a binding, so a code-settable source has no surface in the spec. Carried in extended requirements instead.
 >
-> **G2 — `objectFit` could not be stated until the image registry had an entry.** It lives inside the image value on `backgroundImage`, which needs a registry entry to point at. Resolved once `specs fetch --only library,images` found the workspace image.
+> **G2 — `ratio: None` does not reach React.** The variant states it; the emitted sheet keeps the default ratio. The binding map declares this key as bound, so this is a platform defect rather than a spec problem.
 >
-> **G3 — `ratio: None` does not reach React.** The variant states it; the emitted sheet keeps the default ratio. The binding map declares this key as bound, so this is a platform defect rather than a spec problem. Reset authored into both platform files.
+> …
 
 **Suggestions** are scope noticed and deliberately not taken. Nothing here is built unless you ask, which is what keeps a round from growing while you are not looking.
 
@@ -115,9 +120,9 @@ Every round closes with a report. Three of its sections want something from you,
 >
 > **S2 — a `fit` prop** exposing contain beside the implied cover, for images that must not crop.
 >
-> **S3 — lazy loading, with `srcset` and `sizes`** for responsive sources. Would land as extended requirements with a React overlay.
+> …
 
-The report also lists the files written, the props that now exist, and the tokens applied, so you can see what changed without opening anything.
+The report also lists the files written, the props that now exist, and the tokens applied.
 
 ## Your response
 
@@ -127,43 +132,33 @@ Answer by number. Say nothing about the items you are happy with — silence acc
 >
 > D2 Great.
 >
-> D3 Favor prepending the visual property name for specificity — `topStartCornerRadius`, not `topStartRounded`. Propose that as a shape guideline too.
->
 > G1 The bridge now selects a frame with that fill; capture it to derive the source.
->
-> G3 Resolve it at worst with an extended requirement.
 >
 > S1 Declined.
 >
 > S2 Yes.
 >
-> S3 Yes — extended requirement with a React overlay.
+> …
 
-A reply like that produces a round that renames the prop across every variant, proposes the naming rule into [`specs/foundations/shape/guidelines.yaml`](/schema/documents/guidelines/), resolves the source, and builds the two accepted suggestions. The declined one is not raised again.
+A reply like that produces a round that resolves the source, builds the accepted suggestion, and leaves the declined one alone — it is not raised again.
 
 ## Extended requirements and guidelines
 
-Most of the component comes out of the specification on its own — the markup, the classes, the state selectors, the stories. Two documents carry what it cannot, and they are written for different people.
+Most of the component comes out of the specification on its own: markup, classes, state selectors, stories. Two documents carry what it cannot, and the split is who acts — a thing the component must do, against a thing its caller must do.
 
-**Extended requirements** ([`supplemental.yaml`](/schema/documents/supplemental/)) hold behavior the format cannot describe, for whoever builds and maintains the component. Each entry states a testable intent and names the schema path that would have carried it, so the document doubles as a standing record of where the format stops. The implementation sits in hand-authored files *beside* the generated ones — `component.tsx` for React, `component.ts` for Web Components — so regenerating never overwrites it. G1's image source and S3's lazy loading both land here.
+- **Extended requirements** ([`supplemental.yaml`](/schema/documents/supplemental/)) — behavior the format cannot describe, for whoever builds the component. Each entry states a testable intent and names the schema path that would have carried it, across eleven sections from anatomy to naming. The implementation sits in hand-authored files beside the generated ones, so regenerating never overwrites it. G1 lands here.
+- **Guidelines** ([`guidelines.yaml`](/schema/documents/guidelines/)) — what someone using the component must observe, each a statement carrying an obligation level. The prompt's request for guidance on the accessibility label is this shape. A prohibition pairs with its remedy in the same entry.
 
-Eleven sections are available: anatomy, props, styles, slot composition, events, accessibility, behavior, motion, layout, overrides and naming. An entry can be scoped to one platform where it only applies there.
-
-**Guidelines** ([`guidelines.yaml`](/schema/documents/guidelines/)) hold what someone *using* the component must observe, each as a statement carrying an obligation level — must, should, should-not, must-not, may. The image prompt asks for usage guidance on the accessibility label, and that is exactly this shape: nothing the component does, everything its caller must do. A prohibition pairs with its remedy in the same entry, so a rule never tells someone to stop without telling them what to do instead.
-
-The split is who acts. A thing the component must do is an extended requirement; a thing its caller must do is a guideline. Both are shape-checked by `specs validate` alongside the three concern files.
-
-System-wide guidance is a third layer, and a separate job — [`specs-cli.guidelines.propose`](/cli/skills/guidelines-propose/) writes a concern's rules into `specs/foundations/<concern>/guidelines.yaml` from your own token and styling data, for a system owner to ratify.
+Both are shape-checked by `specs validate` alongside the three concern files. System-wide guidance is a third layer and a separate job: [`specs-cli.guidelines.propose`](/cli/skills/guidelines-propose/) writes a concern's rules into `specs/foundations/<concern>/guidelines.yaml` for a system owner to ratify.
 
 ## Concluding a component
 
 A finished component produces two outputs: the component, and what the round taught you about your system.
 
-**Debrief first.** The gaps are a list of places the schema, a binding map, or an emitter fell short of what you wanted, written while the evidence was in front of you. The declined suggestions say where you drew the line. Both are input to the system rather than to this component — a gap that recurs across three components is a schema proposal, and a platform defect named in a gap is a bug report with a reproduction already attached. Run the debrief before the context is gone.
-
-**Then ship it.** The rendered component on the canvas is a real Figma component: publish it with the library so designers can place it. Merge the spec folder and its two authored documents into your catalogue, and release the workspace with [`specs version`](/cli/commands/version/) — the [`specs-cli.version.release`](/cli/commands/skills/) skill sequences the report, the human review, the cut, the tag and the publish. The emitted React and Web Components builds go out with it, which is what puts the component into a prototyping kit rather than only into a specification.
-
-What a consumer receives at the end is the whole set: the spec, both implementations, the stories, the extended requirements, and the guidelines that say when to reach for it.
+- **Debrief while the evidence is in front of you.** The gaps name where the schema, a binding map or an emitter fell short; the declined suggestions mark where you drew the line. A gap that recurs across three components is a schema proposal, and a platform defect named in a gap is a bug report with a reproduction attached.
+- **Publish the component in Figma.** What `specs render` put on the canvas is a real Figma component — publish it with the library so designers can place it.
+- **Merge and release.** The spec folder and its two authored documents go into your catalogue, and [`specs version`](/cli/commands/version/) cuts the release; the [`specs-cli.version.release`](/cli/commands/skills/) skill sequences the report, the human review, the cut, the tag and the publish.
+- **Ship the kit.** The emitted React and Web Components builds go out with the release, which is what puts the component into a prototyping kit rather than only into a specification.
 
 ## Related
 
