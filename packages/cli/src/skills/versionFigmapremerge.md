@@ -1,5 +1,5 @@
 ---
-name: specs-cli.premerge
+name: specs-cli.version.figmapremerge
 description: Pre-merge impact report for a Figma feature branch — one command fetches both sides, generates both spec trees, and diffs them; stop for a human read of the report before any merge proceeds.
 ---
 <!--

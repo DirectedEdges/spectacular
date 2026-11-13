@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.38.0] - Unreleased
 
+### Breaking
+
+- **Two installed skills move under the `version` namespace they orchestrate**: `specs-cli.premerge` becomes `specs-cli.version.figmapremerge`, and `specs-cli.release` becomes `specs-cli.version.release`. Install writes by name and removes nothing, so delete the two old directories after upgrading.
+
 ### Added
 
 - **`specs author start <key>` opens an authoring round in one call**: a collision-checked component folder with all three concern templates — valid as shipped, so every validation error afterwards is the author's — plus the startup digest. `specs author status` prints the digest alone: catalogue, analysis freshness, conventions paths, and whether the pinned Storybook port answers.
