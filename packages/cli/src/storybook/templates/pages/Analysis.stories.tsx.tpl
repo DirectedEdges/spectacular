@@ -45,7 +45,7 @@ function SpecsTab() {
         <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid rgba(0,0,0,0.1)', marginBottom: 12 }}>
           {FILES.map((f) => (
             <button key={f} style={tabStyle(f === file)} onClick={() => setFile(f)}>
-              {f.replace(/^{{ANALYSIS_ID}}\.?/, '') || f}
+              {f.replace(/^{{ANALYSIS_ID}}[./]?/, '') || 'index'}
             </button>
           ))}
         </div>
