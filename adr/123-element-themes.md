@@ -394,6 +394,7 @@ variants:
 
 - **Reach.** `Elements` is one type. Declaring `themes` on `Element` gives it to `Variant.elements`, `Composition.elements`, `SlotContent.elements` and the subcomponent element maps at once. The concern documents (`component-concern.schema.json`, `composition-concern.schema.json`) `$ref` into `component.schema.json` for `Variant`, `Variants` and `SlotContentMap`, so they inherit the property with no edit of their own.
 - **Optional, and absence is not a default.** An absent `themes` means the element pinned nothing, not that it pinned a collection's default mode. The two are distinct and both are expressible.
+- **Every key is a name.** A pin whose collection cannot be resolved to a name is not written — a raw identifier never appears as a key, which is what keeps the join to `$token` paths total rather than conditional.
 - **No value validation.** Collection and mode names are open strings; the token source owns that vocabulary. A misspelled name validates clean. This is a known gap, named in Decision 4 Option C with the condition under which to revisit it.
 - **Out of scope — configuration-bound pins.** A value is a mode name, never a `PropBinding`, so a pin cannot vary with a prop. The map shape admits that widening later without a reshape, exactly as `Element.content` and `Styles.visible` are shaped.
 - **Out of scope — non-overridable pins.** This model lets any ancestor or descendant override a pin. A component that must hold its own mode against every ambient context needs a stronger semantic than inheritance, and it is not decided here.
@@ -425,6 +426,8 @@ variants:
 | `specs-plugin-2` | Recompile, then populate | Same capture responsibility as the REST path, so the two runtimes stay at parity. |
 
 No consumer breaks by ignoring the field: a spec with no pins is byte-identical to one generated today.
+
+Per-package adoption analysis: `specs-local-workspace/adr/123/plan.md` (maintained outside this repo).
 
 ---
 
