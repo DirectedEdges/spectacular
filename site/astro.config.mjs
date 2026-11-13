@@ -240,6 +240,7 @@ export default defineConfig({
             { label: 'scan', slug: 'cli/commands/scan' },
             { label: 'applyCustomTokens', slug: 'cli/commands/apply-custom-tokens' },
             { label: 'generate', slug: 'cli/commands/generate' },
+            { label: 'author', slug: 'cli/commands/author' },
             { label: 'build', slug: 'cli/commands/build' },
             { label: 'run', slug: 'cli/commands/run' },
             { label: 'cache', slug: 'cli/commands/cache' },
