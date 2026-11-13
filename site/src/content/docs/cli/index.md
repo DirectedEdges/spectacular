@@ -4,6 +4,8 @@ title: "CLI Overview"
 
 The Spectacular command-line interface (CLI) generates design system specifications from Figma REST API data without requiring the Figma Plugin UI. It enables automation, batch processing, and CI/CD integration.
 
+Specs can also be written by hand. An authored spec is identical in shape to a generated one, so a component that does not exist in the library yet can be specified first and rendered onto the canvas afterwards — see [Authoring a component](/guides/authoring-a-component/).
+
 ## Commands
 
 Most commands below do one job. Two do all of them in order.
@@ -17,12 +19,16 @@ Most commands below do one job. Two do all of them in order.
 | [`scan`](/cli/commands/scan/) | List all components in file | Markdown manifest |
 | [`applyCustomTokens`](/cli/commands/apply-custom-tokens/) | Inject `$custom` objects into fetched data | Modified variables/styles JSON |
 | [`generate`](/cli/commands/generate/) | Generate specs from a manifest or single component | YAML/JSON spec file(s) |
+| [`author`](/cli/commands/author/) | Open a hand-authoring round: the startup digest, and a valid folder for one new component | `specs/components/<key>/` with all three concern files |
+| [`validate`](/cli/commands/validate/) | Check specs against the schema and resolve every cross-file reference | Findings on stdout; nothing written |
 | [`analyze`](/cli/analyze/) | Run analyzers over generated specs | Reports in `analysis/` |
 | [`migrate`](/cli/commands/migrate/) | Convert older workspace layouts to the current one | Rewritten `config/` files |
 | [`version`](/cli/commands/version/) | Version the workspace: diffs, semver bumps, reports, changelogs | `versions/` folders, ledgers, reports |
-| [`skills`](/cli/commands/skills/) | Install the premerge and release orchestration skills | Skill files in `.claude/skills/` |
+| [`skills`](/cli/commands/skills/) | Install the orchestration skills that ship with the CLI | Skill files in `.claude/skills/` |
 | [`react`](/cli/commands/react/) *(experimental)* | Emit the React target | Components, contracts, stylesheets, stories in `react/` |
 | [`webcomponents`](/cli/commands/webcomponents/) *(experimental)* | Emit the Web Components target | Elements, contracts, stylesheets, stories in `webcomponents/` |
+| [`storybook`](/cli/commands/storybook/) *(experimental)* | Scaffold and publish the workspace Storybook — `init` writes the host, `publish` writes what it shows | `storybook/`, and its generated content |
+| [`testing`](/cli/commands/testing/) *(experimental)* | Visual testing over the emitted Storybook: Figma baselines for fidelity, accepted renders for regression | Shots, diffs and reports in `testing/visual/` |
 | [`bridge`](/cli/commands/bridge/) *(experimental)* | Start/stop/check the local bridge `render` talks to | Background process |
 | [`cache`](/cli/commands/cache/) *(experimental)* | Build the lookup tables `render` resolves specs against | YAML files in `{data.directory}/cache` |
 | [`render`](/cli/commands/render/) *(experimental)* | Send a spec to the CLI bridge to render it live in Figma | Live Figma component |
