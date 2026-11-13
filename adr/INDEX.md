@@ -4,6 +4,7 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
+| 123 | Element Themes — The Variable Modes an Element Pins | (reserved, draft on `123-element-themes`) |
 | 122 | Layout Grid — `layoutMode: GRID` and a Single Templated Axis | |
 | 119 | Overrides on Instance Elements | (reserved, draft in PR #915) |
 | 108 | The `$slotContent` Pointer Namespace | |
