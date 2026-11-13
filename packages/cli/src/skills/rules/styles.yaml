@@ -1,6 +1,7 @@
 # Judgment rules for variants.yaml elements.*.styles — keys are style properties or families.
-# Facts about the styles schema (which properties exist, where $token is legal) live in
-# specs-cli.author.styles; this file carries judgment only.
+# Facts about the styles schema — which properties exist, their shapes, where $token is
+# legal — live in the schema's own property descriptions (authority order #1), walked
+# through in references/styles.md beside this skill; this file carries judgment only.
 reports:
   guidelines:
     - should: "read `analysis/styling.byComponent.yaml` for how siblings style a property before authoring it — a raw literal is a last resort after the promotion map and the token set both come up empty"
