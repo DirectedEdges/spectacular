@@ -33,6 +33,7 @@ import { React } from './commands/react.js';
 import { WebComponents } from './commands/webcomponents.js';
 import { Render } from './commands/render.js';
 import { Validate } from './commands/validate.js';
+import { Author } from './commands/author.js';
 import { Bridge } from './commands/bridge.js';
 import { Version } from './commands/version.js';
 import { Skills } from './commands/skills.js';
@@ -90,6 +91,7 @@ export function createProgram(): Command {
   program.addCommand(WebComponents);
   program.addCommand(Analyze);
   program.addCommand(Validate);
+  program.addCommand(Author);
   program.addCommand(Render);
   program.addCommand(Bridge);
   program.addCommand(Version);

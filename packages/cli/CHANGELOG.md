@@ -5,6 +5,29 @@ All notable changes to `@directededges/specs-cli` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.38.0] - Unreleased
+
+### Breaking
+
+- **Two installed skills move under the `version` namespace they orchestrate**: `specs-cli.premerge` becomes `specs-cli.version.figmapremerge`, and `specs-cli.release` becomes `specs-cli.version.release`. Install writes by name and removes nothing, so delete the two old directories after upgrading.
+
+### Added
+
+- **`specs author start <key>` opens an authoring round in one call**: a collision-checked component folder with all three concern templates — valid as shipped, so every validation error afterwards is the author's — plus the startup digest. `specs author status` prints the digest alone: catalogue, analysis freshness, conventions paths, and whether the pinned Storybook port answers.
+
+### Changed
+
+- **The authoring skills stage preparation reads by file lifecycle**: a contract pack loads before `api.yaml` and a styling pack at `variants.yaml`, each in one batched read that is never reopened, cutting the reading a session does before its first spec write.
+
+- **`specs analyze foundations` writes one file per token type** under `analysis/foundations/`, with `analysis/foundations.yaml` reduced to an index of counts, theming collections, and the file map — a token lookup now reads that type's own small file. Icon glyphs move to `analysis/foundations/icons.yaml`, and the index's `summary.tokens` always enumerates every kind, a zero meaning the library has none.
+
+### Fixed
+
+- **The styles rules route schema shape questions to the schema's own property descriptions**, replacing a pointer to a skill name that no longer exists.
+
+### Removed
+
+
 ## [0.37.0] - 2026-11-12
 
 ### Breaking

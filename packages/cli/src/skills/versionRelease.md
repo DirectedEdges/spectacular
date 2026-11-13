@@ -1,5 +1,5 @@
 ---
-name: specs-cli.release
+name: specs-cli.version.release
 description: Release a spec workspace — pre-release report and changelog from the ledgers, human review, then cut the version, tag, and publish sequence with a stop at every gate.
 ---
 <!--

@@ -41,6 +41,7 @@ content).
 | `astro.config.mjs` | Nav (`sidebar` array), port 4323, component overrides, `pro`/`experimental` badge constants, accordion script |
 | `src/content/docs/` | All pages; directory = URL prefix; `index.md(x)` = section root |
 | `src/content/docs/cli/commands/` | One page per CLI command, named for the command as `packages/cli/src/commands/` now is — so a page, its command and its source file share a name. The set is 1:1 in both directions; the one difference is spelling, where the page is kebab-case and the command is camelCase (`apply-custom-tokens` ↔ `applyCustomTokens`) |
+| `src/content/docs/cli/skills/` | One page per skill `specs skills install` emits, named for the skill with its `specs-cli.` prefix dropped and dots kept (`states.setup` ↔ `states-setup.md`). Unlike commands the set is *not* 1:1 — a skill earns a page when it carries a judgment or a procedure worth reading; the roster of all of them is `cli/commands/skills.md` |
 | `src/content/docs/schema/` | Type pages + deep `styles/`/`typography/`/`effects/` property trees, plus cross-cutting pages that explain the contract rather than one node of it (`platform-neutrality`) |
 | `src/content/docs/code/` | One page per emitted artifact (`contract`, `scaffold`, `styles`, `stories`, `cssvars`) — what `specs react` / `specs webcomponents` write, linked from both command pages |
 | `src/content/docs/settings/` | One page per config key |
@@ -66,6 +67,10 @@ content).
     (`Property | Type | Required | Description`)
   - **CLI command**: intro → `bash` usage block → flag table with in-page
     anchors → `##` per mode; terminal output in bare fences
+  - **Skill**: intro → where `specs skills install` writes it → `## Prerequisites`
+    → `## Outline` (short bullets, one per step) → `## Related`. Kept small —
+    procedure belongs in a guide, and a judgment the skill makes gets a
+    `## Rationale` section rather than a longer outline
 - Code fences: `yaml` and `bash` dominate; use `ts` (not `typescript`);
   `tsx`/`css` appear in transform docs.
 - Cross-links are root-relative with trailing slash: `[scan](/cli/commands/scan/)`.

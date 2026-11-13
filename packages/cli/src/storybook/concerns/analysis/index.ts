@@ -27,16 +27,29 @@ export function discoverAnalyses(ws: Workspace): AnalysisEntry[] {
   const dir = resolveSpecsLayout(ws.specsDir).analysisDir();
   if (!fs.existsSync(dir)) return [];
   const byId = new Map<string, string[]>();
+  const add = (id: string, file: string): void => {
+    byId.set(id, [...(byId.get(id) ?? []), file]);
+  };
   for (const entry of fs.readdirSync(dir).sort()) {
+    // An analyzer may own a subdirectory of per-part files (foundations, ADR-096
+    // layout unaffected) — its pages belong to the directory's id.
+    if (fs.statSync(path.join(dir, entry)).isDirectory()) {
+      for (const child of fs.readdirSync(path.join(dir, entry)).sort()) {
+        if (child.endsWith('.yaml') || child.endsWith('.yml')) add(entry, `${entry}/${child}`);
+      }
+      continue;
+    }
     if (!entry.endsWith('.yaml') && !entry.endsWith('.yml')) continue;
     const id = entry.split('.')[0];
     if (!id) continue;
-    byId.set(id, [...(byId.get(id) ?? []), entry]);
+    add(id, entry);
   }
   return [...byId.entries()].map(([id, files]) => ({
     id,
     title: id.charAt(0).toUpperCase() + id.slice(1).replace(/[^A-Za-z0-9]/g, ''),
-    files,
+    // The id's own file (the index) leads; per-part files follow, sorted.
+    files: files.sort((a, b) =>
+      Number(a.includes('/')) - Number(b.includes('/')) || a.localeCompare(b)),
   }));
 }
 

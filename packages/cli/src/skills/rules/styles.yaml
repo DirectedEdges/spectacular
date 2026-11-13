@@ -1,12 +1,15 @@
 # Judgment rules for variants.yaml elements.*.styles — keys are style properties or families.
-# Facts about the styles schema (which properties exist, where $token is legal) live in
-# specs-cli.author.styles; this file carries judgment only.
+# Facts about the styles schema — which properties exist, their shapes, where $token is
+# legal — live in the schema's own property descriptions (authority order #1), walked
+# through in references/styles.md beside this skill; this file carries judgment only.
 reports:
   guidelines:
     - should: "read `analysis/styling.byComponent.yaml` for how siblings style a property before authoring it — a raw literal is a last resort after the promotion map and the token set both come up empty"
 tokens:
   guidelines:
-    - must: "resolve token names from `analysis/foundations.yaml` first — it is the complete token language as ready-to-paste `{$token, $type}` objects, with alias targets and the icon key spellings; `analysis/styling.byToken.yaml` adds usage precedent (which components already use a token where); never grep the raw data caches for spellings"
+    - must: "resolve token names from `analysis/foundations/<type>.yaml` first — each type's file is the complete token language for that type as ready-to-paste `{$token, $type}` objects, with alias targets (`analysis/foundations.yaml` is the index; icon key spellings sit in `foundations/icons.yaml`); `analysis/styling.byToken.yaml` adds usage precedent (which components already use a token where); never grep the raw data caches for spellings"
+    - must: "trust the index on existence — a zero in `analysis/foundations.yaml` `summary.tokens` means the library has no tokens of that kind (no file is written for it); use a literal and note the gap"
+      never: "re-run `specs analyze` or grep the caches over a zero count — the manifest is stale only when a kind is missing from `summary.tokens` altogether or the index predates the newest fetch"
     - must: "copy token paths exactly as the reports spell them — never a re-cased, re-segmented, or otherwise reformatted variant"
     - should: "use a token wherever the library has one for the property — a literal there is a consistency defect"
     - never: "invent a token name — a path that looks plausible for this system but appears in no report or cache"

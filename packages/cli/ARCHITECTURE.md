@@ -178,6 +178,8 @@ the work lives in the feature folder.
 | `applyCustomTokens` | Inject custom tokens into foundations |
 | `react`, `webcomponents` | Emit one platform target whole — component, contract, stylesheet, stories. Both are four lines over `emit/targets.ts`, which also holds the `emitTarget()` the chain calls in-process |
 | `analyze` | Dependency/prop/styling/key/role analyzers. Naming none runs every analyzer |
+| `validate` | Spec folders against the schema package plus the cross-file references JSON Schema cannot check; `--authored` downgrades the missing `metadata.source` to a warning. Reads only |
+| `author` | The authoring namespace: `status` prints the startup digest (catalogue, analysis freshness, conventions paths, posture — read-only); `start <key>` writes the collision-checked component folder with all three concern templates, valid as shipped, then prints the digest. Work in `src/author/` |
 | `render` | Spec → Figma via bridge |
 | `bridge` | start/stop/status for the daemon |
 | `version` | Spec workspace versioning: diff/history/bump/restore/premerge/report over `src/version/`. Free tier |

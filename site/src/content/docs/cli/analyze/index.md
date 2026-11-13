@@ -17,7 +17,7 @@ Compositions are read by the analyzers that have something to say about them. `d
 
 | Analyzer | Output | What it produces |
 |----------|--------|-----------------|
-| [`foundations`](/cli/analyze/foundations/) | `analysis/foundations.yaml` | The token language from fetched data — variables and named styles as ready-to-paste `{$token, $type}` objects, plus icon glyphs with their formatted key spellings. Runs on an empty catalogue |
+| [`foundations`](/cli/analyze/foundations/) | `analysis/foundations.yaml` index + `analysis/foundations/<type>.yaml` per token type + `foundations/icons.yaml` | The token language from fetched data — variables and named styles as ready-to-paste `{$token, $type}` objects, plus icon glyphs with their formatted key spellings. Runs on an empty catalogue |
 | [`props`](/cli/analyze/props/) | `analysis/props.yaml` | Cross-library prop inventory — frequency, enum discordance, API surface, slots |
 | [`styling`](/cli/analyze/styling/) | `analysis/styling.byComponent.json`, `analysis/styling.byToken.json`, `analysis/styling.unused.json` | Token usage indexed by component and by token name, plus tokens no spec references |
 | [`dependencies`](/cli/analyze/dependencies/) | `analysis/dependencies.graph.json`, `analysis/dependencies.byComponent.json` | Component dependency graph — blast radius of a change, and which props consumers configure |
