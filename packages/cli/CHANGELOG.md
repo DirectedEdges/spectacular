@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The authoring skills stage preparation reads by file lifecycle**: a contract pack loads before `api.yaml` and a styling pack at `variants.yaml`, each in one batched read that is never reopened, cutting the reading a session does before its first spec write.
+
+### Fixed
+
+- **The styles rules route schema shape questions to the schema's own property descriptions**, replacing a pointer to a skill name that no longer exists.
+
 ### Removed
 
 
