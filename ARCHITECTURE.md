@@ -72,15 +72,27 @@ enum values except external standards (DTCG, CSS Color 4).
 
 ## The sync set
 
-One schema change fans out across five surfaces, all manually synchronized —
+One schema change fans out across seven surfaces, all manually synchronized —
 the reason `/specs.consistency-check` exists:
 
 - `types/*.ts` ↔ `schema/*.schema.json`
 - `tests/*.test-d.ts`
 - `CHANGELOG.md`
 - `adr/NNN-*.md` + `adr/INDEX.md`
-- `site/src/content/docs/schema/**` (hand-written, `.md`/`.mdx`, including
-  `schema/documents/`; `docs/adr/` mirrors automatically at site build)
+- `SPECIFICATION.md` — only when the change carries a rule the JSON Schema
+  cannot express. §1.5's gradient governs: a leaf style member needs nothing,
+  and a cross-member rule needs a §9 `DSPEC-nn` row and usually a section
+- `mappings/bindings/*.json` — **not optional for a `Styles` key.** DSPEC-41
+  obliges a binding to declare a disposition for *every* property of `Styles`,
+  so a new key with no row is a specification violation, not a gap. Only
+  `figma.json` and `css.json` carry per-style-key rows; React and Web
+  Components bind props and anatomy, and their style story is the CSS one
+- `site/src/content/docs/schema/**` — mixed, and the distinction matters:
+  `schema/styles/**` is **generated** by `site/scripts/build-style-pages.mjs`
+  from `styles.schema.json` plus the binding files and is gitignored, so a
+  new style key's page appears by running that script, never by hand. The
+  rest (`schema/*.md`, `schema/documents/`) is hand-written and includes
+  `styles.md`'s own properties table. `docs/adr/` mirrors at site build
 
 ### The stylesheet sync set
 

@@ -157,6 +157,8 @@ Rebuilding two boxes from one requires a rule, since the merge does not record w
 
 Parent-layout keys go to both because the chain has two boxes and the children must arrange as they did in the collapsed one. Most are no-ops on the wrapper by construction — it holds exactly one child, so `itemSpacing` has nothing to space and the alignments have nothing to distribute, and its `layoutMode` axis cannot show.
 
+ADR-122 amends this table. `gridColumns` and `gridRows` join the parent-layout group, and that group goes to the slot box alone when `layoutMode` is `GRID` — the no-op premise above holds for a stacking axis and fails for a templated one, since a lone child in a three-track grid occupies one track. SPECIFICATION §6.6 and DSPEC-69 carry the rule.
+
 Values are never summed. A root with `padding: 8` and a slot with `padding: 12` collapses to `12` — the slot's value — and re-expands as `12` on both boxes. A slot carrying padding at all is an authoring mistake rather than a case the split rule has to accommodate: padding belongs to the box with the surface, and the slot has none.
 
 Visual styles stay on the root, where a surface belongs: the outer box is what a caller sees, and painting a background on the inner box would sit it inside any padding rather than behind it.

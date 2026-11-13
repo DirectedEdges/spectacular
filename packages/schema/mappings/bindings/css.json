@@ -460,6 +460,26 @@
         "onAbsentVerified": false,
         "basis": "implementation"
       },
+      "gridColumns": {
+        "disposition": "unsupported",
+        "module": [],
+        "declarations": null,
+        "notes": "Not emitted. The transform has no awareness of the key, so a GRID container falls through to the stacking path and its track count is dropped with no warning. ADR-122 specifies the intended mapping — `grid-template-columns: repeat(n, 1fr)` for a count, `repeat(auto-fill, minmax(<minSize>px, 1fr))` for the adaptive form, and `auto-fit` when tracks collapse — and adoption is tracked separately.",
+        "rule": "autoLayout",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "declaration"
+      },
+      "gridRows": {
+        "disposition": "unsupported",
+        "module": [],
+        "declarations": null,
+        "notes": "Not emitted, as `gridColumns`. ADR-122 specifies the intended mapping — the column-axis declarations transposed to `grid-template-rows`, with `grid-auto-flow: column` so children fill down each column.",
+        "rule": "autoLayout",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "declaration"
+      },
       "wrap": {
         "disposition": "bound",
         "module": [
