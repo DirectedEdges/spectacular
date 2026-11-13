@@ -12,13 +12,22 @@ description: Author a new component spec from a request — requirements split, 
 
 **Prerequisites:** `specs-cli.primer`, then `specs-cli.authoring.primer`. Load its `references/styles.md` before authoring `variants.yaml`, and its `references/slots-layout.md` before authoring any layout tree or slot.
 
-Templates ship beside this skill in `templates/` — `api.yaml`, `variants.yaml`, `examples.yaml`, `supplemental.yaml`, `guidelines.yaml`. Copy them; never author a file from a blank page or from another spec's structure.
+`specs author start <key>` writes the three concern templates for you (step 0). The other two templates ship beside this skill in `templates/` — `supplemental.yaml`, `guidelines.yaml`. Never author a file from a blank page or from another spec's structure.
 
-## 0. Ensure the posture
+## 0. Start: one command
 
-This procedure compiles live — saving a spec must re-emit into Storybook and onto the canvas. **The Storybook port comes from `storybook/package.json` — read it before any curl; never probe a guessed port.** If the posture is down (that port does not answer), run `specs-cli.posture` first; it is idempotent, so checking by running it is fine.
+```
+specs author start <key>
+```
 
-**Preparation is staged by file lifecycle, and each stage is one batched read.** Before `api.yaml`, load the **contract pack** in one call: the two primers, the rules files for the concepts this request touches, `config/conventions/*.yaml`, `analysis/props.yaml`, `analysis/dependencies.byComponent.yaml`, the component folder list, and `templates/api.yaml`. Nothing about styling belongs here — tokens, `references/styles.md`, and the styling reports are not used until `variants.yaml`, and loading them now dilutes the anatomy and props work they sit idle through. Before `variants.yaml` (step 5), load the **styling pack** in one call: `references/styles.md`, the `analysis/foundations/<type>` files for the token types this component needs, `analysis/styling.byToken.yaml` and `analysis/styling.byComponent.yaml` — plus `references/slots-layout.md` when the component has a layout tree or slot. A pack is read once and never reopened — returning to a skill or rules file later means the first read was skimmed, and re-reading is the largest avoidable cost measured in a round. Every remaining question is resolved *during* the file that raises it — one lookup per question, local schema first — never by reading ahead "to be safe." If you notice yourself reading a source the current file does not need, stop and write.
+One call writes `specs/components/<key>/` — collision-checked, all three concern files from the templates, `title` filled (pass `--title` when the request names one) — and prints the status digest: the catalogue, the analysis reports' paths and freshness, the conventions file list, and the posture (pinned Storybook port, up or down). The folder starts **valid**: it passes `specs validate <key> --authored` at zero edits, so every validation error you see afterwards is one you introduced.
+
+Read the digest instead of deriving its facts: no folder listing, no port probing, no analysis freshness checks. Two of its fields act:
+
+- `posture.up: false` — this procedure compiles live (saving a spec must re-emit into Storybook and onto the canvas), so run `specs-cli.posture`; it is idempotent. Never probe a guessed port yourself — the digest's port came from `storybook/package.json`.
+- `analysis.stale: true` — run `specs analyze` before correlating.
+
+**Preparation is staged by file lifecycle, and each stage is one batched read.** Before `api.yaml`, load the **contract pack** in one call: the two primers, the rules files for the concepts this request touches, `config/conventions/*.yaml` (the digest lists the paths), `analysis/props.yaml`, and `analysis/dependencies.byComponent.yaml` — the catalogue and templates are already in the start digest and on disk. Nothing about styling belongs here — tokens, `references/styles.md`, and the styling reports are not used until `variants.yaml`, and loading them now dilutes the anatomy and props work they sit idle through. Before `variants.yaml` (step 5), load the **styling pack** in one call: `references/styles.md`, the `analysis/foundations/<type>` files for the token types this component needs, `analysis/styling.byToken.yaml` and `analysis/styling.byComponent.yaml` — plus `references/slots-layout.md` when the component has a layout tree or slot. A pack is read once and never reopened — returning to a skill or rules file later means the first read was skimmed, and re-reading is the largest avoidable cost measured in a round. Every remaining question is resolved *during* the file that raises it — one lookup per question, local schema first — never by reading ahead "to be safe." If you notice yourself reading a source the current file does not need, stop and write.
 
 ## 1. Split the requirements
 
@@ -37,16 +46,16 @@ Rules: a requirement goes supplemental only after naming the schema path that ca
 Read, in order:
 
 1. `config/conventions/*.yaml` — the workspace's declared vocabulary: component naming, prop naming, platform idioms. A convention that names your component or its props settles the naming before anything else gets a vote; in an empty catalogue the conventions are the *only* place the system's vocabulary lives. `figma.yaml` in particular answers questions that otherwise read as judgment calls: `naming` (layer-name casing), `codeOnlyProps.match` (the code-only container layer), `glyphs` (icon naming), `images`, `subcomponents`, `instanceExamples`.
-2. The component folder list (`specs/components/`) — what exists to nest or emulate. The new component's folder key must not collide.
+2. The start digest's `catalogue` — what exists to nest or emulate (collisions were already checked at start).
 3. `analysis/props.yaml` — the system's prop vocabulary. Reuse a prop name and its value set when the concept matches; never coin a synonym for a prop the system already has.
 4. `analysis/dependencies.byComponent.yaml` — how components nest, for choosing `instanceOf` targets.
 5. `mappings/bindings/` in the schema package, for the **concepts this component actually touches** — a prop type, a role, a style key. Each concept carries a disposition, and the two that matter are `approximated` (the platform keeps something lossier than the spec says) and `bound` (the platform substitutes a value, such as emitting an authoring-default example as a fallback). Reading them here is half a minute and tells you up front what a surface will do with what you are about to write; reaching for them only after a surface looks wrong has cost whole rounds.
 
-If `analysis/` is missing or stale, run `specs analyze` first. A report that is empty at this catalogue size is skipped, not studied. When emulating the closest sibling, read **all three** of its concern files — the pattern a task hinges on has sat in the one file a session skipped. Decide and write down: components to nest and the closest sibling to emulate (idiom only — structure always comes from the schema). The token set is decided at step 5, from the styling pack — not here.
+If the digest said `analysis.stale: true`, run `specs analyze` first. A report that is empty at this catalogue size is skipped, not studied. When emulating the closest sibling, read **all three** of its concern files — the pattern a task hinges on has sat in the one file a session skipped. Decide and write down: components to nest and the closest sibling to emulate (idiom only — structure always comes from the schema). The token set is decided at step 5, from the styling pack — not here.
 
-## 3. Scaffold
+## 3. The folder is already started
 
-Create `specs/components/<key>/` (camelCase folder key). Copy each template in **at the step that authors it**, not all three upfront — an unauthored template still carries placeholders, and validating the folder would report them as errors that look like yours. Fill `metadata.concern` and `title`; leave `metadata.source` out — this spec is authored, not captured.
+Step 0 wrote all three concern files, valid as shipped — there is nothing to copy and nothing to scaffold by hand. The one-file-at-a-time order below governs *authoring*: work a file to done and validated before opening the next, and leave `metadata.source` out everywhere — this spec is authored, not captured.
 
 ## 4. Author api.yaml, then validate
 
@@ -56,7 +65,7 @@ Anatomy first (every element, typed), then props (reusing the catalogue's vocabu
 specs validate <key> --authored
 ```
 
-Zero errors before touching the next file. Fix the file the error names, re-run, repeat. Never proceed past a validation error — with one expected exception: **a slot-bearing component's `variants.yaml` fails once by design**, because its `children.examples[0]` `$slotContent` pointer targets an `examples.yaml` that does not exist yet. That dangling-pointer error means "author examples next," never "rework the binding."
+Zero errors before touching the next file. Fix the file the error names, re-run, repeat. Never proceed past a validation error — with one expected exception: **a slot-bearing component's `variants.yaml` fails once by design**, because its `children.examples[0]` `$slotContent` pointer targets a slot-content example you have not authored yet. That dangling-pointer error means "author examples next," never "rework the binding."
 
 ## 5. Author variants.yaml, then validate
 

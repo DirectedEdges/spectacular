@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`specs author start <key>` opens an authoring round in one call**: a collision-checked component folder with all three concern templates — valid as shipped, so every validation error afterwards is the author's — plus the startup digest. `specs author status` prints the digest alone: catalogue, analysis freshness, conventions paths, and whether the pinned Storybook port answers.
+
 ### Changed
 
 - **The authoring skills stage preparation reads by file lifecycle**: a contract pack loads before `api.yaml` and a styling pack at `variants.yaml`, each in one batched read that is never reopened, cutting the reading a session does before its first spec write.

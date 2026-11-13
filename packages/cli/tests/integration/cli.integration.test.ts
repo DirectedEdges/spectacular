@@ -123,4 +123,28 @@ describe('CLI integration', () => {
 
     await fs.remove(testDir);
   });
+
+  it('author start writes the three concern files and prints the digest', async () => {
+    const testDir = path.join(process.cwd(), 'tests', 'tmp', `cli-author-${Date.now()}`);
+    const configDir = path.join(testDir, 'config');
+    const specsDir = path.join(testDir, 'specs');
+    await fs.ensureDir(configDir);
+    await fs.writeFile(path.join(configDir, 'settings.yaml'), 'spec:\n  format: YAML\n');
+
+    const result = await runCli(['author', 'start', 'badge', '--config', configDir, '-o', specsDir]);
+
+    expect(result.exitCode).toBe(0);
+    for (const file of ['api.yaml', 'variants.yaml', 'examples.yaml']) {
+      expect(await fs.pathExists(path.join(specsDir, 'components', 'badge', file))).toBe(true);
+    }
+    const printed = result.stdout.join('\n');
+    expect(printed).toContain('badge');
+    expect(printed).toContain('catalogue');
+    expect(printed).toContain('posture');
+
+    const again = await runCli(['author', 'start', 'badge', '--config', configDir, '-o', specsDir]);
+    expect(again.exitCode).toBe(3); // FILE_ERROR — start never overwrites
+
+    await fs.remove(testDir);
+  });
 });
