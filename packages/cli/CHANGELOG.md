@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **The authoring skills stage preparation reads by file lifecycle**: a contract pack loads before `api.yaml` and a styling pack at `variants.yaml`, each in one batched read that is never reopened, cutting the reading a session does before its first spec write.
 
-- **`specs analyze foundations` writes one file per token type** under `analysis/foundations/`, with `analysis/foundations.yaml` reduced to an index of counts, theming collections, and the file map — a token lookup now reads that type's own small file. Icon glyphs move to `analysis/foundations/icons.yaml`.
+- **`specs analyze foundations` writes one file per token type** under `analysis/foundations/`, with `analysis/foundations.yaml` reduced to an index of counts, theming collections, and the file map — a token lookup now reads that type's own small file. Icon glyphs move to `analysis/foundations/icons.yaml`, and the index's `summary.tokens` always enumerates every kind, a zero meaning the library has none.
 
 ### Fixed
 

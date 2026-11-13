@@ -52,9 +52,14 @@ interface IconEntry {
 
 /** The index document — `analysis/foundations.yaml`. Entries live in the per-type files it maps. */
 interface FoundationsIndex {
+  /**
+   * `tokens` always enumerates the full kind vocabulary — every token type plus
+   * `icons` — so a zero is a statement that the library has none of that kind
+   * (no file is written for it), and a kind missing from the map altogether
+   * means the manifest predates the vocabulary.
+   */
   summary: {
     tokens: Record<string, number>;
-    icons: number;
   };
   /**
    * The theming axes: each variable collection and its mode names. Both authoring
@@ -176,8 +181,10 @@ export class FoundationsAnalyzer implements Transformer {
 
     const index: FoundationsIndex = {
       summary: {
-        tokens: Object.fromEntries([...byType].map(([t, entries]) => [t, entries.length])),
-        icons: icons.length,
+        tokens: {
+          ...Object.fromEntries(TYPE_ORDER.map(t => [t, byType.get(t)?.length ?? 0])),
+          icons: icons.length,
+        },
       },
       collections,
       files,

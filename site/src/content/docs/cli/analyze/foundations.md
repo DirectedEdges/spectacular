@@ -28,8 +28,7 @@ The index, `analysis/foundations.yaml` — counts, the theming collections, and 
 
 ```yaml
 summary:
-  tokens: { color: 96, dimension: 41, typography: 12, effects: 3 }
-  icons: 56
+  tokens: { color: 96, dimension: 41, string: 0, boolean: 0, typography: 12, effects: 0, icons: 56 }
 collections:
   - collection: Brand Color
     modes: [Light, Dark]
@@ -37,9 +36,10 @@ files:
   color: foundations/color.yaml
   dimension: foundations/dimension.yaml
   typography: foundations/typography.yaml
-  effects: foundations/effects.yaml
   icons: foundations/icons.yaml
 ```
+
+`summary.tokens` always enumerates every kind — the token types plus `icons` — so a zero is a statement that the library has none of that kind, and no file is written for it (here, `effects`). A kind missing from `summary.tokens` altogether means the manifest predates this vocabulary: re-run the analyzer.
 
 One file per token type, `analysis/foundations/<type>.yaml`:
 

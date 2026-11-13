@@ -8,8 +8,8 @@ reports:
 tokens:
   guidelines:
     - must: "resolve token names from `analysis/foundations/<type>.yaml` first — each type's file is the complete token language for that type as ready-to-paste `{$token, $type}` objects, with alias targets (`analysis/foundations.yaml` is the index; icon key spellings sit in `foundations/icons.yaml`); `analysis/styling.byToken.yaml` adds usage precedent (which components already use a token where); never grep the raw data caches for spellings"
-    - must: "read a type file absent from the index's `files` map as the library having no tokens of that type — the analyzer writes no empty files; use a literal and note the gap"
-      never: "re-run `specs analyze` or grep the caches because `analysis/foundations/<type>.yaml` does not exist — the manifest is stale only when the index itself is missing or predates the newest fetch"
+    - must: "trust the index on existence — a zero in `analysis/foundations.yaml` `summary.tokens` means the library has no tokens of that kind (no file is written for it); use a literal and note the gap"
+      never: "re-run `specs analyze` or grep the caches over a zero count — the manifest is stale only when a kind is missing from `summary.tokens` altogether or the index predates the newest fetch"
     - must: "copy token paths exactly as the reports spell them — never a re-cased, re-segmented, or otherwise reformatted variant"
     - should: "use a token wherever the library has one for the property — a literal there is a consistency defect"
     - never: "invent a token name — a path that looks plausible for this system but appears in no report or cache"

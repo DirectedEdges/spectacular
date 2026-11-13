@@ -68,7 +68,7 @@ Follow the primer's reports convention: `reports/<YYYY-MM-DD>.guidelines.<concer
 | `space`, `shape` | `analysis/foundations/dimension.yaml`, `analysis/styling.byComponent.yaml` |
 | `layout` | `styling.byComponent.yaml` flow/positioning usage (the concern covers layout *styling*; `layout` names the AST inside a spec) |
 | `props` | `analysis/props.yaml` |
-| `motion`, `elevation` | `analysis/foundations/effects.yaml` and `data/cache/styles.yaml` effects; absence of tokens is itself a finding for the ratifier |
+| `motion`, `elevation` | `analysis/foundations/effects.yaml` and `data/cache/styles.yaml` effects; a zero `effects` count in the index is itself a finding for the ratifier |
 
 A concern not in the table follows the same pattern: name the reports that evidence it, read only those.
 

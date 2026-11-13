@@ -121,6 +121,10 @@ describe('foundations analyzer', () => {
     expect(doc!.index.tokens).toBeUndefined();
     expect(doc!.index.icons).toBeUndefined();
     expect(doc!.index.summary.tokens.color).toBe(doc!.tokens.color.length);
+    // The summary enumerates every kind — a zero states the library has none,
+    // and no file is written for a zero kind.
+    expect(doc!.index.summary.tokens).toMatchObject({ string: 0, boolean: 0, effects: 0, icons: 2 });
+    expect(fs.existsSync(path.join(dir, 'analysis', 'foundations', 'effects.yaml'))).toBe(false);
     // Each per-type file names its own type.
     const colorDoc = yaml.parse(fs.readFileSync(path.join(dir, 'analysis', 'foundations', 'color.yaml'), 'utf-8'));
     expect(colorDoc.$type).toBe('color');
@@ -141,7 +145,7 @@ describe('foundations analyzer', () => {
       { name: 'Caret Right', key: 'caretRight' },
       { name: 'Info', key: 'info' },
     ]);
-    expect(doc!.index.summary.icons).toBe(2);
+    expect(doc!.index.summary.tokens.icons).toBe(2);
   });
 
   it('works from caches alone when no foundations data was loaded', async () => {
