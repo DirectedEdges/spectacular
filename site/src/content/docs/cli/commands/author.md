@@ -39,6 +39,7 @@ The folder starts **valid**: the templates are designed so a freshly started com
 | Option | Meaning |
 |--------|---------|
 | `--title <title>` | `start` only — the api document's display title |
+| `--kind <kind>` | `start` only — `component` (default) or `composition`. Composition starts are refused until their templates ship; the flag reserves the surface |
 | `--config <path>` | Path to a `config/` directory |
 | `-o, --output <dir>` | Specs directory (default: `spec.directory` from settings) |
 

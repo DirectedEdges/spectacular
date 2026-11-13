@@ -145,6 +145,13 @@ describe('CLI integration', () => {
     const again = await runCli(['author', 'start', 'badge', '--config', configDir, '-o', specsDir]);
     expect(again.exitCode).toBe(3); // FILE_ERROR — start never overwrites
 
+    // The surface is reserved ahead of the capability — refused until the
+    // composition templates are bundled, and nothing is written.
+    const composition = await runCli(['author', 'start', 'hero', '--kind', 'composition', '--config', configDir, '-o', specsDir]);
+    expect(composition.exitCode).toBe(2); // INVALID_ARGS
+    expect(composition.stderr.join('\n')).toContain('not yet supported');
+    expect(await fs.pathExists(path.join(specsDir, 'compositions'))).toBe(false);
+
     await fs.remove(testDir);
   });
 });

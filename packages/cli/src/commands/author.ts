@@ -75,10 +75,21 @@ Author.command('start')
   .description('Create specs/components/<key>/ with all three concern templates, then print the status digest')
   .argument('<key>', 'camelCase spec folder key for the new component')
   .option('--title <title>', 'Display title (default: derived from the key)')
+  .option('--kind <kind>', 'Spec kind: component or composition', 'component')
   .option('--config <path>', 'Path to a config/ directory')
   .option('-o, --output <dir>', 'Specs directory (default: spec.directory from settings)')
-  .action(async (key: string, options: AuthorOptions & { title?: string }) => {
+  .action(async (key: string, options: AuthorOptions & { title?: string; kind: string }) => {
     try {
+      if (options.kind === 'composition') {
+        // The surface is reserved ahead of the capability: composition authoring
+        // needs its own bundled templates, which do not exist yet.
+        console.error('Error: --kind composition is not yet supported — the composition templates are not yet bundled. Only component starts are available.');
+        process.exit(ERROR_CODES.INVALID_ARGS);
+      }
+      if (options.kind !== 'component') {
+        console.error(`Error: unknown kind "${options.kind}" — use component or composition.`);
+        process.exit(ERROR_CODES.INVALID_ARGS);
+      }
       const resolved = resolve(options);
       const start = startComponent({
         specsRoot: resolved.specsRoot,
