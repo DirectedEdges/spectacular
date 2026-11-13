@@ -63,12 +63,12 @@ Follow the primer's reports convention: `reports/<YYYY-MM-DD>.guidelines.<concer
 
 | Concern | Read |
 |---|---|
-| `color` | `analysis/foundations.yaml`, `analysis/styling.byToken.yaml`, `config/conventions/<platform>.primitives.yaml` |
-| `typography` | `foundations.yaml` typography tokens, `data/cache/styles.yaml`, the primitives map |
-| `space`, `shape` | `foundations.yaml` dimension tokens, `analysis/styling.byComponent.yaml` |
+| `color` | `analysis/foundations/color.yaml`, `analysis/styling.byToken.yaml`, `config/conventions/<platform>.primitives.yaml` |
+| `typography` | `analysis/foundations/typography.yaml`, `data/cache/styles.yaml`, the primitives map |
+| `space`, `shape` | `analysis/foundations/dimension.yaml`, `analysis/styling.byComponent.yaml` |
 | `layout` | `styling.byComponent.yaml` flow/positioning usage (the concern covers layout *styling*; `layout` names the AST inside a spec) |
 | `props` | `analysis/props.yaml` |
-| `motion`, `elevation` | `foundations.yaml` and `data/cache/styles.yaml` effects; absence of tokens is itself a finding for the ratifier |
+| `motion`, `elevation` | `analysis/foundations/effects.yaml` and `data/cache/styles.yaml` effects; absence of tokens is itself a finding for the ratifier |
 
 A concern not in the table follows the same pattern: name the reports that evidence it, read only those.
 
