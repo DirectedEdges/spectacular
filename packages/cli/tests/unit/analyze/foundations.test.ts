@@ -41,12 +41,28 @@ function fabricatedFoundations(): AnalyzerFoundations {
   return { variables, collections, styles };
 }
 
-async function report(foundations?: AnalyzerFoundations): Promise<Record<string, any> | undefined> {
+interface WrittenReport {
+  index: Record<string, any>;
+  /** Token type → the `tokens` list of `analysis/foundations/<type>.yaml`. */
+  tokens: Record<string, any[]>;
+  icons: any[];
+}
+
+async function report(foundations?: AnalyzerFoundations): Promise<WrittenReport | undefined> {
   const analyzer = new FoundationsAnalyzer();
   analyzer.setup({ dataDir: path.join(dir, 'data'), outputFormat: 'YAML', keys: 'CAMEL' });
   await analyzer.finalize(dir, path.join(dir, 'analysis'), foundations);
-  const file = path.join(dir, 'analysis', 'foundations.yaml');
-  return fs.existsSync(file) ? yaml.parse(fs.readFileSync(file, 'utf-8')) : undefined;
+  const indexFile = path.join(dir, 'analysis', 'foundations.yaml');
+  if (!fs.existsSync(indexFile)) return undefined;
+  const index = yaml.parse(fs.readFileSync(indexFile, 'utf-8'));
+  const tokens: Record<string, any[]> = {};
+  let icons: any[] = [];
+  for (const [key, rel] of Object.entries(index.files as Record<string, string>)) {
+    const doc = yaml.parse(fs.readFileSync(path.join(dir, 'analysis', rel), 'utf-8'));
+    if (key === 'icons') icons = doc.icons;
+    else tokens[key] = doc.tokens;
+  }
+  return { index, tokens, icons };
 }
 
 describe('foundations analyzer', () => {
@@ -81,7 +97,7 @@ describe('foundations analyzer', () => {
       platformNames: ['web'],
     });
     expect(doc!.tokens.dimension[0].defaultValue).toBe(24);
-    expect(doc!.collections).toContainEqual({ collection: 'Brand Color', modes: ['Light', 'Dark'] });
+    expect(doc!.index.collections).toContainEqual({ collection: 'Brand Color', modes: ['Light', 'Dark'] });
     // Names only — no resolved value anywhere on the entry.
     expect(JSON.stringify(primary)).not.toMatch(/"r"|"#"|valuesByMode/);
 
@@ -93,13 +109,39 @@ describe('foundations analyzer', () => {
     expect(JSON.stringify(doc)).not.toContain('Grid/Page');
   });
 
+  it('writes a slim index mapping each type to its own file', async () => {
+    const doc = await report(fabricatedFoundations());
+    expect(doc!.index.files).toEqual({
+      color: 'foundations/color.yaml',
+      dimension: 'foundations/dimension.yaml',
+      typography: 'foundations/typography.yaml',
+      icons: 'foundations/icons.yaml',
+    });
+    // Entries live in the per-type files only, never in the index.
+    expect(doc!.index.tokens).toBeUndefined();
+    expect(doc!.index.icons).toBeUndefined();
+    expect(doc!.index.summary.tokens.color).toBe(doc!.tokens.color.length);
+    // Each per-type file names its own type.
+    const colorDoc = yaml.parse(fs.readFileSync(path.join(dir, 'analysis', 'foundations', 'color.yaml'), 'utf-8'));
+    expect(colorDoc.$type).toBe('color');
+  });
+
+  it('removes a stale per-type file on rebuild', async () => {
+    const partsDir = path.join(dir, 'analysis', 'foundations');
+    fs.mkdirSync(partsDir, { recursive: true });
+    fs.writeFileSync(path.join(partsDir, 'string.yaml'), 'stale');
+    const doc = await report(fabricatedFoundations());
+    expect(fs.existsSync(path.join(partsDir, 'string.yaml'))).toBe(false);
+    expect(doc!.index.files.string).toBeUndefined();
+  });
+
   it('lists icons with raw name and formatted key', async () => {
     const doc = await report(fabricatedFoundations());
     expect(doc!.icons).toEqual([
       { name: 'Caret Right', key: 'caretRight' },
       { name: 'Info', key: 'info' },
     ]);
-    expect(doc!.summary.icons).toBe(2);
+    expect(doc!.index.summary.icons).toBe(2);
   });
 
   it('works from caches alone when no foundations data was loaded', async () => {
@@ -113,5 +155,6 @@ describe('foundations analyzer', () => {
     fs.rmSync(path.join(dir, 'data'), { recursive: true, force: true });
     const doc = await report(undefined);
     expect(doc).toBeUndefined();
+    expect(fs.existsSync(path.join(dir, 'analysis', 'foundations'))).toBe(false);
   });
 });
