@@ -96,6 +96,10 @@
         "title": {
           "type": "string"
         },
+        "styles": {
+          "$ref": "styles.schema.json#/definitions/Styles",
+          "description": "The example instance's own styles — its box, not its content's (ADR-124). An author-resized example records layoutSizingHorizontal: FIXED and width (raw px); an example left at its component's natural size (HUG) omits this property entirely. A rendering consumer applies these styles to the instantiated example as its final step."
+        },
         "propConfigurations": {
           "type": "object",
           "description": "Prop values for this example. Scalar types for scalar props; SlotContentRef for slot props; ObjectPropValue for object props (ADR-111); null when the prop is unset in this example (ADR-080). PropBinding is not permitted here.",

@@ -3,7 +3,7 @@
 **Branch**: `124-instance-example-styles`
 **Created**: 2026-11-14
 **Status**: DRAFT
-**Summary**: *(written at implementation — see `/specs.adr.implement`)*
+**Summary**: A `styles` property on `InstanceExample` records the authored box — `layoutSizingHorizontal: FIXED` and `width` — beside `title` and `propConfigurations`.
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
 

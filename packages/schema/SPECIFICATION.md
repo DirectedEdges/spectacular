@@ -295,6 +295,8 @@ A path MUST NOT descend through a slot fill: a filled slot is a reference, handl
 
 `InstanceExample.propConfigurations` does not accept `$nested`: deep configuration lives in `slotContentExamples` (schema: `component.schema.json`).
 
+`InstanceExample.styles` is the example instance's own box, not its content's: a producer records it only when the instance declares a non-`HUG` horizontal sizing — `layoutSizingHorizontal: 'FIXED'` with `width` in raw px — and omits it for an instance left at its component's natural size (DSPEC-65; ADR-124). A rendering consumer applies these styles to the instantiated example after configuration and content fills (DSPEC-66; ADR-124).
+
 ---
 
 ## 6. Slots, roles and composition
@@ -451,6 +453,8 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-62 | A directory under `foundations/` is named from the foundation concern vocabulary; a document schema validates contents and cannot validate the path that selects it | validator | §2.1, ADR-118 |
 | DSPEC-63 | A guidelines document carries rules only, and no table describing what each token is for | validator | §2.3, ADR-118 |
 | DSPEC-64 | An authored document is keyed for one concern vocabulary or the other, never both; `layout` and `motion` are in each and discriminate neither, so the scope is the path | schema: `supplemental.schema.json`, `guidelines.schema.json` | §2.1, ADR-118 |
+| DSPEC-65 | A producer MUST record `InstanceExample.styles` only for an example instance declaring non-`HUG` horizontal sizing — `layoutSizingHorizontal: 'FIXED'` with `width` in raw px — and MUST omit it otherwise | producer | §5.4, ADR-124 |
+| DSPEC-66 | A rendering consumer MUST apply `InstanceExample.styles` to the instantiated example after configuration and content fills | consumer | §5.4, ADR-124 |
 
 Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.
 

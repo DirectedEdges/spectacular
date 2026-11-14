@@ -1,6 +1,7 @@
 import { Scalar } from "./Scalar.js";
 import { SlotContentRef } from "./SlotContentRef.js";
 import { ObjectPropValue } from "./PropConfigurations.js";
+import { Styles } from "./Styles.js";
 
 /**
  * The value of one prop in an `InstanceExample`: a scalar, `null` when the prop
@@ -32,6 +33,16 @@ export type InstanceExampleConfigurationValue =
 export type InstanceExample = {
   /** Human-readable label for this example. */
   title?: string;
+
+  /**
+   * The example instance's own styles — its box, not its content's (ADR-124).
+   * An author-resized example records `layoutSizingHorizontal: 'FIXED'` and
+   * `width` (raw px), the box its interior fixed widths were measured against;
+   * an example left at its component's natural size (`HUG`) omits this property
+   * entirely. A rendering consumer applies these styles to the instantiated
+   * example as its final step. @since 0.41.0
+   */
+  styles?: Styles;
 
   /**
    * Prop values for this example. Scalar types for scalar props;
