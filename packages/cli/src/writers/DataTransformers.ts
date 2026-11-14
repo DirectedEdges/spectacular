@@ -55,6 +55,8 @@ export interface SubcomponentVariantsData {
 export interface ComponentExamplesData {
   slotContentExamples?: Record<string, any>;
   instanceExamples?: Record<string, any>;
+  /** Spike (no schema entry yet): canvas orientation of the captured examples. */
+  orientation?: 'HORIZONTAL' | 'VERTICAL';
   images?: Record<string, unknown>;
   subcomponents?: Record<string, SubcomponentExamplesData>;
   metadata: any;
@@ -199,6 +201,8 @@ export function splitComponentByConcern(data: Record<string, any>): {
   const examples: ComponentExamplesData = { metadata: data.metadata };
   if (data.slotContentExamples) examples.slotContentExamples = data.slotContentExamples;
   if (data.instanceExamples) examples.instanceExamples = data.instanceExamples;
+  // Spike (no schema entry yet): canvas orientation of the captured examples.
+  if (data.orientation) examples.orientation = data.orientation;
   // images registry (ADR-063) lives in the examples concern, beside
   // slotContentExamples — without this, --split-concerns would silently DROP
   // the registry and leave $image references dangling.
