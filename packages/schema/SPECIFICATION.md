@@ -297,6 +297,8 @@ A path MUST NOT descend through a slot fill: a filled slot is a reference, handl
 
 `InstanceExample.styles` is the example instance's own box, not its content's: a producer records it only when the instance declares a non-`HUG` horizontal sizing — `layoutSizingHorizontal: 'FIXED'` with `width` in raw px — and omits it for an instance left at its component's natural size (DSPEC-65; ADR-124). A rendering consumer applies these styles to the instantiated example after configuration and content fills (DSPEC-66; ADR-124).
 
+`instanceExamples` wraps its named `items` with the set-level `orientation` (ADR-125). A rendering consumer lays the examples out along the declared axis, and treats an absent `orientation` as `VERTICAL` (DSPEC-67).
+
 ---
 
 ## 6. Slots, roles and composition
@@ -455,6 +457,7 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-64 | An authored document is keyed for one concern vocabulary or the other, never both; `layout` and `motion` are in each and discriminate neither, so the scope is the path | schema: `supplemental.schema.json`, `guidelines.schema.json` | §2.1, ADR-118 |
 | DSPEC-65 | A producer MUST record `InstanceExample.styles` only for an example instance declaring non-`HUG` horizontal sizing — `layoutSizingHorizontal: 'FIXED'` with `width` in raw px — and MUST omit it otherwise | producer | §5.4, ADR-124 |
 | DSPEC-66 | A rendering consumer MUST apply `InstanceExample.styles` to the instantiated example after configuration and content fills | consumer | §5.4, ADR-124 |
+| DSPEC-67 | A rendering consumer MUST lay instance examples out along the declared `InstanceExamples.orientation`, treating an absent value as `VERTICAL` | consumer | §5.4, ADR-125 |
 
 Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.
 

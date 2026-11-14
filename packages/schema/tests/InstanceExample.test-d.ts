@@ -35,5 +35,9 @@ const styled: InstanceExample = {
 // @ts-expect-error — styles must be a Styles object, not a number
 const invalidStyles: InstanceExample = { styles: 354 };
 
-// Keyed record
-const examples: InstanceExamples = { card5: sized, bare };
+// The wrapper: orientation beside the keyed items record (ADR-125)
+const examples: InstanceExamples = { items: { card5: sized, bare } };
+const oriented: InstanceExamples = { orientation: 'VERTICAL', items: { card5: sized } };
+
+// @ts-expect-error: orientation admits only HORIZONTAL | VERTICAL
+const _badOrientation: InstanceExamples = { orientation: 'ROW', items: {} };

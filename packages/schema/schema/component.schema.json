@@ -129,13 +129,29 @@
     },
     "InstanceExamples": {
       "type": "object",
-      "description": "Named instance examples for this component.",
-      "examples": [{ "primaryDefault": { "title": "Primary", "propConfigurations": { "variant": "primary" } } }],
-      "patternProperties": {
-        "^[a-zA-Z0-9_-]+$": {
-          "$ref": "#/definitions/InstanceExample"
+      "description": "The component's instance examples: the named items and how they sit relative to each other (ADR-125).",
+      "examples": [{ "orientation": "HORIZONTAL", "items": { "primaryDefault": { "title": "Primary", "propConfigurations": { "variant": "primary" } } } }],
+      "properties": {
+        "orientation": {
+          "type": "string",
+          "description": "How the items sit relative to each other.",
+          "oneOf": [
+            { "const": "HORIZONTAL", "description": "The items sit in a row." },
+            { "const": "VERTICAL", "description": "The items sit in a column." }
+          ]
+        },
+        "items": {
+          "type": "object",
+          "description": "Named record of InstanceExample entries.",
+          "patternProperties": {
+            "^[a-zA-Z0-9_-]+$": {
+              "$ref": "#/definitions/InstanceExample"
+            }
+          },
+          "additionalProperties": false
         }
       },
+      "required": ["items"],
       "additionalProperties": false
     },
     "Anatomy": {

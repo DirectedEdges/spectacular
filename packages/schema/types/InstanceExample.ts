@@ -58,7 +58,22 @@ export type InstanceExample = {
 };
 
 /**
- * Named record of `InstanceExample` entries on `Component.instanceExamples`.
- * Keys are plain identifier strings (`^[a-zA-Z0-9_-]+$`).
+ * The component's instance examples: the named items and how they sit relative
+ * to each other (ADR-125). The wrapper keeps set-level facts out of the items
+ * record, whose keys are formatted layer names and could collide with any
+ * field folded in beside them.
  */
-export type InstanceExamples = Record<string, InstanceExample>;
+export interface InstanceExamples {
+  /**
+   * How the items sit relative to each other. Absent means `VERTICAL`.
+   * @since 0.41.0
+   */
+  orientation?: 'HORIZONTAL' | 'VERTICAL';
+
+  /**
+   * Named record of `InstanceExample` entries. Keys are plain identifier
+   * strings (`^[a-zA-Z0-9_-]+$`). Before 0.41.0 this record was
+   * `Component.instanceExamples` itself.
+   */
+  items: Record<string, InstanceExample>;
+}
