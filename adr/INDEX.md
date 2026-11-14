@@ -4,7 +4,6 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
-| 124 | Styles on InstanceExample | |
 | 123 | Element Themes — The Variable Modes an Element Pins | (reserved, draft on `123-element-themes`) |
 | 122 | Layout Grid — `layoutMode: GRID` and a Single Templated Axis | |
 | 119 | Overrides on Instance Elements | (reserved, draft in PR #915) |
@@ -23,6 +22,7 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
+| 124 | Styles on InstanceExample | `InstanceExample.styles` records the authored box — `layoutSizingHorizontal: FIXED` + `width` — applied by renders as the final step |
 | 121 | A Unit-Interval Style Type for `opacity` and `cornerSmoothing` | `UnitIntervalStyle` over a `UnitInterval` primitive; the bound is on the literal, since a token resolves on its own scale — often 0–100 |
 | 118 | Two Authored Documents Beside a Spec — `supplemental.yaml` for Builders, `guidelines.yaml` for Consumers | Two hand-authored documents carrying `meta` rather than Figma provenance; guidelines entries are DSDS 0.23.1 items; each schema self-contained |
 | 117 | A Library's Images Are Assets It Lays Out, Named by a Pattern | `images.match` becomes a `{i}` naming pattern over laid-out image assets; `images.component` alone names the designated image component |
