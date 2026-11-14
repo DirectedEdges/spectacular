@@ -2,7 +2,7 @@
 
 **Branch**: `feat/render-instance-examples`
 **Created**: 2026-11-14
-**Status**: DRAFT
+**Status**: ACCEPTED
 **Summary**: An `InstanceExamples` wrapper pairs the named `items` with their `orientation`, so a render reproduces the authored row or column.
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
