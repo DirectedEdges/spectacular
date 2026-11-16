@@ -393,9 +393,9 @@ Leave the groups alone; skip the collapse when the merged mode would be `GRID`.
 
 Figma disallows grid layout on a slot frame, so a designer who wants a slot whose items lay out as a grid places a grid frame inside the slot. The contract has no such restriction — a slot host is a `GRID` container the moment a spec says so. The two forms differ by one layer, and something has to reconcile them.
 
-#### Option 9A: A declared Figma convention naming the layer, whose children are a preview *(Selected)*
+#### Option 9A: A declared Figma convention naming the layer, folded when it is the slot's only child *(Selected)*
 
-A new platform convention, `figma.slotGrid.match`, names the declaration layer — `"Slot grid"` by convention. A slot whose only child is a `GRID` frame carrying that name is a grid slot, and the frame is a **declaration rather than content**: the slot takes `layoutMode: GRID`, the track count and the two gaps, and the frame's children preview that layout rather than filling the slot. So the slot reads **empty**.
+A new platform convention, `figma.slotGrid.match`, names the declaration layer — `"Slot grid"` by convention. A slot whose **only** child is a `GRID` frame carrying that name is a grid slot: the slot takes `layoutMode: GRID`, the track count and the two gaps, the frame is dropped, and the frame's own children become the slot's default content, read through it.
 
 ```yaml
 # Figma: component > slot frame > "Slot grid" frame > ten cards
@@ -403,14 +403,18 @@ A new platform convention, `figma.slotGrid.match`, names the declaration layer �
 elements:
   root:
     children:
-      $binding: '#/props/slot'   # empty — no content example
+      $binding: '#/props/slot'
+      examples:
+        - $slotContent: '#/components/testSlot1/slotContentExamples/testSlot1__slot__default'
     styles:
       layoutMode: GRID
       gridColumns: 5
       itemSpacing: { horizontal: 20, vertical: 20 }
 ```
 
-**Two collapses run, in order.** The declaration collapses onto its slot first, which leaves plain `root > slot` — and that is exactly the shape ADR-083's wrapper collapse already removes, so it collapses again. A grid slot therefore lands as one container carrying the grid with an empty default slot.
+**The only-child condition is what makes the fold safe**, and it carries the weight the name alone cannot. A slot holding the frame alongside anything else is holding content, not declaring a layout, so nothing is folded and the frame stays an ordinary element. The name says which frame is a declaration; the only-child condition says the designer meant the slot itself to be the grid rather than to put a grid inside it.
+
+**Two collapses run, in order.** The declaration collapses onto its slot first, which leaves plain `root > slot` — and that is exactly the shape ADR-083's wrapper collapse already removes, so it collapses again. A grid slot therefore lands as one container carrying the grid, with the declaration's children as the slot's content. The second collapse depends on the rest of the chain being empty: `root > wrapper > slot > Slot grid` still folds the grid onto the slot, and keeps its wrapper.
 
 **Pros**:
 
@@ -431,7 +435,7 @@ elements:
 
 Trigger on the child's `layoutMode` rather than its name, so no convention is needed.
 
-**Rejected because**: it cannot distinguish a slot declaring its own layout from a slot holding one grid of real content, and it resolves every such case as the former. That misreads a composed grid as the component's contract, and it does so without the designer having said anything. It also leaves the declaration's children as slot content, which makes the slot's shape depend on whatever happened to be previewed in it.
+**Rejected because**: it cannot distinguish a slot declaring its own layout from a slot holding one grid of real content, and it resolves every such case as the former. That misreads a composed grid as the component's contract, and it does so without the designer having said anything. The only-child condition narrows which slots are candidates; the name is what says the designer meant this one.
 
 ---
 
@@ -590,7 +594,7 @@ A declared minimum therefore survives a round trip only with an explicit carrier
 
 Both follow from the decisions above and neither changes `types/` or `schema/`.
 
-**The grid-into-slot flatten (Decision 9).** A slot whose only child is a `GRID` frame named by `figma.slotGrid.match` collapses: the slot takes `layoutMode: GRID`, the column count and the two gaps, and the frame's children are a preview rather than slot content, so the slot reads empty. Render splits it back into a slot frame holding one named grid frame. The flatten runs before the wrapper collapse below, which then removes the remaining `root > slot` pair.
+**The grid-into-slot flatten (Decision 9).** A slot whose only child is a `GRID` frame named by `figma.slotGrid.match` collapses: the slot takes `layoutMode: GRID`, the column count and the two gaps, the frame is dropped, and the frame's children become the slot's content. Render splits it back into a slot frame holding one named grid frame, with the slot's content inside that frame. The flatten runs before the wrapper collapse below, which removes the remaining `root > slot` pair when nothing else sits in the chain.
 
 **ADR-083's parent-layout group (Decision 8).** `gridColumns` and `gridRows` join that group, so a track count is never separated from the `layoutMode` it completes. The group's distribution gains one condition: to both boxes for `NONE`, `HORIZONTAL`, and `VERTICAL`; to the slot box alone for `GRID`, because a lone child in a templated grid occupies one track rather than laying out as it would in a stack. This amends an ACCEPTED ADR, and ADR-083 should carry a pointer to it.
 

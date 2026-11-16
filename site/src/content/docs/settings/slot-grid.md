@@ -23,7 +23,7 @@ slotGrid:
 
 ## Result
 
-The named frame is a declaration, not content. The slot takes its grid layout, and the frame's children preview that layout rather than filling the slot — so the slot reads empty.
+The named frame carries the layout, not the content. The slot takes its grid, and the frame's own children become the slot's default content — read through the frame rather than treated as sitting inside it.
 
 Given this in Figma:
 
@@ -31,16 +31,18 @@ Given this in Figma:
 TEST SLOT 1          (component)
 └─ Slot              (slot frame, no grid allowed here)
    └─ Slot grid      (frame, grid layout, 5 columns, 20px gaps)
-      └─ ten cards   (a preview of the layout)
+      └─ ten cards   (the slot's default content)
 ```
 
-The spec records the slot carrying the grid, with nothing in it:
+The spec records the slot carrying the grid, and the cards as its content:
 
 ```yaml
 elements:
   root:
     children:
       $binding: '#/props/slot'
+      examples:
+        - $slotContent: '#/components/testSlot1/slotContentExamples/testSlot1__slot__default'
     styles:
       layoutMode: GRID
       gridColumns: 5
@@ -49,7 +51,13 @@ elements:
         vertical: 20
 ```
 
-A consumer composing items into that slot gets grid cells, with nothing from the preview to override.
+The declaration frame itself is gone — its layout moved to the slot — so the content entry holds the ten cards directly, and a consumer composing items into that slot gets grid cells.
+
+## Only-child rule
+
+The frame must be the slot's **only** child. A slot holding it alongside anything else is holding content, not declaring a layout, so nothing is folded and the frame stays an ordinary element inside the slot.
+
+That is what makes the fold safe to key on a name: the name says which frame is a declaration, and the only-child condition says the designer meant the slot itself to be the grid rather than to put a grid in it.
 
 ## Collapse order
 
@@ -61,8 +69,7 @@ That second collapse depends on the rest of the chain being empty. A hierarchy o
 
 ## Omissions
 
-Three things on the declaration frame are dropped.
+Two things on the declaration frame are dropped. Its children are not among them — they become the slot's content.
 
-- **Its children.** They are the preview. Keeping them would make the component's contract depend on whatever was illustrated in it.
 - **Per-track sizing.** A declaration frame with individually sized rows or columns records only its column count, as [every grid does](/schema/styles/grid-columns/).
 - **Its own box and surface styles.** A frame that exists to hold a layout normally has none. A designer who puts padding or a background on it loses them.

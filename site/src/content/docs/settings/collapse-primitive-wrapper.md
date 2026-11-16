@@ -114,6 +114,8 @@ elements:
   root:
     children:
       $binding: '#/props/slot'
+      examples:
+        - $slotContent: '#/components/cardGrid/slotContentExamples/cardGrid__slot__default'
     styles:
       layoutMode: GRID
       gridColumns: 5

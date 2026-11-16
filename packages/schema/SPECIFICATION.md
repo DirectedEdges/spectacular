@@ -339,7 +339,9 @@ On an element the component owns, more than one `role` is an error; the array fo
 
 A slot element MAY carry `layoutMode: GRID`, making the items composed into it the cells of a grid. The leaf style vocabulary is governed by `styles.schema.json` and the reference pages (§1.5); the rules here are the ones that cross a structural boundary, which is what earns them a section.
 
-A producer MUST flatten a slot whose only child is a grid container named by the platform's `slotGrid` convention: the slot takes that container's `layoutMode` and track keys, and the container is dropped along with its children, so the slot carries no content (DSPEC-68; ADR-122). The flatten exists because a design tool may forbid grid layout on a slot frame while the contract does not, so the same intent arrives one layer deeper than the contract records it. The named container is a declaration rather than content: its children illustrate the layout, and treating them as the slot's fill would make a component's contract depend on what happened to be previewed in it.
+A producer MUST flatten a slot whose only child is a grid container named by the platform's `slotGrid` convention: the slot takes that container's `layoutMode` and track keys, the container is dropped, and the container's children become the slot's content (DSPEC-68; ADR-122). The flatten exists because a design tool may forbid grid layout on a slot frame while the contract does not, so the same intent arrives one layer deeper than the contract records it.
+
+The container must be the slot's **only** child. A slot holding it beside anything else is holding content rather than declaring a layout, and a producer MUST leave such a container as an ordinary element (DSPEC-68).
 
 Where the platform declares no such convention, the container is ordinary slot content and no flatten occurs (`producer`).
 
@@ -466,7 +468,7 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-65 | A resolved `styles` block carries a non-null value for at most one of `gridColumns` and `gridRows`; a grid templates one axis and sizes the other by content | validator | styles reference, ADR-122 |
 | DSPEC-66 | A variant layer that sets one of `gridColumns` or `gridRows` clears the other, written as an explicit `null` rather than omitted, since an omitted key inherits | producer | styles reference, ADR-122 |
 | DSPEC-67 | A consumer reading both axes non-null treats `gridColumns` as the templated axis and reports `gridRows` as unsupported, rather than choosing either silently | consumer | styles reference, ADR-122 |
-| DSPEC-68 | A slot whose only child is a grid container named by the platform's `slotGrid` convention is flattened into an empty grid slot, before wrapper collapse runs | producer | §6.6, ADR-122 |
+| DSPEC-68 | A slot whose only child is a grid container named by the platform's `slotGrid` convention takes that container's grid, and the container's children become the slot's content; a container sharing the slot with anything else stays an ordinary element | producer | §6.6, ADR-122 |
 | DSPEC-69 | Wrapper collapse carries the grid track keys with the `layoutMode` they complete, and distributes that group to the slot box alone when the mode is `GRID` | producer | §6.6, ADR-083/122 |
 
 Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.

@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Styles.gridColumns` and `Styles.gridRows` — typed as `GridTracks` (`number | AdaptiveGridTracks | null`); an integer fixes the count, and at most one of the two is non-null (ADR-122)
 - `AdaptiveGridTracks` — `{ minSize, collapseUnusedTracks? }`, fitting as many tracks as the container allows at that minimum; `collapseUnusedTracks` drops empty tracks so a short row stretches, and defaults to `false` (ADR-122)
 - `LayoutMode` — gains `'GRID'` alongside `'NONE'`, `'HORIZONTAL'` and `'VERTICAL'` (ADR-122)
-- **A slot can lay its content out as a grid, declared by a named layer** — `figma.slotGrid.match` names the frame a designer must nest because Figma forbids grid layout on a slot frame; the slot takes the grid and reads empty, and declaring the convention is the opt-in (ADR-122)
+- **A slot can lay its content out as a grid, declared by a named layer** — `figma.slotGrid.match` names the frame a designer must nest because Figma forbids grid layout on a slot frame; the slot takes its grid and the frame's children become the slot's content, folded only when that frame is the slot's sole child (ADR-122)
 - DSPEC-65 to DSPEC-69 — one templated axis, a variant layer clearing the other, which axis wins when both are set, and the two collapse rules a grid changes (ADR-122)
 
 ### ADRs
