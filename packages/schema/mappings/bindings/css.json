@@ -461,24 +461,32 @@
         "basis": "implementation"
       },
       "gridColumns": {
-        "disposition": "unsupported",
-        "module": [],
-        "declarations": null,
-        "notes": "Not emitted. The transform has no awareness of the key, so a GRID container falls through to the stacking path and its track count is dropped with no warning. ADR-122 specifies the intended mapping — `grid-template-columns: repeat(n, 1fr)` for a count, `repeat(auto-fill, minmax(<minSize>px, 1fr))` for the adaptive form, and `auto-fit` when tracks collapse — and adoption is tracked separately.",
+        "disposition": "bound",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": [
+          "grid-template-columns"
+        ],
+        "notes": "An integer emits `repeat(n, minmax(0, 1fr))` — `minmax(0, 1fr)` rather than a bare `1fr`, so a wide child cannot push its track past its share. The adaptive form emits `repeat(auto-fill, minmax(<minSize>, 1fr))`, and `auto-fit` when `collapseUnusedTracks` is set, which is exactly the distinction that boolean names.",
         "rule": "autoLayout",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
-        "basis": "declaration"
+        "basis": "implementation"
       },
       "gridRows": {
-        "disposition": "unsupported",
-        "module": [],
-        "declarations": null,
-        "notes": "Not emitted, as `gridColumns`. ADR-122 specifies the intended mapping — the column-axis declarations transposed to `grid-template-rows`, with `grid-auto-flow: column` so children fill down each column.",
+        "disposition": "bound",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": [
+          "grid-template-rows"
+        ],
+        "notes": "The column-axis forms transposed. Emitted only when `gridColumns` is absent: a spec templates one axis and sizes the other by content, so the untouched axis keeps the browser's implicit tracks.",
         "rule": "autoLayout",
         "onAbsent": "platformInitial",
         "onAbsentVerified": false,
-        "basis": "declaration"
+        "basis": "implementation"
       },
       "wrap": {
         "disposition": "bound",
