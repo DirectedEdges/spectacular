@@ -105,11 +105,9 @@ elements:
 
 As with a leaf, `$extensions.com.figma.name` carries the surviving layer's Figma name so the source layer remains traceable.
 
-### A grid slot collapses twice
+### Grid slots
 
-A slot whose content is laid out as a grid reaches this rule already collapsed once. Figma will not apply grid layout to a slot frame, so the grid is authored one layer inside it, and the [slotGrid](/settings/slot-grid/) convention names that frame and folds it onto the slot.
-
-What that first collapse leaves behind is a root wrapping one slot — the shape this rule removes. So the two run in sequence, and a grid slot lands as a single container carrying the grid:
+A slot laying its content out as a grid arrives here already collapsed once: the [slotGrid](/settings/slot-grid/) convention folds the grid frame onto the slot, which leaves a root wrapping one slot — the shape this rule removes. So a grid slot with nothing else in the chain lands as a single container carrying the grid.
 
 ```yaml
 elements:
@@ -121,7 +119,7 @@ elements:
       gridColumns: 5
 ```
 
-The order is fixed: the `slotGrid` collapse runs first. Reversed, this rule meets a root wrapping a slot that still holds a frame — not a shape it removes — and the wrapper survives into the spec.
+To learn more, read about the [slot grid](/settings/slot-grid/) convention.
 
 ## Roles on a collapsed root
 
