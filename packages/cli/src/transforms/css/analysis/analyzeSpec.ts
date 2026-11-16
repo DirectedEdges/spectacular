@@ -57,7 +57,12 @@ export function analyzeSpec(
   /** How a composed instance lays its default-slot content out. */
   slotDirection: SlotDirectionResolver = NO_SLOT_DIRECTION,
 ): SpecAnalysis {
-  const defaultBlock = variantsYaml.default as Record<string, unknown> | undefined;
+  // A component's variants document wraps its base state in `default`; a composition has
+  // no variants to vary against, so its `elements` and `layout` sit at the top level
+  // (ADR-109). Reading only `default` gave every composition an empty analysis, so every
+  // composition emitted a stylesheet with nothing in it but `box-sizing` — the scaffold
+  // wrote BEM classes that no rule ever matched.
+  const defaultBlock = (variantsYaml.default ?? variantsYaml) as Record<string, unknown> | undefined;
   const defaultElements = (defaultBlock?.elements ?? {}) as Record<string, Record<string, unknown>>;
   const variantList = (variantsYaml.variants ?? []) as Array<Record<string, unknown>>;
 
