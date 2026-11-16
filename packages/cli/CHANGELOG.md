@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking
 
+- **An authored `instanceExamples` block carries its examples under `items` (ADR-125)**: the block becomes `{ orientation?, items }`, so validation addresses `instanceExamples/items/<key>` and the authoring template scaffolds the wrapper. A spec written as a bare record of examples no longer validates — regenerate it, or move its entries under `items`.
+
 - **Two installed skills move under the `version` namespace they orchestrate**: `specs-cli.premerge` becomes `specs-cli.version.figmapremerge`, and `specs-cli.release` becomes `specs-cli.version.release`. Install writes by name and removes nothing, so delete the two old directories after upgrading.
 
 ### Added
