@@ -597,6 +597,14 @@ export class ConfigLoader {
       }
     }
 
+    // slotGrid (ADR-122) — a non-empty match string, else the block is dropped
+    if (raw.slotGrid !== undefined && raw.slotGrid !== null) {
+      const match = typeof raw.slotGrid === 'object' ? raw.slotGrid.match : undefined;
+      if (typeof match === 'string' && match.trim() !== '') {
+        platform.slotGrid = { match };
+      }
+    }
+
     // objectProps (ADR-111). Presence of the block is the on-switch; separator
     // defaults to "." inside a declared block. Absence means no folding.
     if (raw.objectProps !== undefined) {

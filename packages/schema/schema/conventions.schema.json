@@ -101,6 +101,25 @@
           ],
           "additionalProperties": false
         },
+        "slotGrid": {
+          "type": "object",
+          "description": "The layer declaring that a slot lays its content out as a grid, since the platform cannot apply grid layout to a slot frame itself. Absence means the library has no such convention.",
+          "examples": [
+            {
+              "match": "Slot grid"
+            }
+          ],
+          "properties": {
+            "match": {
+              "type": "string",
+              "description": "Literal layer name identifying the declaration frame."
+            }
+          },
+          "required": [
+            "match"
+          ],
+          "additionalProperties": false
+        },
         "subcomponents": {
           "type": "object",
           "description": "Subcomponent organization and naming. Absence means the library has no subcomponent convention.",

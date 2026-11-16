@@ -339,7 +339,11 @@ On an element the component owns, more than one `role` is an error; the array fo
 
 A slot element MAY carry `layoutMode: GRID`, making the items composed into it the cells of a grid. The leaf style vocabulary is governed by `styles.schema.json` and the reference pages (§1.5); the rules here are the ones that cross a structural boundary, which is what earns them a section.
 
-A producer MUST flatten a slot whose only child is a grid container: the slot host takes that container's `layoutMode` and track keys, the container's children become the slot's items, and the container itself is dropped (DSPEC-68; ADR-122). The flatten exists because a design tool may forbid grid layout on a slot frame while the contract does not, so the same intent arrives one layer deeper than the contract records it. A producer MUST run this flatten before wrapper collapse (§6.5), which otherwise meets a grid host its distribution rule has not accounted for (DSPEC-68).
+A producer MUST flatten a slot whose only child is a grid container named by the platform's `slotGrid` convention: the slot takes that container's `layoutMode` and track keys, and the container is dropped along with its children, so the slot carries no content (DSPEC-68; ADR-122). The flatten exists because a design tool may forbid grid layout on a slot frame while the contract does not, so the same intent arrives one layer deeper than the contract records it. The named container is a declaration rather than content: its children illustrate the layout, and treating them as the slot's fill would make a component's contract depend on what happened to be previewed in it.
+
+Where the platform declares no such convention, the container is ordinary slot content and no flatten occurs (`producer`).
+
+A producer MUST run this flatten before wrapper collapse (§6.5). The flatten leaves a root wrapping one slot, which is the shape that collapse removes, so the two run in sequence on a grid slot and a producer that reverses them leaves a wrapper standing (DSPEC-68).
 
 Wrapper collapse distributes a merged element's styles by what each style acts on. The track keys travel with the `layoutMode` they complete — a mode without them declares a layout it cannot perform — and when that mode is `GRID` the parent-layout group goes to the slot box alone rather than to both boxes (DSPEC-69; ADR-083, ADR-122). The both-boxes rule rests on those keys being near no-ops on a box holding exactly one child, which holds for a stacking axis and fails for a templated one: a lone child in a three-track grid occupies one track.
 
@@ -462,7 +466,7 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-65 | A resolved `styles` block carries a non-null value for at most one of `gridColumns` and `gridRows`; a grid templates one axis and sizes the other by content | validator | styles reference, ADR-122 |
 | DSPEC-66 | A variant layer that sets one of `gridColumns` or `gridRows` clears the other, written as an explicit `null` rather than omitted, since an omitted key inherits | producer | styles reference, ADR-122 |
 | DSPEC-67 | A consumer reading both axes non-null treats `gridColumns` as the templated axis and reports `gridRows` as unsupported, rather than choosing either silently | consumer | styles reference, ADR-122 |
-| DSPEC-68 | A slot whose only child is a grid container is flattened into a grid slot host, before wrapper collapse runs | producer | §6.6, ADR-122 |
+| DSPEC-68 | A slot whose only child is a grid container named by the platform's `slotGrid` convention is flattened into an empty grid slot, before wrapper collapse runs | producer | §6.6, ADR-122 |
 | DSPEC-69 | Wrapper collapse carries the grid track keys with the `layoutMode` they complete, and distributes that group to the slot box alone when the mode is `GRID` | producer | §6.6, ADR-083/122 |
 
 Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.

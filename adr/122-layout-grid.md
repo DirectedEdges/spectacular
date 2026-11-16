@@ -393,40 +393,45 @@ Leave the groups alone; skip the collapse when the merged mode would be `GRID`.
 
 Figma disallows grid layout on a slot frame, so a designer who wants a slot whose items lay out as a grid places a grid frame inside the slot. The contract has no such restriction — a slot host is a `GRID` container the moment a spec says so. The two forms differ by one layer, and something has to reconcile them.
 
-#### Option 9A: Collapse on structure — a slot whose only child is a grid frame *(Selected)*
+#### Option 9A: A declared Figma convention naming the layer, whose children are a preview *(Selected)*
 
-Capture collapses the pair: the slot host takes `layoutMode: GRID` and the track keys, the grid frame's children become the slot's items, and the grid frame is dropped. Render reverses it, emitting a slot frame containing one grid frame. The flatten runs **before** the ADR-083 wrapper collapse, so that collapse sees a grid host and applies Decision 8 rather than meeting a shape it has no rule for.
+A new platform convention, `figma.slotGrid.match`, names the declaration layer — `"Slot grid"` by convention. A slot whose only child is a `GRID` frame carrying that name is a grid slot, and the frame is a **declaration rather than content**: the slot takes `layoutMode: GRID`, the track count and the two gaps, and the frame's children preview that layout rather than filling the slot. So the slot reads **empty**.
 
 ```yaml
-# Figma: slot frame > grid frame > cards
-# Spec, after the flatten:
+# Figma: component > slot frame > "Slot grid" frame > ten cards
+# Spec, after both collapses:
 elements:
-  content:
-    slot: true
+  root:
+    children:
+      $binding: '#/props/slot'   # empty — no content example
     styles:
       layoutMode: GRID
-      gridColumns: 3
-      itemSpacing: 16
+      gridColumns: 5
+      itemSpacing: { horizontal: 20, vertical: 20 }
 ```
+
+**Two collapses run, in order.** The declaration collapses onto its slot first, which leaves plain `root > slot` — and that is exactly the shape ADR-083's wrapper collapse already removes, so it collapses again. A grid slot therefore lands as one container carrying the grid with an empty default slot.
 
 **Pros**:
 
-- The trigger is a declared fact. `layoutMode: 'GRID'` on the sole child is read from the data, not inferred from how a layer was named, so no library has to adopt a convention and no rename can break it.
-- It makes the rule recorded rather than applied at render time, which is what lets the component asset carry it and instances inherit it — an instance of the component composes items into the slot and they become cells, with no per-instance fixup.
-- It matches what the designer sees. The slot renders as a grid in Figma, and the spec says the slot is a grid.
+- A declaration layer is a Figma fact, which is what a platform convention records. It sits beside `codeOnlyProps.match`, which names a container layer for the same reason, and `glyphs.match`.
+- The name is what separates a slot *declaring* its layout from a slot *holding* a grid of real content. Structure cannot tell those apart, and reading the second as the first would move a nested grid's layout onto the component.
+- The declaration being empty is what makes the result a contract rather than an example: a consumer composes items into the slot and they become cells, with nothing from the fixture to override.
+- Declaring the convention is also the opt-in. A library that does not declare it keeps the grid frame as slot content, so no existing spec changes shape.
 
 **Cons / Trade-offs**:
 
-- A designer who deliberately wants a grid *element* inside a slot, rather than a grid *slot*, has no way to say so. That shape is indistinguishable from this one, and this reading wins.
+- A library must adopt and maintain the name, and a typo fails silently as a non-collapse rather than as an error.
+- The declaration frame's own box and surface styles are dropped. Nothing is lost on a frame that exists only to hold a layout — the one in the fixture is visually inert — but a designer who puts padding or a background on it loses it. Lifting those onto the slot the way ADR-083's merge does is the fix if a real case appears.
 - The flatten must run ahead of the wrapper collapse. An ordering dependency between two passes is a thing that can be got wrong silently.
 
 ---
 
-#### Option 9B: Collapse on a layer-name convention, such as `Slot grid` *(Rejected)*
+#### Option 9B: Collapse on structure — any slot whose only child is a grid frame *(Rejected)*
 
-Trigger the flatten on a named layer rather than on the child's layout mode.
+Trigger on the child's `layoutMode` rather than its name, so no convention is needed.
 
-**Rejected because**: the structure already carries the fact unambiguously, and name matching exists in this contract for cases where it does not — `primitives.match` (ADR-100) and `slots.default.match` (ADR-099) name a layer because nothing in the data says which layer is meant. Here `layoutMode: 'GRID'` on an only child says it. Adding a convention would make every library adopt and maintain a name to get behaviour the data already specifies, and a typo would fail silently as a non-collapse. It is the right mechanism for the Cons above, if that case ever turns out to be real.
+**Rejected because**: it cannot distinguish a slot declaring its own layout from a slot holding one grid of real content, and it resolves every such case as the former. That misreads a composed grid as the component's contract, and it does so without the designer having said anything. It also leaves the declaration's children as slot content, which makes the slot's shape depend on whatever happened to be previewed in it.
 
 ---
 
@@ -448,6 +453,8 @@ Trigger the flatten on a named layer rather than on the child's layout mode.
 | `Styles.ts` | Added exported type `GridTracks` | MINOR |
 | `Styles.ts` | Added exported interface `AdaptiveGridTracks` | MINOR |
 | `Styles.ts` | Added `'gridColumns'` and `'gridRows'` to `StyleKey` | MINOR |
+| `Conventions.ts` | Added `PlatformConventions.slotGrid` — `{ match: string }` | MINOR |
+| `Conventions.ts` | Added `ResolvedPlatformConventions.slotGrid` — same shape | MINOR |
 | `index.ts` | Re-export `GridTracks` and `AdaptiveGridTracks` | MINOR |
 
 **Example — new shape** (`types/Styles.ts`):
@@ -486,6 +493,7 @@ Styles:
 | `styles.schema.json` | Added definition `AdaptiveGridTracks` | MINOR |
 | `styles.schema.json` | Added definition `GridTracksStyleValue` | MINOR |
 | `styles.schema.json` | Added properties `gridColumns`, `gridRows` to `Styles` | MINOR |
+| `conventions.schema.json` | Added property `slotGrid` to the platform entry | MINOR |
 
 **Example — new shape** (`schema/styles.schema.json`):
 
@@ -582,7 +590,7 @@ A declared minimum therefore survives a round trip only with an explicit carrier
 
 Both follow from the decisions above and neither changes `types/` or `schema/`.
 
-**The grid-into-slot flatten (Decision 9).** A slot whose only child is a grid frame collapses: the slot host takes `layoutMode: GRID` and the track keys, the grid frame's children become the slot's items, and the frame is dropped. Render splits it back into a slot frame holding one grid frame. The flatten runs before the wrapper collapse below.
+**The grid-into-slot flatten (Decision 9).** A slot whose only child is a `GRID` frame named by `figma.slotGrid.match` collapses: the slot takes `layoutMode: GRID`, the column count and the two gaps, and the frame's children are a preview rather than slot content, so the slot reads empty. Render splits it back into a slot frame holding one named grid frame. The flatten runs before the wrapper collapse below, which then removes the remaining `root > slot` pair.
 
 **ADR-083's parent-layout group (Decision 8).** `gridColumns` and `gridRows` join that group, so a track count is never separated from the `layoutMode` it completes. The group's distribution gains one condition: to both boxes for `NONE`, `HORIZONTAL`, and `VERTICAL`; to the slot box alone for `GRID`, because a lone child in a templated grid occupies one track rather than laying out as it would in a stack. This amends an ACCEPTED ADR, and ADR-083 should carry a pointer to it.
 
@@ -635,7 +643,9 @@ The axis-clearing rule in Decision 7 additionally depends on how variant differe
 
 **Change class**: `MINOR` — for CHANGELOG placement, not a version bump.
 
-**Justification**: every change is additive. Two new optional `Styles` properties, two new exported types, one new member on an existing string-literal union, and two new members on `StyleKey`. No type signature, field name, field presence, or schema structure is removed or reshaped, and no existing spec changes meaning. The constitution's versioning rule — "`MINOR` for additive types or new optional fields" — applies directly.
+**Justification**: every change is additive. Two new optional `Styles` properties, two new exported types, one new member on an existing string-literal union, two new members on `StyleKey`, and one new optional platform convention. No type signature, field name, field presence, or schema structure is removed or reshaped, and no existing spec changes meaning. The constitution's versioning rule — "`MINOR` for additive types or new optional fields" — applies directly.
+
+`figma.slotGrid` is additive in behaviour as well as in shape: a library that does not declare it keeps a slot's grid frame as slot content, exactly as before this ADR.
 
 The `LayoutMode` widening is additive to the contract and still surfaces as a compile error in consumers whose switches are exhaustive. That is a property of exhaustive matching on an open-ended enum, not a breaking change to the contract, and the constitution classes it as additive.
 
