@@ -46,9 +46,12 @@ hook blocks it).
   adds role annotations to one page's components. `/annotate` is the only
   mutating endpoint besides `/render`, and it appends — it never assigns over an
   annotation already on a layer.
-- `npm run watch` rebuilds only `dist/specs.js` — **bridge/server changes need
-  an explicit `npm run build`** to refresh `dist/bridge-server.js`. That applies
-  to every module `server.ts` imports, not only the file itself.
+- `npm run watch` rebuilds only `dist/specs.js`. **`npm run watch:bridge-server`
+  is its pair** and rebuilds `dist/bridge-server.js`; both have to be running, or
+  a change under `src/bridge/` is live in the CLI and stale in the server that
+  actually answers. That applies to every module `server.ts` imports, not only the
+  file itself, and the failure is silent — the server keeps serving the old bundle,
+  so a new field simply never arrives.
 - **`server.ts` is the only module in `src/bridge/` that opens a port**, and
   keeping it that way is what makes the rest testable. Importing it to call a
   function starts a listener on 9001, so anything another module could own —

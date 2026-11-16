@@ -9,9 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking
 
+- **`instanceExamples` carries its examples under `items`** (ADR-125): regenerate an authored spec, or move its entries under `items`.
+
 - **Two installed skills move under the `version` namespace they orchestrate**: `specs-cli.premerge` becomes `specs-cli.version.figmapremerge`, and `specs-cli.release` becomes `specs-cli.version.release`. Install writes by name and removes nothing, so delete the two old directories after upgrading.
 
 ### Added
+
+- **`specs bridge status` reports which page each connected plugin is on**, by name and id:
+
+  ```
+  Bridge running (pid 41414). 1 plugin connected:
+    unsaved-lhe0t90miac (EGDS 2 UI kit) — connected
+      page: Testing (74085:0)
+  ```
+
+  The bridge has always identified a *file* by key and name, and has always asked the plugin for its current page id before every unpinned render — but reported neither the page nor its name, so the one thing a render cannot be checked for afterwards without opening the canvas was the one thing status would not tell you. The plugin now returns `figma.currentPage.name` alongside the id, `/status` asks every live connection in parallel, and a plugin that does not answer costs its own page line and nothing else. A plugin older than this still answers with an id alone, and the line prints `(unnamed)`.
+
+- **`npm run watch:bridge-server`**, the missing pair to `npm run watch`. The bridge server is a second bundle and had no watcher, so every change under `src/bridge/` stayed invisible until someone remembered a hand build — silently, because the old bundle keeps answering. Both watchers now have to run for the bridge to reflect source.
 
 - **`specs author start <key>` opens an authoring round in one call**: a collision-checked component folder with all three concern templates — valid as shipped, so every validation error afterwards is the author's — plus the startup digest. `specs author status` prints the digest alone: catalogue, analysis freshness, conventions paths, and whether the pinned Storybook port answers.
 

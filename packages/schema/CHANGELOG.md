@@ -7,9 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.41.0] - Unreleased
 
+### Breaking
+
+- `Component.instanceExamples` — `InstanceExamples` restructured to `{ orientation?, items }`; the former bare example record moves under `items` (ADR-125)
+
 ### Added
 
+- `InstanceExample.styles` — the example instance's own box, recorded when its horizontal sizing is not HUG (ADR-124)
+- `InstanceExamples.orientation` — how the examples sit relative to each other (`HORIZONTAL` or `VERTICAL`); absent means `VERTICAL` (ADR-125)
+
 ### Changed
+
+### Migration
+
+- `instanceExamples.<key>` → `instanceExamples.items.<key>`: read examples from `items`; regenerate specs or move existing entries under it
 
 ### Removed
 

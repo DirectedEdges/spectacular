@@ -281,8 +281,10 @@ describe('specs validate', () => {
         examples: {
           metadata: metadata('examples'),
           instanceExamples: {
-            stale: { title: 'Stale', propConfigurations: { appearance: 'danger' } },
-            ghost: { title: 'Ghost', propConfigurations: { tone: 'quiet' } },
+            items: {
+              stale: { title: 'Stale', propConfigurations: { appearance: 'danger' } },
+              ghost: { title: 'Ghost', propConfigurations: { tone: 'quiet' } },
+            },
           },
         },
       });
@@ -297,7 +299,10 @@ describe('specs validate', () => {
         examples: {
           metadata: metadata('examples'),
           instanceExamples: {
-            ok: { title: 'OK', propConfigurations: { appearance: 'success', disabled: false } },
+            orientation: 'HORIZONTAL',
+            items: {
+              ok: { title: 'OK', propConfigurations: { appearance: 'success', disabled: false } },
+            },
           },
         },
       });

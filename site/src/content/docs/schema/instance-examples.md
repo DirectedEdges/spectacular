@@ -8,10 +8,14 @@ An `InstanceExample` is a pre-configured usage of a *whole* component — a docu
 ```ts
 type InstanceExample = {
   title?: string;
+  styles?: Styles;
   propConfigurations?: Record<string, string | number | boolean | null | SlotContentRef | ObjectPropValue>;
 };
 
-type InstanceExamples = Record<string, InstanceExample>;
+interface InstanceExamples {
+  orientation?: 'HORIZONTAL' | 'VERTICAL';
+  items: Record<string, InstanceExample>;
+}
 ```
 
 ## Properties
@@ -19,6 +23,7 @@ type InstanceExamples = Record<string, InstanceExample>;
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | `title` | `string` | No | Human-readable label for this example |
+| `styles` | [`Styles`](/schema/styles/) | No | The example instance's own box — not its content's (since 0.41.0). An author-resized example records `layoutSizingHorizontal: FIXED` and `width` (raw px); an example left at its component's natural size (`HUG`) omits this property entirely |
 | `propConfigurations` | `Record<string, string \| number \| boolean \| null \| `[`SlotContentRef`](/schema/slot-content-ref/)` \| ObjectPropValue>` | No | Prop values — scalars for scalar props, a `SlotContentRef` for slot props, a member-keyed [`ObjectPropValue`](/schema/prop-configurations/) for object props (since 0.39.0), `null` for a prop this example leaves unset |
 
 A [`PropBinding`](/schema/prop-binding/) is **not** permitted in `propConfigurations` — an instance example is a static configuration, not a binding.
@@ -27,15 +32,16 @@ A [`PropBinding`](/schema/prop-binding/) is **not** permitted in `propConfigurat
 
 ```yaml
 instanceExamples:
-  cardWithHeader:
-    title: Card with a header
-    propConfigurations:
-      header:
-        $slotContent: "#/components/card/slotContentExamples/cardHeader"
-  cardWithoutHeader:
-    title: Card without a header
-    propConfigurations:
-      header: null
+  items:
+    cardWithHeader:
+      title: Card with a header
+      propConfigurations:
+        header:
+          $slotContent: "#/components/card/slotContentExamples/cardHeader"
+    cardWithoutHeader:
+      title: Card without a header
+      propConfigurations:
+        header: null
 ```
 
 Slot fills encountered inside an example instance are contributed to the shared [`slotContentExamples`](/schema/slot-content/) registry (de-duplicated against existing entries), so an `InstanceExample` holds no slot content of its own — only a `SlotContentRef` into that registry.
@@ -50,11 +56,12 @@ Below that first hop the ordinary rule applies. Inside the registry entry the re
 
 ```yaml
 instanceExamples:
-  cardInAList:
-    propConfigurations:
-      # the example's own default slot — a reference, because there is nowhere to nest
-      children:
-        $slotContent: "#/components/card/slotContentExamples/cardInAList__children"
+  items:
+    cardInAList:
+      propConfigurations:
+        # the example's own default slot — a reference, because there is nowhere to nest
+        children:
+          $slotContent: "#/components/card/slotContentExamples/cardInAList__children"
 
 slotContentExamples:
   cardInAList__children:
@@ -69,7 +76,21 @@ slotContentExamples:
 
 ## Registry shape
 
-`InstanceExamples` (`Record<string, InstanceExample>`) is the shape of `Component.instanceExamples`. Keys are plain identifier strings matching `^[a-zA-Z0-9_-]+$`.
+`InstanceExamples` is the shape of `Component.instanceExamples` (since 0.41.0, ADR-125): the named `items` and how they sit relative to each other.
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `orientation` | `'HORIZONTAL' \| 'VERTICAL'` | No | How the items sit relative to each other. Absent means `VERTICAL` |
+| `items` | `Record<string, InstanceExample>` | Yes | The named examples. Keys are plain identifier strings matching `^[a-zA-Z0-9_-]+$` |
+
+```yaml
+instanceExamples:
+  orientation: HORIZONTAL
+  items:
+    cardOffer1:
+      propConfigurations:
+        appearance: Secondary
+```
 
 ## Detection
 
