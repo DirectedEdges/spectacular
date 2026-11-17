@@ -1,0 +1,14 @@
+# A whole-component document must not carry metadata.concern — that key marks
+# a concern document (§2.2).
+kind: component
+expect: schema
+document:
+  metadata:
+    source: { pageId: '1:2', nodeId: '3:4', nodeType: COMPONENT_SET }
+    concern: api
+  title: Button
+  anatomy:
+    root: { type: container }
+  default:
+    elements:
+      root: {}

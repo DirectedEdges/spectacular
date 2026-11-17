@@ -1,0 +1,13 @@
+# Two slot props both claim defaultSlot: true; a component designates at most one.
+kind: component
+expect: DSPEC-06
+document:
+  title: Dialog
+  anatomy:
+    root: { type: container }
+  props:
+    header: { type: slot, defaultSlot: true }
+    body: { type: slot, defaultSlot: true }
+  default:
+    elements:
+      root: {}

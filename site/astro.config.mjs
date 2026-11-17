@@ -183,6 +183,15 @@ export default defineConfig({
               ],
             },
             {
+              label: 'Conformance',
+              collapsed: true,
+              items: [
+                { label: 'Overview', slug: 'schema/conformance' },
+                { label: 'Validator API', slug: 'schema/conformance/validator' },
+                { label: 'Conformance Suite', slug: 'schema/conformance/fixtures' },
+              ],
+            },
+            {
               // Cluster pages are deliberately NOT in the nav: a cluster is
               // reached from the platform page's Clusters table or from a key's
               // row, and forty generated rule pages would bury the five pages

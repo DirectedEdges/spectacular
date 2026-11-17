@@ -1,0 +1,13 @@
+# An enum prop's value list declares minItems 1: an empty axis is invalid, not
+# a synonym for "no values".
+kind: component
+expect: schema
+document:
+  title: Button
+  anatomy:
+    root: { type: container }
+  props:
+    variant: { type: string, default: primary, enum: [] }
+  default:
+    elements:
+      root: {}

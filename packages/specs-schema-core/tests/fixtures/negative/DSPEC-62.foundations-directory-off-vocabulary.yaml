@@ -1,0 +1,9 @@
+# The document sits under foundations/blur/, which is not a foundation
+# concern; the directory vocabulary is what selects the scope.
+kind: guidelines
+expect: DSPEC-62
+path: guidelines/foundations/blur/guidelines.yaml
+document:
+  color:
+    - statement: Blur values come from the elevation scale
+      level: should

@@ -1,0 +1,10 @@
+# A supplemental entry naming the schema surface that cannot carry it; the
+# pointer resolves (DSPEC-58's positive case).
+kind: supplemental
+path: specs/button/supplemental.yaml
+document:
+  accessibility:
+    - intent: The focus ring stays visible at 200% zoom
+      schemaGap:
+        path: 'styles.schema.json#/definitions/Styles/properties/effects'
+        need: Effects cannot express zoom-dependent visibility behaviour

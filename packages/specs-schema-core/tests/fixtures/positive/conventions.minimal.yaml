@@ -1,0 +1,11 @@
+# A declared images.component with its required non-empty sourceProps
+# (DSPEC-55's positive case).
+kind: conventions
+document:
+  platforms:
+    figma:
+      images:
+        match: 'Image / {i}'
+        backgroundImage: true
+        component: image
+        sourceProps: [src]

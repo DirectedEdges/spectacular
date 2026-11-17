@@ -6,6 +6,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
+import { checkRules, concernOfPath, mergeConcerns, type Violation } from '@directededges/specs-schema-core';
 import { concernValidators, describeAjvError, isMissingSourceError, type ConcernName } from './schemas.js';
 import {
   authoredFilesIn,
@@ -69,6 +70,19 @@ export interface ValidateResult {
 }
 
 const CONCERNS: readonly ConcernName[] = ['api', 'variants', 'examples'];
+
+/**
+ * Catalogue rules the reference layer (`references.ts`) already checks with
+ * workspace context — cross-file pointers, declared props, legal values. The
+ * in-document versions would double-report the same defects, so Layer 3 skips
+ * them.
+ */
+const WORKSPACE_CHECKED = new Set(['DSPEC-01', 'DSPEC-02', 'DSPEC-03', 'DSPEC-11', 'DSPEC-12', 'DSPEC-14']);
+
+/** Which concern file a merged-document violation path came from; root-spanning paths report under api. */
+function concernOf(violationPath: string): ConcernName {
+  return concernOfPath(violationPath) ?? 'api';
+}
 
 function readSpec(dir: string): { parsed: ParsedSpec; files: Partial<Record<ConcernName, string>>; failures: Finding[] } {
   const parsed: ParsedSpec = {};
@@ -214,6 +228,22 @@ export function runValidate(options: ValidateOptions): ValidateResult {
           path: ref.path || '/',
           message: ref.message,
           level: ref.level ?? 'error',
+        });
+      }
+
+      // Layer 3 — the specification's semantic rule catalogue (§9), run over
+      // the whole document the concern files carry between them. Each finding
+      // names its rule, the way the conformance suite requires.
+      const merged = mergeConcerns(parsed);
+      const catalogueKind = kind === 'component' ? 'component' : 'composition-concern';
+      for (const v of checkRules(merged, catalogueKind, { exclude: WORKSPACE_CHECKED }) as Violation[]) {
+        const concern = concernOf(v.path);
+        findings.push({
+          kind, spec: name,
+          file: files[concern] ?? `${concern}.yaml`,
+          path: v.path || '/',
+          message: `[${v.rule}] ${v.message}`,
+          level: 'error',
         });
       }
     }
@@ -380,6 +410,11 @@ function validateAuthored(
       seen.add(line);
       findings.push({ kind, spec, file: location.fileLabel, path: errPath, message, level: 'error' });
     }
+  }
+  // The authored-document catalogue rules: schemaGap pointers resolve
+  // (DSPEC-58), foundation directories use the vocabulary (DSPEC-62).
+  for (const v of checkRules(doc, location.kind, { documentPath: location.file })) {
+    findings.push({ kind, spec, file: location.fileLabel, path: v.path || '/', message: `[${v.rule}] ${v.message}`, level: 'error' });
   }
   return doc;
 }

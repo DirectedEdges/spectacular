@@ -1,0 +1,13 @@
+# Every colour space the schema admits is three-channel; four components do
+# not correspond to srgb's channels. (Alpha is its own member.)
+kind: component
+expect: DSPEC-40
+document:
+  title: Panel
+  anatomy:
+    root: { type: container }
+  default:
+    elements:
+      root:
+        styles:
+          backgroundColor: { colorSpace: srgb, components: [1, 0.4, 0, 0.5] }
