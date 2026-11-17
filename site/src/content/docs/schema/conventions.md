@@ -222,6 +222,8 @@ Authored at `config/conventions/figma.primitives.yaml` — a reserved basename i
 
 Each key is one of the design system's own component names. When [`promotePrimitives`](/settings/promote-primitives/) is on, a primitive layer in composed example content is promoted to an instance of the component whose entry best matches it.
 
+For writing the table rather than reading its reference — a worked entry per element type, what a source and a `values` key can be, and what `specs validate` warns about — see [Promoting Primitives](/guides/primitives/).
+
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `elementType` | `'text' \| 'glyph' \| 'container'` | *(required)* | The anatomy element type this component can be promoted from |

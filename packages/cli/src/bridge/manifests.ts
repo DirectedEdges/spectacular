@@ -108,15 +108,18 @@ export function buildManifest(spec: Record<string, unknown>, specsDir: string, d
     for (const [id, entry] of Object.entries(cache.entries)) {
       if (!entry.name) continue;
       const formatted = formatKey(entry.name, keyFormat);
-      // First occurrence wins. Distinct components can format to the same key (the transform
-      // is lossy), and nothing in the payload says which one a spec meant.
+      // A row carrying `fileKey` was written by a render here; one without came from a
+      // fetch, which is a snapshot an `--overwrite` since then may have invalidated. So
+      // rendered wins over fetched for the same formatted key. Within one provenance:
+      // fetched keeps the first, since distinct components can format to the same key and
+      // nothing says which a spec meant; rendered keeps the last, the most recent render.
       //
       // `key` is omitted rather than set to undefined when the entry has none: an entry a
       // render wrote is not published, so it has only a node id, and a `key: undefined`
       // would serialize into the payload as a published key the plugin would try to import.
-      if (!byFormattedName.has(formatted)) {
-        byFormattedName.set(formatted, entry.key ? { id, key: entry.key } : { id });
-      }
+      const rendered = Boolean(entry.fileKey);
+      if (!rendered && byFormattedName.has(formatted)) continue;
+      byFormattedName.set(formatted, entry.key ? { id, key: entry.key } : { id });
     }
     let added = 0;
     for (const name of referenced) {

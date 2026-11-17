@@ -10,6 +10,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { resolveSpecsLayout } from '../utilities/specsLayout.js';
+import { hostIsStale } from '../storybook/templates.js';
 
 export interface AnalysisFact {
   /** Workspace-relative path the report lives at (or would). */
@@ -33,10 +34,24 @@ export interface AuthorStatus {
   conventions: {
     files: string[];
   };
+  cache: {
+    /**
+     * True when a render lookup would be rejected as stale or missing; null when the
+     * workspace fetches nothing, so there is no cache to judge. Render treats it as fatal
+     * and runs last, so the digest is where it has to be answerable.
+     */
+    stale: boolean | null;
+  };
   posture: {
     /** The pinned Storybook port read from storybook/package.json; null when unreadable. */
     storybookPort: number | null;
     up: boolean;
+    /**
+     * True when the scaffolded host predates this CLI's templates; null when there is no
+     * stamp to compare. The port answering says nothing about the host behind it, and a
+     * stale one serves pages the emitters have already replaced.
+     */
+    hostStale: boolean | null;
   };
 }
 
@@ -54,6 +69,12 @@ export interface StatusInputs {
   workspaceRoot: string;
   /** Probe for the Storybook port; injectable for tests. */
   probe?: (port: number) => Promise<boolean>;
+  /**
+   * Whether a render's cache lookup would be rejected — computed by the caller, which
+   * holds the source aliases and glyph conventions `validateCache` needs. Undefined
+   * means it was not determined and is reported as null.
+   */
+  cacheStale?: boolean | null;
 }
 
 export async function buildStatus(inputs: StatusInputs): Promise<AuthorStatus> {
@@ -90,9 +111,13 @@ export async function buildStatus(inputs: StatusInputs): Promise<AuthorStatus> {
     conventions: {
       files: conventionsFiles(inputs.configDir, inputs.workspaceRoot),
     },
+    cache: {
+      stale: inputs.cacheStale ?? null,
+    },
     posture: {
       storybookPort: port,
       up: port !== null && (await probe(port)),
+      hostStale: hostIsStale(path.join(inputs.workspaceRoot, 'storybook')),
     },
   };
 }

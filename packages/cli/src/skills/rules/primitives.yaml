@@ -1,0 +1,51 @@
+# Judgment rules for authoring the promotion table — `config/conventions/figma.primitives.yaml`.
+# Keys mirror the schema node they govern.
+# useWhen: ordered, evaluate top to bottom, first match wins. guidelines: modality-keyed
+# items — must/never hard, should/avoid strong convention, could/warn judgment.
+# adr: the decision an item projects.
+#
+# The table is the one conventions file whose every side is checkable against artifacts the
+# workspace already holds: a target key is a spec folder, a written prop is in that spec's
+# api.yaml, and a `values` key is a token in the foundations analysis. Nothing enforces any
+# of it, so a wrong row is inert rather than reported — it silently promotes nothing.
+entry:
+  guidelines:
+    - must: "key an entry by the target component's own spec folder key — the promotion resolves to that component, so a key with no spec folder promotes nothing and reports nothing"
+      adr: [74, 75]
+    - must: "derive every row from the target's own `api.yaml` and `variants.yaml` — a written prop must exist on the target, and a written value must be a member of that prop's declared enum"
+      never: "write a prop name or enum value that reads plausibly for the library but appears in neither file"
+      adr: 75
+    - never: "declare two entries as synonyms for one concept — several entries may share an `elementType`, but they must be distinguishable by `match` or by which rules resolve, or selection comes down to declaration order"
+      adr: 100
+    - should: "record what you deliberately left unmapped, and why, in a comment at the top of the file — a library value with no row is indistinguishable from one nobody considered"
+source:
+  useWhen:
+    content: the text string or the glyph name — not a style
+    styles-member: a value the captured layer carries in `styles`
+    dotted-path: a member inside a composite style value, where the layer was styled ad hoc rather than with a named style
+  guidelines:
+    - must: "name a source the element type actually carries — the honoured set is closed per kind and listed in the conventions reference; a source outside it reads as undefined, so its rule never resolves and the entry loses the score it would have won"
+      never: "use `children` as a source — children are not a style. A promoted container's children become the target's slot content on their own, which is why that component's root must be the box they land in"
+      adr: [74, 90]
+    - must: "declare `typography` and the `typography.*` members as separate rules when one entry serves both a layer wearing a named text style and a layer styled ad hoc — they can never both resolve, so this is how one entry covers each"
+    - warn: "a source whose authored value space is open has no closed vocabulary to enumerate, so it matches nothing and stays styling — only a structural enum or a finite scale the library authors with can carry a `values` table"
+      adr: 90
+values:
+  guidelines:
+    - must: "write each key as a full token path or a raw scalar, exactly as the library spells it — nothing is matched partially and no key is derived from part of a token's name"
+      never: "write a token path the library does not hold — the row is dead and nothing says so"
+      adr: 75
+    - must: "spell a `layoutMode` absence as a `NONE` key — a frame with no auto-layout is what `NONE` means, and the absent value matches that key rather than nothing"
+      adr: 76
+    - could: "write several props from one key, and write a prop whose meaning differs from the source's — a colour in, an intent out"
+match:
+  guidelines:
+    - should: "declare `match` where a family of entries shares an `elementType` and their prop signatures are too alike for scoring to separate"
+      note: "a prefix, exact and case-sensitive, and the longest match wins — so selection never depends on the order the table is written in"
+      adr: 100
+    - warn: "an entry selected by `match` needs no rule in `map` to resolve, so a name alone can promote a layer whose every prop is a default"
+container:
+  guidelines:
+    - must: "declare a `container` entry only where the target's root is the box its children land in — a component wrapping its children in an inner element loses the gap, padding and alignment the promotion writes, and neither failure raises an error"
+      should: "declare no container entry at all where that does not hold; `text` and `glyph` are unaffected"
+      adr: 74

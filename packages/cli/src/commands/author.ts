@@ -12,6 +12,8 @@ import fs from 'fs-extra';
 import path from 'path';
 import yaml from 'yaml';
 import { ConfigLoader } from '../config/ConfigLoader.js';
+import type { CLIConfig } from '../config/types.js';
+import { validateCache } from '../cache/cache.js';
 import { buildStatus } from '../author/status.js';
 import { startComponent, StartKeyError, StartCollisionError } from '../author/start.js';
 import { ERROR_CODES } from '../utilities/errorCodes.js';
@@ -27,6 +29,7 @@ interface Resolved {
   dataDir?: string;
   workspaceRoot: string;
   format: 'YAML' | 'JSON';
+  cacheStale: boolean | null;
 }
 
 function resolve(options: AuthorOptions): Resolved {
@@ -37,13 +40,31 @@ function resolve(options: AuthorOptions): Resolved {
       ? path.resolve(config.settings.spec.directory)
       : path.resolve(process.cwd());
   const configDir = options.config ? path.resolve(options.config) : path.resolve('config');
+  const dataDir = config.settings.data?.directory ? path.resolve(config.settings.data.directory) : undefined;
   return {
     specsRoot,
     configDir: fs.existsSync(configDir) ? configDir : undefined,
-    dataDir: config.settings.data?.directory ? path.resolve(config.settings.data.directory) : undefined,
+    dataDir,
     workspaceRoot: process.cwd(),
     format: config.settings.spec.format === 'JSON' ? 'JSON' : 'YAML',
+    cacheStale: cacheStaleness(config, dataDir),
   };
+}
+
+/**
+ * The same judgment `specs render` makes, asked early. Lives here rather than in
+ * `buildStatus` because the source aliases and glyph conventions are held here.
+ */
+function cacheStaleness(config: CLIConfig, dataDir: string | undefined): boolean | null {
+  const aliases = Object.keys(config.settings.data?.sources ?? {});
+  if (!dataDir || aliases.length === 0) return null;
+  try {
+    const glyphs = config.conventions.platforms?.figma?.glyphs;
+    return validateCache({ dataDir, aliases, glyphs }).length > 0;
+  } catch {
+    // A digest never fails on a question it could not answer; null says "not determined".
+    return null;
+  }
 }
 
 function print(document: unknown, format: 'YAML' | 'JSON'): void {

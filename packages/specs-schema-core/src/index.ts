@@ -18,6 +18,7 @@ export {
   authoredValidator,
   concernValidators,
   describeAjvError,
+  describeAjvErrors,
   isMissingSourceError,
   schemaDir,
   schemaValidator,
