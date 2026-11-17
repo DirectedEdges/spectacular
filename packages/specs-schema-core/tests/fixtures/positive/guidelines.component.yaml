@@ -1,0 +1,8 @@
+# A component-scope guidelines document: rules only.
+kind: guidelines
+path: specs/button/guidelines.yaml
+document:
+  props:
+    - statement: Pass a label even when the button is icon-only
+      level: must
+      instead: Use the ariaLabel prop to carry the accessible name

@@ -1,0 +1,22 @@
+# equals is a binary operation; its args carry no compareTo operand.
+kind: component
+expect: DSPEC-29
+document:
+  title: Divider
+  anatomy:
+    root: { type: container }
+    caption: { type: text }
+  props:
+    showCaption: { type: boolean, default: true }
+  default:
+    elements:
+      caption:
+        styles:
+          visible:
+            if:
+              condition:
+                operation: equals
+                args:
+                  value: { $binding: '#/props/showCaption' }
+              then: true
+              else: false

@@ -1,0 +1,28 @@
+# Two registry entries fill each other: following $slotContent references
+# returns to the starting entry.
+kind: component
+expect: DSPEC-20
+document:
+  title: Nest
+  anatomy:
+    root: { type: container }
+  default:
+    elements:
+      root: {}
+  slotContentExamples:
+    a:
+      anatomy:
+        inner: { type: instance, instanceOf: nest }
+      elements:
+        inner:
+          propConfigurations:
+            children: { $slotContent: '#/slotContentExamples/b' }
+      layout: [inner]
+    b:
+      anatomy:
+        inner: { type: instance, instanceOf: nest }
+      elements:
+        inner:
+          propConfigurations:
+            children: { $slotContent: '#/slotContentExamples/a' }
+      layout: [inner]

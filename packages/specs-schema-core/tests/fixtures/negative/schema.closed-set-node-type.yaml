@@ -1,0 +1,13 @@
+# metadata.source.nodeType admits COMPONENT, COMPONENT_SET or FRAME; GROUP is
+# not among them.
+kind: component
+expect: schema
+document:
+  metadata:
+    source: { pageId: '1:2', nodeId: '3:4', nodeType: GROUP }
+  title: Button
+  anatomy:
+    root: { type: container }
+  default:
+    elements:
+      root: {}

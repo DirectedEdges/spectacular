@@ -1,0 +1,46 @@
+{
+  "name": "@directededges/specs-schema-core",
+  "version": "0.1.0",
+  "description": "Reference validator and conformance suite for the Specs document format - JSON Schema validation plus the specification's semantic rule catalogue, reporting every failure by rule identifier",
+  "license": "CC-BY-4.0",
+  "author": "Nathan Curtis <nathan@directededges.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DirectedEdges/spectacular.git",
+    "directory": "packages/specs-schema-core"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "specs",
+    "component",
+    "schema",
+    "validator",
+    "conformance",
+    "design-system"
+  ],
+  "dependencies": {
+    "@directededges/specs-schema": "file:../schema",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "yaml": "^2.3.4"
+  }
+}

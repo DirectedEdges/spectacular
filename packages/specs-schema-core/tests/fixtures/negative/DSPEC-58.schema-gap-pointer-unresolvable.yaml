@@ -1,0 +1,11 @@
+# The schemaGap.path is a JSON Schema pointer that resolves to nothing in the
+# file it names.
+kind: supplemental
+expect: DSPEC-58
+path: specs/button/supplemental.yaml
+document:
+  styles:
+    - intent: The pressed state darkens by one elevation step
+      schemaGap:
+        path: 'styles.schema.json#/definitions/NoSuchDefinition'
+        need: No such surface exists

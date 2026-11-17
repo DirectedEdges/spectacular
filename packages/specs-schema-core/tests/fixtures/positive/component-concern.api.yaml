@@ -1,0 +1,14 @@
+# A component api concern document: requires what it carries and nothing else
+# (§2.2). Validated against the concern file's root, which carries the choice
+# over document kinds.
+kind: component-concern
+document:
+  metadata:
+    source: { pageId: '1:2', nodeId: '3:4', nodeType: COMPONENT_SET }
+    concern: api
+  title: Button
+  anatomy:
+    root: { type: container }
+    label: { type: text }
+  props:
+    label: { type: string, examples: [Save] }

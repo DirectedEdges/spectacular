@@ -1,0 +1,15 @@
+kind: component-concern
+document:
+  metadata:
+    source: { pageId: '1:2', nodeId: '3:4', nodeType: COMPONENT_SET }
+    concern: examples
+  slotContentExamples:
+    textFill:
+      anatomy:
+        label: { type: text }
+      elements:
+        label: { content: Save }
+      layout: [label]
+  images:
+    hero:
+      src: ./images/hero.png

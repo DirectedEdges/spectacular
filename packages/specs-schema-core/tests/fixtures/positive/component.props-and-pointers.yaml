@@ -1,0 +1,77 @@
+# Every prop kind, and every in-document reference form: $binding, $ref to a
+# subcomponent, $slotContent into the registry, $image into the images
+# registry, $token.
+kind: component
+document:
+  title: Card
+  anatomy:
+    root: { type: container }
+    heading: { type: text }
+    icon: { type: glyph }
+    content: { type: slot }
+    header: { type: instance, instanceOf: { $ref: '#/subcomponents/cardHeader' } }
+  props:
+    isDisabled: { type: boolean, default: false }
+    label: { type: string, examples: [Save] }
+    variant: { type: string, default: primary, enum: [primary, secondary] }
+    count: { type: number, default: 0, enum: [0, 1, 2] }
+    badge:
+      type: object
+      members:
+        visible: { type: boolean, default: true }
+        tone: { type: string, default: neutral, enum: [neutral, positive] }
+    children: { type: slot, defaultSlot: true, minChildren: 1, maxChildren: 2, anyOf: [pill, $text] }
+  default:
+    configuration:
+      variant: primary
+      label: null
+      badge: { tone: positive }
+      children: { $slotContent: '#/slotContentExamples/pillFill' }
+    layout:
+      - root: [heading, icon, content]
+    elements:
+      root:
+        children: [heading, icon, content]
+        styles: { backgroundColor: '#FFFFFFFF', padding: 16 }
+      heading:
+        content: { $binding: '#/props/label' }
+        styles: { textColor: '#1B1B1BFF' }
+      icon:
+        styles: { fillColor: { $token: Color/On surface, $type: color } }
+      content:
+        children:
+          $binding: '#/props/children'
+          examples:
+            - { $slotContent: '#/slotContentExamples/pillFill' }
+        contentStyles:
+          $text: { textColor: '#1B1B1BFF' }
+  variants:
+    - configuration: { variant: secondary }
+      elements:
+        root: { styles: { backgroundColor: '#EEEEEEFF' } }
+  invalidPropCombinations:
+    - { isDisabled: true, variant: secondary }
+  subcomponents:
+    cardHeader:
+      title: Card header
+      anatomy:
+        root: { type: container }
+      default:
+        elements:
+          root: { styles: { padding: 16 } }
+  slotContentExamples:
+    pillFill:
+      anatomy:
+        pill: { type: instance, instanceOf: pill }
+      elements:
+        pill: {}
+      layout: [pill]
+  images:
+    hero:
+      src: ./images/hero.png
+  instanceExamples:
+    orientation: HORIZONTAL
+    items:
+      primary:
+        title: Primary
+        propConfigurations: { variant: primary }

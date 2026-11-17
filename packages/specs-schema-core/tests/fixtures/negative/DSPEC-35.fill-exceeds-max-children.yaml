@@ -1,0 +1,23 @@
+# The slot admits at most one child; the fill has two top-level items.
+kind: component
+expect: DSPEC-35
+document:
+  title: Card
+  anatomy:
+    root: { type: container }
+  props:
+    children: { type: slot, maxChildren: 1 }
+  default:
+    configuration:
+      children: { $slotContent: '#/slotContentExamples/pair' }
+    elements:
+      root: {}
+  slotContentExamples:
+    pair:
+      anatomy:
+        first: { type: instance, instanceOf: pill }
+        second: { type: instance, instanceOf: pill }
+      elements:
+        first: {}
+        second: {}
+      layout: [first, second]

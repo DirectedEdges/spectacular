@@ -6,6 +6,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
+import { checkRules, type Violation } from '@directededges/specs-schema-core';
 import { concernValidators, describeAjvError, isMissingSourceError, type ConcernName } from './schemas.js';
 import {
   authoredFilesIn,
@@ -69,6 +70,57 @@ export interface ValidateResult {
 }
 
 const CONCERNS: readonly ConcernName[] = ['api', 'variants', 'examples'];
+
+/**
+ * Catalogue rules the reference layer (`references.ts`) already checks with
+ * workspace context — cross-file pointers, declared props, legal values. The
+ * in-document versions would double-report the same defects, so Layer 3 skips
+ * them.
+ */
+const WORKSPACE_CHECKED = new Set(['DSPEC-01', 'DSPEC-02', 'DSPEC-03', 'DSPEC-11', 'DSPEC-12', 'DSPEC-14']);
+
+/** Which concern file a merged-document violation path came from, by its first recognised member. */
+const MEMBER_CONCERN: Record<string, ConcernName> = {
+  title: 'api', anatomy: 'api', props: 'api', invalidPropCombinations: 'api',
+  default: 'variants', variants: 'variants', elements: 'variants', layout: 'variants',
+  slotContentExamples: 'examples', instanceExamples: 'examples', images: 'examples', slotContent: 'examples',
+};
+
+function concernOf(violationPath: string): ConcernName {
+  for (const segment of violationPath.split('/')) {
+    const concern = MEMBER_CONCERN[segment];
+    if (concern) return concern;
+  }
+  return 'api';
+}
+
+/**
+ * The whole document the concern files carry between them — what the semantic
+ * rule catalogue evaluates, since its rules cross concerns (a configuration in
+ * variants against a prop in api). Subcomponents are sliced per concern
+ * (ADR-091), so their entries merge per key.
+ */
+function mergeConcerns(parsed: ParsedSpec): Record<string, unknown> {
+  const merged: Record<string, unknown> = {};
+  const subcomponents: Record<string, Record<string, unknown>> = {};
+  for (const doc of [parsed.api, parsed.variants, parsed.examples]) {
+    if (!doc) continue;
+    for (const [key, value] of Object.entries(doc)) {
+      if (key === 'metadata') continue;
+      if (key === 'subcomponents' && value && typeof value === 'object' && !Array.isArray(value)) {
+        for (const [name, slice] of Object.entries(value as Record<string, unknown>)) {
+          if (slice && typeof slice === 'object') {
+            subcomponents[name] = { ...subcomponents[name], ...(slice as Record<string, unknown>) };
+          }
+        }
+        continue;
+      }
+      merged[key] = value;
+    }
+  }
+  if (Object.keys(subcomponents).length > 0) merged.subcomponents = subcomponents;
+  return merged;
+}
 
 function readSpec(dir: string): { parsed: ParsedSpec; files: Partial<Record<ConcernName, string>>; failures: Finding[] } {
   const parsed: ParsedSpec = {};
@@ -214,6 +266,22 @@ export function runValidate(options: ValidateOptions): ValidateResult {
           path: ref.path || '/',
           message: ref.message,
           level: ref.level ?? 'error',
+        });
+      }
+
+      // Layer 3 — the specification's semantic rule catalogue (§9), run over
+      // the whole document the concern files carry between them. Each finding
+      // names its rule, the way the conformance suite requires.
+      const merged = mergeConcerns(parsed);
+      const catalogueKind = kind === 'component' ? 'component' : 'composition-concern';
+      for (const v of checkRules(merged, catalogueKind, { exclude: WORKSPACE_CHECKED }) as Violation[]) {
+        const concern = concernOf(v.path);
+        findings.push({
+          kind, spec: name,
+          file: files[concern] ?? `${concern}.yaml`,
+          path: v.path || '/',
+          message: `[${v.rule}] ${v.message}`,
+          level: 'error',
         });
       }
     }
@@ -380,6 +448,11 @@ function validateAuthored(
       seen.add(line);
       findings.push({ kind, spec, file: location.fileLabel, path: errPath, message, level: 'error' });
     }
+  }
+  // The authored-document catalogue rules: schemaGap pointers resolve
+  // (DSPEC-58), foundation directories use the vocabulary (DSPEC-62).
+  for (const v of checkRules(doc, location.kind, { documentPath: location.file })) {
+    findings.push({ kind, spec, file: location.fileLabel, path: v.path || '/', message: `[${v.rule}] ${v.message}`, level: 'error' });
   }
   return doc;
 }

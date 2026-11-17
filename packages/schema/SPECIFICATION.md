@@ -8,7 +8,7 @@ It is the normative root of the schema documentation. The per-member reference �
 
 The audience is engineers and automated agents equally. Section numbers and rule identifiers (`DSPEC-nn`) are stable citation targets: cite a requirement by its rule ID where it has one, and by section otherwise.
 
-> **Draft status.** The requirements and the rule catalogue (§9) are written. No conformance suite or reference validator exists yet (§10). A requirement marked `unenforced` is a statement of intent that nothing currently checks — a gap to close, not a claim to rely on.
+> **Draft status.** The requirements and the rule catalogue (§9) are written, and the reference validator and conformance suite exist (§10): `@directededges/specs-schema-core` checks a document against the schema for its kind and the catalogue's validator-class rules, reporting every failure by rule identifier. A requirement marked `unenforced` is a statement of intent that nothing currently checks — a gap to close, not a claim to rely on.
 
 ---
 
@@ -31,7 +31,7 @@ Every requirement ends with a parenthetical note naming what enforces it:
 | `(consumer)` | Binds consumers; visible only in their behaviour |
 | `(unenforced)` | Nothing currently checks it |
 
-A rule ID in the note means a validator implementing §9 checks it; until a validator exists, every `DSPEC-nn` is also effectively unenforced. A requirement that cannot be given an enforcement note does not belong in this document.
+A rule ID in the note means a validator implementing §9 checks it; the reference validator (§10) checks every validator-class rule except the two it names as uncheckable from a single document. A requirement that cannot be given an enforcement note does not belong in this document.
 
 ### 1.3 Terminology
 
@@ -51,7 +51,7 @@ A rule ID in the note means a validator implementing §9 checks it; until a vali
 | **Document** | A file conforming to §2–§8 | Generated and authored specs |
 | **Producer** | A tool that writes Specs documents | `specs generate`, the Figma plugin, hand authoring |
 | **Consumer** | A tool that reads Specs documents and acts on them | Platform transforms, the Figma render path, the docs generator |
-| **Validator** | A tool that decides conformance: schema plus §9 | None published — see §10 |
+| **Validator** | A tool that decides conformance: schema plus §9 | `@directededges/specs-schema-core` (§10) |
 
 ### 1.5 Scope and depth
 
@@ -459,20 +459,29 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-66 | A rendering consumer MUST apply `InstanceExample.styles` to the instantiated example after configuration and content fills | consumer | §5.4, ADR-124 |
 | DSPEC-67 | A rendering consumer MUST lay instance examples out along the declared `InstanceExamples.orientation`, treating an absent value as `VERTICAL` | consumer | §5.4, ADR-125 |
 
-Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.
+The reference validator (§10) implements every **validator** row except DSPEC-33 and DSPEC-63, whose single-document limits §10 states.
 
 Rules DSPEC-23 through 40 were harvested from ADRs 001–045 in a systematic second pass; candidates citing fields that no longer exist (`internal`, `iconNamePattern`) or binding pipeline internals invisible in any document were excluded, and renamed fields are stated under their current names with the renaming ADR cited.
 
 ## 10. Validators and consumers
 
-**Stub — no reference validator or conformance suite is published.** Conformance requires, and does not yet have:
+The reference validator and conformance suite live in `packages/specs-schema-core` (`@directededges/specs-schema-core`). The package is the normative answer to "does this document conform": `validateDocument(document, kind)` runs the JSON Schema for the document's kind (§2.1) and the rule catalogue's validator-class rules (§9), and reports every failure by rule identifier — `DSPEC-nn` for a catalogue rule, `schema` for a JSON Schema failure. Formats (`uri`, `uri-reference`, `date-time`) are enforced, so the schema's format constraints are checked rather than correct by inspection.
 
-- A validator that checks a document against the schema for its kind (§2.1) and the rule catalogue (§9), reporting each failure by rule ID.
-- A positive fixture set: documents that MUST validate.
-- A negative fixture set: documents that MUST be rejected, each paired with the rule it violates. A validator that rejects a negative fixture for the wrong reason does not conform.
-- A test validating every `examples` value in the schema files against its enclosing definition (137 of 138 definitions currently carry no `examples` — issue 785 Step 2).
+The schema a document validates against depends on its kind. A whole component validates against the `Component` definition in `component.schema.json`; a concern document validates against its file's root, which carries the top-level choice over document kinds — validating against one definition inside the file would silently narrow the check to that kind. `conventions.schema.json` and `settings.schema.json` declare no root schema, so their main definitions are the targets.
 
-Consumer requirements stated above (DSPEC-19, DSPEC-21, §1.5, §4.2, §6.3, §6.4, §6.5) bind any tool reading Specs documents, whether or not a validator exists.
+The conformance suite is the package's fixture corpus plus the test that runs it:
+
+- **Positive fixtures** — documents that MUST validate: each document kind, each in-document reference form, slots with primitive content and a default slot, roles and actions, extensions, and value forms the schema admits that generated corpora rarely write.
+- **Negative fixtures** — documents that MUST be rejected, each paired with the one rule it violates. The suite asserts the reported rules are exactly the paired rule, so a validator that rejects a fixture for the wrong reason — and a fixture that violates two rules — both fail.
+- **Completeness** — every validator-class row in §9 is implemented or named in the package's `UNCHECKED_RULES` with its reason, and every implemented rule has a negative fixture. Adding a rule without either fails the suite.
+
+Two validator-class rules are uncheckable from a single document and are declared as such in `UNCHECKED_RULES`: DSPEC-33, because what must stay constant across variants is producer behaviour across generation runs, which no single document records; and DSPEC-63, whose structural half `guidelines.schema.json` enforces and whose prose half — whether a statement describes rather than binds — no validator can judge.
+
+Scope: the validator checks what one document states about itself. A pointer rooted in the workspace (`#/components/…`, `<file>#/…`) needs the rest of the workspace to resolve; `specs validate` checks those across files in its reference layer, and uses this package as its schema and catalogue engine.
+
+The `examples` values in the schema files are validated against their enclosing definitions by `packages/schema/tests/SchemaExamples.test.ts`.
+
+Consumer requirements stated above (DSPEC-19, DSPEC-21, §1.5, §4.2, §6.3, §6.4, §6.5) bind any tool reading Specs documents, whether or not a validator runs.
 
 ## 11. Platform bindings
 

@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `InstanceExample.styles` — the example instance's own box, recorded when its horizontal sizing is not HUG (ADR-124)
 - `InstanceExamples.orientation` — how the examples sit relative to each other (`HORIZONTAL` or `VERTICAL`); absent means `VERTICAL` (ADR-125)
+- SPECIFICATION §10 — the conformance section now describes the shipped reference validator and fixture corpus (`@directededges/specs-schema-core`), replacing the stub; conformance is decided by the kind's schema plus the §9 catalogue, reported by rule identifier
 
 ### Changed
 

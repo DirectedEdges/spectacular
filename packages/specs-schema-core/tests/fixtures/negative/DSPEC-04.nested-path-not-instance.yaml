@@ -1,0 +1,19 @@
+# The $nested path's first segment names no instanceOf element — "ghost" is
+# not in the anatomy at all.
+kind: component
+expect: DSPEC-04
+document:
+  title: Toolbar
+  anatomy:
+    root: { type: container }
+    action: { type: instance, instanceOf: button }
+  default:
+    elements:
+      action: {}
+  variants:
+    - configuration:
+        $nested:
+          - path: [ghost]
+            size: small
+      elements:
+        action: {}

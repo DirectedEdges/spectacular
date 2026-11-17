@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`specs validate` checks the specification's semantic rule catalogue**, reporting each failure by rule identifier (e.g. `[DSPEC-29]`) alongside the schema and reference findings — on spec folders and on the authored documents beside them.
+
 - **`specs bridge status` reports which page each connected plugin is on**, by name and id:
 
   ```

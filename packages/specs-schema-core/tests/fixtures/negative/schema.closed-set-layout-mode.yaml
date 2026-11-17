@@ -1,0 +1,12 @@
+# layoutMode is a closed value set declared as oneOf const branches (§4.5); an
+# unadmitted value matches none of them.
+kind: component
+expect: schema
+document:
+  title: Panel
+  anatomy:
+    root: { type: container }
+  default:
+    elements:
+      root:
+        styles: { layoutMode: DIAGONAL }

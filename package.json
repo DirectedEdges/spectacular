@@ -3,6 +3,7 @@
   "name": "specs",
   "workspaces": [
     "packages/schema",
+    "packages/specs-schema-core",
     "packages/cli"
   ],
   "scripts": {

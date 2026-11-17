@@ -3,7 +3,7 @@ title: "validate"
 description: "Check specs against the schema and resolve every cross-file reference."
 ---
 
-Checks spec folders against the schema package: each concern file against its JSON Schema definition, then the references JSON Schema cannot express because they cross nodes, files, or spec folders.
+Checks spec folders against the schema package: each concern file against its JSON Schema definition, the references JSON Schema cannot express because they cross nodes, files, or spec folders, and the specification's semantic rule catalogue, reported by rule identifier.
 
 It reads only. Nothing here writes, and no license is needed.
 
@@ -26,9 +26,9 @@ With no arguments it validates the whole catalogue — components and compositio
 
 ## What it checks
 
-Two layers, in order.
+Three layers, in order.
 
-**Schema conformance.** Each of `api`, `variants` and `examples` is validated against its own definition in `@directededges/specs-schema`. The two authored documents beside a spec — [`supplemental.yaml`](/schema/documents/supplemental/) and [`guidelines.yaml`](/schema/documents/guidelines/) — are shape-checked against their published contracts too.
+**Schema conformance.** Each of `api`, `variants` and `examples` is validated against its own definition in `@directededges/specs-schema`, through the reference validator in `@directededges/specs-schema-core`. The two authored documents beside a spec — [`supplemental.yaml`](/schema/documents/supplemental/) and [`guidelines.yaml`](/schema/documents/guidelines/) — are shape-checked against their published contracts too.
 
 **Reference integrity.** The errors a JSON Schema cannot catch, because they cross a node, a file, or a spec folder:
 
@@ -46,6 +46,8 @@ Two layers, in order.
 A spec has one scope for itself and one per [subcomponent](/guides/subcomponent-scoping/). A `#/props/<name>` pointer written inside `subcomponents.<name>` resolves against that subcomponent's own props, never the parent component's.
 
 `instanceExamples` are held to the same contract as a variant's `configuration`. Unchecked, a stale example — `size: Large` after the enum dropped `Large` — validates clean and reaches Storybook as a silently wrong story.
+
+**The semantic rule catalogue.** The specification's validator-class rules ([SPECIFICATION §9](/schema/specification/)) run over the whole document the concern files carry between them — one default slot per component, `contentStyles` only on slots, `compareTo` matching its operation's arity, fills honouring a slot's `anyOf` and child bounds, and the rest. Each finding is tagged with its rule, e.g. `[DSPEC-29]`, so a failure can be cited and looked up. Rules the reference layer already covers across files are not re-reported.
 
 ### Token checking has a declared blind spot
 
