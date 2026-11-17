@@ -27,9 +27,9 @@ This release adds a layout mode, restructures how a component's examples are hel
 - DSPEC-68 to DSPEC-72 — one templated axis, a variant layer clearing the other, which axis wins when both are set, and the two collapse rules a grid changes (ADR-122)
 - `InstanceExample.styles` — the example instance's own box, recorded when its horizontal sizing is not HUG (ADR-124)
 - `InstanceExamples.orientation` — how the examples sit relative to each other (`HORIZONTAL` or `VERTICAL`); absent means `VERTICAL` (ADR-125)
-- SPECIFICATION §10 — the conformance section now describes the shipped reference validator and fixture corpus (`@directededges/specs-schema-core`), replacing the stub; conformance is decided by the kind's schema plus the §9 catalogue, reported by rule identifier
-- Type-to-schema parity is now tested (DSPEC-22): every exported type pairs with a schema definition and every definition with a type, under the declared naming conventions, with the deliberate divergences enumerated and reasoned in `tests/parity-exclusions.ts`
-- 24 names close most of that parity gap. The schema names what it wrote inline — `Children`, `Concern`, `ColorFormat`, `Subcomponents`, `ObjectPropMember`, `RoleConceptName`, `ActionConceptName`, `GuidelinesStatus`, `SupplementalStatus`, `ImageDataExtensions`, `FigmaImageExtension`, and all four document roots (`ComponentConcernDocument`, `CompositionConcernDocument`, `GuidelinesDocument`, `SupplementalDocument`) — and the types export the nine `*StyleValue` wrapper aliases plus `GuidelineReferences`. Validation behaviour is unchanged; every inline shape simply gained a citable name
+- SPECIFICATION §10 — conformance is decided by the kind's schema plus the §9 catalogue and reported by rule identifier, against the shipped reference validator and fixture corpus (`@directededges/specs-schema-core`), replacing the stub section
+- DSPEC-22 — every exported type pairs with a schema definition and every definition with a type, under the declared naming conventions, with the deliberate divergences enumerated and reasoned; parity is now tested rather than assumed
+- 24 inline shapes gain a citable name, closing most of that parity gap: `Children`, `Concern`, `ColorFormat`, `Subcomponents`, `ObjectPropMember`, `RoleConceptName`, `ActionConceptName`, `GuidelinesStatus`, `SupplementalStatus`, `ImageDataExtensions`, `FigmaImageExtension`, the four document roots, the nine `*StyleValue` wrapper aliases and `GuidelineReferences`. Validation behaviour is unchanged
 
 ### Migration
 
@@ -39,6 +39,7 @@ This release adds a layout mode, restructures how a component's examples are hel
 
 #### Accepted
 
+- [083](../../adr/083-slot-wrapper-collapse.md) — Collapsing a Slot-Only Wrapper (amended by ADR-122: the parent-layout group goes to the slot box alone under `layoutMode: GRID`)
 - [122](../../adr/122-layout-grid.md) — Layout Grid — `layoutMode: GRID` and a Single Templated Axis
 - [124](../../adr/124-instance-example-styles.md) — Styles on InstanceExample
 - [125](../../adr/125-examples-orientation.md) — Instance-example orientation

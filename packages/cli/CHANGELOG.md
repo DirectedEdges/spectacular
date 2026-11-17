@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.38.0] - Unreleased
 
+This release makes `specs validate` the authority on whether a spec conforms, and opens an authoring round in one command.
+
+- **`specs validate` now checks the specification's own rule catalogue**, reports each failure by rule identifier, and extends its reach to the authored documents, the promotion table, and the style properties a platform cannot deliver.
+- **`specs author start <key>` scaffolds a component folder and prints the startup digest**, so a round begins from something that already validates.
+- **`specs analyze foundations` writes one file per token type**, leaving `foundations.yaml` as an index.
+
 ### Breaking
 
 - **`instanceExamples` carries its examples under `items`** (ADR-125): regenerate an authored spec, or move its entries under `items`.
@@ -25,25 +31,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       page: Testing (74085:0)
   ```
 
-  The bridge has always identified a *file* by key and name, and has always asked the plugin for its current page id before every unpinned render — but reported neither the page nor its name, so the one thing a render cannot be checked for afterwards without opening the canvas was the one thing status would not tell you. The plugin now returns `figma.currentPage.name` alongside the id, `/status` asks every live connection in parallel, and a plugin that does not answer costs its own page line and nothing else. A plugin older than this still answers with an id alone, and the line prints `(unnamed)`.
+  A plugin older than this answers with an id alone, and the line prints `(unnamed)`.
 
-- **`npm run watch:bridge-server`**, the missing pair to `npm run watch`. The bridge server is a second bundle and had no watcher, so every change under `src/bridge/` stayed invisible until someone remembered a hand build — silently, because the old bundle keeps answering. Both watchers now have to run for the bridge to reflect source.
-
-- **`specs validate` reports the style properties a platform declares it cannot deliver**, naming the platform and its own reason, so a dash pattern or a corner smoothing that reaches no surface is visible while you are authoring rather than after a review. The spec is correct, so these never fail a run — write a supplemental requirement for anything the design depends on.
+- **`specs validate` reports the style properties a platform declares it cannot deliver**, naming the platform and its reason, so a dash pattern that reaches no surface is visible while you author. These never fail a run — write a supplemental requirement for anything the design depends on.
 
 - **`specs validate` warns when two slot fills in one spec hold the same elements**, naming the overlap, because a fill cannot include another fill and an edit to one otherwise has to be mirrored by hand.
 
 - **The authoring startup digest reports `cache.stale`**, alongside analysis freshness and the posture, so a stale cache is dealt with before the first write instead of failing the render at the end of a round.
 
-- **The authoring rules cover subcomponents**, deriving a part's key, title and the parent slot's `anyOf` from the library's own discovery patterns, and covering the visibility extension and its variant binding. Visibility conditionals and token-namespace lookup gain rules of their own, and the compile step names the diagnostic for a render that reports unresolved instances and still exits successfully.
+- **The authoring rules cover subcomponents**, deriving a part's key, title and the parent slot's `anyOf` from the library's own discovery patterns, with rules of their own for the visibility extension, visibility conditionals, and token-namespace lookup.
 
 - **The authoring rules cover instance examples and the promotion table.** An example now shows only what the variants cannot reach, so a component whose every configuration is a variant has none — content that reads differently from the default is the exception that still earns one.
 
 - **`specs author start <key>` opens an authoring round in one call**: a collision-checked component folder with all three concern templates — valid as shipped, so every validation error afterwards is the author's — plus the startup digest. `specs author status` prints the digest alone: catalogue, analysis freshness, conventions paths, and whether the pinned Storybook port answers.
 
 ### Changed
-
-- **An element roled `decoration` stops catching clicks when it has no children**, emitting `pointer-events: none` beside the `aria-hidden` it already carried, so a frontmost overlay no longer blocks the content behind it. A decoration that has children keeps its hit-test, since its text would otherwise become unselectable.
 
 - **The promotion table is cross-referenced against the workspace** by `specs validate`, which warns about a target with no spec folder, a `values` key naming a token the library does not hold, and a written prop the target does not declare. Warnings only — a table is often authored ahead of the components it names.
 
@@ -61,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **The styles rules route schema shape questions to the schema's own property descriptions**, replacing a pointer to a skill name that no longer exists.
 
-### Removed
+- **An element roled `decoration` stops catching clicks when it has no children**, emitting `pointer-events: none` beside the `aria-hidden` it already carried, so a frontmost overlay no longer blocks the content behind it. A decoration with children keeps its hit-test, since its text would otherwise become unselectable.
 
 
 ## [0.37.0] - 2026-11-12
