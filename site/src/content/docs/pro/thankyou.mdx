@@ -7,21 +7,30 @@ head:
     content: ':root{--sl-sidebar-width:0rem}.sidebar-pane{display:none}starlight-menu-button{display:none}.right-sidebar-container{display:none}.main-pane{width:100%}'
 ---
 
-Your purchase is complete, and a confirmation email is on its way with your license keys and receipt. Thank you for supporting Spectacular — your subscription unlocks the full set of Pro features across the Figma plugin and the CLI, and helps fund continued development. If you have any trouble at all, we're here to help.
+Thank you for supporting Spectacular. Your subscription unlocks the full set of Pro features across the Figma plugin and the CLI, and it funds the work that keeps both moving. If anything about your license or your billing looks wrong, we would rather hear about it than have you work around it.
 
-## Activate your license
+## Specs Pro
 
-A subscription is not the same thing as a license. The subscription is what you bought; the licenses are what it contains — a plugin key and a CLI key per seat, tied to the email address that holds the seat and active for the duration of your billing period. Full terms, including seat counts, renewals, and team licensing, are described in the [licensing overview](/overview/licensing/).
+Your subscription carries two license keys — one for the Figma plugin and one for the CLI. Both live in your Polar customer portal; neither is emailed to you.
 
-### Individual subscriptions
+- Sign in to the [Polar customer portal](https://polar.sh/directed-edges-llc/portal) with the email address you used at checkout — Polar sends you a one-time login link.
+- Copy the plugin key into the **Account** pane of the [Spectacular plugin](https://www.figma.com/community/plugin/1549454283615386215/specs-2-formerly-anova) to activate Pro in Figma.
+- Copy the CLI key into a `.env` file in your project as `SPECS_LICENSE_KEY`, or pass it to any command with `-l`. The [CLI getting started guide](/cli/getting-started/) covers both.
+- Each key is meant for one person and activates on up to two machines.
 
-Check the email sent to the address you used at checkout. It contains your plugin and CLI license keys — paste them into the [Spectacular plugin](https://www.figma.com/community/plugin/1549454283615386215/specs-2-formerly-anova) and the [CLI](/cli/getting-started/) to activate Pro on each surface. You can retrieve the keys again at any time from your account in the [Polar customer portal](https://polar.sh/directed-edges-llc/portal).
+What each tier includes, how CLI generations are metered, and the full subscription terms are on the [licensing page](/overview/licensing/).
 
-### Team subscriptions
+## Specs Pro for Teams
 
-A Teams subscription gives you, the administrator, a pool of seats rather than a set of keys. To hand those seats out, sign in to the [Polar customer portal](https://polar.sh/directed-edges-llc/portal), choose **Manage your subscription**, and then **Invite members** — once for each seat you purchased. Each invited person receives a message with a link to claim their seat, obtain their license, and get started.
+A Teams subscription gives you a pool of seats rather than a set of keys. Nobody holds a license until a seat is assigned to their email address and they claim it — and that includes you, the administrator.
 
-Invitations must be claimed within 24 hours, after which they expire and can be re-sent from the portal. Once a team member claims their seat, they receive their own plugin and CLI license key pair by email and activate them exactly as an individual subscriber does.
+- Sign in to the [Polar customer portal](https://polar.sh/directed-edges-llc/portal), choose **Manage your subscription**, then **Invite members** — once for each seat you bought.
+- Look for your own address in the seat list. If it isn't there, assign yourself a seat: paying for the subscription does not license the administrator.
+- Each person you invite receives an email with a link to claim their seat. Claim links expire after 24 hours and can be re-sent from the portal.
+- Once a seat is claimed, that person's own plugin and CLI keys appear in their own Polar portal, and they activate them exactly as an individual subscriber does.
+- A seat nobody has claimed yet still counts toward your seat total and is billed normally.
+
+Seat counts, volume discounts, and the detail of how claiming works are on the [licensing page](/overview/licensing/).
 
 ## Manage your subscription
 
