@@ -319,7 +319,7 @@ When true, an authored example may nest a filling instance as a plain child elem
 
 The reserved markers `$text` and `$glyph` name the primitive kinds a slot accepts. The names are `ElementType`'s: `type: text` on an anatomy item and `$text` in `anyOf` are the same concept (ADR-102).
 
-Formatting for primitive fills lives under the matching key of the slot element's `contentStyles`. `contentStyles` is meaningful only on a slot element, and its keys SHOULD agree with that slot's `anyOf` markers (DSPEC-07; ADR-102).
+Formatting for primitive fills lives under the matching key of the slot element's `contentStyles`. A slot element is one typed `slot` — or one whose `children` bind to a slot prop, which is how a producer writes a default slot's host: the anatomy says container, the binding says slot. `contentStyles` is meaningful only on a slot element, and its keys SHOULD agree with that slot's `anyOf` markers (DSPEC-07; ADR-102).
 
 A component fill is formatted by the component it instantiates: a consumer rendering one applies the instance's `styles` and MUST discard the slot's `contentStyles` rather than cascading it (`consumer`; ADR-102).
 
@@ -398,7 +398,7 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-04 | Every `$nested` path segment is an `instanceOf` element key, resolved by direct lookup | validator | §5.4, ADR-052 |
 | DSPEC-05 | A `$nested` path never descends through a slot fill | validator | §5.4, ADR-052 |
 | DSPEC-06 | At most one `SlotProp` per component carries `defaultSlot: true` | validator | §6.2, ADR-099 |
-| DSPEC-07 | `contentStyles` appears only on slot elements, keyed consistently with the slot's markers | validator | §6.3, ADR-102 |
+| DSPEC-07 | `contentStyles` appears only on slot elements — typed `slot`, or slot-bound through `children` — keyed consistently with the slot's markers | validator | §6.3, ADR-102 |
 | DSPEC-08 | A primitive marker never appears in a marker-only `anyOf` | producer | §6.1, ADR-102 |
 | DSPEC-09 | An owned element carries at most one role; the array form appears only on instances | validator | §6.5, ADR-067 |
 | DSPEC-11 | A configuration key names a prop declared in `props` | validator | §4.2, ADR-080 |
@@ -417,7 +417,7 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-24 | `$type: "effects"` on a token reference is a non-DTCG extension; a consumer treats it as non-portable | consumer | §5.1, ADR-006 |
 | DSPEC-25 | A token reference's origin is read from `$extensions['com.figma'].collectionName`: present means variable, absent means named style | consumer | §5.1, ADR-006 |
 | DSPEC-26 | An omitted `settings.spec.tokens` behaves identically to `TOKEN`; omitted default-bearing settings generally behave as their scaffolded defaults, and only feature-toggle members mean "off" when absent | consumer | §2.1, ADR-007/035/112 |
-| DSPEC-27 | `fillColor` appears only on glyph elements; `textColor` only on text elements | validator | §6.3, ADR-013 |
+| DSPEC-27 | `fillColor` appears only on glyph and shape elements, `textColor` only on text elements; an instance's colour overrides are the composed component's to judge | validator | §6.3, ADR-013 |
 | DSPEC-28 | A `ConditionExpression.operation` is an open vocabulary; a consumer tolerates unrecognized operations | consumer | styles reference, ADR-018 |
 | DSPEC-29 | `compareTo` is present for binary operations (`equals`, `notEquals`) and absent for unary ones (`isNull`, `isNotNull`) | validator | styles reference, ADR-018 |
 | DSPEC-30 | A new platform's extension data is added as a reverse-DNS key on `PropExtensions`, never as a top-level prop member | producer | §7.1, ADR-026 |

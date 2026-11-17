@@ -69,10 +69,9 @@ const FOUNDATION_VOCABULARY = new Set([
 ]);
 
 /**
- * Element types whose fill `fillColor` paints. DSPEC-27's prose says glyph
- * only, but `styles.schema.json` declares fillColor as "the fill of a glyph or
- * vector shape" — the schema's broader set governs until the catalogue is
- * corrected, so a shape element's fill is not rejected.
+ * Element types whose fill `fillColor` paints — DSPEC-27's "glyph and shape
+ * elements", matching `styles.schema.json`'s "the fill of a glyph or vector
+ * shape".
  */
 const FILLABLE_TYPES = new Set(['glyph', 'vector', 'line', 'ellipse', 'rectangle', 'polygon', 'star']);
 
@@ -316,7 +315,7 @@ export const RULES: readonly Rule[] = [
   },
   {
     id: 'DSPEC-07',
-    summary: "contentStyles appears only on slot elements, keyed consistently with the slot's markers",
+    summary: "contentStyles appears only on slot elements — typed slot, or slot-bound through children — keyed consistently with the slot's markers",
     kinds: COMPONENT_KINDS,
     check(doc) {
       const violations: Violation[] = [];
@@ -488,7 +487,7 @@ export const RULES: readonly Rule[] = [
   },
   {
     id: 'DSPEC-27',
-    summary: 'fillColor appears only on glyph elements; textColor only on text elements',
+    summary: "fillColor appears only on glyph and shape elements, textColor only on text elements; an instance's colour overrides are the composed component's to judge",
     kinds: COMPONENT_KINDS,
     check(doc) {
       const violations: Violation[] = [];
