@@ -327,16 +327,20 @@ export const RULES: readonly Rule[] = [
             if (!isObj(element) || element.contentStyles === undefined) continue;
             const anatomyEntry = triplet.anatomy[key];
             if (!isObj(anatomyEntry) || typeof anatomyEntry.type !== 'string') continue;
-            if (anatomyEntry.type !== 'slot') {
+            // A slot site is an element typed `slot` — or one whose children
+            // are bound to a slot prop, which is how producers write a default
+            // slot's host: the anatomy says container, the binding says slot.
+            const binding = isObj(element.children) ? element.children.$binding : undefined;
+            const match = typeof binding === 'string' ? /^#\/props\/([^/]+)$/.exec(binding) : null;
+            const prop = match && props ? props[match[1]] : undefined;
+            const slotBound = isObj(prop) && prop.type === 'slot';
+            if (anatomyEntry.type !== 'slot' && !slotBound) {
               violations.push(
-                violation('DSPEC-07', `${triplet.base}/${key}/contentStyles`, `"${key}" is a ${anatomyEntry.type} element — contentStyles is meaningful only on a slot`),
+                violation('DSPEC-07', `${triplet.base}/${key}/contentStyles`, `"${key}" is a ${anatomyEntry.type} element with no slot binding — contentStyles is meaningful only on a slot`),
               );
               continue;
             }
             // Marker agreement, where the slot's prop and its anyOf are known.
-            const binding = isObj(element.children) ? element.children.$binding : undefined;
-            const match = typeof binding === 'string' ? /^#\/props\/([^/]+)$/.exec(binding) : null;
-            const prop = match && props ? props[match[1]] : undefined;
             if (isObj(prop) && Array.isArray(prop.anyOf) && isObj(element.contentStyles)) {
               for (const marker of Object.keys(element.contentStyles)) {
                 if (!prop.anyOf.includes(marker)) {
@@ -494,6 +498,11 @@ export const RULES: readonly Rule[] = [
             if (!isObj(element) || !isObj(element.styles)) continue;
             const anatomyEntry = triplet.anatomy[key];
             if (!isObj(anatomyEntry) || typeof anatomyEntry.type !== 'string') continue;
+            // An instance's colour overrides travel with the instance, and
+            // whether they are apt depends on the composed component — another
+            // document. Generated corpora write textColor on instances of text
+            // components as a matter of course.
+            if (anatomyEntry.type === 'instance') continue;
             if ('textColor' in element.styles && anatomyEntry.type !== 'text') {
               violations.push(
                 violation('DSPEC-27', `${triplet.base}/${key}/styles/textColor`, `textColor belongs to text elements; "${key}" is a ${anatomyEntry.type}`),
