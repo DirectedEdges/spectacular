@@ -10,6 +10,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { resolveSpecsLayout } from '../utilities/specsLayout.js';
+import { hostIsStale } from '../storybook/templates.js';
 
 export interface AnalysisFact {
   /** Workspace-relative path the report lives at (or would). */
@@ -45,6 +46,12 @@ export interface AuthorStatus {
     /** The pinned Storybook port read from storybook/package.json; null when unreadable. */
     storybookPort: number | null;
     up: boolean;
+    /**
+     * True when the scaffolded host predates this CLI's templates; null when there is no
+     * stamp to compare. The port answering says nothing about the host behind it, and a
+     * stale one serves pages the emitters have already replaced.
+     */
+    hostStale: boolean | null;
   };
 }
 
@@ -110,6 +117,7 @@ export async function buildStatus(inputs: StatusInputs): Promise<AuthorStatus> {
     posture: {
       storybookPort: port,
       up: port !== null && (await probe(port)),
+      hostStale: hostIsStale(path.join(inputs.workspaceRoot, 'storybook')),
     },
   };
 }

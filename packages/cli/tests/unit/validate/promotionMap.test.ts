@@ -76,6 +76,31 @@ describe('checkPromotionMap', () => {
     expect(out[0].message).toBe('2 promotion targets have no spec folder, so they promote nothing: dsBox, dsCard');
   });
 
+  it('reports a value outside the target prop\'s declared enum', async () => {
+    await target('dsBox', { layoutMode: { type: 'string', enum: ['Vertical', 'Horizontal'] } });
+    await table({ dsBox: { elementType: 'container', map: [{ source: 'layoutMode', values: { VERTICAL: { layoutMode: 'Column' } } }] } });
+    expect(check(['dsBox'])[0].message)
+      .toBe('writes "layoutMode: Column", which is not one of "dsBox"\'s declared values (Vertical, Horizontal)');
+  });
+
+  it('leaves a value alone where the prop declares no enum', async () => {
+    await target('dsText', { text: { type: 'string' } });
+    await table({ dsText: { elementType: 'text', map: [{ source: 'content', prop: 'text' }] } });
+    expect(check(['dsText'])).toEqual([]);
+  });
+
+  it('reports a source the element kind does not carry', async () => {
+    await target('dsBox', { gap: { type: 'string' } });
+    await table({ dsBox: { elementType: 'container', map: [{ source: 'children', prop: 'gap' }] } });
+    expect(check(['dsBox'])[0].message).toContain('"children" is not read from a container');
+  });
+
+  it('accepts a dotted source whose head is honoured', async () => {
+    await target('dsText', { weight: { type: 'string' } });
+    await table({ dsText: { elementType: 'text', map: [{ source: 'typography.fontStyle', prop: 'weight' }] } });
+    expect(check(['dsText'])).toEqual([]);
+  });
+
   it('leaves a raw scalar key alone', async () => {
     await tokens('dimension', ['Spacing/S']);
     await target('dsBox', { layoutMode: { type: 'string' } });

@@ -35,6 +35,19 @@ interface Entry {
 /** A `values` key naming a token rather than a raw scalar — only these are checkable. */
 const looksLikeTokenPath = (key: string): boolean => key.includes('/');
 
+/**
+ * What a source may read, per element kind — the honoured set the conventions reference
+ * lists. A source outside it reads as undefined, so its rule never resolves and the entry
+ * quietly loses the score it would have won.
+ *
+ * `typography` is also addressed by dotted path, so a prefix match covers both forms.
+ */
+const HONOURED_SOURCES: Record<string, ReadonlySet<string>> = {
+  text: new Set(['typography', 'textColor', 'content']),
+  glyph: new Set(['width', 'height', 'fillColor', 'content']),
+  container: new Set(['layoutMode', 'itemSpacing', 'padding', 'mainAxisAlignment', 'crossAxisAlignment', 'wrap', 'wrapAlignment']),
+};
+
 export function checkPromotionMap(options: {
   /** The `config/` directory, when the workspace has one. */
   configDir?: string;
@@ -66,22 +79,51 @@ export function checkPromotionMap(options: {
       continue; // without the target's api there is nothing further to check
     }
     const props = declaredProps(specsPath, target);
+    const honoured = typeof entry.elementType === 'string' ? HONOURED_SOURCES[entry.elementType] : undefined;
     for (const [i, rule] of (entry.map ?? []).entries()) {
       const at = `/${target}/map/${i}`;
-      const written = new Set<string>();
-      if (typeof rule?.prop === 'string') written.add(rule.prop);
+
+      const source = typeof rule?.source === 'string' ? rule.source : undefined;
+      if (source && honoured && !honoured.has(source.split('.')[0])) {
+        warnings.push({
+          at: `${at}/source`,
+          message: `"${source}" is not read from a ${String(entry.elementType)} — the rule never resolves (honoured: ${[...honoured].sort().join(', ')})`,
+        });
+      }
+
+      // prop → the values written to it, so an off-enum value names its own prop.
+      const written = new Map<string, Set<string>>();
+      const note = (prop: string, value?: unknown): void => {
+        const seen = written.get(prop) ?? new Set<string>();
+        if (typeof value === 'string') seen.add(value);
+        written.set(prop, seen);
+      };
+      if (typeof rule?.prop === 'string') note(rule.prop);
       for (const [key, writes] of Object.entries(rule?.values ?? {})) {
         if (tokens && looksLikeTokenPath(key) && !tokens.has(key)) {
           warnings.push({ at: `${at}/values/${key}`, message: `"${key}" is not a token this library holds — the row matches nothing` });
         }
         if (writes && typeof writes === 'object') {
-          for (const prop of Object.keys(writes)) written.add(prop);
+          for (const [prop, value] of Object.entries(writes as Record<string, unknown>)) note(prop, value);
         }
       }
+
       if (!props) continue;
-      for (const prop of [...written].sort()) {
-        if (!props.has(prop)) {
+      for (const [prop, values] of [...written].sort(([a], [b]) => a.localeCompare(b))) {
+        const declared = props.get(prop);
+        if (!declared) {
           warnings.push({ at, message: `writes "${prop}", which "${target}" does not declare` });
+          continue;
+        }
+        // A prop with no enum has an open value set; only a closed one can be violated.
+        if (!declared.enum) continue;
+        for (const value of [...values].sort()) {
+          if (!declared.enum.has(value)) {
+            warnings.push({
+              at,
+              message: `writes "${prop}: ${value}", which is not one of "${target}"'s declared values (${[...declared.enum].join(', ')})`,
+            });
+          }
         }
       }
     }
@@ -116,15 +158,23 @@ function tokenPaths(specsPath: string): Set<string> | undefined {
   return paths.size > 0 ? paths : undefined;
 }
 
-/** A target's declared prop names; undefined when its api cannot be read. */
-function declaredProps(specsPath: string, target: string): Set<string> | undefined {
+/** A target's declared props, each with its closed value set where it has one. */
+function declaredProps(specsPath: string, target: string): Map<string, { enum?: Set<string> }> | undefined {
   for (const dir of ['components', 'compositions']) {
     const file = path.join(specsPath, dir, target, 'api.yaml');
     if (!fs.existsSync(file)) continue;
     try {
       const doc = parse(fs.readFileSync(file, 'utf8')) as { props?: Record<string, unknown> };
       const props = doc?.props;
-      if (props && typeof props === 'object') return new Set(Object.keys(props));
+      if (!props || typeof props !== 'object') continue;
+      const out = new Map<string, { enum?: Set<string> }>();
+      for (const [name, prop] of Object.entries(props)) {
+        const values = (prop as { enum?: unknown })?.enum;
+        out.set(name, Array.isArray(values)
+          ? { enum: new Set(values.map(String)) }
+          : {});
+      }
+      return out;
     } catch {
       return undefined;
     }

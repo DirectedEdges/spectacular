@@ -26,7 +26,7 @@ function line(f: Finding): string {
   return `${mark} ${loc} ${f.path} — ${f.message}`;
 }
 
-function formatText(allFindings: Finding[], counts: { component: number; composition: number }): void {
+function formatText(allFindings: Finding[], counts: { component: number; composition: number }, skipped?: { specs: number; errors: number }): void {
   // A finding carrying a scope belongs to a workspace-level document this run validated
   // but was not asked about. It prints under its own heading, below the requested scope's
   // own result, and counts toward neither the tally nor the exit code.
@@ -42,6 +42,10 @@ function formatText(allFindings: Finding[], counts: { component: number; composi
     console.log(`✓ ${scope} valid`);
   } else {
     console.log(`${errors === 0 ? '✓' : '✗'} ${errors} ${errors === 1 ? 'error' : 'errors'}, ${warnings} ${warnings === 1 ? 'warning' : 'warnings'} across ${scope}`);
+  }
+
+  if (skipped && skipped.errors > 0) {
+    console.log(`ℹ ${skipped.errors} ${skipped.errors === 1 ? 'error' : 'errors'} in the ${skipped.specs} ${skipped.specs === 1 ? 'spec' : 'specs'} this run did not check — run \`specs validate\` over the catalogue to see them`);
   }
 
   if (outOfScope.length > 0) {
@@ -123,10 +127,11 @@ export const Validate = new Command('validate')
           warnings: result.findings.filter(f => f.level === 'warning' && f.scope === undefined),
           outOfScope: result.findings.filter(f => f.scope === 'workspace'),
           platformGaps: result.platformGaps,
+          skipped: result.skipped,
           resolved: result.resolved,
         }, null, 2));
       } else {
-        formatText(result.findings, result.counts);
+        formatText(result.findings, result.counts, result.skipped);
         if (result.platformGaps.length > 0) {
           const n = result.platformGaps.length;
           console.log(`⚠ ${n} ${n === 1 ? 'property' : 'properties'} will not reach a platform that declares it unsupported — the spec is right, the surface is limited. Write a supplemental requirement for anything the design depends on:`);

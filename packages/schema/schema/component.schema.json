@@ -567,7 +567,7 @@
           "nullable": true,
           "default": null,
           "examples": ["New"],
-          "$extensions": { "com.figma": { "visibilityProp": "showBadge" } }
+          "$extensions": { "com.figma": { "visibilityProp": "Badge visible" } }
         }
       ],
       "properties": {

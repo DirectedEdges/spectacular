@@ -80,6 +80,13 @@ export interface ValidateResult {
   resolved: ResolvedToken[];
   /** Style properties a platform declares it cannot deliver — correct spec, limited surface. */
   platformGaps: PlatformGap[];
+  /**
+   * What a scoped run did not check. Absent when the run covered the catalogue.
+   *
+   * Only the JSON Schema layer runs over these — the cheap half, and where a catalogue-wide
+   * breakage shows. A scoped run otherwise reports a clean workspace while most of it fails.
+   */
+  skipped?: { specs: number; errors: number };
 }
 
 const CONCERNS: readonly ConcernName[] = ['api', 'variants', 'examples'];
@@ -299,7 +306,42 @@ export function runValidate(options: ValidateOptions): ValidateResult {
     || a.message.localeCompare(b.message));
 
   resolved.sort((a, b) => a.spec.localeCompare(b.spec) || a.prop.localeCompare(b.prop) || a.token.localeCompare(b.token));
-  return { findings, counts, missing, notes, resolved, platformGaps };
+  let skipped: ValidateResult['skipped'];
+  if (requested.size > 0) {
+    let specs = 0;
+    let errors = 0;
+    for (const kind of SPEC_KINDS) {
+      for (const name of specsByKind.get(kind) ?? []) {
+        if (requested.has(name)) continue;
+        specs += 1;
+        errors += schemaErrorCount(path.join(layout.dirFor(kind), name), validators, options.authored);
+      }
+    }
+    if (specs > 0) skipped = { specs, errors };
+  }
+
+  return { findings, counts, missing, notes, resolved, platformGaps, skipped };
+}
+
+/** Schema errors in one spec folder, counted without building findings for it. */
+function schemaErrorCount(
+  dir: string,
+  validators: ReturnType<typeof concernValidators>,
+  authored: boolean | undefined,
+): number {
+  const { parsed, failures } = readSpec(dir);
+  let count = failures.length;
+  for (const concern of CONCERNS) {
+    const doc = parsed[concern];
+    if (!doc) continue;
+    const validate = validators[concern];
+    if (validate(doc) || !validate.errors) continue;
+    const reportable = authored
+      ? validate.errors.filter(err => !isMissingSourceError(err))
+      : validate.errors;
+    count += describeAjvErrors(reportable).length;
+  }
+  return count;
 }
 
 /**
