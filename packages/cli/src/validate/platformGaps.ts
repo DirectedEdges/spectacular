@@ -1,17 +1,10 @@
 /**
- * Which of a spec's style properties the platforms declare they cannot deliver.
+ * Which of a spec's style properties the platforms declare they cannot deliver, from the
+ * `disposition` recorded per platform in the schema package's `mappings/bindings/`.
  *
- * A spec can be entirely correct and still carry a property that reaches no surface. The
- * schema package records that per platform in `mappings/bindings/<platform>.json`, where a
- * `disposition` of `unsupported` means the platform declares it emits nothing and says
- * why. Nothing read those dispositions during authoring, so a stated requirement — a dash
- * pattern, a corner smoothing — validated clean, generated clean, and silently never
- * appeared on the surface the designer would review. The only record was a sentence in a
- * report in someone's scrollback.
- *
- * Reported as its own block rather than as findings: the spec is right and the platform is
- * limited, so this fails nothing. It is the author's cue to write a supplemental
- * requirement, which is where a gap the spec cannot carry belongs.
+ * Never a finding: the spec is right and the surface is limited, so this fails nothing. It
+ * is the author's cue to write a supplemental requirement, which is where a gap the spec
+ * cannot carry belongs.
  */
 
 import fs from 'fs-extra';

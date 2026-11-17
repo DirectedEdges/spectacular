@@ -68,7 +68,7 @@ Load the styling pack (step 0) first, in one call; token choices come from it. T
 
 ## 5. Author examples.yaml (when needed), then validate
 
-At least one `instanceExamples` entry showing a realistic configuration. `slotContentExamples` for every slot the component declares. Validate; zero errors.
+`slotContentExamples` for every slot the component declares. `instanceExamples` only for what the variants cannot reach — a configuration outside the matrix, a content composition, or content that reads differently from the default. A component whose every configuration is a variant has **no** instance examples, and that is the right answer rather than a gap (`rules/examples.yaml`). Validate; zero errors.
 
 **A component that shows an image also carries an `images` registry here.** Find what the library holds in `data/cache/images.yaml` — keyed by content hash, each entry giving its `src`, the library's `name`, which components `usedBy` it, and an `origin`. Write the entry under a name you choose, carrying `src` and `$extensions.com.figma.imageHash`, then point at it with `$image: "#/components/<key>/images/<name>"` from `backgroundImage` or from an image prop's `examples`. Never put a raw Figma hash in a style value (`rules/styles.yaml · images`).
 

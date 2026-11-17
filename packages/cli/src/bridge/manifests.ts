@@ -108,17 +108,11 @@ export function buildManifest(spec: Record<string, unknown>, specsDir: string, d
     for (const [id, entry] of Object.entries(cache.entries)) {
       if (!entry.name) continue;
       const formatted = formatKey(entry.name, keyFormat);
-      // A row carrying `fileKey` was written by a render in this workspace; a row without
-      // one came from a fetch. The rendered node is the better answer whenever both format
-      // to the same key: the fetch is a snapshot, and an `--overwrite` since then replaced
-      // the node it recorded, leaving an id the plugin cannot find. Insertion order used to
-      // decide this, and fetched rows are always written first — so a component the render
-      // had just drawn lost to a dead id from the last fetch, and every re-render appended
-      // a row that could never win.
-      //
-      // Among rows of one provenance: fetched keeps the first, since distinct components can
-      // format to the same key and nothing says which one a spec meant; rendered keeps the
-      // last, which is the most recent render of that component.
+      // A row carrying `fileKey` was written by a render here; one without came from a
+      // fetch, which is a snapshot an `--overwrite` since then may have invalidated. So
+      // rendered wins over fetched for the same formatted key. Within one provenance:
+      // fetched keeps the first, since distinct components can format to the same key and
+      // nothing says which a spec meant; rendered keeps the last, the most recent render.
       //
       // `key` is omitted rather than set to undefined when the entry has none: an entry a
       // render wrote is not published, so it has only a node id, and a `key: undefined`

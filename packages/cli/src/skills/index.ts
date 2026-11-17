@@ -55,6 +55,8 @@ import TEMPLATE_GUIDELINES from './templates/guidelines.yaml';
 import TEMPLATE_GUIDELINES_RULES from './templates/guidelinesRules.yaml';
 import POSTURE from './posture.md';
 import RULES_ANATOMY from './rules/anatomy.yaml';
+import RULES_EXAMPLES from './rules/examples.yaml';
+import RULES_PRIMITIVES from './rules/primitives.yaml';
 import RULES_STYLES from './rules/styles.yaml';
 import RULES_LAYOUT from './rules/layoutStyling.yaml';
 import RULES_PROPS from './rules/props.yaml';
@@ -92,6 +94,8 @@ export const SKILL_ASSETS: SkillAsset[] = [
     markdown: AUTHORING_PRIMER,
     files: [
       { path: 'rules/anatomy.yaml', content: RULES_ANATOMY },
+      { path: 'rules/examples.yaml', content: RULES_EXAMPLES },
+      { path: 'rules/primitives.yaml', content: RULES_PRIMITIVES },
       { path: 'rules/styles.yaml', content: RULES_STYLES },
       { path: 'rules/layoutStyling.yaml', content: RULES_LAYOUT },
       { path: 'rules/props.yaml', content: RULES_PROPS },

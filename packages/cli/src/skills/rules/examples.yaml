@@ -1,0 +1,19 @@
+# Judgment rules for examples.yaml — `instanceExamples`, the whole-component
+# configurations, and the named slot fills beside them. Keys mirror the schema node they
+# govern; `slotContentExamples` is governed by `slots.yaml · fills`.
+# useWhen: ordered, evaluate top to bottom, first match wins. guidelines: modality-keyed
+# items — must/never hard, should/avoid strong convention, could/warn judgment.
+# adr: the decision an item projects.
+instanceExamples:
+  guidelines:
+    - must: "author the named entries under `items`, beside an optional `orientation` that says how they sit relative to each other"
+      adr: 125
+    - must: "show only configurations the variants do not already carry — a variant is the component in one state, and an example that restates one documents nothing twice and emits a second story for the same thing"
+      never: "write an example per state, per appearance, or per size — the variant matrix is where a state lives, and every surface already renders it"
+      note: "the test is whether the configuration is reachable by setting the props a variant sets. If it is, drop the example"
+    - must: "write no instance examples at all where every configuration is a variant — a component whose props are all state is fully documented by its matrix, and zero entries is the right answer rather than a gap to fill"
+    - could: "keep an example whose props the matrix reaches when its **content** is what it documents — the variants cover a prop surface, not what the component holds, so a realistic string, a different glyph, or a composed fill can carry something no variant shows"
+      avoid: "an example per possible content value — one that reads differently from the default earns its place; a second of the same kind does not"
+    - should: "give each entry a title naming the usage rather than the configuration — what a reader is looking at, not which props are set"
+    - must: "fill a slot prop with a `$slotContent` pointer, never inline content and never a `$binding` — an instance example is a documented configuration, not a live binding"
+      adr: [46, 47]

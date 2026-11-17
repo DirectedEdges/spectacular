@@ -158,19 +158,12 @@ export function describeAjvError(err: ErrorObject): { path: string; message: str
 }
 
 /**
- * Describe a whole error array, collapsing a failed `oneOf` over a closed vocabulary
- * into the one message an author can act on.
+ * Describe a whole error array, collapsing a failed `oneOf` over a closed vocabulary into
+ * one message naming the permitted values — a union of `const` branches otherwise reports
+ * one message per rejected branch, none of which names a legal value.
  *
- * A property whose schema is a `oneOf` of `const` branches reports every branch
- * separately — `must be equal to constant`, once per branch — plus `must be null` for a
- * nullable one and `must match exactly one schema in oneOf` for the union itself. Three
- * or more messages for one mistake, and not one of them names a legal value: the author's
- * next move is to open the type definitions and read the union by hand. Collecting the
- * branches says it once, with the vocabulary in it.
- *
- * Grouped by path, so two unrelated failures never merge. A group with no `oneOf` error,
- * or one whose branches are not a closed vocabulary, is described error by error exactly
- * as before.
+ * Grouped by path, so unrelated failures never merge. A group with no union error, or one
+ * whose branches are not a closed vocabulary, is described error by error.
  */
 export function describeAjvErrors(errors: readonly ErrorObject[]): Array<{ path: string; message: string }> {
   const byPath = new Map<string, ErrorObject[]>();

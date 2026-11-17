@@ -284,7 +284,7 @@ message — [Choosing a role](/roles/choosing/) gives the question that separate
 | `value` | The element standing in for the control's value |
 | `placeholder` | The element standing in for placeholder text |
 | `indicator` | Decorative state indicator (check glyph, switch thumb); `aria-hidden` |
-| `decoration` | An element conveying nothing at all; `aria-hidden`, and it resolves to no control |
+| `decoration` | An element conveying nothing at all; `aria-hidden`, plus `pointer-events: none` where it has no children, and it resolves to no control |
 | `panel` | The region a `disclosure` shows and hides |
 | `increment` | Step-up affordance on a `spinbutton` |
 | `decrement` | Step-down affordance on a `spinbutton` |

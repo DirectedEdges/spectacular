@@ -314,14 +314,10 @@ export function recordRenderedComponent(options: {
   const existing = readCacheFile<ComponentsEntry>(dataDir, 'components')
     ?? { sources: {}, entries: {} };
 
-  // One component, one row. Rows are keyed by node id, so an append left the previous
-  // node behind on every `--overwrite` — one marathon component accumulated seven, with
-  // nothing marking which id was live and six that resolve to nothing. An alias is one
-  // Figma file, so a name within it has exactly one current node: drop the rest.
-  //
-  // Matched on name and alias rather than also on `fileKey`, because the plugin reports an
-  // unsaved file by a per-session placeholder rather than its key — matching on it would
-  // leave a stale row behind every time that placeholder changed.
+  // One component, one row: rows are keyed by node id, and an alias is one Figma file, so
+  // a name within it has exactly one current node. Matched on name and alias rather than
+  // also on `fileKey`, because the plugin reports an unsaved file by a per-session
+  // placeholder — matching on that would strand a row each time it changed.
   for (const [priorId, priorEntry] of Object.entries(existing.entries)) {
     const prior = priorEntry as ComponentsEntry;
     if (priorId !== nodeId && prior.fileKey && prior.name === name && prior.file === alias) {

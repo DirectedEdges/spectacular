@@ -36,11 +36,8 @@ export interface AuthorStatus {
   cache: {
     /**
      * True when a render lookup would be rejected as stale or missing; null when the
-     * workspace fetches nothing, so there is no cache to judge.
-     *
-     * Reported here because a stale cache does not announce itself until `specs render`,
-     * which is the last step of an authoring round — a round has already lost twenty-five
-     * tool calls to a failure that this field would have named before the first write.
+     * workspace fetches nothing, so there is no cache to judge. Render treats it as fatal
+     * and runs last, so the digest is where it has to be answerable.
      */
     stale: boolean | null;
   };

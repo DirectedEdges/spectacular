@@ -86,7 +86,13 @@ export type PrimitiveKind = 'text' | 'glyph' | 'container';
  * @since 0.32.0
  */
 export interface PrimitiveRule {
-  /** What is read from the captured layer — a `Styles` member, a dotted path into `typography`, or `content`. */
+  /**
+   * What is read from the captured layer — a `Styles` member, a dotted path into
+   * `typography`, or `content`.
+   *
+   * `children` is never a source: a promoted container's children become the target's
+   * slot content on their own. An absent `layoutMode` matches a `NONE` key (ADR-076).
+   */
   source: string;
   /** The prop this source's value is written to, as-is. Mutually exclusive with `values`. */
   prop?: string;

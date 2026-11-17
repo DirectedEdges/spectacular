@@ -701,11 +701,9 @@ export const RULES: readonly Rule[] = [
     kinds: COMPONENT_KINDS,
     check(doc) {
       const violations: Violation[] = [];
-      // The property's style value permits null because its type is shared with every
-      // other unit-interval property, where null means unset and is honest. Smoothing is
-      // the exception: the render requires a number, so a null validates clean and then
-      // fails at the canvas — the one place the author has stopped looking. `0` is what
-      // "no smoothing" is, and it says the same thing the render can act on.
+      // Null is admitted by the shared unit-interval style value, where it means unset.
+      // The render requires a number here, so the constraint is the property's, not the
+      // type's — and `0` is what no smoothing is.
       walk(doc, (value, path) => {
         if (!isObj(value) || !isObj(value.styles)) return;
         if (!('cornerSmoothing' in value.styles)) return;

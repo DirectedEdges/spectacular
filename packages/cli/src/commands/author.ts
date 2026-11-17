@@ -52,9 +52,8 @@ function resolve(options: AuthorOptions): Resolved {
 }
 
 /**
- * The same judgment `specs render` makes, asked early. Render treats a stale or missing
- * cache as fatal, and the digest is the first thing an authoring round reads — so the
- * answer belongs here rather than twenty-five tool calls later.
+ * The same judgment `specs render` makes, asked early. Lives here rather than in
+ * `buildStatus` because the source aliases and glyph conventions are held here.
  */
 function cacheStaleness(config: CLIConfig, dataDir: string | undefined): boolean | null {
   const aliases = Object.keys(config.settings.data?.sources ?? {});

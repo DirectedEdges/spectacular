@@ -37,9 +37,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **The authoring rules cover subcomponents**, deriving a part's key, title and the parent slot's `anyOf` from the library's own discovery patterns, and covering the visibility extension and its variant binding. Visibility conditionals and token-namespace lookup gain rules of their own, and the compile step names the diagnostic for a render that reports unresolved instances and still exits successfully.
 
+- **The authoring rules cover instance examples and the promotion table.** An example now shows only what the variants cannot reach, so a component whose every configuration is a variant has none — content that reads differently from the default is the exception that still earns one.
+
 - **`specs author start <key>` opens an authoring round in one call**: a collision-checked component folder with all three concern templates — valid as shipped, so every validation error afterwards is the author's — plus the startup digest. `specs author status` prints the digest alone: catalogue, analysis freshness, conventions paths, and whether the pinned Storybook port answers.
 
 ### Changed
+
+- **An element roled `decoration` stops catching clicks when it has no children**, emitting `pointer-events: none` beside the `aria-hidden` it already carried, so a frontmost overlay no longer blocks the content behind it. A decoration that has children keeps its hit-test, since its text would otherwise become unselectable.
+
+- **The promotion table is cross-referenced against the workspace** by `specs validate`, which warns about a target with no spec folder, a `values` key naming a token the library does not hold, and a written prop the target does not declare. Warnings only — a table is often authored ahead of the components it names.
 
 - **The authoring skills stage preparation reads by file lifecycle**: a contract pack loads before `api.yaml` and a styling pack at `variants.yaml`, each in one batched read that is never reopened, cutting the reading a session does before its first spec write.
 

@@ -103,6 +103,10 @@ export const Validate = new Command('validate')
         authored: options.authored,
         dataDir: config.settings.data?.directory,
         tokenValues,
+        // `config.configDir` is the directory holding `config/`, not `config/` itself.
+        configDir: options.config
+          ? path.resolve(options.config)
+          : path.join(config.configDir ?? process.cwd(), 'config'),
       });
 
       for (const name of result.missing) {

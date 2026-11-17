@@ -17,6 +17,7 @@ import {
 import { checkReferences, type ParsedSpec, type WorkspaceIndex } from './references.js';
 import { loadTokenIndex, type TokenIndex } from './tokens.js';
 import { platformGaps as gapsForSpec, type PlatformGap } from './platformGaps.js';
+import { checkPromotionMap } from './promotionMap.js';
 import { resolveSpecsLayout, SPEC_KINDS, type SpecKind } from '../utilities/specsLayout.js';
 
 export interface ValidateOptions {
@@ -36,6 +37,8 @@ export interface ValidateOptions {
   tokenValues?: ReadonlyMap<string, number>;
   /** Workspace root holding the platform trees; defaults to the specs root's parent. */
   workspaceDir?: string;
+  /** The `config/` directory, for cross-referencing the promotion table. */
+  configDir?: string;
 }
 
 /** One dimension token a spec uses, with what it resolves to in the default mode. */
@@ -57,14 +60,10 @@ export interface Finding {
   message: string;
   level: 'error' | 'warning';
   /**
-   * Set only on a finding from an authored document outside any spec folder — the
-   * catalogue scope and the foundation concerns — when this run was asked about specific
-   * specs. Those documents are always validated (an entry at a broader scope can apply to
-   * a spec this run was not asked about, DSPEC-56), but reporting them inside the
-   * requested spec's tally made the authoring loop's "zero errors before the next file"
-   * unreachable: one unrelated broken foundation file put every component permanently at
-   * one error, and the only way to read your own state was to filter the line out by eye.
-   * Tagged rather than dropped, so nothing is hidden and the count still means something.
+   * Set on a finding from an authored document outside any spec folder when the run named
+   * specific specs. Those documents are always validated — an entry at a broader scope can
+   * apply to a spec the run was not asked about (DSPEC-56) — so they are tagged out of the
+   * requested scope's tally and exit code rather than skipped.
    */
   scope?: 'workspace';
 }
@@ -279,6 +278,17 @@ export function runValidate(options: ValidateOptions): ValidateResult {
   for (const location of workspaceAuthoredFiles(path.resolve(options.specsPath))) {
     validateAuthored(location, workspaceFindings, 'component', location.label);
   }
+  for (const promotion of checkPromotionMap({ configDir: options.configDir, specsPath: options.specsPath, known: allNames })) {
+    workspaceFindings.push({
+      kind: 'component',
+      spec: '',
+      file: 'config/conventions/figma.primitives.yaml',
+      path: promotion.at,
+      message: promotion.message,
+      level: 'warning',
+    });
+  }
+
   for (const finding of workspaceFindings) {
     findings.push(requested.size > 0 ? { ...finding, scope: 'workspace' } : finding);
   }
@@ -293,19 +303,13 @@ export function runValidate(options: ValidateOptions): ValidateResult {
 }
 
 /**
- * Slot fills in one spec that hold the same elements, defined identically.
+ * Slot fills in one spec that hold the same elements, defined identically. Nothing points
+ * between fills, so shared content is written out once per fill and an edit to one has to
+ * be mirrored by hand.
  *
- * A fill is a self-contained anatomy, elements and layout triplet, and nothing points
- * between fills — so a spec whose examples share a content block has it written out once
- * per example. One card documented five listings by duplicating twelve elements between
- * two of them; a later edit to one has to be mirrored by hand, and nothing notices when it
- * is not. This cannot say which fill is the original, so it reports the overlap and leaves
- * the judgment alone.
- *
- * Two thresholds, both measured against real fills rather than chosen for roundness: at
- * least five shared elements, because three identically-defined primitives (a price, its
- * struck-through original, a duration) is ordinary coincidence rather than duplication;
- * and at least half of the smaller fill, so a large fill that happens to contain five of a
+ * Which fill is the original is unknowable here, so this reports the overlap and judges
+ * nothing. Five shared elements, because three identically-defined primitives is ordinary
+ * coincidence; half the smaller fill, so a large fill incidentally containing five of a
  * small one's elements does not warn.
  */
 function duplicatedFills(parsed: ParsedSpec): Array<{ path: string; message: string }> {
