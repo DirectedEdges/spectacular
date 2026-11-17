@@ -144,6 +144,12 @@ export type GuidelineReference = {
 };
 
 /**
+ * A list of references. Mirrors `GuidelineReferences` in `schema/guidelines.schema.json`.
+ * @since 0.41.0
+ */
+export type GuidelineReferences = GuidelineReference[];
+
+/**
  * One rule a consumer must observe.
  * @since 0.40.0
  */
@@ -157,7 +163,7 @@ export type GuidelineEntry = {
    * over `instead` whenever the remedy can be named, because a pointer resolves
    * and a sentence does not.
    */
-  alternatives?: GuidelineReference[];
+  alternatives?: GuidelineReferences;
   /**
    * What to do instead, when the remedy is a rule rather than a thing — "style
    * from the semantic layer" names no single token. An exporter folds this into
@@ -167,11 +173,11 @@ export type GuidelineEntry = {
   /** A broader guideline this one elaborates. */
   refines?: GuidelineReference;
   /** Source material supporting the rule. */
-  evidence?: GuidelineReference[];
+  evidence?: GuidelineReferences;
   /** How this is checked. */
   checkedBy?: GuidelinesCheckedBy;
   /** What does the checking. Required when `checkedBy` is `automated`. */
-  checks?: GuidelineReference[];
+  checks?: GuidelineReferences;
 };
 
 /**

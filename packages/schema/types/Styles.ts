@@ -11,7 +11,7 @@ export type Styles = Partial<{
   locked: boolean;
   backgroundColor: ColorStyle;
   /** Image fill painted on a layer. Present on container element types. Fallback representation used when no image component is configured. A `TokenReference` when the image fill comes from an applied Figma fill style (the style reference routes here — not to `backgroundColor` — when the styled paint is an image). Absent when there is no image fill. @since 0.28.0 */
-  backgroundImage: ImageValue | TokenReference | null;
+  backgroundImage: ImageStyleValue;
   /** Glyph fill color. Present on GLYPH element type only. Represented in Figma as fills. @since 0.13.0 */
   fillColor: ColorStyle;
   effects: TokenReference | Effects;
@@ -260,6 +260,63 @@ export type ColorStyle = ColorString | ColorObject | TokenReference | GradientVa
  * @since 0.40.0
  */
 export type UnitIntervalStyle = number | TokenReference | null;
+
+/**
+ * A boolean style value. Mirrors `BooleanStyleValue` in `schema/styles.schema.json`.
+ * @since 0.41.0
+ */
+export type BooleanStyleValue = boolean;
+
+/**
+ * A boolean style value that may also be prop-bound or conditional.
+ * Mirrors `BooleanBindableStyleValue` in `schema/styles.schema.json`.
+ * @since 0.41.0
+ */
+export type BooleanBindableStyleValue = boolean | TokenReference | PropBinding | Conditional;
+
+/**
+ * A numeric style value. Mirrors `NumberStyleValue` in `schema/styles.schema.json`.
+ * @since 0.41.0
+ */
+export type NumberStyleValue = number | TokenReference | null;
+
+/**
+ * A string style value. Mirrors `StringStyleValue` in `schema/styles.schema.json`.
+ * @since 0.41.0
+ */
+export type StringStyleValue = string | TokenReference | null;
+
+/**
+ * A font member value — a family name or weight, `'mixed'` when the text mixes them.
+ * Mirrors `FontStyleValue` in `schema/styles.schema.json`.
+ * @since 0.41.0
+ */
+export type FontStyleValue = string | number | null;
+
+/**
+ * A line-height value — a percentage string, `'AUTO'`, a number, or `'mixed'`.
+ * Mirrors `LineHeightStyleValue` in `schema/styles.schema.json`.
+ * @since 0.41.0
+ */
+export type LineHeightStyleValue = string | number | TokenReference | null;
+
+/**
+ * A stroke-weight value. Mirrors `StrokeStyleValue` in `schema/styles.schema.json`.
+ * @since 0.41.0
+ */
+export type StrokeStyleValue = number | 'mixed' | TokenReference | null;
+
+/**
+ * A corner-radius value. Mirrors `CornerStyleValue` in `schema/styles.schema.json`.
+ * @since 0.41.0
+ */
+export type CornerStyleValue = number | 'mixed' | TokenReference | null;
+
+/**
+ * A container image fill value. Mirrors `ImageStyleValue` in `schema/styles.schema.json`.
+ * @since 0.41.0
+ */
+export type ImageStyleValue = ImageValue | TokenReference | null;
 
 /**
  * Inline typography properties grouped into a composite object.
