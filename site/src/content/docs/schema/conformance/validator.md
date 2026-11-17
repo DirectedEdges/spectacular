@@ -31,7 +31,7 @@ The kinds are `component`, `component-concern`, `composition-concern`, `componen
 
 ## Split specs — the preferred layout
 
-A spec written per concern (`api.yaml`, `variants.yaml`, `examples.yaml`) is three valid documents and one component. The catalogue's rules cross that split — a configuration in the variants file is only judgeable against the props the api file declares — so the package owns the assembly. Pass the parsed files; missing ones are simply absent:
+A spec written per concern (`api.yaml`, `variants.yaml`, `examples.yaml`) is three valid documents and one component. The catalogue's rules cross that split — a configuration in the variants file is only judgeable against the props the api file declares — so the package owns the merge. Pass the parsed files; missing ones are simply absent:
 
 ```js
 import { validateConcernSet } from '@directededges/specs-schema-core';
@@ -45,7 +45,7 @@ for (const v of violations) {
 
 Each present document is validated against its own concern definition, then the catalogue runs over the merged whole. Every violation carries the `concern` it came from — schema failures from the file that failed, rule failures attributed by the path's first recognised member. For a composition's folder, pass `{ specKind: 'composition' }`.
 
-`mergeConcerns(concerns)` is exported on its own for a consumer that wants the assembled document — it drops each file's `metadata` (the merged form is the whole-component shape, which carries no `concern`) and merges subcomponent slices per key. It lives here so every consumer merges the same way: two implementations that merged differently would disagree about conformance while agreeing about every file.
+`mergeConcerns(concerns)` is exported on its own for a consumer that wants the merged document — it drops each file's `metadata` (the merged form is the whole-component shape, which carries no `concern`) and merges subcomponent slices per key. It lives here so every consumer merges the same way: two implementations that merged differently would disagree about conformance while agreeing about every file.
 
 ## The layers, separately
 

@@ -164,8 +164,8 @@ export function isMissingSourceError(err: ErrorObject): boolean {
   return missing === 'source' && /(^|\/)metadata$/.test(err.instancePath);
 }
 
-/** Run the JSON Schema layer for a kind, as `rule: 'schema'` violations. */
-export function schemaViolations(doc: unknown, kind: DocumentKind): Violation[] {
+/** Run the JSON Schema layer for a kind, as `rule: 'schema'` violations — the sibling of `checkRules` and the CLI's `checkReferences`. */
+export function checkSchema(doc: unknown, kind: DocumentKind): Violation[] {
   const fn = schemaValidator(kind);
   if (fn(doc)) return [];
   return (fn.errors ?? []).map(err => {

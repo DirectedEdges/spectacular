@@ -1,4 +1,4 @@
-// Assembling a split spec back into the whole document the rule catalogue
+// Merging a split spec back into the whole document the rule catalogue
 // evaluates. A component MAY be written whole or split into concern documents,
 // and the two forms carry the same information (§2.1) — but the catalogue's
 // rules cross concerns (a configuration in the variants document against a

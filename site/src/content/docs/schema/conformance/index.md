@@ -35,7 +35,7 @@ Validating a concern document against one definition *inside* its file would che
 
 ## Scope: one document, or a concern set
 
-The validator checks what a document states about itself, and it assembles a [split spec](/schema/component/#concern-documents) into the whole document the catalogue evaluates — see [the validator API](/schema/conformance/validator/). What it deliberately does not do is resolve a workspace: a pointer rooted outside the document (`#/components/…`, `<file>#/…`) needs the rest of the catalogue, and [`specs validate`](/cli/commands/validate/) checks those across files in its reference layer, using this package as its engine.
+The validator checks what a document states about itself, and it merges a [split spec](/schema/component/#concern-documents) into the whole document the catalogue evaluates — see [the validator API](/schema/conformance/validator/). What it deliberately does not do is resolve a workspace: a pointer rooted outside the document (`#/components/…`, `<file>#/…`) needs the rest of the catalogue, and [`specs validate`](/cli/commands/validate/) checks those across files in its reference layer, using this package as its engine.
 
 Two catalogue rules are uncheckable from documents alone and are declared as such in the package's `UNCHECKED_RULES`, each with its reason: DSPEC-33, because what must stay constant across variants is producer behaviour across generation runs; and DSPEC-63, whose structural half the guidelines schema enforces and whose prose half no validator can judge.
 

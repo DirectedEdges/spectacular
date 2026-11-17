@@ -7,7 +7,7 @@
 // for a JSON Schema failure. The library API is the whole surface; there is no
 // command-line entry point.
 
-import { schemaViolations } from './schemas.js';
+import { checkSchema } from './schemas.js';
 import { checkRules } from './rules.js';
 import type { DocumentKind, RuleContext, ValidateResult, Violation } from './types.js';
 
@@ -21,7 +21,7 @@ export {
   isMissingSourceError,
   schemaDir,
   schemaValidator,
-  schemaViolations,
+  checkSchema,
   type AuthoredKind,
   type ConcernName,
   type ConcernValidators,
@@ -35,7 +35,7 @@ export {
   type ConcernSetOptions,
   type ConcernSetResult,
   type ConcernViolation,
-} from './assemble.js';
+} from './concerns.js';
 // Re-exported so a consumer can type a compiled validator without depending on
 // ajv itself.
 export type { ValidateFunction, ErrorObject } from 'ajv';
@@ -50,6 +50,6 @@ function compare(a: Violation, b: Violation): number {
  * rule — so two runs over the same document report the same lines.
  */
 export function validateDocument(doc: unknown, kind: DocumentKind, ctx: RuleContext = {}): ValidateResult {
-  const violations = [...schemaViolations(doc, kind), ...checkRules(doc, kind, ctx)].sort(compare);
+  const violations = [...checkSchema(doc, kind), ...checkRules(doc, kind, ctx)].sort(compare);
   return { valid: violations.length === 0, violations };
 }

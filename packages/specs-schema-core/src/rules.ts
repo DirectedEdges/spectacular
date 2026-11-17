@@ -484,7 +484,7 @@ export const RULES: readonly Rule[] = [
   },
   {
     id: 'DSPEC-27',
-    summary: 'fillColor appears only on fillable elements; textColor only on text elements',
+    summary: 'fillColor appears only on glyph elements; textColor only on text elements',
     kinds: COMPONENT_KINDS,
     check(doc) {
       const violations: Violation[] = [];
