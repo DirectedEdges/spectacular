@@ -39,12 +39,9 @@ This release adds a layout mode, restructures how a component's examples are hel
 
 #### Accepted
 
+- [122](../../adr/122-layout-grid.md) — Layout Grid — `layoutMode: GRID` and a Single Templated Axis
 - [124](../../adr/124-instance-example-styles.md) — Styles on InstanceExample
 - [125](../../adr/125-examples-orientation.md) — Instance-example orientation
-
-#### New drafts
-
-- [122](../../adr/122-layout-grid.md) — Layout Grid — `layoutMode: GRID` and a Single Templated Axis
 
 
 ## [0.40.0] - 2026-11-12
