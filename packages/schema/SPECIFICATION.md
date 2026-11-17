@@ -380,7 +380,7 @@ The schema files declare JSON Schema draft-07; the decomposition keyword is `def
 
 ### 8.4 Type and schema parity
 
-The package publishes TypeScript types in `types/` and JSON Schema in `schema/` describing the same structure. Every type MUST have a corresponding schema definition and every definition a corresponding type (DSPEC-22; CONSTITUTION §I — test: `SchemaTypeParity.test.ts`). Correspondence is by name, under two conventions the test applies: a definition `<X>StyleValue` or `<X>Value` pairs with a type `<X>` or `<X>Style`, and the deliberate divergences — roots the schema cannot name, unions one side writes inline, grammars TS cannot express, deprecated schema-only forms — are enumerated with reasons in `tests/parity-exclusions.ts`.
+The package publishes TypeScript types in `types/` and JSON Schema in `schema/` describing the same structure. Every type MUST have a corresponding schema definition and every definition a corresponding type (DSPEC-22; CONSTITUTION §I — test: `SchemaTypeParity.test.ts`). Correspondence is by name, under two conventions the test applies: a definition `<X>StyleValue` or `<X>Value` pairs with a type `<X>` or `<X>Style`, and the deliberate divergences — path-scoped narrowings and property-name vocabularies the schema cannot address, grammars TS cannot express, runtime-resolved TS-only shapes, deprecated schema-only forms — are enumerated with reasons in `tests/parity-exclusions.ts`.
 
 The JSON Schema is authoritative for validating serialized documents; the TypeScript types are authoritative for compile-time consumption. Neither governs the other.
 

@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `InstanceExamples.orientation` — how the examples sit relative to each other (`HORIZONTAL` or `VERTICAL`); absent means `VERTICAL` (ADR-125)
 - SPECIFICATION §10 — the conformance section now describes the shipped reference validator and fixture corpus (`@directededges/specs-schema-core`), replacing the stub; conformance is decided by the kind's schema plus the §9 catalogue, reported by rule identifier
 - Type-to-schema parity is now tested (DSPEC-22): every exported type pairs with a schema definition and every definition with a type, under the declared naming conventions, with the deliberate divergences enumerated and reasoned in `tests/parity-exclusions.ts`
+- 24 names close most of that parity gap. The schema names what it wrote inline — `Children`, `Concern`, `ColorFormat`, `Subcomponents`, `ObjectPropMember`, `RoleConceptName`, `ActionConceptName`, `GuidelinesStatus`, `SupplementalStatus`, `ImageDataExtensions`, `FigmaImageExtension`, and all four document roots (`ComponentConcernDocument`, `CompositionConcernDocument`, `GuidelinesDocument`, `SupplementalDocument`) — and the types export the nine `*StyleValue` wrapper aliases plus `GuidelineReferences`. Validation behaviour is unchanged; every inline shape simply gained a citable name
 
 ### Changed
 
