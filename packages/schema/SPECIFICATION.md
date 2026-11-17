@@ -339,6 +339,20 @@ On an element the component owns, more than one `role` is an error; the array fo
 
 `$extensions['com.figma'].childRole` records a role annotated on a layer that wrapper collapse folded into this element. It is deliberately not merged into `role`: the pair is what lets a renderer put each annotation back on the layer that carried it (ADR-104).
 
+### 6.6 Grid slot hosts
+
+A slot element MAY carry `layoutMode: GRID`, making the items composed into it the cells of a grid. The leaf style vocabulary is governed by `styles.schema.json` and the reference pages (§1.5); the rules here are the ones that cross a structural boundary, which is what earns them a section.
+
+A producer MUST flatten a slot whose only child is a grid container named by the platform's `slotGrid` convention: the slot takes that container's `layoutMode` and track keys, the container is dropped, and the container's children become the slot's content (DSPEC-71; ADR-122). The flatten exists because a design tool may forbid grid layout on a slot frame while the contract does not, so the same intent arrives one layer deeper than the contract records it.
+
+The container must be the slot's **only** child. A slot holding it beside anything else is holding content rather than declaring a layout, and a producer MUST leave such a container as an ordinary element (DSPEC-71).
+
+Where the platform declares no such convention, the container is ordinary slot content and no flatten occurs (`producer`).
+
+A producer MUST run this flatten before wrapper collapse (§6.5). The flatten leaves a root wrapping one slot, which is the shape that collapse removes, so the two run in sequence on a grid slot and a producer that reverses them leaves a wrapper standing (DSPEC-71).
+
+Wrapper collapse distributes a merged element's styles by what each style acts on. The track keys travel with the `layoutMode` they complete — a mode without them declares a layout it cannot perform — and when that mode is `GRID` the parent-layout group goes to the slot box alone rather than to both boxes (DSPEC-72; ADR-083, ADR-122). The both-boxes rule rests on those keys being near no-ops on a box holding exactly one child, which holds for a stacking axis and fails for a templated one: a lone child in a three-track grid occupies one track.
+
 ---
 
 ## 7. Extensions
@@ -458,6 +472,11 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-65 | A producer MUST record `InstanceExample.styles` only for an example instance declaring non-`HUG` horizontal sizing — `layoutSizingHorizontal: 'FIXED'` with `width` in raw px — and MUST omit it otherwise | producer | §5.4, ADR-124 |
 | DSPEC-66 | A rendering consumer MUST apply `InstanceExample.styles` to the instantiated example after configuration and content fills | consumer | §5.4, ADR-124 |
 | DSPEC-67 | A rendering consumer MUST lay instance examples out along the declared `InstanceExamples.orientation`, treating an absent value as `VERTICAL` | consumer | §5.4, ADR-125 |
+| DSPEC-68 | A resolved `styles` block carries a non-null value for at most one of `gridColumns` and `gridRows`; a grid templates one axis and sizes the other by content | validator | styles reference, ADR-122 |
+| DSPEC-69 | A variant layer that sets one of `gridColumns` or `gridRows` clears the other, written as an explicit `null` rather than omitted, since an omitted key inherits | producer | styles reference, ADR-122 |
+| DSPEC-70 | A consumer reading both axes non-null treats `gridColumns` as the templated axis and reports `gridRows` as unsupported, rather than choosing either silently | consumer | styles reference, ADR-122 |
+| DSPEC-71 | A slot whose only child is a grid container named by the platform's `slotGrid` convention takes that container's grid, and the container's children become the slot's content; a container sharing the slot with anything else stays an ordinary element | producer | §6.6, ADR-122 |
+| DSPEC-72 | Wrapper collapse carries the grid track keys with the `layoutMode` they complete, and distributes that group to the slot box alone when the mode is `GRID` | producer | §6.6, ADR-083/122 |
 
 The reference validator (§10) implements every **validator** row except DSPEC-33 and DSPEC-63, whose single-document limits §10 states.
 

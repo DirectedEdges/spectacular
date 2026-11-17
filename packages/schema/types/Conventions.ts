@@ -226,6 +226,21 @@ export interface PlatformConventions {
     /** Literal layer name identifying the container (e.g. `"Code only props"`). */
     match: string;
   };
+  /**
+   * The layer declaring that a slot lays its content out as a grid (ADR-122). Optional;
+   * absence means no such convention and a slot's grid frame stays slot content.
+   *
+   * This platform cannot apply grid layout to a slot frame, so the grid is authored one
+   * layer inside it. The named frame is a declaration rather than content: the slot takes
+   * its grid layout, and the frame's children preview that layout rather than filling the
+   * slot, so the slot reads empty.
+   *
+   * @since 0.41.0
+   */
+  slotGrid?: {
+    /** Literal layer name identifying the declaration frame (e.g. `"Slot grid"`). */
+    match: string;
+  };
   /** Subcomponent organization and naming. Optional; absence means no subcomponent convention. */
   subcomponents?: {
     /** Where this platform keeps subcomponents. NESTED = anatomy only (default); PAGE = also the Figma page. */
@@ -604,6 +619,10 @@ export interface ResolvedPlatformConventions {
   };
   /** The code-only props container layer. Optional; absence means no such convention. */
   codeOnlyProps?: {
+    match: string;
+  };
+  /** The layer declaring a slot's grid layout. Optional; absence means no such convention. @since 0.41.0 */
+  slotGrid?: {
     match: string;
   };
   /** Subcomponent organization and naming. Optional; absence means no subcomponent convention. */

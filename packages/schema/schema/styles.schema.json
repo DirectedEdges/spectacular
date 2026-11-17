@@ -275,6 +275,18 @@
           "default": "NONE",
           "examples": ["HORIZONTAL", "VERTICAL"]
         },
+        "gridColumns": {
+          "$ref": "#/definitions/GridTracksStyleValue",
+          "description": "The columns a grid templates, when the column axis is the templated one.",
+          "default": null,
+          "examples": [{ "minSize": 200 }]
+        },
+        "gridRows": {
+          "$ref": "#/definitions/GridTracksStyleValue",
+          "description": "The rows a grid templates, when the row axis is the templated one.",
+          "default": null,
+          "examples": [2]
+        },
         "wrap": {
           "$ref": "#/definitions/BooleanStyleValue",
           "description": "Whether children that overflow the stacking axis continue onto another line.",
@@ -1095,7 +1107,44 @@
           "const": "VERTICAL",
           "title": "Column",
           "description": "Children stack along the block axis."
+        },
+        {
+          "const": "GRID",
+          "title": "Grid",
+          "description": "Children fill cells of equal tracks on the templated axis, in source order."
         }
+      ]
+    },
+    "AdaptiveGridTracks": {
+      "type": "object",
+      "description": "A track count derived from the container: as many tracks as fit at the declared minimum, with remaining space shared equally.",
+      "examples": [{ "minSize": 200 }],
+      "properties": {
+        "minSize": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "The smallest size a track may take, in pixels, measured on the axis its owning key names."
+        },
+        "collapseUnusedTracks": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether tracks holding no child are dropped, letting the remaining children fill the row."
+        }
+      },
+      "required": ["minSize"],
+      "additionalProperties": false
+    },
+    "GridTracksStyleValue": {
+      "examples": [3],
+      "description": "Grid track count value. Integer when fixed; AdaptiveGridTracks when derived from the container; null when the axis is not templated. Structural property — not token-bindable.",
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 1,
+          "description": "A fixed count of equal tracks."
+        },
+        { "$ref": "#/definitions/AdaptiveGridTracks" },
+        { "type": "null" }
       ]
     },
     "WrapAlignmentStyleValue": {

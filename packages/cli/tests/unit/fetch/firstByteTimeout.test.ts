@@ -46,13 +46,20 @@ describe('figmaFetch first-byte deadline', () => {
 
   it('does not cut off a body that keeps arriving past the deadline', async () => {
     // Headers immediately, then bytes dribbling out well past the deadline.
+    //
+    // The deadline is generous and the body far slower still, because what this
+    // asserts is an ordering — headers before the deadline, body after it — and a
+    // tight budget turns that into a race. At 100ms it measured whether the local
+    // server could answer within 100ms, which a loaded machine running the suite in
+    // parallel workers sometimes cannot, and the test failed for a reason it does
+    // not test.
     const url = await listen((_req, res) => {
       res.writeHead(200, { 'content-type': 'application/json' });
       res.write('{"a":');
-      setTimeout(() => res.end('1}'), 250);
+      setTimeout(() => res.end('1}'), 1500);
     });
 
-    const result = await figmaFetch(url, 'token', 100);
+    const result = await figmaFetch(url, 'token', 500);
     expect(result.status).toBe(200);
     const chunks: string[] = [];
     const reader = result.stream!.getReader();

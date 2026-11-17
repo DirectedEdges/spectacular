@@ -675,6 +675,27 @@ export const RULES: readonly Rule[] = [
     },
   },
   {
+    id: 'DSPEC-68',
+    summary: 'A styles block templates at most one grid axis',
+    kinds: COMPONENT_KINDS,
+    check(doc) {
+      const violations: Violation[] = [];
+      // Cross-member, so JSON Schema cannot state it: each key is valid alone, and only
+      // the pair is wrong. A grid templates one axis and sizes the other by its content,
+      // so two templated axes leave a consumer choosing which to honour.
+      walk(doc, (value, path) => {
+        if (!isObj(value) || !isObj(value.styles)) return;
+        const { gridColumns, gridRows } = value.styles;
+        if (gridColumns === undefined || gridColumns === null) return;
+        if (gridRows === undefined || gridRows === null) return;
+        violations.push(
+          violation('DSPEC-68', `${path}/styles`, 'a grid templates one axis and sizes the other by content — gridColumns and gridRows are not both non-null'),
+        );
+      });
+      return violations;
+    },
+  },
+  {
     id: 'DSPEC-62',
     summary: 'A directory under foundations/ is named from the foundation concern vocabulary',
     kinds: ['supplemental', 'guidelines'],
