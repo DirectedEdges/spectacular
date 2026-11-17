@@ -12,3 +12,4 @@ document:
     label: { type: text }
   props:
     label: { type: string, examples: [Save] }
+    variant: { type: string, default: primary, enum: [primary, secondary] }

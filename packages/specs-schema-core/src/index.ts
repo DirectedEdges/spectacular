@@ -27,6 +27,15 @@ export {
   type ConcernValidators,
 } from './schemas.js';
 export { resolvePointer } from './walk.js';
+export {
+  concernOfPath,
+  mergeConcerns,
+  validateConcernSet,
+  type ConcernSet,
+  type ConcernSetOptions,
+  type ConcernSetResult,
+  type ConcernViolation,
+} from './assemble.js';
 // Re-exported so a consumer can type a compiled validator without depending on
 // ajv itself.
 export type { ValidateFunction, ErrorObject } from 'ajv';

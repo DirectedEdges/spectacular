@@ -117,6 +117,7 @@ specs validate button buttonGroup toolbar
 
 ## Related
 
+- [Conformance](/schema/conformance/) — the reference validator this command runs, and the rule identifiers it reports
 - [Authoring a component](/guides/authoring-a-component/) — the round this command gates
 - [`author`](/cli/commands/author/) — writes a folder that starts valid
 - [supplemental](/schema/documents/supplemental/) and [guidelines](/schema/documents/guidelines/) — the two authored documents it shape-checks
