@@ -1,0 +1,16 @@
+# A concern document requires what it carries and permits nothing else (§2.2):
+# an api document carrying `default` matches no branch of the concern file's
+# top-level choice.
+kind: component-concern
+expect: schema
+document:
+  metadata:
+    source: { pageId: '1:2', nodeId: '3:4', nodeType: COMPONENT_SET }
+    concern: api
+  title: Button
+  anatomy:
+    root: { type: container }
+  props: {}
+  default:
+    elements:
+      root: {}

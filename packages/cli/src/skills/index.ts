@@ -35,8 +35,8 @@
 
 import PRIMER from './primer.md';
 import WORKSPACE_SETUP from './workspaceSetup.md';
-import PREMERGE from './premerge.md';
-import RELEASE from './release.md';
+import VERSION_FIGMAPREMERGE from './versionFigmapremerge.md';
+import VERSION_RELEASE from './versionRelease.md';
 import ROLES_PROPOSE from './rolesPropose.md';
 import ROLES_APPLY from './rolesApply.md';
 import STATES_SETUP from './statesSetup.md';
@@ -79,8 +79,8 @@ export const SKILL_ASSETS: SkillAsset[] = [
   { name: 'specs-cli.primer', markdown: PRIMER },
   { name: 'specs-cli.workspace.setup', markdown: WORKSPACE_SETUP },
   { name: 'specs-cli.posture', markdown: POSTURE },
-  { name: 'specs-cli.premerge', markdown: PREMERGE },
-  { name: 'specs-cli.release', markdown: RELEASE },
+  { name: 'specs-cli.version.figmapremerge', markdown: VERSION_FIGMAPREMERGE },
+  { name: 'specs-cli.version.release', markdown: VERSION_RELEASE },
   { name: 'specs-cli.roles.propose', markdown: ROLES_PROPOSE },
   { name: 'specs-cli.roles.apply', markdown: ROLES_APPLY },
   { name: 'specs-cli.states.setup', markdown: STATES_SETUP },

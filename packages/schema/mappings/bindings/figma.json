@@ -65,7 +65,7 @@
           "glyph"
         ],
         "target": "node.opacity",
-        "notes": "A TokenReference binds the variable; otherwise the raw number is written.",
+        "notes": "A TokenReference binds the variable; otherwise the raw number is written. The two forms sit on different scales: node.opacity takes 0-1, while a bound variable is evaluated on the percent scale Figma's own UI shows, so a variable holding 36 renders as 36% opacity. An opacity variable is therefore authored 0-100, and a captured rawValue, read from the node rather than from the variable, is on 0-1.",
         "onAbsent": "unverified",
         "basis": "implementation"
       },

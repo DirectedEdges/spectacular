@@ -1,0 +1,10 @@
+# The smallest conforming whole component: the three required members (§2.3).
+kind: component
+document:
+  title: Button
+  anatomy:
+    root: { type: container }
+    label: { type: text }
+  default:
+    elements:
+      label: { content: Save }

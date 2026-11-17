@@ -1,0 +1,36 @@
+# Value forms the schema admits that generated corpora rarely write: a
+# TokenReference on itemSpacing, a Conditional on visible, an inline
+# ColorObject (three components, as DSPEC-40 requires), and an image style
+# value referencing the registry.
+kind: component
+document:
+  title: Divider
+  anatomy:
+    root: { type: container }
+    rule: { type: line }
+    caption: { type: text }
+  props:
+    showCaption: { type: boolean, default: true }
+  default:
+    elements:
+      root:
+        styles:
+          itemSpacing: { $token: Space/2, $type: dimension }
+          backgroundImage: { $image: '#/images/texture', objectFit: COVER }
+      rule:
+        styles:
+          strokes: { colorSpace: srgb, components: [0, 0, 0], alpha: 1 }
+      caption:
+        styles:
+          visible:
+            if:
+              condition:
+                operation: equals
+                args:
+                  value: { $binding: '#/props/showCaption' }
+                  compareTo: true
+              then: true
+              else: false
+  images:
+    texture:
+      src: ./images/texture.png

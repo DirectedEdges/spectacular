@@ -1,0 +1,17 @@
+# null under an enum prop that never admitted it — an enum's nullable defaults
+# to false, because enum enumerates every accepted value.
+kind: component
+expect: DSPEC-12
+document:
+  title: Button
+  anatomy:
+    root: { type: container }
+  props:
+    variant: { type: string, default: primary, enum: [primary, secondary] }
+  default:
+    elements:
+      root: {}
+  variants:
+    - configuration: { variant: null }
+      elements:
+        root: {}

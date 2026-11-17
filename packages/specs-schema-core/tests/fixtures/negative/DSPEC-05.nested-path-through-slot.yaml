@@ -1,0 +1,19 @@
+# The $nested path descends through a slot element — a filled slot is a
+# reference, handled by recursion into the target entry's own paths.
+kind: component
+expect: DSPEC-05
+document:
+  title: Card
+  anatomy:
+    root: { type: container }
+    content: { type: slot }
+  default:
+    elements:
+      content: {}
+  variants:
+    - configuration:
+        $nested:
+          - path: [content]
+            size: small
+      elements:
+        content: {}

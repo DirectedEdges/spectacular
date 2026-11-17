@@ -4,6 +4,48 @@
   "title": "Specs Settings",
   "description": "Choices about a run rather than facts about a library. Changing a setting produces different output, never incorrect output.",
   "definitions": {
+    "ColorFormat": {
+      "description": "A colour value output notation (settings spec.color).",
+      "examples": ["HEXA"],
+      "oneOf": [
+        {
+          "const": "HEX",
+          "description": "A 6-digit hex string. Discards alpha, so a translucent colour reads as opaque."
+        },
+        {
+          "const": "HEXA",
+          "description": "An 8-digit hex string carrying alpha — the most compact form that survives a round trip."
+        },
+        {
+          "const": "RGB",
+          "description": "CSS `rgb()` functional notation."
+        },
+        {
+          "const": "RGBA",
+          "description": "CSS `rgba()` functional notation with alpha, which is what Figma labels \"CSS\" in its colour picker."
+        },
+        {
+          "const": "HSLA",
+          "description": "CSS `hsla()` functional notation."
+        },
+        {
+          "const": "HSB",
+          "description": "Figma's native colour model, also known as HSV. Not a CSS function."
+        },
+        {
+          "const": "OKLCH",
+          "description": "CSS Color Level 4 perceptually uniform cylindrical notation."
+        },
+        {
+          "const": "OKLAB",
+          "description": "CSS Color Level 4 perceptually uniform rectangular notation."
+        },
+        {
+          "const": "OBJECT",
+          "description": "A full `ColorObject` with its colour space and components, preserving fidelity with no lossy conversion."
+        }
+      ]
+    },
     "SourceEntry": {
       "examples": [{ "key": "abc123XYZ", "fetch": ["file", "variables"] }],
       "type": "object",
@@ -194,46 +236,9 @@
               ]
             },
             "color": {
+              "$ref": "#/definitions/ColorFormat",
               "default": "HEXA",
-              "description": "Color value output format. Defaults to HEXA, an 8-digit hex string carrying alpha.",
-              "oneOf": [
-                {
-                  "const": "HEX",
-                  "description": "A 6-digit hex string. Discards alpha, so a translucent colour reads as opaque."
-                },
-                {
-                  "const": "HEXA",
-                  "description": "An 8-digit hex string carrying alpha — the most compact form that survives a round trip."
-                },
-                {
-                  "const": "RGB",
-                  "description": "CSS `rgb()` functional notation."
-                },
-                {
-                  "const": "RGBA",
-                  "description": "CSS `rgba()` functional notation with alpha, which is what Figma labels \"CSS\" in its colour picker."
-                },
-                {
-                  "const": "HSLA",
-                  "description": "CSS `hsla()` functional notation."
-                },
-                {
-                  "const": "HSB",
-                  "description": "Figma's native colour model, also known as HSV. Not a CSS function."
-                },
-                {
-                  "const": "OKLCH",
-                  "description": "CSS Color Level 4 perceptually uniform cylindrical notation."
-                },
-                {
-                  "const": "OKLAB",
-                  "description": "CSS Color Level 4 perceptually uniform rectangular notation."
-                },
-                {
-                  "const": "OBJECT",
-                  "description": "A full `ColorObject` with its colour space and components, preserving fidelity with no lossy conversion."
-                }
-              ]
+              "description": "Color value output format. Defaults to HEXA, an 8-digit hex string carrying alpha."
             },
             "variantDepth": {
               "default": 9999,

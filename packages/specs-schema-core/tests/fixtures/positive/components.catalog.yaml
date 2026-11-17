@@ -1,0 +1,11 @@
+kind: components
+document:
+  components:
+    button:
+      title: Button
+      anatomy:
+        root: { type: container }
+        label: { type: text }
+      default:
+        elements:
+          label: { content: Save }

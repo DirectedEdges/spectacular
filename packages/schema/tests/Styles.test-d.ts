@@ -624,7 +624,7 @@ const _grAdaptive: Styles = { gridRows: { minSize: 120 } };
 // null clears an inherited value — the form a variant uses to switch axis
 const _gcNull: Styles = { gridColumns: null };
 
-// Both keys compile; "at most one is non-null" is a semantic rule (DSPEC-65), not a type-level one
+// Both keys compile; "at most one is non-null" is a semantic rule (DSPEC-68), not a type-level one
 const _gcBothAxes: Styles = { gridColumns: 3, gridRows: null };
 
 // @ts-expect-error: a string is not a track count

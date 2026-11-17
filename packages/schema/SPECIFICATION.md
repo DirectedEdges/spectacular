@@ -8,7 +8,7 @@ It is the normative root of the schema documentation. The per-member reference �
 
 The audience is engineers and automated agents equally. Section numbers and rule identifiers (`DSPEC-nn`) are stable citation targets: cite a requirement by its rule ID where it has one, and by section otherwise.
 
-> **Draft status.** The requirements and the rule catalogue (§9) are written. No conformance suite or reference validator exists yet (§10). A requirement marked `unenforced` is a statement of intent that nothing currently checks — a gap to close, not a claim to rely on.
+> **Draft status.** The requirements and the rule catalogue (§9) are written, and the reference validator and conformance suite exist (§10): `@directededges/specs-schema-core` checks a document against the schema for its kind and the catalogue's validator-class rules, reporting every failure by rule identifier. A requirement marked `unenforced` is a statement of intent that nothing currently checks — a gap to close, not a claim to rely on.
 
 ---
 
@@ -31,7 +31,7 @@ Every requirement ends with a parenthetical note naming what enforces it:
 | `(consumer)` | Binds consumers; visible only in their behaviour |
 | `(unenforced)` | Nothing currently checks it |
 
-A rule ID in the note means a validator implementing §9 checks it; until a validator exists, every `DSPEC-nn` is also effectively unenforced. A requirement that cannot be given an enforcement note does not belong in this document.
+A rule ID in the note means a validator implementing §9 checks it; the reference validator (§10) checks every validator-class rule except the two it names as uncheckable from a single document. A requirement that cannot be given an enforcement note does not belong in this document.
 
 ### 1.3 Terminology
 
@@ -51,7 +51,7 @@ A rule ID in the note means a validator implementing §9 checks it; until a vali
 | **Document** | A file conforming to §2–§8 | Generated and authored specs |
 | **Producer** | A tool that writes Specs documents | `specs generate`, the Figma plugin, hand authoring |
 | **Consumer** | A tool that reads Specs documents and acts on them | Platform transforms, the Figma render path, the docs generator |
-| **Validator** | A tool that decides conformance: schema plus §9 | None published — see §10 |
+| **Validator** | A tool that decides conformance: schema plus §9 | `@directededges/specs-schema-core` (§10) |
 
 ### 1.5 Scope and depth
 
@@ -295,6 +295,10 @@ A path MUST NOT descend through a slot fill: a filled slot is a reference, handl
 
 `InstanceExample.propConfigurations` does not accept `$nested`: deep configuration lives in `slotContentExamples` (schema: `component.schema.json`).
 
+`InstanceExample.styles` is the example instance's own box, not its content's: a producer records it only when the instance declares a non-`HUG` horizontal sizing — `layoutSizingHorizontal: 'FIXED'` with `width` in raw px — and omits it for an instance left at its component's natural size (DSPEC-65; ADR-124). A rendering consumer applies these styles to the instantiated example after configuration and content fills (DSPEC-66; ADR-124).
+
+`instanceExamples` wraps its named `items` with the set-level `orientation` (ADR-125). A rendering consumer lays the examples out along the declared axis, and treats an absent `orientation` as `VERTICAL` (DSPEC-67).
+
 ---
 
 ## 6. Slots, roles and composition
@@ -315,7 +319,7 @@ When true, an authored example may nest a filling instance as a plain child elem
 
 The reserved markers `$text` and `$glyph` name the primitive kinds a slot accepts. The names are `ElementType`'s: `type: text` on an anatomy item and `$text` in `anyOf` are the same concept (ADR-102).
 
-Formatting for primitive fills lives under the matching key of the slot element's `contentStyles`. `contentStyles` is meaningful only on a slot element, and its keys SHOULD agree with that slot's `anyOf` markers (DSPEC-07; ADR-102).
+Formatting for primitive fills lives under the matching key of the slot element's `contentStyles`. A slot element is one typed `slot` — or one whose `children` bind to a slot prop, which is how a producer writes a default slot's host: the anatomy says container, the binding says slot. `contentStyles` is meaningful only on a slot element, and its keys SHOULD agree with that slot's `anyOf` markers (DSPEC-07; ADR-102).
 
 A component fill is formatted by the component it instantiates: a consumer rendering one applies the instance's `styles` and MUST discard the slot's `contentStyles` rather than cascading it (`consumer`; ADR-102).
 
@@ -339,15 +343,15 @@ On an element the component owns, more than one `role` is an error; the array fo
 
 A slot element MAY carry `layoutMode: GRID`, making the items composed into it the cells of a grid. The leaf style vocabulary is governed by `styles.schema.json` and the reference pages (§1.5); the rules here are the ones that cross a structural boundary, which is what earns them a section.
 
-A producer MUST flatten a slot whose only child is a grid container named by the platform's `slotGrid` convention: the slot takes that container's `layoutMode` and track keys, the container is dropped, and the container's children become the slot's content (DSPEC-68; ADR-122). The flatten exists because a design tool may forbid grid layout on a slot frame while the contract does not, so the same intent arrives one layer deeper than the contract records it.
+A producer MUST flatten a slot whose only child is a grid container named by the platform's `slotGrid` convention: the slot takes that container's `layoutMode` and track keys, the container is dropped, and the container's children become the slot's content (DSPEC-71; ADR-122). The flatten exists because a design tool may forbid grid layout on a slot frame while the contract does not, so the same intent arrives one layer deeper than the contract records it.
 
-The container must be the slot's **only** child. A slot holding it beside anything else is holding content rather than declaring a layout, and a producer MUST leave such a container as an ordinary element (DSPEC-68).
+The container must be the slot's **only** child. A slot holding it beside anything else is holding content rather than declaring a layout, and a producer MUST leave such a container as an ordinary element (DSPEC-71).
 
 Where the platform declares no such convention, the container is ordinary slot content and no flatten occurs (`producer`).
 
-A producer MUST run this flatten before wrapper collapse (§6.5). The flatten leaves a root wrapping one slot, which is the shape that collapse removes, so the two run in sequence on a grid slot and a producer that reverses them leaves a wrapper standing (DSPEC-68).
+A producer MUST run this flatten before wrapper collapse (§6.5). The flatten leaves a root wrapping one slot, which is the shape that collapse removes, so the two run in sequence on a grid slot and a producer that reverses them leaves a wrapper standing (DSPEC-71).
 
-Wrapper collapse distributes a merged element's styles by what each style acts on. The track keys travel with the `layoutMode` they complete — a mode without them declares a layout it cannot perform — and when that mode is `GRID` the parent-layout group goes to the slot box alone rather than to both boxes (DSPEC-69; ADR-083, ADR-122). The both-boxes rule rests on those keys being near no-ops on a box holding exactly one child, which holds for a stacking axis and fails for a templated one: a lone child in a three-track grid occupies one track.
+Wrapper collapse distributes a merged element's styles by what each style acts on. The track keys travel with the `layoutMode` they complete — a mode without them declares a layout it cannot perform — and when that mode is `GRID` the parent-layout group goes to the slot box alone rather than to both boxes (DSPEC-72; ADR-083, ADR-122). The both-boxes rule rests on those keys being near no-ops on a box holding exactly one child, which holds for a stacking axis and fails for a templated one: a lone child in a three-track grid occupies one track.
 
 ---
 
@@ -390,7 +394,7 @@ The schema files declare JSON Schema draft-07; the decomposition keyword is `def
 
 ### 8.4 Type and schema parity
 
-The package publishes TypeScript types in `types/` and JSON Schema in `schema/` describing the same structure. Every type MUST have a corresponding schema definition and every definition a corresponding type (DSPEC-22; CONSTITUTION §I — `test:` none, `unenforced`).
+The package publishes TypeScript types in `types/` and JSON Schema in `schema/` describing the same structure. Every type MUST have a corresponding schema definition and every definition a corresponding type (DSPEC-22; CONSTITUTION §I — test: `SchemaTypeParity.test.ts`). Correspondence is by name, under two conventions the test applies: a definition `<X>StyleValue` or `<X>Value` pairs with a type `<X>` or `<X>Style`, and the deliberate divergences — path-scoped narrowings and property-name vocabularies the schema cannot address, grammars TS cannot express, runtime-resolved TS-only shapes, deprecated schema-only forms — are enumerated with reasons in `tests/parity-exclusions.ts`.
 
 The JSON Schema is authoritative for validating serialized documents; the TypeScript types are authoritative for compile-time consumption. Neither governs the other.
 
@@ -408,7 +412,7 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-04 | Every `$nested` path segment is an `instanceOf` element key, resolved by direct lookup | validator | §5.4, ADR-052 |
 | DSPEC-05 | A `$nested` path never descends through a slot fill | validator | §5.4, ADR-052 |
 | DSPEC-06 | At most one `SlotProp` per component carries `defaultSlot: true` | validator | §6.2, ADR-099 |
-| DSPEC-07 | `contentStyles` appears only on slot elements, keyed consistently with the slot's markers | validator | §6.3, ADR-102 |
+| DSPEC-07 | `contentStyles` appears only on slot elements — typed `slot`, or slot-bound through `children` — keyed consistently with the slot's markers | validator | §6.3, ADR-102 |
 | DSPEC-08 | A primitive marker never appears in a marker-only `anyOf` | producer | §6.1, ADR-102 |
 | DSPEC-09 | An owned element carries at most one role; the array form appears only on instances | validator | §6.5, ADR-067 |
 | DSPEC-11 | A configuration key names a prop declared in `props` | validator | §4.2, ADR-080 |
@@ -427,7 +431,7 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-24 | `$type: "effects"` on a token reference is a non-DTCG extension; a consumer treats it as non-portable | consumer | §5.1, ADR-006 |
 | DSPEC-25 | A token reference's origin is read from `$extensions['com.figma'].collectionName`: present means variable, absent means named style | consumer | §5.1, ADR-006 |
 | DSPEC-26 | An omitted `settings.spec.tokens` behaves identically to `TOKEN`; omitted default-bearing settings generally behave as their scaffolded defaults, and only feature-toggle members mean "off" when absent | consumer | §2.1, ADR-007/035/112 |
-| DSPEC-27 | `fillColor` appears only on glyph elements; `textColor` only on text elements | validator | §6.3, ADR-013 |
+| DSPEC-27 | `fillColor` appears only on glyph and shape elements, `textColor` only on text elements; an instance's colour overrides are the composed component's to judge | validator | §6.3, ADR-013 |
 | DSPEC-28 | A `ConditionExpression.operation` is an open vocabulary; a consumer tolerates unrecognized operations | consumer | styles reference, ADR-018 |
 | DSPEC-29 | `compareTo` is present for binary operations (`equals`, `notEquals`) and absent for unary ones (`isNull`, `isNotNull`) | validator | styles reference, ADR-018 |
 | DSPEC-30 | A new platform's extension data is added as a reverse-DNS key on `PropExtensions`, never as a top-level prop member | producer | §7.1, ADR-026 |
@@ -465,26 +469,38 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-62 | A directory under `foundations/` is named from the foundation concern vocabulary; a document schema validates contents and cannot validate the path that selects it | validator | §2.1, ADR-118 |
 | DSPEC-63 | A guidelines document carries rules only, and no table describing what each token is for | validator | §2.3, ADR-118 |
 | DSPEC-64 | An authored document is keyed for one concern vocabulary or the other, never both; `layout` and `motion` are in each and discriminate neither, so the scope is the path | schema: `supplemental.schema.json`, `guidelines.schema.json` | §2.1, ADR-118 |
-| DSPEC-65 | A resolved `styles` block carries a non-null value for at most one of `gridColumns` and `gridRows`; a grid templates one axis and sizes the other by content | validator | styles reference, ADR-122 |
-| DSPEC-66 | A variant layer that sets one of `gridColumns` or `gridRows` clears the other, written as an explicit `null` rather than omitted, since an omitted key inherits | producer | styles reference, ADR-122 |
-| DSPEC-67 | A consumer reading both axes non-null treats `gridColumns` as the templated axis and reports `gridRows` as unsupported, rather than choosing either silently | consumer | styles reference, ADR-122 |
-| DSPEC-68 | A slot whose only child is a grid container named by the platform's `slotGrid` convention takes that container's grid, and the container's children become the slot's content; a container sharing the slot with anything else stays an ordinary element | producer | §6.6, ADR-122 |
-| DSPEC-69 | Wrapper collapse carries the grid track keys with the `layoutMode` they complete, and distributes that group to the slot box alone when the mode is `GRID` | producer | §6.6, ADR-083/122 |
+| DSPEC-65 | A producer MUST record `InstanceExample.styles` only for an example instance declaring non-`HUG` horizontal sizing — `layoutSizingHorizontal: 'FIXED'` with `width` in raw px — and MUST omit it otherwise | producer | §5.4, ADR-124 |
+| DSPEC-66 | A rendering consumer MUST apply `InstanceExample.styles` to the instantiated example after configuration and content fills | consumer | §5.4, ADR-124 |
+| DSPEC-67 | A rendering consumer MUST lay instance examples out along the declared `InstanceExamples.orientation`, treating an absent value as `VERTICAL` | consumer | §5.4, ADR-125 |
+| DSPEC-68 | A resolved `styles` block carries a non-null value for at most one of `gridColumns` and `gridRows`; a grid templates one axis and sizes the other by content | validator | styles reference, ADR-122 |
+| DSPEC-69 | A variant layer that sets one of `gridColumns` or `gridRows` clears the other, written as an explicit `null` rather than omitted, since an omitted key inherits | producer | styles reference, ADR-122 |
+| DSPEC-70 | A consumer reading both axes non-null treats `gridColumns` as the templated axis and reports `gridRows` as unsupported, rather than choosing either silently | consumer | styles reference, ADR-122 |
+| DSPEC-71 | A slot whose only child is a grid container named by the platform's `slotGrid` convention takes that container's grid, and the container's children become the slot's content; a container sharing the slot with anything else stays an ordinary element | producer | §6.6, ADR-122 |
+| DSPEC-72 | Wrapper collapse carries the grid track keys with the `layoutMode` they complete, and distributes that group to the slot box alone when the mode is `GRID` | producer | §6.6, ADR-083/122 |
 
-Until a validator implements this catalogue, each **validator** row is a documented requirement nothing checks.
+The reference validator (§10) implements every **validator** row except DSPEC-33 and DSPEC-63, whose single-document limits §10 states.
 
 Rules DSPEC-23 through 40 were harvested from ADRs 001–045 in a systematic second pass; candidates citing fields that no longer exist (`internal`, `iconNamePattern`) or binding pipeline internals invisible in any document were excluded, and renamed fields are stated under their current names with the renaming ADR cited.
 
 ## 10. Validators and consumers
 
-**Stub — no reference validator or conformance suite is published.** Conformance requires, and does not yet have:
+The reference validator and conformance suite live in `packages/specs-schema-core` (`@directededges/specs-schema-core`). The package is the normative answer to "does this document conform": `validateDocument(document, kind)` runs the JSON Schema for the document's kind (§2.1) and the rule catalogue's validator-class rules (§9), and reports every failure by rule identifier — `DSPEC-nn` for a catalogue rule, `schema` for a JSON Schema failure. Formats (`uri`, `uri-reference`, `date-time`) are enforced, so the schema's format constraints are checked rather than correct by inspection.
 
-- A validator that checks a document against the schema for its kind (§2.1) and the rule catalogue (§9), reporting each failure by rule ID.
-- A positive fixture set: documents that MUST validate.
-- A negative fixture set: documents that MUST be rejected, each paired with the rule it violates. A validator that rejects a negative fixture for the wrong reason does not conform.
-- A test validating every `examples` value in the schema files against its enclosing definition (137 of 138 definitions currently carry no `examples` — issue 785 Step 2).
+The schema a document validates against depends on its kind. A whole component validates against the `Component` definition in `component.schema.json`; a concern document validates against its file's root, which carries the top-level choice over document kinds — validating against one definition inside the file would silently narrow the check to that kind. `conventions.schema.json` and `settings.schema.json` declare no root schema, so their main definitions are the targets.
 
-Consumer requirements stated above (DSPEC-19, DSPEC-21, §1.5, §4.2, §6.3, §6.4, §6.5) bind any tool reading Specs documents, whether or not a validator exists.
+The conformance suite is the package's fixture corpus plus the test that runs it:
+
+- **Positive fixtures** — documents that MUST validate: each document kind, each in-document reference form, slots with primitive content and a default slot, roles and actions, extensions, and value forms the schema admits that generated corpora rarely write.
+- **Negative fixtures** — documents that MUST be rejected, each paired with the one rule it violates. The suite asserts the reported rules are exactly the paired rule, so a validator that rejects a fixture for the wrong reason — and a fixture that violates two rules — both fail.
+- **Completeness** — every validator-class row in §9 is implemented or named in the package's `UNCHECKED_RULES` with its reason, and every implemented rule has a negative fixture. Adding a rule without either fails the suite.
+
+Two validator-class rules are uncheckable from a single document and are declared as such in `UNCHECKED_RULES`: DSPEC-33, because what must stay constant across variants is producer behaviour across generation runs, which no single document records; and DSPEC-63, whose structural half `guidelines.schema.json` enforces and whose prose half — whether a statement describes rather than binds — no validator can judge.
+
+Scope: the validator checks what one document states about itself. A pointer rooted in the workspace (`#/components/…`, `<file>#/…`) needs the rest of the workspace to resolve; `specs validate` checks those across files in its reference layer, and uses this package as its schema and catalogue engine.
+
+The `examples` values in the schema files are validated against their enclosing definitions by `packages/schema/tests/SchemaExamples.test.ts`.
+
+Consumer requirements stated above (DSPEC-19, DSPEC-21, §1.5, §4.2, §6.3, §6.4, §6.5) bind any tool reading Specs documents, whether or not a validator runs.
 
 ## 11. Platform bindings
 

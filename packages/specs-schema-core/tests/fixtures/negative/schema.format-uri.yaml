@@ -1,0 +1,15 @@
+# metadata.schema.url declares format uri; a schemeless phrase is not one.
+kind: component
+expect: schema
+document:
+  metadata:
+    source: { pageId: '1:2', nodeId: '3:4', nodeType: COMPONENT_SET }
+    schema:
+      url: not a uri at all
+      version: 0.41.0
+  title: Button
+  anatomy:
+    root: { type: container }
+  default:
+    elements:
+      root: {}

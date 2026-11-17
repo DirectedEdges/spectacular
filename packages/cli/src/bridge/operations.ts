@@ -86,9 +86,16 @@ export interface InspectResult {
   error?: string;
 }
 
+/** Which page a plugin is on: the id every caller needs, and the name a human does. */
+export interface CurrentPage {
+  id: string;
+  /** Absent on a plugin build older than the one that started reporting it. */
+  name?: string;
+}
+
 /** Everything a tracked request can resolve to. */
 export type TrackedResult =
-  | string | RenderResult | GenerateResult | VariablesResult | InspectResult | AnnotateResult;
+  | string | CurrentPage | RenderResult | GenerateResult | VariablesResult | InspectResult | AnnotateResult;
 
 /**
  * The minimum a socket must do for these operations — a real `ws`, or a fake.
@@ -119,12 +126,18 @@ export class BridgeOperations<S extends Sendable> {
   }
 
   /**
-   * Ask a specific connection's plugin for the current Figma page ID.
+   * Ask a specific connection's plugin which page it is on — id and, from a plugin
+   * new enough to send it, name.
    */
-  getCurrentPageId(conn: Connection<S>): Promise<string> {
+  getCurrentPage(conn: Connection<S>): Promise<CurrentPage> {
     const { requestId, promise } = this.requests.create(5000, 'Timed out waiting for pageId-result.');
     conn.ws.send(JSON.stringify({ type: 'getPageId', requestId }));
-    return promise as Promise<string>;
+    return promise as Promise<CurrentPage>;
+  }
+
+  /** The current page id alone, for callers that only need somewhere to render. */
+  async getCurrentPageId(conn: Connection<S>): Promise<string> {
+    return (await this.getCurrentPage(conn)).id;
   }
 
   /** Testing utility: delete a rendered node so a catalogue sweep leaves the page as it found it. */

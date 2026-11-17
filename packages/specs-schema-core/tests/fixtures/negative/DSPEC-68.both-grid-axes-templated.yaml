@@ -1,0 +1,16 @@
+# A grid templates one axis and sizes the other by its content. Both counts set leaves a
+# consumer choosing which axis to honour, which is the choice the rule removes.
+kind: component
+expect: DSPEC-68
+document:
+  title: Card Grid
+  anatomy:
+    root: { type: container }
+  props: {}
+  default:
+    elements:
+      root:
+        styles:
+          layoutMode: GRID
+          gridColumns: 3
+          gridRows: 2

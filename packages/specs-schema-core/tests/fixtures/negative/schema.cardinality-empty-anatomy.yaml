@@ -1,0 +1,9 @@
+# Anatomy declares minProperties 1: a component with no elements is invalid.
+kind: component
+expect: schema
+document:
+  title: Button
+  anatomy: {}
+  default:
+    elements:
+      root: {}

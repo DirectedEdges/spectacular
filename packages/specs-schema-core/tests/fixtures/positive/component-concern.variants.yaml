@@ -1,0 +1,12 @@
+kind: component-concern
+document:
+  metadata:
+    source: { pageId: '1:2', nodeId: '3:4', nodeType: COMPONENT_SET }
+    concern: variants
+  default:
+    elements:
+      label: { content: Save }
+  variants:
+    - configuration: { variant: secondary }
+      elements:
+        label: { content: Cancel }

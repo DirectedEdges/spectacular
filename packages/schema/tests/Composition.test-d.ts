@@ -133,9 +133,16 @@ const slotExample: InstanceExample = {
 };
 
 const examplesMap: InstanceExamples = {
-  danger: scalarExample,
-  withIcon: slotExample,
+  orientation: 'HORIZONTAL',
+  items: {
+    danger: scalarExample,
+    withIcon: slotExample,
+  },
 };
+
+// items is required; the pre-ADR-125 bare record no longer satisfies the wrapper
+// @ts-expect-error: a bare example record is not an InstanceExamples wrapper
+const _bareRecord: InstanceExamples = { danger: scalarExample };
 
 // PropBinding is still not permitted in InstanceExample.propConfigurations, but
 // since ADR-111 the type cannot be the thing that says so: `ObjectPropValue` is

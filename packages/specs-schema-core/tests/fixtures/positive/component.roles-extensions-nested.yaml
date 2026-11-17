@@ -1,0 +1,28 @@
+# Roles (single and the instance-only array form), actions, open prop
+# extensions (an unknown reverse-DNS namespace is accepted, DSPEC-31), and a
+# variant-level $nested path descending into an instanceOf element.
+kind: component
+document:
+  title: Toolbar
+  anatomy:
+    root: { type: container, role: toolbar, actions: [{ type: dismiss }] }
+    action: { type: instance, instanceOf: button, role: [button, dismissTrigger] }
+  props:
+    density:
+      type: string
+      default: cozy
+      enum: [cozy, compact]
+      $extensions:
+        com.figma: { type: VARIANT, name: Density }
+        com.example: { anything: true }
+  default:
+    elements:
+      action: {}
+  variants:
+    - configuration:
+        density: compact
+        $nested:
+          - path: [action]
+            size: small
+      elements:
+        action: {}

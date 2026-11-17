@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.41.0] - Unreleased
 
-**A container can now lay its children out as a grid.** `layoutMode` takes a fourth value, and one axis is templated into equal tracks by a fixed count or by a minimum track size the container divides itself against.
+This release adds a layout mode, restructures how a component's examples are held, and gives the schema a name for every shape it had written inline.
+
+- **A container can now lay its children out as a grid.** `layoutMode` takes a fourth value, and one axis is templated into equal tracks by a fixed count or by a minimum track size the container divides itself against.
+- **A component's instance examples carry an arrangement and a box.** They move under `items`, beside the `orientation` they sit along, and each may state the size it was authored at.
+- **Every inline shape in the schema now has a citable name**, and type-to-schema parity is tested rather than assumed.
+
+### Breaking
+
+- `Component.instanceExamples` — `InstanceExamples` restructured to `{ orientation?, items }`; the former bare example record moves under `items` (ADR-125)
 
 ### Added
 
@@ -16,9 +24,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AdaptiveGridTracks` — `{ minSize, collapseUnusedTracks? }`, fitting as many tracks as the container allows at that minimum; `collapseUnusedTracks` drops empty tracks so a short row stretches, and defaults to `false` (ADR-122)
 - `LayoutMode` — gains `'GRID'` alongside `'NONE'`, `'HORIZONTAL'` and `'VERTICAL'` (ADR-122)
 - **A slot can lay its content out as a grid, declared by a named layer** — `figma.slotGrid.match` names the frame a designer must nest because Figma forbids grid layout on a slot frame; the slot takes its grid and the frame's children become the slot's content, folded only when that frame is the slot's sole child (ADR-122)
-- DSPEC-65 to DSPEC-69 — one templated axis, a variant layer clearing the other, which axis wins when both are set, and the two collapse rules a grid changes (ADR-122)
+- DSPEC-68 to DSPEC-72 — one templated axis, a variant layer clearing the other, which axis wins when both are set, and the two collapse rules a grid changes (ADR-122)
+- `InstanceExample.styles` — the example instance's own box, recorded when its horizontal sizing is not HUG (ADR-124)
+- `InstanceExamples.orientation` — how the examples sit relative to each other (`HORIZONTAL` or `VERTICAL`); absent means `VERTICAL` (ADR-125)
+- SPECIFICATION §10 — the conformance section now describes the shipped reference validator and fixture corpus (`@directededges/specs-schema-core`), replacing the stub; conformance is decided by the kind's schema plus the §9 catalogue, reported by rule identifier
+- Type-to-schema parity is now tested (DSPEC-22): every exported type pairs with a schema definition and every definition with a type, under the declared naming conventions, with the deliberate divergences enumerated and reasoned in `tests/parity-exclusions.ts`
+- 24 names close most of that parity gap. The schema names what it wrote inline — `Children`, `Concern`, `ColorFormat`, `Subcomponents`, `ObjectPropMember`, `RoleConceptName`, `ActionConceptName`, `GuidelinesStatus`, `SupplementalStatus`, `ImageDataExtensions`, `FigmaImageExtension`, and all four document roots (`ComponentConcernDocument`, `CompositionConcernDocument`, `GuidelinesDocument`, `SupplementalDocument`) — and the types export the nine `*StyleValue` wrapper aliases plus `GuidelineReferences`. Validation behaviour is unchanged; every inline shape simply gained a citable name
+
+### Migration
+
+- `instanceExamples.<key>` → `instanceExamples.items.<key>`: read examples from `items`; regenerate specs or move existing entries under it
 
 ### ADRs
+
+#### Accepted
+
+- [124](../../adr/124-instance-example-styles.md) — Styles on InstanceExample
+- [125](../../adr/125-examples-orientation.md) — Instance-example orientation
 
 #### New drafts
 

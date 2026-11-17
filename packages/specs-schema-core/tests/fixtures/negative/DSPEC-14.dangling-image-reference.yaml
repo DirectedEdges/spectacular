@@ -1,0 +1,16 @@
+# The $image reference names no entry in the images registry. An unresolved
+# registry entry is valid; a dangling reference is not.
+kind: component
+expect: DSPEC-14
+document:
+  title: Hero
+  anatomy:
+    root: { type: container }
+  default:
+    elements:
+      root:
+        styles:
+          backgroundImage: { $image: '#/images/missing' }
+  images:
+    present:
+      src: ./images/present.png

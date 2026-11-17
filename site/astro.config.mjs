@@ -183,6 +183,15 @@ export default defineConfig({
               ],
             },
             {
+              label: 'Conformance',
+              collapsed: true,
+              items: [
+                { label: 'Overview', slug: 'schema/conformance' },
+                { label: 'Validator API', slug: 'schema/conformance/validator' },
+                { label: 'Conformance Suite', slug: 'schema/conformance/fixtures' },
+              ],
+            },
+            {
               // Cluster pages are deliberately NOT in the nav: a cluster is
               // reached from the platform page's Clusters table or from a key's
               // row, and forty generated rule pages would bury the five pages
@@ -241,6 +250,7 @@ export default defineConfig({
             { label: 'applyCustomTokens', slug: 'cli/commands/apply-custom-tokens' },
             { label: 'generate', slug: 'cli/commands/generate' },
             { label: 'author', slug: 'cli/commands/author' },
+            { label: 'validate', slug: 'cli/commands/validate' },
             { label: 'build', slug: 'cli/commands/build' },
             { label: 'run', slug: 'cli/commands/run' },
             { label: 'cache', slug: 'cli/commands/cache' },
@@ -257,6 +267,7 @@ export default defineConfig({
                 { label: 'Overview', slug: 'cli/analyze' },
                 { label: 'props', slug: 'cli/analyze/props' },
                 { label: 'styling', slug: 'cli/analyze/styling' },
+                { label: 'foundations', slug: 'cli/analyze/foundations' },
                 { label: 'dependencies', slug: 'cli/analyze/dependencies' },
                 { label: 'keys', slug: 'cli/analyze/keys' },
                 { label: 'roles', slug: 'cli/analyze/roles' },
@@ -280,8 +291,12 @@ export default defineConfig({
               collapsed: true,
               items: [
                 { label: 'skills', slug: 'cli/commands/skills' },
+                { label: 'authoring.primer', slug: 'cli/skills/authoring-primer' },
+                { label: 'component.author', slug: 'cli/skills/component-author' },
+                { label: 'guidelines.propose', slug: 'cli/skills/guidelines-propose' },
                 { label: 'icons.setup', slug: 'cli/skills/icons-setup' },
                 { label: 'images.setup', slug: 'cli/skills/images-setup' },
+                { label: 'posture', slug: 'cli/skills/posture' },
                 { label: 'states.setup', slug: 'cli/skills/states-setup' },
               ],
             },
@@ -356,6 +371,7 @@ export default defineConfig({
           collapsed: true,
           items: [
             { label: 'Absolute Positioning', slug: 'guides/absolute-positioning' },
+            { label: 'Authoring a Component', slug: 'guides/authoring-a-component' },
             { label: 'Code-Only Props', slug: 'guides/code-only-props' },
             { label: 'Consolidating Props', slug: 'guides/consolidating-props' },
             { label: 'Data Layout', slug: 'guides/data-layout' },

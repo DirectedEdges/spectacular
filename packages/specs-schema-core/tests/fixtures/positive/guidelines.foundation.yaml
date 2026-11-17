@@ -1,0 +1,9 @@
+# A foundation-scope guidelines document under a vocabulary directory
+# (DSPEC-62's positive case), using the foundation section vocabulary
+# (DSPEC-64's one-vocabulary rule).
+kind: guidelines
+path: guidelines/foundations/color/guidelines.yaml
+document:
+  color:
+    - statement: Pair a surface colour only with its on-surface counterpart
+      level: must

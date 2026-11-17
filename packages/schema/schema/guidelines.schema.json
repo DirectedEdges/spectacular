@@ -109,6 +109,28 @@
     }
   ],
   "definitions": {
+    "GuidelinesDocument": {
+      "description": "The guidelines document itself — a name for this file's root, so the document shape can be cited like any other definition.",
+      "$ref": "#"
+    },
+    "GuidelinesStatus": {
+      "description": "Where a guidelines document sits in its review cycle.",
+      "examples": ["proposed"],
+      "oneOf": [
+        {
+          "const": "proposed",
+          "description": "Drafted and awaiting a ratifier; its rules are not yet the system's position."
+        },
+        {
+          "const": "ratified",
+          "description": "Reviewed and adopted; its rules are the system's position."
+        },
+        {
+          "const": "deprecated",
+          "description": "Superseded or withdrawn; kept for the record and not to be followed."
+        }
+      ]
+    },
     "GuidelinesMeta": {
       "type": "object",
       "additionalProperties": false,
@@ -120,21 +142,8 @@
           "description": "The subject this document covers, restating what the containing directory names — a foundation concern at the foundation scope, a component name at the component scope."
         },
         "status": {
-          "description": "Where the document sits in its review cycle.",
-          "oneOf": [
-            {
-              "const": "proposed",
-              "description": "Drafted and awaiting a ratifier; its rules are not yet the system's position."
-            },
-            {
-              "const": "ratified",
-              "description": "Reviewed and adopted; its rules are the system's position."
-            },
-            {
-              "const": "deprecated",
-              "description": "Superseded or withdrawn; kept for the record and not to be followed."
-            }
-          ]
+          "$ref": "#/definitions/GuidelinesStatus",
+          "description": "Where the document sits in its review cycle."
         },
         "author": {
           "type": "string",
