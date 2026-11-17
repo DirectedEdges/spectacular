@@ -24,6 +24,7 @@ One call writes the collision-checked folder with all three concern files (`--ti
 
 - `posture.up: false` — run `specs-cli.posture` (idempotent; this procedure compiles live). Never probe a guessed port yourself.
 - `analysis.stale: true` — run `specs analyze` before correlating.
+- `cache.stale: true` — run `specs cache` now, before the first write. Render treats a stale cache as fatal and render is the last step of this procedure, so the cost of leaving it is a failure that arrives after everything else has already passed. `null` means the workspace fetches nothing, so there is no cache to judge.
 
 **Preparation is staged by file lifecycle, and each stage is one batched read.** Before `api.yaml`, load the **contract pack** in one call: the two primers, the rules files for the concepts this request touches, `config/conventions/*.yaml`, `analysis/props.yaml`, and `analysis/dependencies.byComponent.yaml`. Nothing about styling belongs here — tokens, `references/styles.md`, and the styling reports are not used until `variants.yaml`, and loading them now dilutes the anatomy and props work they sit idle through. Before `variants.yaml` (step 4), load the **styling pack** in one call: `references/styles.md`, the `analysis/foundations/<type>` files for the token types this component needs, `analysis/styling.byToken.yaml` and `analysis/styling.byComponent.yaml` — plus `references/slots-layout.md` when the component has a layout tree or slot. A pack is read once and never reopened — returning to a skill or rules file later means the first read was skimmed, and re-reading is the largest avoidable cost measured in a round. Every remaining question is resolved *during* the file that raises it — one lookup per question, local schema first — never by reading ahead "to be safe." If you notice yourself reading a source the current file does not need, stop and write.
 
@@ -86,10 +87,11 @@ node_modules/.bin/specs render specs/components/<key> --overwrite
 
 If the posture is not running, start it; do not fall back to one-shot `specs react` invocations per iteration — emit stays the posture's job. If render reports a stale or unusable cache, run `specs cache` once and retry.
 
-Two situations with sanctioned answers, so they cost no deliberation:
+Three situations with sanctioned answers, so they cost no deliberation:
 
 - **The bridge plugin is not connected** — that is a human-side control in the Figma app. Report it as a pending human action, keep authoring; run the render once the plugin reconnects.
 - **The canvas needs refreshing** (the plugin just reconnected, the canvas was cleared) — run the same one-shot render command again; `--overwrite` replaces the previous result.
+- **The render reports `⚠ INCOMPLETE: N instance element(s) could not be resolved`** — and still exits successfully, so the command reads as a pass. The reason is never on stdout. Read `.posture/bridge-server.log`, whose tail covers the render you just ran: a line per unresolved element names the element key and why it could not be placed, and a `slot fill failed` line is followed by the example it caused to be dropped. Two causes account for nearly all of them, and they are different problems: an **instance of another component** that has never been rendered into this file has no node to point at, so render that component once and retry; a **subcomponent of the spec you are authoring** resolves through its `title`, so a disagreement among its title, its `subcomponents` key, and the parent slot's `anyOf` is what to fix (`rules/subcomponents.yaml`). An example the render dropped is not a styling problem — it documented content it could not build, so it was removed rather than shown wrong.
 
 ## 7. The two authored documents
 

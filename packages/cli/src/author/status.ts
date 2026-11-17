@@ -33,6 +33,17 @@ export interface AuthorStatus {
   conventions: {
     files: string[];
   };
+  cache: {
+    /**
+     * True when a render lookup would be rejected as stale or missing; null when the
+     * workspace fetches nothing, so there is no cache to judge.
+     *
+     * Reported here because a stale cache does not announce itself until `specs render`,
+     * which is the last step of an authoring round — a round has already lost twenty-five
+     * tool calls to a failure that this field would have named before the first write.
+     */
+    stale: boolean | null;
+  };
   posture: {
     /** The pinned Storybook port read from storybook/package.json; null when unreadable. */
     storybookPort: number | null;
@@ -54,6 +65,12 @@ export interface StatusInputs {
   workspaceRoot: string;
   /** Probe for the Storybook port; injectable for tests. */
   probe?: (port: number) => Promise<boolean>;
+  /**
+   * Whether a render's cache lookup would be rejected — computed by the caller, which
+   * holds the source aliases and glyph conventions `validateCache` needs. Undefined
+   * means it was not determined and is reported as null.
+   */
+  cacheStale?: boolean | null;
 }
 
 export async function buildStatus(inputs: StatusInputs): Promise<AuthorStatus> {
@@ -89,6 +106,9 @@ export async function buildStatus(inputs: StatusInputs): Promise<AuthorStatus> {
     },
     conventions: {
       files: conventionsFiles(inputs.configDir, inputs.workspaceRoot),
+    },
+    cache: {
+      stale: inputs.cacheStale ?? null,
     },
     posture: {
       storybookPort: port,

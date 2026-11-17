@@ -21,13 +21,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ```
   Bridge running (pid 41414). 1 plugin connected:
-    unsaved-lhe0t90miac (EGDS 2 UI kit) — connected
+    unsaved-lhe0t90miac (Design System UI kit) — connected
       page: Testing (74085:0)
   ```
 
   The bridge has always identified a *file* by key and name, and has always asked the plugin for its current page id before every unpinned render — but reported neither the page nor its name, so the one thing a render cannot be checked for afterwards without opening the canvas was the one thing status would not tell you. The plugin now returns `figma.currentPage.name` alongside the id, `/status` asks every live connection in parallel, and a plugin that does not answer costs its own page line and nothing else. A plugin older than this still answers with an id alone, and the line prints `(unnamed)`.
 
 - **`npm run watch:bridge-server`**, the missing pair to `npm run watch`. The bridge server is a second bundle and had no watcher, so every change under `src/bridge/` stayed invisible until someone remembered a hand build — silently, because the old bundle keeps answering. Both watchers now have to run for the bridge to reflect source.
+
+- **`specs validate` reports the style properties a platform declares it cannot deliver**, naming the platform and its own reason, so a dash pattern or a corner smoothing that reaches no surface is visible while you are authoring rather than after a review. The spec is correct, so these never fail a run — write a supplemental requirement for anything the design depends on.
+
+- **`specs validate` warns when two slot fills in one spec hold the same elements**, naming the overlap, because a fill cannot include another fill and an edit to one otherwise has to be mirrored by hand.
+
+- **The authoring startup digest reports `cache.stale`**, alongside analysis freshness and the posture, so a stale cache is dealt with before the first write instead of failing the render at the end of a round.
+
+- **The authoring rules cover subcomponents**, deriving a part's key, title and the parent slot's `anyOf` from the library's own discovery patterns, and covering the visibility extension and its variant binding. Visibility conditionals and token-namespace lookup gain rules of their own, and the compile step names the diagnostic for a render that reports unresolved instances and still exits successfully.
 
 - **`specs author start <key>` opens an authoring round in one call**: a collision-checked component folder with all three concern templates — valid as shipped, so every validation error afterwards is the author's — plus the startup digest. `specs author status` prints the digest alone: catalogue, analysis freshness, conventions paths, and whether the pinned Storybook port answers.
 
@@ -38,6 +46,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`specs analyze foundations` writes one file per token type** under `analysis/foundations/`, with `analysis/foundations.yaml` reduced to an index of counts, theming collections, and the file map — a token lookup now reads that type's own small file. Icon glyphs move to `analysis/foundations/icons.yaml`, and the index's `summary.tokens` always enumerates every kind, a zero meaning the library has none.
 
 ### Fixed
+
+- **`specs validate <key>` reaches zero errors when the spec you named is valid.** Findings from the catalogue scope and the foundation documents are still reported, under their own heading, but they no longer count toward the named spec's tally or fail the run — one unrelated broken foundation file used to put every component permanently at one error.
+
+- **A render resolves another component to the node a render actually drew**, rather than to a stale id from the last fetch, so one authored component can be nested in another without recapturing the file. Recording a render also replaces that component's previous entry instead of accumulating one per overwrite.
+
+- **A closed-vocabulary failure names the permitted values.** A property that admits a fixed set used to report one message per rejected branch, none of which said what was legal.
 
 - **The styles rules route schema shape questions to the schema's own property descriptions**, replacing a pointer to a skill name that no longer exists.
 

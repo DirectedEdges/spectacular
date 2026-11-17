@@ -14,6 +14,9 @@ tokens:
     - should: "use a token wherever the library has one for the property — a literal there is a consistency defect"
     - never: "invent a token name — a path that looks plausible for this system but appears in no report or cache"
       should: "use a literal and note the gap when no suitable token exists"
+    - must: "grep a token type's file anchored on the namespace you are looking for (`'^\\s+- \\$token: <Namespace>/'`), never on an unanchored keyword — a type's file is one flat list and a library's theme-level aliases can be a small minority of it, so a keyword search returns whichever entries happen to contain the word and buries the handful an author can write"
+      never: "write a token a theme resolves *through* rather than one it exposes — a library may carry per-brand or per-mode variables in the same file as the aliases that select among them, and only the alias is addressable from a spec"
+      note: "`analysis/styling.byToken.yaml` is the fastest way to tell the two apart in an unfamiliar library: the namespaces other components already use are the exposed ones. Which namespace this library exposes is the library's own fact — a foundations guidelines topic, not a rule here"
 visible:
   guidelines:
     - must: "bind `visible` on nested elements only — root show/hide is interaction state owned by the behavior layer"

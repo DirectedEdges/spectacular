@@ -7,7 +7,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
 import { checkRules, concernOfPath, mergeConcerns, type Violation } from '@directededges/specs-schema-core';
-import { concernValidators, describeAjvError, isMissingSourceError, type ConcernName } from './schemas.js';
+import { concernValidators, describeAjvErrors, isMissingSourceError, type ConcernName } from './schemas.js';
 import {
   authoredFilesIn,
   authoredValidator,
@@ -16,6 +16,7 @@ import {
 } from './authored.js';
 import { checkReferences, type ParsedSpec, type WorkspaceIndex } from './references.js';
 import { loadTokenIndex, type TokenIndex } from './tokens.js';
+import { platformGaps as gapsForSpec, type PlatformGap } from './platformGaps.js';
 import { resolveSpecsLayout, SPEC_KINDS, type SpecKind } from '../utilities/specsLayout.js';
 
 export interface ValidateOptions {
@@ -55,6 +56,17 @@ export interface Finding {
   path: string;
   message: string;
   level: 'error' | 'warning';
+  /**
+   * Set only on a finding from an authored document outside any spec folder — the
+   * catalogue scope and the foundation concerns — when this run was asked about specific
+   * specs. Those documents are always validated (an entry at a broader scope can apply to
+   * a spec this run was not asked about, DSPEC-56), but reporting them inside the
+   * requested spec's tally made the authoring loop's "zero errors before the next file"
+   * unreachable: one unrelated broken foundation file put every component permanently at
+   * one error, and the only way to read your own state was to filter the line out by eye.
+   * Tagged rather than dropped, so nothing is hidden and the count still means something.
+   */
+  scope?: 'workspace';
 }
 
 export interface ValidateResult {
@@ -67,6 +79,8 @@ export interface ValidateResult {
   notes: string[];
   /** Dimension tokens used, with their default-mode values — orientation, not judgment. */
   resolved: ResolvedToken[];
+  /** Style properties a platform declares it cannot deliver — correct spec, limited surface. */
+  platformGaps: PlatformGap[];
 }
 
 const CONCERNS: readonly ConcernName[] = ['api', 'variants', 'examples'];
@@ -152,6 +166,7 @@ export function runValidate(options: ValidateOptions): ValidateResult {
 
   const findings: Finding[] = [];
   const resolved: ResolvedToken[] = [];
+  const platformGaps: PlatformGap[] = [];
   const counts: Record<SpecKind, number> = { component: 0, composition: 0 };
 
   for (const kind of SPEC_KINDS) {
@@ -174,16 +189,13 @@ export function runValidate(options: ValidateOptions): ValidateResult {
         if (!doc) continue;
         const validate = validators[concern];
         if (!validate(doc) && validate.errors) {
-          const seen = new Set<string>();
-          for (const err of validate.errors) {
-            const { path: errPath, message } = describeAjvError(err);
-            const line = `${errPath}|${message}`;
-            if (seen.has(line)) continue;
-            seen.add(line);
-            // The one omission `--authored` exists to forgive is not reported at
-            // all: three guaranteed warnings per spec on every run trained real
-            // sessions to grep warnings away, which is how a real one gets lost.
-            if (options.authored && isMissingSourceError(err)) continue;
+          // The one omission `--authored` exists to forgive is not reported at
+          // all: three guaranteed warnings per spec on every run trained real
+          // sessions to grep warnings away, which is how a real one gets lost.
+          const reportable = options.authored
+            ? validate.errors.filter(err => !isMissingSourceError(err))
+            : validate.errors;
+          for (const { path: errPath, message } of describeAjvErrors(reportable)) {
             findings.push({
               kind, spec: name, file: files[concern]!, path: errPath, message,
               level: 'error',
@@ -197,6 +209,14 @@ export function runValidate(options: ValidateOptions): ValidateResult {
       // checking and obvious the moment the number is printed.
       if (options.tokenValues) {
         collectResolvedTokens(parsed, name, options.tokenValues, resolved);
+      }
+
+      // What this spec asks for that a platform declares it cannot deliver. Never a
+      // finding — the spec is right and the surface is limited.
+      platformGaps.push(...gapsForSpec(name, [parsed.api, parsed.variants, parsed.examples]));
+
+      for (const dup of duplicatedFills(parsed)) {
+        findings.push({ kind, spec: name, file: 'examples.yaml', path: dup.path, message: dup.message, level: 'warning' });
       }
 
       // The two authored documents, when present (ADR-118). Both are hand-written,
@@ -253,8 +273,14 @@ export function runValidate(options: ValidateOptions): ValidateResult {
   // (`components/`) and one per foundation concern. Validated on every run
   // rather than per requested spec, because an entry at a broader scope applies
   // to specs this run may not have been asked about (DSPEC-56).
+  // Their findings are tagged out-of-scope when this run named specific specs, so the
+  // requested scope's error count is about the requested specs. See `Finding.scope`.
+  const workspaceFindings: Finding[] = [];
   for (const location of workspaceAuthoredFiles(path.resolve(options.specsPath))) {
-    validateAuthored(location, findings, 'component', location.label);
+    validateAuthored(location, workspaceFindings, 'component', location.label);
+  }
+  for (const finding of workspaceFindings) {
+    findings.push(requested.size > 0 ? { ...finding, scope: 'workspace' } : finding);
   }
 
   findings.sort((a, b) =>
@@ -263,7 +289,55 @@ export function runValidate(options: ValidateOptions): ValidateResult {
     || a.message.localeCompare(b.message));
 
   resolved.sort((a, b) => a.spec.localeCompare(b.spec) || a.prop.localeCompare(b.prop) || a.token.localeCompare(b.token));
-  return { findings, counts, missing, notes, resolved };
+  return { findings, counts, missing, notes, resolved, platformGaps };
+}
+
+/**
+ * Slot fills in one spec that hold the same elements, defined identically.
+ *
+ * A fill is a self-contained anatomy, elements and layout triplet, and nothing points
+ * between fills — so a spec whose examples share a content block has it written out once
+ * per example. One card documented five listings by duplicating twelve elements between
+ * two of them; a later edit to one has to be mirrored by hand, and nothing notices when it
+ * is not. This cannot say which fill is the original, so it reports the overlap and leaves
+ * the judgment alone.
+ *
+ * Two thresholds, both measured against real fills rather than chosen for roundness: at
+ * least five shared elements, because three identically-defined primitives (a price, its
+ * struck-through original, a duration) is ordinary coincidence rather than duplication;
+ * and at least half of the smaller fill, so a large fill that happens to contain five of a
+ * small one's elements does not warn.
+ */
+function duplicatedFills(parsed: ParsedSpec): Array<{ path: string; message: string }> {
+  const examples = parsed.examples as { slotContentExamples?: Record<string, unknown> } | undefined;
+  const fills = examples?.slotContentExamples;
+  if (!fills || typeof fills !== 'object') return [];
+
+  const signatures = new Map<string, Map<string, string>>();
+  for (const [name, fill] of Object.entries(fills)) {
+    const elements = (fill as { elements?: Record<string, unknown> } | undefined)?.elements;
+    if (!elements || typeof elements !== 'object') continue;
+    signatures.set(name, new Map(
+      Object.entries(elements).map(([key, value]) => [key, JSON.stringify(value)]),
+    ));
+  }
+
+  const out: Array<{ path: string; message: string }> = [];
+  const names = [...signatures.keys()];
+  for (let i = 0; i < names.length; i++) {
+    for (let j = i + 1; j < names.length; j++) {
+      const a = signatures.get(names[i])!;
+      const b = signatures.get(names[j])!;
+      const shared = [...a].filter(([key, value]) => b.get(key) === value).map(([key]) => key);
+      if (shared.length < 5) continue;
+      if (shared.length * 2 < Math.min(a.size, b.size)) continue;
+      out.push({
+        path: `/slotContentExamples/${names[i]}`,
+        message: `${shared.length} elements are defined identically in "${names[j]}" (${shared.slice(0, 4).join(', ')}${shared.length > 4 ? ', …' : ''}) — a fill cannot include another fill, so an edit to one has to be mirrored by hand`,
+      });
+    }
+  }
+  return out;
 }
 
 /** Walk a spec's parsed docs for `{$token}` values and record the resolvable dimension ones, deduped. */
@@ -402,12 +476,7 @@ function validateAuthored(
   }
   const validate = authoredValidator(location.kind);
   if (!validate(doc) && validate.errors) {
-    const seen = new Set<string>();
-    for (const err of validate.errors) {
-      const { path: errPath, message } = describeAjvError(err);
-      const line = `${errPath}|${message}`;
-      if (seen.has(line)) continue;
-      seen.add(line);
+    for (const { path: errPath, message } of describeAjvErrors(validate.errors)) {
       findings.push({ kind, spec, file: location.fileLabel, path: errPath, message, level: 'error' });
     }
   }

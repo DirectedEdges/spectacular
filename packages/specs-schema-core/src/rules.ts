@@ -696,6 +696,28 @@ export const RULES: readonly Rule[] = [
     },
   },
   {
+    id: 'DSPEC-69',
+    summary: 'A corner smoothing is a number, never null',
+    kinds: COMPONENT_KINDS,
+    check(doc) {
+      const violations: Violation[] = [];
+      // The property's style value permits null because its type is shared with every
+      // other unit-interval property, where null means unset and is honest. Smoothing is
+      // the exception: the render requires a number, so a null validates clean and then
+      // fails at the canvas — the one place the author has stopped looking. `0` is what
+      // "no smoothing" is, and it says the same thing the render can act on.
+      walk(doc, (value, path) => {
+        if (!isObj(value) || !isObj(value.styles)) return;
+        if (!('cornerSmoothing' in value.styles)) return;
+        if (value.styles.cornerSmoothing !== null) return;
+        violations.push(
+          violation('DSPEC-69', `${path}/styles/cornerSmoothing`, 'write 0 for no corner smoothing — null validates but the render requires a number'),
+        );
+      });
+      return violations;
+    },
+  },
+  {
     id: 'DSPEC-62',
     summary: 'A directory under foundations/ is named from the foundation concern vocabulary',
     kinds: ['supplemental', 'guidelines'],

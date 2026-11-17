@@ -150,7 +150,64 @@ export function describeAjvError(err: ErrorObject): { path: string; message: str
       message: `must be one of: ${(allowed ?? []).map(v => String(v)).join(', ')}`,
     };
   }
+  if (err.keyword === 'const') {
+    const value = (err.params as { allowedValue?: unknown }).allowedValue;
+    return { path: err.instancePath, message: `must be ${JSON.stringify(value)}` };
+  }
   return { path: err.instancePath || '/', message: err.message ?? err.keyword };
+}
+
+/**
+ * Describe a whole error array, collapsing a failed `oneOf` over a closed vocabulary
+ * into the one message an author can act on.
+ *
+ * A property whose schema is a `oneOf` of `const` branches reports every branch
+ * separately — `must be equal to constant`, once per branch — plus `must be null` for a
+ * nullable one and `must match exactly one schema in oneOf` for the union itself. Three
+ * or more messages for one mistake, and not one of them names a legal value: the author's
+ * next move is to open the type definitions and read the union by hand. Collecting the
+ * branches says it once, with the vocabulary in it.
+ *
+ * Grouped by path, so two unrelated failures never merge. A group with no `oneOf` error,
+ * or one whose branches are not a closed vocabulary, is described error by error exactly
+ * as before.
+ */
+export function describeAjvErrors(errors: readonly ErrorObject[]): Array<{ path: string; message: string }> {
+  const byPath = new Map<string, ErrorObject[]>();
+  for (const err of errors) {
+    const path = err.instancePath || '/';
+    const group = byPath.get(path);
+    if (group) group.push(err); else byPath.set(path, [err]);
+  }
+
+  const out: Array<{ path: string; message: string }> = [];
+  for (const [path, group] of byPath) {
+    const union = group.find(e => e.keyword === 'oneOf' || e.keyword === 'anyOf');
+    const values: string[] = [];
+    let nullable = false;
+    for (const err of group) {
+      if (err.keyword === 'const') values.push(String((err.params as { allowedValue?: unknown }).allowedValue));
+      else if (err.keyword === 'enum') values.push(...((err.params as { allowedValues?: unknown[] }).allowedValues ?? []).map(String));
+      else if (err.keyword === 'type' && err.params && (err.params as { type?: unknown }).type === 'null') nullable = true;
+    }
+    const vocabulary = [...new Set(values)];
+    if (union && vocabulary.length > 0) {
+      out.push({
+        path,
+        message: `must be one of: ${vocabulary.join(', ')}${nullable ? ', or null' : ''}`,
+      });
+      continue;
+    }
+    const seen = new Set<string>();
+    for (const err of group) {
+      const described = describeAjvError(err);
+      const line = `${described.path}|${described.message}`;
+      if (seen.has(line)) continue;
+      seen.add(line);
+      out.push(described);
+    }
+  }
+  return out;
 }
 
 /**

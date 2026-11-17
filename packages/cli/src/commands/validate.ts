@@ -17,15 +17,23 @@ import { ERROR_CODES } from '../utilities/errorCodes.js';
 import { loadFoundations } from '../utilities/loadFoundations.js';
 import { tokenPath, terminalTokenValue } from '../analyze/Foundations.js';
 
-function formatText(findings: Finding[], counts: { component: number; composition: number }): void {
-  for (const f of findings) {
-    const mark = f.level === 'error' ? '✗' : '⚠';
-    const kindDir = f.kind === 'component' ? 'components' : 'compositions';
-    // A file with a slash is already a workspace-relative path (a platform-tree
-    // finding); a bare name is a file inside the spec's folder.
-    const loc = f.file.includes('/') ? f.file : `${kindDir}/${f.spec}/${f.file}`;
-    console.log(`${mark} ${loc} ${f.path} — ${f.message}`);
-  }
+function line(f: Finding): string {
+  const mark = f.level === 'error' ? '✗' : '⚠';
+  const kindDir = f.kind === 'component' ? 'components' : 'compositions';
+  // A file with a slash is already a workspace-relative path (a platform-tree
+  // finding); a bare name is a file inside the spec's folder.
+  const loc = f.file.includes('/') ? f.file : `${kindDir}/${f.spec}/${f.file}`;
+  return `${mark} ${loc} ${f.path} — ${f.message}`;
+}
+
+function formatText(allFindings: Finding[], counts: { component: number; composition: number }): void {
+  // A finding carrying a scope belongs to a workspace-level document this run validated
+  // but was not asked about. It prints under its own heading, below the requested scope's
+  // own result, and counts toward neither the tally nor the exit code.
+  const findings = allFindings.filter(f => f.scope === undefined);
+  const outOfScope = allFindings.filter(f => f.scope === 'workspace');
+
+  for (const f of findings) console.log(line(f));
   const errors = findings.filter(f => f.level === 'error').length;
   const warnings = findings.filter(f => f.level === 'warning').length;
   const specs = counts.component + counts.composition;
@@ -34,6 +42,12 @@ function formatText(findings: Finding[], counts: { component: number; compositio
     console.log(`✓ ${scope} valid`);
   } else {
     console.log(`${errors === 0 ? '✓' : '✗'} ${errors} ${errors === 1 ? 'error' : 'errors'}, ${warnings} ${warnings === 1 ? 'warning' : 'warnings'} across ${scope}`);
+  }
+
+  if (outOfScope.length > 0) {
+    const n = outOfScope.length;
+    console.log(`ℹ ${n} ${n === 1 ? 'finding' : 'findings'} elsewhere in the workspace, outside what you asked about:`);
+    for (const f of outOfScope) console.log(`    ${line(f)}`);
   }
 }
 
@@ -101,19 +115,30 @@ export const Validate = new Command('validate')
       if (options.format === 'json') {
         console.log(JSON.stringify({
           specs: result.counts,
-          errors: result.findings.filter(f => f.level === 'error'),
-          warnings: result.findings.filter(f => f.level === 'warning'),
+          errors: result.findings.filter(f => f.level === 'error' && f.scope === undefined),
+          warnings: result.findings.filter(f => f.level === 'warning' && f.scope === undefined),
+          outOfScope: result.findings.filter(f => f.scope === 'workspace'),
+          platformGaps: result.platformGaps,
           resolved: result.resolved,
         }, null, 2));
       } else {
         formatText(result.findings, result.counts);
+        if (result.platformGaps.length > 0) {
+          const n = result.platformGaps.length;
+          console.log(`⚠ ${n} ${n === 1 ? 'property' : 'properties'} will not reach a platform that declares it unsupported — the spec is right, the surface is limited. Write a supplemental requirement for anything the design depends on:`);
+          for (const g of result.platformGaps) {
+            console.log(`    ${g.spec} ${g.property} → ${g.platform}: ${g.note}`);
+          }
+        }
         if (result.resolved.length > 0) {
           console.log('ℹ dimension tokens resolve to (default mode — themed, orientation only):');
           for (const r of result.resolved) console.log(`    ${r.spec} ${r.prop}: ${r.token} → ${r.value}`);
         }
       }
 
-      const hasErrors = result.findings.some(f => f.level === 'error');
+      // Out-of-scope findings are reported but never fail the run: the pass condition the
+      // authoring loop is built on is about the spec you asked about.
+      const hasErrors = result.findings.some(f => f.level === 'error' && f.scope === undefined);
       process.exit(hasErrors ? ERROR_CODES.VALIDATION_FAILED : ERROR_CODES.SUCCESS);
     } catch (e) {
       console.error(`Error: ${(e as Error).message}`);

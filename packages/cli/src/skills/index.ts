@@ -59,6 +59,7 @@ import RULES_STYLES from './rules/styles.yaml';
 import RULES_LAYOUT from './rules/layoutStyling.yaml';
 import RULES_PROPS from './rules/props.yaml';
 import RULES_SLOTS from './rules/slots.yaml';
+import RULES_SUBCOMPONENTS from './rules/subcomponents.yaml';
 import RULES_VARIANTS from './rules/variants.yaml';
 
 export interface SkillAsset {
@@ -95,6 +96,7 @@ export const SKILL_ASSETS: SkillAsset[] = [
       { path: 'rules/layoutStyling.yaml', content: RULES_LAYOUT },
       { path: 'rules/props.yaml', content: RULES_PROPS },
       { path: 'rules/slots.yaml', content: RULES_SLOTS },
+      { path: 'rules/subcomponents.yaml', content: RULES_SUBCOMPONENTS },
       { path: 'rules/variants.yaml', content: RULES_VARIANTS },
       { path: 'references/styles.md', content: REF_STYLES },
       { path: 'references/slots-layout.md', content: REF_SLOTS_LAYOUT },

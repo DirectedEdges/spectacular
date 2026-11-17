@@ -7,6 +7,7 @@
 export {
   concernValidators,
   describeAjvError,
+  describeAjvErrors,
   isMissingSourceError,
   type ConcernName,
   type ConcernValidators,

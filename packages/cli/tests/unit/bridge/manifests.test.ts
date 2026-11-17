@@ -217,6 +217,39 @@ describe('buildManifest — layer 3, a library component with no spec', () => {
     expect(buildManifest(spec, specsDir(), dataDir(), 'CAMEL').badge).toEqual({ id: '1:1' });
   });
 
+  it('lets a rendered entry win over a fetched one that formats to the same key', async () => {
+    // The fetch is a snapshot: an `--overwrite` since then replaced the node it recorded,
+    // so its id is one the plugin cannot find. The rendered node is the live answer, and
+    // insertion order used to decide this — fetched rows are written first, so a component
+    // the render had just drawn lost to a dead id and no re-render could change it.
+    await writeCache('components', {
+      '84011:10074': { key: 'pub10074', name: 'EGDS Image', file: 'lib' },
+      '84060:5108': { name: 'egdsImage', file: 'lib', fileKey: 'file9' },
+    });
+    const spec = { anatomy: { thing: { type: 'instance', instanceOf: 'egdsImage' } } };
+    expect(buildManifest(spec, specsDir(), dataDir(), 'CAMEL').egdsImage).toEqual({ id: '84060:5108' });
+  });
+
+  it('keeps the rendered entry whichever order the cache holds the two in', async () => {
+    await writeCache('components', {
+      '84060:5108': { name: 'egdsImage', file: 'lib', fileKey: 'file9' },
+      '84011:10074': { key: 'pub10074', name: 'EGDS Image', file: 'lib' },
+    });
+    const spec = { anatomy: { thing: { type: 'instance', instanceOf: 'egdsImage' } } };
+    expect(buildManifest(spec, specsDir(), dataDir(), 'CAMEL').egdsImage).toEqual({ id: '84060:5108' });
+  });
+
+  it('keeps the most recent of several rendered entries for one key', async () => {
+    // A cache written before recording pruned itself holds one row per `--overwrite`;
+    // the last is the live node.
+    await writeCache('components', {
+      '84059:1571': { name: 'egdsCard', file: 'lib', fileKey: 'file9' },
+      '84061:10375': { name: 'egdsCard', file: 'lib', fileKey: 'file9' },
+    });
+    const spec = { anatomy: { thing: { type: 'instance', instanceOf: 'egdsCard' } } };
+    expect(buildManifest(spec, specsDir(), dataDir(), 'CAMEL').egdsCard).toEqual({ id: '84061:10375' });
+  });
+
   it('adds only the components the spec actually references', async () => {
     await writeCache('components', {
       '9:9': { key: 'pub9', name: 'Badge', file: 'lib' },
