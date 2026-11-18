@@ -66,6 +66,7 @@
 //   back on the matching result message, so responses route to the right
 //   caller even with multiple connections and requests in flight.
 
+import type { KnownFoundations } from './knownFoundations.js';
 import type { ResolvedConventions, ResolvedSettings } from '@directededges/specs-schema';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { createServer, type IncomingMessage, type ServerResponse } from 'http';
@@ -333,9 +334,9 @@ const http = createServer((req, res) => {
   }
 
   if (req.method === 'POST' && req.url === '/generate') {
-    type P = { fileKey?: string; nodeId?: string; conventions?: ResolvedConventions; settings?: ResolvedSettings; remove?: boolean };
+    type P = { fileKey?: string; nodeId?: string; conventions?: ResolvedConventions; settings?: ResolvedSettings; foundations?: KnownFoundations; remove?: boolean };
     withJsonBody<P>(req, res, async (p) => {
-      const result = await ops.sendGenerateFromSelection(p.fileKey, p.nodeId, p.conventions, p.settings);
+      const result = await ops.sendGenerateFromSelection(p.fileKey, p.nodeId, p.conventions, p.settings, p.foundations);
       // The spec is in hand before the node goes, so a failed removal cannot cost the read.
       if (p.remove && result.success && result.nodeId) {
         try { await ops.sendRemoveNode(result.nodeId, p.fileKey); } catch { /* reported by the caller's next read */ }

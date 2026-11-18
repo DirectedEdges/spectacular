@@ -52,6 +52,16 @@ hook blocks it).
   actually answers. That applies to every module `server.ts` imports, not only the
   file itself, and the failure is silent — the server keeps serving the old bundle,
   so a new field simply never arrives.
+- **A rebuilt bundle is not a restarted server.** The bridge is a daemon that
+  holds whatever bundle it launched with, so rebuilding `dist/bridge-server.js`
+  leaves the running process unchanged — the watcher cannot fix this, because the
+  problem is the process rather than the file. `specs bridge stop` then
+  `specs bridge start` after any change under `src/bridge/`. The failure mode is
+  the same silence as above and much harder to read, because the file on disk now
+  contains the new field while the server answering requests does not: the CLI
+  sends it, the plugin receives a body without it, and every symptom points at the
+  plugin or the engine. `ps -o lstart=` on the pid holding 9002, compared against
+  the mtime of the change, settles it in one command.
 - **`server.ts` is the only module in `src/bridge/` that opens a port**, and
   keeping it that way is what makes the rest testable. Importing it to call a
   function starts a listener on 9001, so anything another module could own —

@@ -9,6 +9,7 @@
 // constructor arguments rather than module singletons, so these can be exercised against
 // a fake socket. Nothing here opens a port.
 
+import type { KnownFoundations } from './knownFoundations.js';
 import type { ResolvedConventions, ResolvedSettings } from '@directededges/specs-schema';
 import { readFileSync } from 'fs';
 import { parse } from 'yaml';
@@ -215,12 +216,12 @@ export class BridgeOperations<S extends Sendable> {
    * Ask a connection's plugin to generate a spec from its current Figma selection, or
    * from an explicit nodeId — the plugin selects that node first.
    */
-  async sendGenerateFromSelection(fileKey?: string, nodeId?: string, conventions?: ResolvedConventions, settings?: ResolvedSettings): Promise<GenerateResult> {
+  async sendGenerateFromSelection(fileKey?: string, nodeId?: string, conventions?: ResolvedConventions, settings?: ResolvedSettings, foundations?: KnownFoundations): Promise<GenerateResult> {
     const conn = this.registry.resolve(fileKey);
     const { requestId, promise } = this.requests.create(60000, 'Timed out waiting for generateFromSelection-result.');
     // `conventions`/`settings` travel with the request and govern how the plugin builds
     // this one spec. The plugin must not adopt them as its own settings.
-    conn.ws.send(JSON.stringify({ type: 'generateFromSelection', requestId, nodeId, conventions, settings }));
+    conn.ws.send(JSON.stringify({ type: 'generateFromSelection', requestId, nodeId, conventions, settings, foundations }));
     return promise as Promise<GenerateResult>;
   }
 
