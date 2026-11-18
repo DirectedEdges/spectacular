@@ -4,7 +4,6 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
-| 127 | Foundations Manifest | (reserved, draft on `123-element-themes`) |
 | 126 | Conditional Style Values Collapse to a Single-Key Null Test | (reserved, draft on `126-conditional-shorthand`) |
 | 125 | Instance-Example Orientation | |
 | 124 | Styles on InstanceExample | |
