@@ -1,0 +1,15 @@
+# metadata.lastUpdated declares format date-time. Without ajv-formats this
+# constraint was correct by inspection and unvalidated — this fixture proves
+# the format is now enforced.
+kind: component
+expect: schema
+document:
+  metadata:
+    source: { pageId: '1:2', nodeId: '3:4', nodeType: COMPONENT_SET }
+    lastUpdated: yesterday afternoon
+  title: Button
+  anatomy:
+    root: { type: container }
+  default:
+    elements:
+      root: {}

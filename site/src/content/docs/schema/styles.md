@@ -26,6 +26,8 @@ The Default column is the value a property is treated as having when absent — 
 | [`fontFamily`](/schema/styles/typography/font-family/) | `string`<br>`TokenReference` | *(via `typography`)* | `null` |
 | [`fontSize`](/schema/styles/typography/font-size/) | `number`<br>`TokenReference` | *(via `typography`)* | `16` |
 | [`fontStyle`](/schema/styles/typography/font-style/) | `string`<br>`TokenReference` | *(via `typography`)* | `null` |
+| [`gridColumns`](/schema/styles/grid-columns/) | `GridTracks` | — | `null` |
+| [`gridRows`](/schema/styles/grid-rows/) | `GridTracks` | — | `null` |
 | [`hangingList`](/schema/styles/typography/hanging-list/) | `boolean` | *(via `typography`)* | `false` |
 | [`hangingPunctuation`](/schema/styles/typography/hanging-punctuation/) | `boolean` | *(via `typography`)* | `false` |
 | [`height`](/schema/styles/height/) | `Style` | — | `0` |

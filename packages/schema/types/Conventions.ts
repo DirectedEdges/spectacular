@@ -86,7 +86,13 @@ export type PrimitiveKind = 'text' | 'glyph' | 'container';
  * @since 0.32.0
  */
 export interface PrimitiveRule {
-  /** What is read from the captured layer — a `Styles` member, a dotted path into `typography`, or `content`. */
+  /**
+   * What is read from the captured layer — a `Styles` member, a dotted path into
+   * `typography`, or `content`.
+   *
+   * `children` is never a source: a promoted container's children become the target's
+   * slot content on their own. An absent `layoutMode` matches a `NONE` key (ADR-076).
+   */
   source: string;
   /** The prop this source's value is written to, as-is. Mutually exclusive with `values`. */
   prop?: string;
@@ -224,6 +230,21 @@ export interface PlatformConventions {
   /** The code-only props container layer. Optional; absence means no such convention and code-only props are not extracted. */
   codeOnlyProps?: {
     /** Literal layer name identifying the container (e.g. `"Code only props"`). */
+    match: string;
+  };
+  /**
+   * The layer declaring that a slot lays its content out as a grid (ADR-122). Optional;
+   * absence means no such convention and a slot's grid frame stays slot content.
+   *
+   * This platform cannot apply grid layout to a slot frame, so the grid is authored one
+   * layer inside it. The named frame is a declaration rather than content: the slot takes
+   * its grid layout, and the frame's children preview that layout rather than filling the
+   * slot, so the slot reads empty.
+   *
+   * @since 0.41.0
+   */
+  slotGrid?: {
+    /** Literal layer name identifying the declaration frame (e.g. `"Slot grid"`). */
     match: string;
   };
   /** Subcomponent organization and naming. Optional; absence means no subcomponent convention. */
@@ -604,6 +625,10 @@ export interface ResolvedPlatformConventions {
   };
   /** The code-only props container layer. Optional; absence means no such convention. */
   codeOnlyProps?: {
+    match: string;
+  };
+  /** The layer declaring a slot's grid layout. Optional; absence means no such convention. @since 0.41.0 */
+  slotGrid?: {
     match: string;
   };
   /** Subcomponent organization and naming. Optional; absence means no subcomponent convention. */

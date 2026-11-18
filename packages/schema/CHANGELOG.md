@@ -7,13 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.41.0] - Unreleased
 
+This release adds a layout mode, restructures how a component's examples are held, and gives the schema a name for every shape it had written inline.
+
+- **A container can now lay its children out as a grid.** `layoutMode` takes a fourth value, and one axis is templated into equal tracks by a fixed count or by a minimum track size the container divides itself against.
+- **A component's instance examples carry an arrangement and a box.** They move under `items`, beside the `orientation` they sit along, and each may state the size it was authored at.
+- **Every inline shape in the schema now has a citable name**, and type-to-schema parity is tested rather than assumed.
+
+### Breaking
+
+- `Component.instanceExamples` — `InstanceExamples` restructured to `{ orientation?, items }`; the former bare example record moves under `items` (ADR-125)
+
 ### Added
 
 - `Element.themes` — typed as `Themes` (`Record<string, string>`): the theme selected per token group, keyed by verbatim group name, written where selected and inherited by descendants (ADR-123)
+- `Themes` — the token group → theme map `Element.themes` carries (ADR-123)
+- DSPEC-73 to DSPEC-77 — verbatim group keys, selections written only where made, the consumer's ancestor merge, explicit defaults recorded, and an unresolvable group omitted rather than written raw (ADR-123)
+- **A `GRID` container templates one axis into equal tracks and fills cells in source order**, with `gridColumns` or `gridRows` setting that axis and the existing `itemSpacing` holding the gap on both (ADR-122)
+- `Styles.gridColumns` and `Styles.gridRows` — typed as `GridTracks` (`number | AdaptiveGridTracks | null`); an integer fixes the count, and at most one of the two is non-null (ADR-122)
+- `AdaptiveGridTracks` — `{ minSize, collapseUnusedTracks? }`, fitting as many tracks as the container allows at that minimum; `collapseUnusedTracks` drops empty tracks so a short row stretches, and defaults to `false` (ADR-122)
+- `LayoutMode` — gains `'GRID'` alongside `'NONE'`, `'HORIZONTAL'` and `'VERTICAL'` (ADR-122)
+- **A slot can lay its content out as a grid, declared by a named layer** — `figma.slotGrid.match` names the frame a designer must nest because Figma forbids grid layout on a slot frame; the slot takes its grid and the frame's children become the slot's content, folded only when that frame is the slot's sole child (ADR-122)
+- DSPEC-68 to DSPEC-72 — one templated axis, a variant layer clearing the other, which axis wins when both are set, and the two collapse rules a grid changes (ADR-122)
+- `InstanceExample.styles` — the example instance's own box, recorded when its horizontal sizing is not HUG (ADR-124)
+- `InstanceExamples.orientation` — how the examples sit relative to each other (`HORIZONTAL` or `VERTICAL`); absent means `VERTICAL` (ADR-125)
+- SPECIFICATION §10 — conformance is decided by the kind's schema plus the §9 catalogue and reported by rule identifier, against the shipped reference validator and fixture corpus (`@directededges/specs-schema-core`), replacing the stub section
+- DSPEC-22 — every exported type pairs with a schema definition and every definition with a type, under the declared naming conventions, with the deliberate divergences enumerated and reasoned; parity is now tested rather than assumed
+- 24 inline shapes gain a citable name, closing most of that parity gap: `Children`, `Concern`, `ColorFormat`, `Subcomponents`, `ObjectPropMember`, `RoleConceptName`, `ActionConceptName`, `GuidelinesStatus`, `SupplementalStatus`, `ImageDataExtensions`, `FigmaImageExtension`, the four document roots, the nine `*StyleValue` wrapper aliases and `GuidelineReferences`. Validation behaviour is unchanged
 
-### Changed
+### Migration
 
-### Removed
+- `instanceExamples.<key>` → `instanceExamples.items.<key>`: read examples from `items`; regenerate specs or move existing entries under it
+
+### ADRs
+
+#### Accepted
+
+- [083](../../adr/083-slot-wrapper-collapse.md) — Collapsing a Slot-Only Wrapper (amended by ADR-122: the parent-layout group goes to the slot box alone under `layoutMode: GRID`)
+- [122](../../adr/122-layout-grid.md) — Layout Grid — `layoutMode: GRID` and a Single Templated Axis
+- [124](../../adr/124-instance-example-styles.md) — Styles on InstanceExample
+- [125](../../adr/125-examples-orientation.md) — Instance-example orientation
 
 
 ## [0.40.0] - 2026-11-12

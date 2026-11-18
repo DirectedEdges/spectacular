@@ -314,6 +314,17 @@ export function recordRenderedComponent(options: {
   const existing = readCacheFile<ComponentsEntry>(dataDir, 'components')
     ?? { sources: {}, entries: {} };
 
+  // One component, one row: rows are keyed by node id, and an alias is one Figma file, so
+  // a name within it has exactly one current node. Matched on name and alias rather than
+  // also on `fileKey`, because the plugin reports an unsaved file by a per-session
+  // placeholder — matching on that would strand a row each time it changed.
+  for (const [priorId, priorEntry] of Object.entries(existing.entries)) {
+    const prior = priorEntry as ComponentsEntry;
+    if (priorId !== nodeId && prior.fileKey && prior.name === name && prior.file === alias) {
+      delete existing.entries[priorId];
+    }
+  }
+
   existing.entries[nodeId] = { name, file: alias, fileKey };
   // Marks the partition as present without claiming a payload. `from` names the producer
   // rather than a path, since there is no file behind it.

@@ -58,11 +58,8 @@
           }
         },
         "subcomponents": {
-          "type": "object",
-          "description": "A record of subcomponents, where each key is a subcomponent name that matches a system-specific naming convention.",
-          "additionalProperties": {
-            "$ref": "#/definitions/Subcomponent"
-          }
+          "$ref": "#/definitions/Subcomponents",
+          "description": "A record of subcomponents, where each key is a subcomponent name that matches a system-specific naming convention."
         },
         "instanceExamples": {
           "$ref": "#/definitions/InstanceExamples",
@@ -96,6 +93,10 @@
         "title": {
           "type": "string"
         },
+        "styles": {
+          "$ref": "styles.schema.json#/definitions/Styles",
+          "description": "The example instance's own styles — its box, not its content's (ADR-124). An author-resized example records layoutSizingHorizontal: FIXED and width (raw px); an example left at its component's natural size (HUG) omits this property entirely. A rendering consumer applies these styles to the instantiated example as its final step."
+        },
         "propConfigurations": {
           "type": "object",
           "description": "Prop values for this example. Scalar types for scalar props; SlotContentRef for slot props; ObjectPropValue for object props (ADR-111); null when the prop is unset in this example (ADR-080). PropBinding is not permitted here.",
@@ -125,13 +126,29 @@
     },
     "InstanceExamples": {
       "type": "object",
-      "description": "Named instance examples for this component.",
-      "examples": [{ "primaryDefault": { "title": "Primary", "propConfigurations": { "variant": "primary" } } }],
-      "patternProperties": {
-        "^[a-zA-Z0-9_-]+$": {
-          "$ref": "#/definitions/InstanceExample"
+      "description": "The component's instance examples: the named items and how they sit relative to each other (ADR-125).",
+      "examples": [{ "orientation": "HORIZONTAL", "items": { "primaryDefault": { "title": "Primary", "propConfigurations": { "variant": "primary" } } } }],
+      "properties": {
+        "orientation": {
+          "type": "string",
+          "description": "How the items sit relative to each other.",
+          "oneOf": [
+            { "const": "HORIZONTAL", "description": "The items sit in a row." },
+            { "const": "VERTICAL", "description": "The items sit in a column." }
+          ]
+        },
+        "items": {
+          "type": "object",
+          "description": "Named record of InstanceExample entries.",
+          "patternProperties": {
+            "^[a-zA-Z0-9_-]+$": {
+              "$ref": "#/definitions/InstanceExample"
+            }
+          },
+          "additionalProperties": false
         }
       },
+      "required": ["items"],
       "additionalProperties": false
     },
     "Anatomy": {
@@ -240,12 +257,22 @@
       ],
       "additionalProperties": false
     },
+    "RoleConceptName": {
+      "type": "string",
+      "description": "A behavior role concept name (e.g. 'button', 'label'). An open vocabulary: recognized names are published on the docs site, and a consumer ignores values it does not recognize (§6.5).",
+      "examples": ["button", "label"]
+    },
     "ElementRole": {
       "description": "A semantic behavior role concept, or a non-empty list of them.",
       "oneOf": [
-        { "type": "string" },
-        { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+        { "$ref": "#/definitions/RoleConceptName" },
+        { "type": "array", "items": { "$ref": "#/definitions/RoleConceptName" }, "minItems": 1 }
       ]
+    },
+    "ActionConceptName": {
+      "type": "string",
+      "description": "A behavior concept name (e.g. 'dismiss'). An open vocabulary: recognized names are published on the docs site; unrecognized values are ignored by transforms.",
+      "examples": ["dismiss"]
     },
     "ActionEntry": {
       "type": "object",
@@ -255,8 +282,8 @@
       ],
       "properties": {
         "type": {
-          "type": "string",
-          "description": "The behavior's concept name (e.g. 'dismiss'). Recognized names are published on the docs site; unrecognized values are ignored by transforms."
+          "$ref": "#/definitions/ActionConceptName",
+          "description": "The behavior this entry performs."
         }
       },
       "additionalProperties": false
@@ -397,20 +424,7 @@
             "pattern": "^[^$]"
           },
           "additionalProperties": {
-            "oneOf": [
-              {
-                "$ref": "#/definitions/BooleanProp"
-              },
-              {
-                "$ref": "#/definitions/StringProp"
-              },
-              {
-                "$ref": "#/definitions/EnumProp"
-              },
-              {
-                "$ref": "#/definitions/NumberProp"
-              }
-            ]
+            "$ref": "#/definitions/ObjectPropMember"
           }
         },
         "$extensions": {
@@ -425,6 +439,24 @@
         "^\\$": {}
       },
       "additionalProperties": false
+    },
+    "ObjectPropMember": {
+      "description": "One named member of an ObjectProp: an existing scalar prop definition, discriminated by `type` like any other prop.",
+      "examples": [{ "type": "boolean", "default": true }],
+      "oneOf": [
+        {
+          "$ref": "#/definitions/BooleanProp"
+        },
+        {
+          "$ref": "#/definitions/StringProp"
+        },
+        {
+          "$ref": "#/definitions/EnumProp"
+        },
+        {
+          "$ref": "#/definitions/NumberProp"
+        }
+      ]
     },
     "FigmaCodeOnlySource": {
       "type": "object",
@@ -535,7 +567,7 @@
           "nullable": true,
           "default": null,
           "examples": ["New"],
-          "$extensions": { "com.figma": { "visibilityProp": "showBadge" } }
+          "$extensions": { "com.figma": { "visibilityProp": "Badge visible" } }
         }
       ],
       "properties": {
@@ -944,18 +976,8 @@
       "examples": [{ "children": ["label"], "styles": { "padding": 16, "layoutMode": "HORIZONTAL" } }],
       "properties": {
         "children": {
-          "oneOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "$ref": "#/definitions/SlotBinding"
-            }
-          ],
-          "description": "Child element names, or a SlotBinding when bound to a slot prop. SlotBinding is a PropBinding optionally carrying `examples` — an array of SlotContentRef entries for authored sample fills (e.g. Figma's authoring default at index 0). The bare `{ $binding }` form still validates."
+          "$ref": "#/definitions/Children",
+          "description": "Child element names, or a SlotBinding when bound to a slot prop."
         },
         "parent": {
           "oneOf": [
@@ -1012,6 +1034,21 @@
         }
       },
       "additionalProperties": false
+    },
+    "Children": {
+      "description": "An element's children: child element names in order, or a SlotBinding when the children are bound to a slot prop. SlotBinding is a PropBinding optionally carrying `examples` — an array of SlotContentRef entries for authored sample fills (e.g. Figma's authoring default at index 0). The bare `{ $binding }` form still validates.",
+      "examples": [["label", "icon"], { "$binding": "#/props/children" }],
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "$ref": "#/definitions/SlotBinding"
+        }
+      ]
     },
     "PropBinding": {
       "type": "object",
@@ -1123,27 +1160,32 @@
           "description": "The Figma node this spec was captured from."
         },
         "concern": {
-          "description": "Which slice of a component this document carries, when a run wrote one file per concern. Absent on a single-file component, which carries every concern at once. (ADR-091)",
-          "oneOf": [
-            {
-              "const": "api",
-              "description": "The component's surface — its props, slots and anatomy."
-            },
-            {
-              "const": "variants",
-              "description": "The default configuration and every variant's difference from it."
-            },
-            {
-              "const": "examples",
-              "description": "Instance examples and the slot content they fill."
-            }
-          ]
+          "$ref": "#/definitions/Concern",
+          "description": "Which slice of a component this document carries, when a run wrote one file per concern. Absent on a single-file component, which carries every concern at once. (ADR-091)"
         }
       },
       "required": [
         "source"
       ],
       "additionalProperties": false
+    },
+    "Concern": {
+      "description": "Which slice of a component a concern document carries (ADR-091).",
+      "examples": ["api"],
+      "oneOf": [
+        {
+          "const": "api",
+          "description": "The component's surface — its props, slots and anatomy."
+        },
+        {
+          "const": "variants",
+          "description": "The default configuration and every variant's difference from it."
+        },
+        {
+          "const": "examples",
+          "description": "Instance examples and the slot content they fill."
+        }
+      ]
     },
     "SubcomponentSource": {
       "type": "object",
@@ -1211,6 +1253,14 @@
           "$ref": "#/definitions/SubcomponentSource",
           "description": "Figma source identity for this subcomponent's node. Populated by the generator; absent in specs produced before ADR-060."
         }
+      }
+    },
+    "Subcomponents": {
+      "type": "object",
+      "description": "A record of subcomponents, keyed by subcomponent name.",
+      "examples": [{ "cardHeader": { "title": "Card header", "anatomy": { "root": { "type": "container" } }, "default": { "elements": {} } } }],
+      "additionalProperties": {
+        "$ref": "#/definitions/Subcomponent"
       }
     },
     "NumberProp": {
@@ -1350,27 +1400,36 @@
           "description": "Resolved image source — an emitted asset path (the standard resolved form, relative to the referencing spec file), a data: URI, or an external URL. Absent = unresolved."
         },
         "$extensions": {
-          "type": "object",
-          "description": "Platform extensions. com.figma carries extraction provenance.",
-          "properties": {
-            "com.figma": {
-              "type": "object",
-              "properties": {
-                "imageHash": {
-          "pattern": "^[0-9a-f]{40}$",
-                  "type": "string",
-                  "description": "The Figma image content hash (Plugin ImagePaint.imageHash / REST fills[].imageRef) — reverse-direction tooling reconstructs an ImagePaint from it. SHA-1 of the image's original bytes: any transcoding invalidates it, so keep the stored asset byte-identical."
-                }
-              },
-              "required": [
-                "imageHash"
-              ],
-              "additionalProperties": false
-            }
-          },
-          "additionalProperties": false
+          "$ref": "#/definitions/ImageDataExtensions"
         }
       },
+      "additionalProperties": false
+    },
+    "ImageDataExtensions": {
+      "type": "object",
+      "description": "Platform extensions for an image registry entry. com.figma carries extraction provenance.",
+      "examples": [{ "com.figma": { "imageHash": "0123456789abcdef0123456789abcdef01234567" } }],
+      "properties": {
+        "com.figma": {
+          "$ref": "#/definitions/FigmaImageExtension"
+        }
+      },
+      "additionalProperties": false
+    },
+    "FigmaImageExtension": {
+      "type": "object",
+      "description": "Figma extraction provenance for an image registry entry.",
+      "examples": [{ "imageHash": "0123456789abcdef0123456789abcdef01234567" }],
+      "properties": {
+        "imageHash": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string",
+          "description": "The Figma image content hash (Plugin ImagePaint.imageHash / REST fills[].imageRef) — reverse-direction tooling reconstructs an ImagePaint from it. SHA-1 of the image's original bytes: any transcoding invalidates it, so keep the stored asset byte-identical."
+        }
+      },
+      "required": [
+        "imageHash"
+      ],
       "additionalProperties": false
     },
     "FigmaElementExtension": {

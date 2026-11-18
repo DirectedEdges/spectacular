@@ -7,13 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.38.0] - Unreleased
 
+This release makes `specs validate` the authority on whether a spec conforms, and opens an authoring round in one command.
+
+- **`specs validate` now checks the specification's own rule catalogue**, reports each failure by rule identifier, and extends its reach to the authored documents, the promotion table, and the style properties a platform cannot deliver.
+- **`specs author start <key>` scaffolds a component folder and prints the startup digest**, so a round begins from something that already validates.
+- **`specs analyze foundations` writes one file per token type**, leaving `foundations.yaml` as an index.
+
 ### Breaking
+
+- **`instanceExamples` carries its examples under `items`** (ADR-125): regenerate an authored spec, or move its entries under `items`.
 
 - **The cssvars stylesheet's theme override blocks are no longer anchored to `:root`.** A block is now `[data-<group>="<theme>"]`, so the attribute scopes whatever element carries it — the document for a whole-page switch, or one subtree for an element that selects a theme (ADR-123). A page that stamped the attribute on `:root` is unaffected; a consumer whose own CSS relied on the `:root` specificity may not be. A subscribed collection still emits no block, because its per-mode values are not in the workspace's data, and the run now names those collections instead of skipping them silently.
 
 - **Two installed skills move under the `version` namespace they orchestrate**: `specs-cli.premerge` becomes `specs-cli.version.figmapremerge`, and `specs-cli.release` becomes `specs-cli.version.release`. Install writes by name and removes nothing, so delete the two old directories after upgrading.
 
 ### Added
+
+- **`specs validate` checks the specification's semantic rule catalogue**, reporting each failure by rule identifier (e.g. `[DSPEC-29]`) alongside the schema and reference findings — on spec folders and on the authored documents beside them.
+
+- **`specs bridge status` reports which page each connected plugin is on**, by name and id:
+
+  ```
+  Bridge running (pid 41414). 1 plugin connected:
+    unsaved-lhe0t90miac (Design System UI kit) — connected
+      page: Testing (74085:0)
+  ```
+
+  A plugin older than this answers with an id alone, and the line prints `(unnamed)`.
+
+- **`specs validate` reports the style properties a platform declares it cannot deliver**, naming the platform and its reason, so a dash pattern that reaches no surface is visible while you author. These never fail a run — write a supplemental requirement for anything the design depends on.
+
+- **`specs validate` warns when two slot fills in one spec hold the same elements**, naming the overlap, because a fill cannot include another fill and an edit to one otherwise has to be mirrored by hand.
+
+- **The authoring startup digest reports `cache.stale`**, alongside analysis freshness and the posture, so a stale cache is dealt with before the first write instead of failing the render at the end of a round.
+
+- **The authoring rules cover subcomponents**, deriving a part's key, title and the parent slot's `anyOf` from the library's own discovery patterns, with rules of their own for the visibility extension, visibility conditionals, and token-namespace lookup.
+
+- **The authoring rules cover instance examples and the promotion table.** An example now shows only what the variants cannot reach, so a component whose every configuration is a variant has none — content that reads differently from the default is the exception that still earns one.
 
 - **`specs author start <key>` opens an authoring round in one call**: a collision-checked component folder with all three concern templates — valid as shipped, so every validation error afterwards is the author's — plus the startup digest. `specs author status` prints the digest alone: catalogue, analysis freshness, conventions paths, and whether the pinned Storybook port answers.
 
@@ -23,15 +53,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The promotion table is cross-referenced against the workspace** by `specs validate`, which warns about a target with no spec folder, a `values` key naming a token the library does not hold, and a written prop the target does not declare. Warnings only — a table is often authored ahead of the components it names.
+
 - **The authoring skills stage preparation reads by file lifecycle**: a contract pack loads before `api.yaml` and a styling pack at `variants.yaml`, each in one batched read that is never reopened, cutting the reading a session does before its first spec write.
 
 - **`specs analyze foundations` writes one file per token type** under `analysis/foundations/`, with `analysis/foundations.yaml` reduced to an index of counts, theming collections, and the file map — a token lookup now reads that type's own small file. Icon glyphs move to `analysis/foundations/icons.yaml`, and the index's `summary.tokens` always enumerates every kind, a zero meaning the library has none.
 
 ### Fixed
 
+- **`specs validate <key>` reaches zero errors when the spec you named is valid.** Findings from the catalogue scope and the foundation documents are still reported, under their own heading, but they no longer count toward the named spec's tally or fail the run — one unrelated broken foundation file used to put every component permanently at one error.
+
+- **A render resolves another component to the node a render actually drew**, rather than to a stale id from the last fetch, so one authored component can be nested in another without recapturing the file. Recording a render also replaces that component's previous entry instead of accumulating one per overwrite.
+
+- **A closed-vocabulary failure names the permitted values.** A property that admits a fixed set used to report one message per rejected branch, none of which said what was legal.
+
 - **The styles rules route schema shape questions to the schema's own property descriptions**, replacing a pointer to a skill name that no longer exists.
 
-### Removed
+- **An element roled `decoration` stops catching clicks when it has no children**, emitting `pointer-events: none` beside the `aria-hidden` it already carried, so a frontmost overlay no longer blocks the content behind it. A decoration with children keeps its hit-test, since its text would otherwise become unselectable.
 
 
 ## [0.37.0] - 2026-11-12

@@ -1,0 +1,17 @@
+# The $slotContent pointer names a registry entry that does not exist.
+kind: component
+expect: DSPEC-01
+document:
+  title: Card
+  anatomy:
+    root: { type: container }
+    content: { type: slot }
+  props:
+    children: { type: slot }
+  default:
+    elements:
+      content:
+        children:
+          $binding: '#/props/children'
+          examples:
+            - { $slotContent: '#/slotContentExamples/missing' }

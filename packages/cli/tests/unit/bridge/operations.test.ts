@@ -66,10 +66,23 @@ afterEach(async () => {
 
 describe('the message each operation sends', () => {
   it('asks for the current page', async () => {
-    const promise = ops.getCurrentPageId(registry.resolve('fileA'));
+    const promise = ops.getCurrentPage(registry.resolve('fileA'));
     expect(socket.only).toMatchObject({ type: 'getPageId' });
-    reply('42:2');
+    reply({ id: '42:2', name: 'Testing' });
+    await expect(promise).resolves.toEqual({ id: '42:2', name: 'Testing' });
+  });
+
+  it('reduces the current page to its id for callers that only need somewhere to render', async () => {
+    const promise = ops.getCurrentPageId(registry.resolve('fileA'));
+    reply({ id: '42:2', name: 'Testing' });
     await expect(promise).resolves.toBe('42:2');
+  });
+
+  it('answers with the page id alone when the plugin reports no name', async () => {
+    // A plugin build older than the one that started sending `pageName`.
+    const promise = ops.getCurrentPage(registry.resolve('fileA'));
+    reply({ id: '42:2' });
+    await expect(promise).resolves.toEqual({ id: '42:2' });
   });
 
   it('asks to generate from the selection, carrying conventions and settings', async () => {
@@ -252,7 +265,7 @@ describe('sendRender', () => {
     const promise = ops.sendRender(specPath, null, 'fileA');
     // First message is the page question; the render follows once it is answered.
     expect(socket.sent[0]).toMatchObject({ type: 'getPageId' });
-    requests.resolve((socket.sent[0] as { requestId: string }).requestId, '42:2' as TrackedResult);
+    requests.resolve((socket.sent[0] as { requestId: string }).requestId, { id: '42:2', name: 'Testing' } as TrackedResult);
     await vi.waitFor(() => expect(socket.sent).toHaveLength(2));
     expect(socket.sent[1]).toMatchObject({ type: 'renderComponent', pageId: '42:2' });
     requests.resolve((socket.sent[1] as { requestId: string }).requestId, { success: true } as TrackedResult);

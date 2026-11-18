@@ -7,6 +7,12 @@ export interface BridgeConnection {
   fileKey: string;
   fileName?: string;
   connected: boolean;
+  /**
+   * The page this plugin is on right now — what an unpinned `specs render` will write
+   * to. Absent when the plugin did not answer in time, or when it predates reporting
+   * it; `name` alone is absent on a plugin that reports only the id.
+   */
+  page?: { id: string; name?: string };
 }
 
 export interface BridgeStatus {

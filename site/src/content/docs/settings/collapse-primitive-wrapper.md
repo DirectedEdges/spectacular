@@ -105,6 +105,24 @@ elements:
 
 As with a leaf, `$extensions.com.figma.name` carries the surviving layer's Figma name so the source layer remains traceable.
 
+### Grid slots
+
+A slot laying its content out as a grid arrives here already collapsed once: the [slotGrid](/settings/slot-grid/) convention folds the grid frame onto the slot, which leaves a root wrapping one slot — the shape this rule removes. So a grid slot with nothing else in the chain lands as a single container carrying the grid.
+
+```yaml
+elements:
+  root:
+    children:
+      $binding: '#/props/slot'
+      examples:
+        - $slotContent: '#/components/cardGrid/slotContentExamples/cardGrid__slot__default'
+    styles:
+      layoutMode: GRID
+      gridColumns: 5
+```
+
+To learn more, read about the [slot grid](/settings/slot-grid/) convention.
+
 ## Roles on a collapsed root
 
 A collapse turns two Figma layers into one anatomy element, and either layer may carry a `role:` annotation. The element records which one did, because render has to put each annotation back on the layer it came from:

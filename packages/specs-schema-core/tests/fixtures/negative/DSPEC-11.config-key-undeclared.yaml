@@ -1,0 +1,16 @@
+# The variant configuration sets a prop the component does not declare.
+kind: component
+expect: DSPEC-11
+document:
+  title: Button
+  anatomy:
+    root: { type: container }
+  props:
+    variant: { type: string, default: primary, enum: [primary, secondary] }
+  default:
+    elements:
+      root: {}
+  variants:
+    - configuration: { tone: critical }
+      elements:
+        root: {}

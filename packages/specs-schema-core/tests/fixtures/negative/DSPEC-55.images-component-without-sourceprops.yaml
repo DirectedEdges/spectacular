@@ -1,0 +1,10 @@
+# images.component is declared with no sourceProps; the designated component
+# needs its own source prop named first.
+kind: conventions
+expect: DSPEC-55
+document:
+  platforms:
+    figma:
+      images:
+        match: 'Image / {i}'
+        component: image

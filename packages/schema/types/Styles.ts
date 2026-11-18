@@ -11,7 +11,7 @@ export type Styles = Partial<{
   locked: boolean;
   backgroundColor: ColorStyle;
   /** Image fill painted on a layer. Present on container element types. Fallback representation used when no image component is configured. A `TokenReference` when the image fill comes from an applied Figma fill style (the style reference routes here — not to `backgroundColor` — when the styled paint is an image). Absent when there is no image fill. @since 0.28.0 */
-  backgroundImage: ImageValue | TokenReference | null;
+  backgroundImage: ImageStyleValue;
   /** Glyph fill color. Present on GLYPH element type only. Represented in Figma as fills. @since 0.13.0 */
   fillColor: ColorStyle;
   effects: TokenReference | Effects;
@@ -68,6 +68,10 @@ export type Styles = Partial<{
   crossAxisAlignment: CrossAxisAlignment | null;
   /** Auto-layout direction. Structural property — not token-bindable. @since 0.18.0 */
   layoutMode: LayoutMode;
+  /** The columns a `GRID` templates, when the column axis is the templated one. Non-null on at most one of `gridColumns` and `gridRows`. Structural property — not token-bindable. @since 0.41.0 */
+  gridColumns: GridTracks;
+  /** The rows a `GRID` templates, when the row axis is the templated one. Non-null on at most one of `gridColumns` and `gridRows`. Structural property — not token-bindable. @since 0.41.0 */
+  gridRows: GridTracks;
   /** Whether auto-layout wrapping is enabled (default: false). @since 0.18.0 */
   wrap: boolean;
   /** Space distribution between wrapped lines. Only meaningful when `wrap` is true. Structural property — not token-bindable. @since 0.18.0 */
@@ -262,6 +266,63 @@ export type ColorStyle = ColorString | ColorObject | TokenReference | GradientVa
 export type UnitIntervalStyle = number | TokenReference | null;
 
 /**
+ * A boolean style value. Mirrors `BooleanStyleValue` in `schema/styles.schema.json`.
+ * @since 0.41.0
+ */
+export type BooleanStyleValue = boolean;
+
+/**
+ * A boolean style value that may also be prop-bound or conditional.
+ * Mirrors `BooleanBindableStyleValue` in `schema/styles.schema.json`.
+ * @since 0.41.0
+ */
+export type BooleanBindableStyleValue = boolean | TokenReference | PropBinding | Conditional;
+
+/**
+ * A numeric style value. Mirrors `NumberStyleValue` in `schema/styles.schema.json`.
+ * @since 0.41.0
+ */
+export type NumberStyleValue = number | TokenReference | null;
+
+/**
+ * A string style value. Mirrors `StringStyleValue` in `schema/styles.schema.json`.
+ * @since 0.41.0
+ */
+export type StringStyleValue = string | TokenReference | null;
+
+/**
+ * A font member value — a family name or weight, `'mixed'` when the text mixes them.
+ * Mirrors `FontStyleValue` in `schema/styles.schema.json`.
+ * @since 0.41.0
+ */
+export type FontStyleValue = string | number | null;
+
+/**
+ * A line-height value — a percentage string, `'AUTO'`, a number, or `'mixed'`.
+ * Mirrors `LineHeightStyleValue` in `schema/styles.schema.json`.
+ * @since 0.41.0
+ */
+export type LineHeightStyleValue = string | number | TokenReference | null;
+
+/**
+ * A stroke-weight value. Mirrors `StrokeStyleValue` in `schema/styles.schema.json`.
+ * @since 0.41.0
+ */
+export type StrokeStyleValue = number | 'mixed' | TokenReference | null;
+
+/**
+ * A corner-radius value. Mirrors `CornerStyleValue` in `schema/styles.schema.json`.
+ * @since 0.41.0
+ */
+export type CornerStyleValue = number | 'mixed' | TokenReference | null;
+
+/**
+ * A container image fill value. Mirrors `ImageStyleValue` in `schema/styles.schema.json`.
+ * @since 0.41.0
+ */
+export type ImageStyleValue = ImageValue | TokenReference | null;
+
+/**
  * Inline typography properties grouped into a composite object.
  * All fields are optional; only properties set on the text node are present.
  * Maps to transformer primitive types: font, mixableNumber, mixableString, pureNumber, boolean, lineHeight.
@@ -375,9 +436,35 @@ export type PositionOffset = number | string | null;
 
 /**
  * Auto-layout direction mode. Structural property that cannot be token-bound.
+ * `'GRID'` templates one axis into equal tracks and fills cells in source order (ADR-122).
  * @since 0.18.0
  */
-export type LayoutMode = 'NONE' | 'HORIZONTAL' | 'VERTICAL';
+export type LayoutMode = 'NONE' | 'HORIZONTAL' | 'VERTICAL' | 'GRID';
+
+/**
+ * A track count derived from the container rather than declared: as many tracks as fit
+ * at `minSize`, with the remaining space shared equally.
+ *
+ * Named for Jetpack Compose's `GridCells.Adaptive(minSize:)`; SwiftUI's `GridItem.adaptive(minimum:)`
+ * and CSS `repeat(auto-fill, minmax(…))` are the same concept (ADR-122).
+ * @since 0.41.0
+ */
+export interface AdaptiveGridTracks {
+  /** The smallest size a track may take, in pixels. Measured on the axis its owning key names. */
+  minSize: number;
+  /** Whether tracks holding no child are dropped, letting the remaining children fill the row (default: false). */
+  collapseUnusedTracks?: boolean;
+}
+
+/**
+ * Track count for one axis of a `GRID` container. An integer is a fixed count of equal tracks;
+ * {@link AdaptiveGridTracks} derives the count from the container; `null` means the axis is not templated.
+ *
+ * Narrower than `Style` — a track count is computed layout structure, not a design value a token
+ * carries, which is the same reasoning that keeps `LayoutMode` and `PositionOffset` outside `Style`.
+ * @since 0.41.0
+ */
+export type GridTracks = number | AdaptiveGridTracks | null;
 
 /**
  * Wrap alignment mode for multi-line auto-layout. Structural property that cannot be token-bound.
@@ -507,6 +594,8 @@ export type StyleKey =
   | 'primaryAxisSizingMode'
   | 'crossAxisAlignment'
   | 'layoutMode'
+  | 'gridColumns'
+  | 'gridRows'
   | 'wrap'
   | 'wrapAlignment'
   | 'itemReverseZIndex'

@@ -1,0 +1,19 @@
+# The SubcomponentRef's key is not in the document's subcomponents.
+kind: component
+expect: DSPEC-03
+document:
+  title: Card
+  anatomy:
+    root: { type: container }
+    header: { type: instance, instanceOf: { $ref: '#/subcomponents/cardHeader' } }
+  default:
+    elements:
+      header: {}
+  subcomponents:
+    cardFooter:
+      title: Card footer
+      anatomy:
+        root: { type: container }
+      default:
+        elements:
+          root: {}

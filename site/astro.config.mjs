@@ -184,6 +184,15 @@ export default defineConfig({
               ],
             },
             {
+              label: 'Conformance',
+              collapsed: true,
+              items: [
+                { label: 'Overview', slug: 'schema/conformance' },
+                { label: 'Validator API', slug: 'schema/conformance/validator' },
+                { label: 'Conformance Suite', slug: 'schema/conformance/fixtures' },
+              ],
+            },
+            {
               // Cluster pages are deliberately NOT in the nav: a cluster is
               // reached from the platform page's Clusters table or from a key's
               // row, and forty generated rule pages would bury the five pages
@@ -376,6 +385,7 @@ export default defineConfig({
             { label: 'Key Formatting', slug: 'guides/key-formatting' },
             { label: 'Layout Positioning', slug: 'guides/layout-positioning' },
             { label: 'Number Inference', slug: 'guides/number-inference' },
+            { label: 'Promoting Primitives', slug: 'guides/primitives', badge: pro },
             { label: 'Render to Figma', slug: 'guides/render-to-figma', badge: experimental },
             { label: 'Run Metadata', slug: 'guides/run-metadata' },
             { label: 'Slot Constraints', slug: 'guides/slot-constraints', badge: pro },

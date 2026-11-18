@@ -16,16 +16,16 @@
   "scripts": {
     "build": "esbuild src/bin/specs.ts --bundle --platform=node --target=node18 --format=esm --packages=external --define:__SPECS_CLI_VERSION__=\\\"$npm_package_version\\\" --loader:.md=text --loader:.yaml=text --outfile=dist/specs.js --banner:js='#!/usr/bin/env node' && chmod +x dist/specs.js && rm -rf dist/storybook-templates && cp -R src/storybook/templates dist/storybook-templates && cp ../../README.md README.md && npm run build:bridge-server",
     "build:bridge-server": "esbuild src/bridge/server.ts --bundle --platform=node --target=node18 --format=esm --packages=external --outfile=dist/bridge-server.js && chmod +x dist/bridge-server.js",
+    "watch:bridge-server": "esbuild src/bridge/server.ts --bundle --platform=node --target=node18 --format=esm --packages=external --outfile=dist/bridge-server.js --watch=forever",
     "watch": "esbuild src/bin/specs.ts --bundle --platform=node --target=node18 --format=esm --packages=external --define:__SPECS_CLI_VERSION__=\\\"$npm_package_version\\\" --loader:.md=text --loader:.yaml=text --banner:js='#!/usr/bin/env node' --outfile=dist/specs.js --watch=forever",
     "test": "cd ../.. && vitest -c vitest.config.ts packages/cli/tests"
   },
   "dependencies": {
     "@directededges/react-from-specs": "^0.7.0",
-    "@directededges/specs-from-figma": "^0.39.0",
-    "@directededges/specs-schema": "^0.40.0",
+    "@directededges/specs-from-figma": "file:../../../specs-transforms/packages/specs-from-figma",
+    "@directededges/specs-schema": "file:../../../spectacular/packages/schema",
+    "@directededges/specs-schema-core": "file:../specs-schema-core",
     "@directededges/webcomponents-from-specs": "^0.7.0",
-    "ajv": "^8.20.0",
-    "ajv-formats": "^3.0.1",
     "commander": "^11.1.0",
     "fs-extra": "^11.2.0",
     "tslib": "^2.6.2",

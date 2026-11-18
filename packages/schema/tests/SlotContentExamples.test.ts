@@ -105,9 +105,9 @@ describe('SlotContent structural conformance', () => {
 describe('InstanceExample structural conformance', () => {
   const def = schema.definitions.InstanceExample;
 
-  it('schema forbids extra top-level props and allows title + propConfigurations', () => {
+  it('schema forbids extra top-level props and allows title + styles + propConfigurations', () => {
     expect(def.additionalProperties).toBe(false);
-    expect(objectKeys(def.properties).sort()).toEqual(['propConfigurations', 'title']);
+    expect(objectKeys(def.properties).sort()).toEqual(['propConfigurations', 'styles', 'title']);
   });
 
   it('propConfigurations accepts scalars OR a SlotContentRef (oneOf)', () => {

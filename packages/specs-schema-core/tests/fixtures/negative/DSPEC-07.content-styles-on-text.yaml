@@ -1,0 +1,14 @@
+# contentStyles on a text element; it is meaningful only on a slot.
+kind: component
+expect: DSPEC-07
+document:
+  title: Button
+  anatomy:
+    root: { type: container }
+    label: { type: text }
+  default:
+    elements:
+      label:
+        content: Save
+        contentStyles:
+          $text: { textColor: '#1B1B1BFF' }

@@ -464,6 +464,37 @@ describe('Cache', () => {
       expect(cache.entries['84021:19488']).toEqual({ name: 'egdsLink', file: 'library', fileKey: 'abc123' });
     });
 
+    it('replaces the component\'s prior row rather than appending a second', () => {
+      // Rows are keyed by node id, so an append left the replaced node behind on every
+      // `--overwrite` — one marathon component reached seven rows, six of them resolving
+      // to nothing, with no way to tell which id was live.
+      build();
+      record();
+      record({ nodeId: '84061:10375' });
+      const cache = readCacheFile<ComponentsEntry>(dataDir, 'components')!;
+      expect(cache.entries['84021:19488']).toBeUndefined();
+      expect(cache.entries['84061:10375']).toEqual({ name: 'egdsLink', file: 'library', fileKey: 'abc123' });
+    });
+
+    it('prunes the prior row even when the file key changed', () => {
+      // The plugin reports an unsaved file by a per-session placeholder rather than its
+      // key, so matching on the file key would leave a stale row behind each session.
+      build();
+      record();
+      record({ nodeId: '84061:10375', fileKey: 'unsaved-second-session' });
+      const cache = readCacheFile<ComponentsEntry>(dataDir, 'components')!;
+      expect(Object.keys(cache.entries).filter(id => cache.entries[id].name === 'egdsLink')).toEqual(['84061:10375']);
+    });
+
+    it('leaves another component\'s rendered row alone', () => {
+      build();
+      record();
+      record({ nodeId: '84061:8944', name: 'egdsBadge' });
+      const cache = readCacheFile<ComponentsEntry>(dataDir, 'components')!;
+      expect(cache.entries['84021:19488']).toBeDefined();
+      expect(cache.entries['84061:8944']).toBeDefined();
+    });
+
     it('keeps the fetched entries beside it', () => {
       build();
       record();

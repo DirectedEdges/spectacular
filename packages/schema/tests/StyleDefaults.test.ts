@@ -186,6 +186,7 @@ describe('DSPEC-52 — an optional composite member declares a default', () => {
     // A traversal that silently stopped short would pass every assertion below
     // on an empty set.
     expect([...composites.keys()].sort()).toEqual([
+      'AdaptiveGridTracks',
       'AngularGradient',
       'AspectRatioValue',
       'Blur',

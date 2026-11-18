@@ -10,7 +10,7 @@ Everything is usable at the free tier. Nothing is time-limited, watermarked, or 
 
 A Pro subscription is **$10/month**.
 
-- [Purchase Pro](https://buy.polar.sh/polar_cl_xnq7zeKLXunrhOIpfNwA56F4wIq2Y0lLNCKmb0hhYJH) via Polar — you'll receive your license keys by email at checkout
+- [Purchase Pro](https://buy.polar.sh/polar_cl_xnq7zeKLXunrhOIpfNwA56F4wIq2Y0lLNCKmb0hhYJH) via Polar — your license keys are then available in your Polar customer portal, not sent by email
 - [Manage your subscription](https://polar.sh/directed-edges-llc/portal) from your Polar customer portal
 - Need help? Contact [nathan@specsplugin.com](mailto:nathan@specsplugin.com)
 
@@ -88,6 +88,7 @@ Pro subscriptions are purchased and managed through [Polar](https://polar.sh), t
 
 From your Polar dashboard you can:
 
+- Retrieve your plugin and CLI license keys — this is the only place they are published
 - View your current billing cycle and generation usage
 - Upgrade, downgrade, or cancel your subscription
 - Purchase top-off generation packs
@@ -103,17 +104,19 @@ Teams can purchase a single subscription that covers multiple seats, with volume
 | 5–9 seats | 10% off |
 | 10+ seats | 20% off |
 
-Each seat is functionally identical to an individual Pro subscription: when a team member claims their seat, they receive their own plugin and CLI key pair by email, activated and managed the same way as any other Pro subscriber.
+Each seat is functionally identical to an individual Pro subscription: when a team member claims their seat, their own plugin and CLI key pair appears in their own Polar customer portal, activated and managed the same way as any other Pro subscriber.
 
 ### Purchasing and managing seats
 
 A team subscription is purchased by an administrator, who becomes the owner of the subscription and the only person who can adjust it. Seats are managed by email address — the administrator enters each team member's email individually, and Polar sends that person an invitation to claim their seat.
 
+Buying the subscription does not license the administrator. A seat only carries a license once it is assigned to an email address and claimed, so an administrator who also uses Spectacular needs a seat assigned to their own address like anyone else — check the seat list in the portal and assign one if it isn't already there.
+
 Seats are managed **one at a time** rather than via bulk import or CSV upload. The administrator adds, removes, or reassigns seats individually through the Polar customer portal.
 
 ### Claiming a seat
 
-When a team member is invited, they receive an email with a link to claim their seat. **Invitations must be claimed within 24 hours** — after that the invitation expires and the administrator needs to re-send it from the portal. Once claimed, the team member receives their own plugin and CLI keys and activates them like any individual Pro subscriber.
+When a team member is invited, they receive an email with a link to claim their seat. That email carries the claim link, not the keys. **Invitations must be claimed within 24 hours** — after that the invitation expires and the administrator needs to re-send it from the portal. Once claimed, the team member's own plugin and CLI keys appear in their Polar customer portal, and they activate them like any individual Pro subscriber.
 
 A seat that hasn't been claimed yet still counts toward the subscription's seat total and is billed normally. Administrators can revoke a pending invitation and reassign the seat to a different email at any time.
 

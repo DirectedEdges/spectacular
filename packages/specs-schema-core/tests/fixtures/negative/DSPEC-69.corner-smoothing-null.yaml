@@ -1,0 +1,16 @@
+# Null reads as "unset" for every other unit-interval property, and for smoothing it is the
+# one value the render cannot act on — so it validates clean and fails at the canvas, where
+# the author has stopped looking. `0` is what no smoothing is.
+kind: component
+expect: DSPEC-69
+document:
+  title: Card
+  anatomy:
+    root: { type: container }
+  props: {}
+  default:
+    elements:
+      root:
+        styles:
+          cornerRadius: 0
+          cornerSmoothing: null

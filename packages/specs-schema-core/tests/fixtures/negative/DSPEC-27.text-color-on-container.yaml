@@ -1,0 +1,11 @@
+# textColor on a container element; it belongs to text elements.
+kind: component
+expect: DSPEC-27
+document:
+  title: Panel
+  anatomy:
+    root: { type: container }
+  default:
+    elements:
+      root:
+        styles: { textColor: '#1B1B1BFF' }

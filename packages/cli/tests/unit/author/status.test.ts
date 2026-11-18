@@ -52,7 +52,7 @@ describe('author status', () => {
       path.join('config', 'conventions', 'figma.yaml'),
       path.join('config', 'conventions', 'react.yaml'),
     ]);
-    expect(result.posture).toEqual({ storybookPort: 6106, up: true });
+    expect(result.posture).toEqual({ storybookPort: 6106, up: true, hostStale: null });
   });
 
   it('marks analysis stale when a report is missing or older than the newest payload', async () => {
@@ -71,7 +71,7 @@ describe('author status', () => {
   it('reports the posture down without a readable port, and never probes', async () => {
     let probed = false;
     const result = await status({ probe: async () => { probed = true; return true; } });
-    expect(result.posture).toEqual({ storybookPort: null, up: false });
+    expect(result.posture).toEqual({ storybookPort: null, up: false, hostStale: null });
     expect(probed).toBe(false);
   });
 
