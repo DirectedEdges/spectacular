@@ -52,6 +52,16 @@ hook blocks it).
   actually answers. That applies to every module `server.ts` imports, not only the
   file itself, and the failure is silent — the server keeps serving the old bundle,
   so a new field simply never arrives.
+- **A rebuilt bundle is not a restarted server.** The bridge is a daemon that
+  holds whatever bundle it launched with, so rebuilding `dist/bridge-server.js`
+  leaves the running process unchanged — the watcher cannot fix this, because the
+  problem is the process rather than the file. `specs bridge stop` then
+  `specs bridge start` after any change under `src/bridge/`. The failure mode is
+  the same silence as above and much harder to read, because the file on disk now
+  contains the new field while the server answering requests does not: the CLI
+  sends it, the plugin receives a body without it, and every symptom points at the
+  plugin or the engine. `ps -o lstart=` on the pid holding 9002, compared against
+  the mtime of the change, settles it in one command.
 - **`server.ts` is the only module in `src/bridge/` that opens a port**, and
   keeping it that way is what makes the rest testable. Importing it to call a
   function starts a listener on 9001, so anything another module could own —
@@ -180,7 +190,7 @@ the work lives in the feature folder.
 | `cache` | Render lookup caches |
 | `applyCustomTokens` | Inject custom tokens into foundations |
 | `react`, `webcomponents` | Emit one platform target whole — component, contract, stylesheet, stories. Both are four lines over `emit/targets.ts`, which also holds the `emitTarget()` the chain calls in-process |
-| `analyze` | Dependency/prop/styling/key/role analyzers. Naming none runs every analyzer |
+| `analyze` | The analyzers behind the catalogue reports. Naming none runs every analyzer |
 | `validate` | Spec folders against the schema package plus the cross-file references JSON Schema cannot check; `--authored` downgrades the missing `metadata.source` to a warning. A run naming specific specs scopes its tally and exit code to them, reporting workspace-level documents separately. Also reports, without failing: the style properties a platform's binding declares unsupported, and slot fills holding the same elements. Reads only |
 | `author` | The authoring namespace: `status` prints the startup digest (catalogue, analysis freshness, conventions paths, posture — read-only); `start <key>` writes the collision-checked component folder with all three concern templates, valid as shipped, then prints the digest. Work in `src/author/` |
 | `render` | Spec → Figma via bridge |
@@ -237,7 +247,7 @@ the work lives in the feature folder.
 | `src/bridge/` | `server.ts` is the two listeners and the HTTP router, and nothing else: the sockets, result routing by `requestId`, and `withJsonBody`, which holds the read-parse-respond envelope every endpoint shares. `operations.ts` is one method per message the plugin answers, taking the registry, the request tracker and the bound workspace resolver as arguments so it can run against a fake socket. `manifests.ts` and `workspace.ts` are pure — what a render payload needs from the caches, and where a render reads from. Also `client.ts` (`postRender`, `postGenerateFromSelection`, `postInspect`, `postAnnotate`), connection pick (`resolveFileKey`), pidfile. **Only `server.ts` opens a port**, which is what lets everything else be tested |
 | `src/generate/licenseStatus.ts` | Reads engine-stamped license state; the CLI validates nothing |
 | `src/cache/` | `cache.ts` builds the render lookup caches under `{data.directory}/cache/`; `report.ts` prints a refresh result, shared by `specs cache` and by every command that refreshes as its last step |
-| `src/analyze/` | The five analyzers behind `specs analyze` — `Props`, `Styling`, `Dependencies`, `Keys`, `Roles` — and `index.ts`, the registry that resolves names to them and answers what a run with no names does. Named for the command, like every other feature folder; it was `analyzers/`, named for the plural of its contents. `roleVocabulary.ts` sits beside them: the one machine-readable copy of the documented role concepts and their emission status, because the schema types a role as an open string and a coverage report needs to tell a typo from a concept |
+| `src/analyze/` | The analyzers behind `specs analyze` — one file each, and `index.ts`, the registry that resolves names to them and answers what a run with no names does. The registry is the roster: a list here would be a second one, free to go stale, which is what it was doing. Named for the command, like every other feature folder; it was `analyzers/`, named for the plural of its contents. `roleVocabulary.ts` sits beside them: the one machine-readable copy of the documented role concepts and their emission status, because the schema types a role as an open string and a coverage report needs to tell a typo from a concept |
 | `src/generate/` | What only `specs generate` uses: `manifestParser.ts` (the v1 manifest), `fileSourceAlias.ts` (which configured source carries the component file), `imageFills.ts` (ADR-063 phase two), `licenseStatus.ts` + `licenseGuidance.ts` (display and the transient-failure wording) |
 | `src/scan/` | What only `specs scan` uses: `discovery.ts` (component and composition discovery over a REST payload, monolithic or sectioned), `glyphPatternMatch.ts`, `manifestMigrationV1ToV2.ts` |
 | `src/utilities/` | The 15 modules more than one feature imports — the layout seam, the payload format (`sectionedFile` + `payloadSplit` + `payloadRead`, one on-disk format in three files), the key derivations, the exit-code contract, the watch loop, the dev-status vocabulary. Entry rule above; it is not a catch-all |

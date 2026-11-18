@@ -5,7 +5,7 @@
 | # | Title | Highlights |
 |---|-------|------------|
 | 126 | Conditional Style Values Collapse to a Single-Key Null Test | (reserved, draft on `126-conditional-shorthand`) |
-| 123 | Element Themes — The Variable Modes an Element Pins | (reserved, draft on `123-element-themes`) |
+| 123 | Element Themes — The Variable Modes an Element Pins | (reserved, draft in PR #948) |
 | 119 | Overrides on Instance Elements | (reserved, draft in PR #915) |
 | 108 | The `$slotContent` Pointer Namespace | |
 | 107 | Schema File Identity and Packaging | |

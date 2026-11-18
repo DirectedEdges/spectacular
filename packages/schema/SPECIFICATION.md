@@ -248,6 +248,28 @@ The sentinel is not a value. **A consumer MUST apply nothing for it, and MUST NO
 
 Its purpose is to be visible. A `mixed` value reports that the source design mixes values within one layer, which is a thing to fix in the design rather than a thing to render. A producer SHOULD warn when it records one (`producer`, `unenforced`).
 
+### 4.7 A theme selection is recorded where it was made and inherits down the element tree
+
+`Element.themes` maps a token group name to the theme selected for that group (`schema: component.schema.json`; ADR-123). A token resolves to a different value under a different theme, and which theme applies is a fact of the element rather than of the token. The key names the group and the value names the theme, both as the token source spells them: a group name is not a key under §3 and is not formatted to `spec.keys`, because it must match the group segment of the `TokenReference.$token` paths the selection governs (DSPEC-73).
+
+A producer MUST write a key only on the element that explicitly selected a theme for that group, and MUST NOT write the effective selection onto descendants (DSPEC-74). An absent key therefore means *inherit*, which is distinct from §4.1a's *declared default* — there is no default at this site to fall back to.
+
+A `null` value selects nothing for that group, and a consumer MUST drop the key from the effective set rather than carry it as a selection (DSPEC-78). This is §4.2's distinction at a second site: an absent key inherits from the layer beneath, where a `null` key overrides the inherited selection with no selection. Every element selects nothing for every group until something says otherwise, so a `null` is that baseline written down — which is what lets a layering variant return an element to it.
+
+`null` is a **layering** instruction and nothing else. A producer MUST NOT write one where no layer beneath it selects that group — in a `default` variant, in a composition, or in a slot fill (DSPEC-79). It says nothing at those sites: there is no selection to withdraw, and an element that selects nothing is written by omitting the key. Nor does it act on tree position: a descendant that writes `null` still resolves against its ancestors, which is what omitting the key already does, so the two are indistinguishable in the resolved state and on the canvas alike.
+
+A consumer MUST resolve an element's effective themes by merging its own keys over those of its ancestors, through nested instance boundaries, with the nearest selection winning per group (DSPEC-75). No document states the effective set.
+
+A producer MUST write an explicit selection even where the selected theme is the group's default theme (DSPEC-76). The two are not equivalent: an explicit selection holds inside a differently themed ancestor, where an absent key would inherit.
+
+A producer MUST NOT write a key that is not a group name — a group identifier that resolves to no name is omitted rather than recorded raw (DSPEC-77), which is what makes the match against `$token` paths total rather than conditional. Group and theme names are open strings; the token source owns that vocabulary, and no validator checks a value against it (§10).
+
+An `InstanceExample` MAY carry its own `themes`, which selects for the example instance and not for the component instantiated inside it — the distinction `styles` draws on the same type (§5.4). A consumer MUST resolve an example's effective themes by merging the example's map over the instantiated component's, nearest selection winning per group, exactly as DSPEC-75 requires for elements (DSPEC-81). Without it an example reaches a theme only through the variant its `propConfigurations` select, so one configuration could not be presented under two themes.
+
+A group name MUST come from a token source the producer's workspace holds, never from the document's source file alone (DSPEC-80). A file outlives the libraries it consumes: a group renamed and republished leaves the file answering under the name it last synced, and a file may reference groups no library the workspace holds has ever published. Both yield a key naming a group no consumer can resolve, and neither is detectable from inside the file — the file reports the retired name as confidently as a current one. So a producer resolves a group identifier against the sources it holds, and omits and reports anything that does not resolve (§11.2's second permitted degradation). A producer with no sources to consult declares no opinion and filters nothing, which is not the same as holding none.
+
+In a Figma-sourced spec a token group is a variable collection and a theme is one of its modes. That reading is provenance, in the sense of §7.2, and binds no consumer: a `themes` entry names a group and a theme, and resolving one requires nothing from any one design tool.
+
 ---
 
 ## 5. Pointers
@@ -297,7 +319,7 @@ A path MUST NOT descend through a slot fill: a filled slot is a reference, handl
 
 `InstanceExample.styles` is the example instance's own box, not its content's: a producer records it only when the instance declares a non-`HUG` horizontal sizing — `layoutSizingHorizontal: 'FIXED'` with `width` in raw px — and omits it for an instance left at its component's natural size (DSPEC-65; ADR-124). A rendering consumer applies these styles to the instantiated example after configuration and content fills (DSPEC-66; ADR-124).
 
-`instanceExamples` wraps its named `items` with the set-level `orientation` (ADR-125). A rendering consumer lays the examples out along the declared axis, and treats an absent `orientation` as `VERTICAL` (DSPEC-67).
+`instanceExamples` wraps its named `items` with the set-level `orientation` (ADR-125). A rendering consumer lays the examples out along the declared axis, and treats an absent `orientation` as `VERTICAL` (DSPEC-75).
 
 ---
 
@@ -477,6 +499,13 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-70 | A consumer reading both axes non-null treats `gridColumns` as the templated axis and reports `gridRows` as unsupported, rather than choosing either silently | consumer | styles reference, ADR-122 |
 | DSPEC-71 | A slot whose only child is a grid container named by the platform's `slotGrid` convention takes that container's grid, and the container's children become the slot's content; a container sharing the slot with anything else stays an ordinary element | producer | §6.6, ADR-122 |
 | DSPEC-72 | Wrapper collapse carries the grid track keys with the `layoutMode` they complete, and distributes that group to the slot box alone when the mode is `GRID` | producer | §6.6, ADR-083/122 |
+| DSPEC-73 | A `themes` key is a token group name as the token source spells it, unformatted by `spec.keys`, so it matches the group segment of the token paths the selection governs | producer | §4.7, ADR-123 |
+| DSPEC-74 | A `themes` key is written only on the element that explicitly selected a theme for that group, never as the effective selection on descendants | producer | §4.7, ADR-123 |
+| DSPEC-75 | An element's effective themes are its own `themes` keys merged over its ancestors', through nested instance boundaries, nearest selection winning per group | consumer | §4.7, ADR-123 |
+| DSPEC-76 | An explicit selection is written even where it equals the group's default theme, because it holds inside a differently themed ancestor where an absent key would inherit | producer | §4.7, ADR-123 |
+| DSPEC-77 | A token group whose identifier resolves to no name is omitted from `themes` rather than recorded as a raw identifier | producer | §4.7, ADR-123 |
+| DSPEC-78 | A `null` theme value selects nothing: a consumer drops the key from the effective set, and a layering variant writes `null` to remove a selection the layer beneath made | consumer | §4.7, ADR-123 |
+| DSPEC-79 | A `null` theme value is written only where a layer beneath selects that group — never in a `default` variant, a composition, or a slot fill, where an element that selects nothing omits the key instead | producer | §4.7, ADR-123 |
 
 The reference validator (§10) implements every **validator** row except DSPEC-33 and DSPEC-63, whose single-document limits §10 states.
 

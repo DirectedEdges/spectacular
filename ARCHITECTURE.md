@@ -112,6 +112,11 @@ came to describe a gradient-stroke mechanism, a `FILL` translation and a
   `code/style-mapping.md` is gone
 - `site/src/content/docs/code/styles.mdx` — the *Mapping Specs to CSS* table,
   when a style key is added or removed. Hand-written, keys only
+- `packages/cli/src/transforms/Cssvars.ts` ↔
+  `site/src/content/docs/code/cssvars.md` — the same pair one level up, for the
+  custom properties and theme override blocks every emitted stylesheet reads.
+  The page quotes those selectors verbatim, so a change to their shape leaves it
+  describing a mechanism nothing emits
 
 Changing a module's output without updating the binding is drift, and the binding
 names its owning module per key, so a changed file identifies the entries to

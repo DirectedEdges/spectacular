@@ -129,7 +129,12 @@ function readSpec(dir: string): { parsed: ParsedSpec; files: Partial<Record<Conc
 
 export function runValidate(options: ValidateOptions): ValidateResult {
   const layout = resolveSpecsLayout(options.specsPath);
-  const validators = concernValidators();
+  // One set per kind. A composition's concern documents are its own exact shape
+  // (ADR-109) — no props, no variants, elements and layout at the top level — so
+  // validating one against the component definitions reports errors naming
+  // members a composition cannot have.
+  const validatorsFor = (kind: SpecKind) =>
+    concernValidators(kind === 'composition' ? 'composition' : 'component');
 
   const notes: string[] = [];
   let tokens: TokenIndex | undefined;
@@ -193,7 +198,7 @@ export function runValidate(options: ValidateOptions): ValidateResult {
       for (const concern of CONCERNS) {
         const doc = parsed[concern];
         if (!doc) continue;
-        const validate = validators[concern];
+        const validate = validatorsFor(kind)[concern];
         if (!validate(doc) && validate.errors) {
           // The one omission `--authored` exists to forgive is not reported at
           // all: three guaranteed warnings per spec on every run trained real
@@ -314,7 +319,7 @@ export function runValidate(options: ValidateOptions): ValidateResult {
       for (const name of specsByKind.get(kind) ?? []) {
         if (requested.has(name)) continue;
         specs += 1;
-        errors += schemaErrorCount(path.join(layout.dirFor(kind), name), validators, options.authored);
+        errors += schemaErrorCount(path.join(layout.dirFor(kind), name), validatorsFor(kind), options.authored);
       }
     }
     if (specs > 0) skipped = { specs, errors };

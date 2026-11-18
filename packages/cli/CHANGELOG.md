@@ -17,6 +17,8 @@ This release makes `specs validate` the authority on whether a spec conforms, an
 
 - **`instanceExamples` carries its examples under `items`** (ADR-125): regenerate an authored spec, or move its entries under `items`.
 
+- **The cssvars stylesheet's theme override blocks are no longer anchored to `:root`.** A block is now `[data-<group>="<theme>"]`, so the attribute scopes whatever element carries it — the document for a whole-page switch, or one subtree for an element that selects a theme (ADR-123). A page that stamped the attribute on `:root` is unaffected; a consumer whose own CSS relied on the `:root` specificity may not be. A subscribed collection still emits no block, because its per-mode values are not in the workspace's data, and the run now names those collections instead of skipping them silently.
+
 - **Two installed skills move under the `version` namespace they orchestrate**: `specs-cli.premerge` becomes `specs-cli.version.figmapremerge`, and `specs-cli.release` becomes `specs-cli.version.release`. Install writes by name and removes nothing, so delete the two old directories after upgrading.
 
 ### Added
@@ -45,6 +47,10 @@ This release makes `specs validate` the authority on whether a spec conforms, an
 
 - **`specs author start <key>` opens an authoring round in one call**: a collision-checked component folder with all three concern templates — valid as shipped, so every validation error afterwards is the author's — plus the startup digest. `specs author status` prints the digest alone: catalogue, analysis freshness, conventions paths, and whether the pinned Storybook port answers.
 
+- **`specs analyze themes` reports which themes a catalogue selects (ADR-123)** — a per-component file plus `themes.byComponent`, `themes.byTheme` and `themes.unused`, the last measured against the groups and themes `foundations` already declares. Authored selections only: the effective theme an element renders under is a merge over its ancestors', and computing that in a report would put a second implementation of the rule beside the emitters' own.
+
+- **A theme change in `variants.yaml` is named in the version report.** A `themes-selection` rule grades it `patch`, as the broad variants rule already did — the rule exists so the cause is stated, since one key decides what every token reference in a subtree resolves to and otherwise arrives as a scatter of style diffs.
+
 ### Changed
 
 - **The promotion table is cross-referenced against the workspace** by `specs validate`, which warns about a target with no spec folder, a `values` key naming a token the library does not hold, and a written prop the target does not declare. Warnings only — a table is often authored ahead of the components it names.
@@ -54,6 +60,8 @@ This release makes `specs validate` the authority on whether a spec conforms, an
 - **`specs analyze foundations` writes one file per token type** under `analysis/foundations/`, with `analysis/foundations.yaml` reduced to an index of counts, theming collections, and the file map — a token lookup now reads that type's own small file. Icon glyphs move to `analysis/foundations/icons.yaml`, and the index's `summary.tokens` always enumerates every kind, a zero meaning the library has none.
 
 ### Fixed
+
+- **`specs validate` now checks a composition against the composition schema.** It used the component definitions for every spec, so each composition reported three errors naming members it cannot have — a missing `props`, a missing `default`, and `elements` "not allowed here" — and no composition could be validated at all. The real findings were buried under them: a composition referencing a component the workspace does not have now surfaces instead.
 
 - **`specs validate <key>` reaches zero errors when the spec you named is valid.** Findings from the catalogue scope and the foundation documents are still reported, under their own heading, but they no longer count toward the named spec's tally or fail the run — one unrelated broken foundation file used to put every component permanently at one error.
 

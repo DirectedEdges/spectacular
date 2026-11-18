@@ -18,7 +18,7 @@ Analyzer names are positional. There is no config key for them — analysis runs
 **With no analyzer named, every analyzer runs**, and the run says which:
 
 ```
-[analyze] no analyzer named — running all: props, styling, dependencies, keys, roles
+[analyze] no analyzer named — running all: foundations, props, styling, themes, dependencies, keys, roles, supplemental, guidelines
 ```
 
 Name a subset when you want one report quickly, or when a slower analyzer has nothing to tell you about the change you just made.
@@ -55,7 +55,7 @@ Two differences from running it yourself:
 
 ### `[analyzers...]` (optional)
 
-Any of `props`, `styling`, `dependencies`, `keys`, `roles`, in any order. Omit to run all five.
+Any of `foundations`, `props`, `styling`, `themes`, `dependencies`, `keys`, `roles`, `supplemental`, `guidelines`, in any order. Omit to run them all.
 
 ## Options
 

@@ -24,6 +24,7 @@ export {
   schemaValidator,
   checkSchema,
   type AuthoredKind,
+  type ConcernKind,
   type ConcernName,
   type ConcernValidators,
 } from './schemas.js';

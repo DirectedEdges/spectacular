@@ -23,7 +23,7 @@ It is platform-neutral and identical whichever target produces it, so `specs rea
 | Kind | Emitted as |
 |---|---|
 | Variables | `--{collection-name}-{variable-path}`, matching the stylesheet's derivation exactly. Aliases resolve to `var()` references; aliases pointing outside the fetched payload are skipped and counted |
-| Collection modes | Attribute-scoped override blocks per local multi-mode collection |
+| Collection modes | Attribute-scoped override blocks per local multi-mode collection, matched by any element carrying the attribute |
 | Text styles | A font shorthand, plus a `-letter-spacing` companion when present |
 | Effect styles | One variable per role the style uses — shadows, layer blur, background blur |
 | Fill styles | A color or CSS gradient function, from the style's topmost visible paint |
@@ -35,7 +35,7 @@ It is platform-neutral and identical whichever target produces it, so `specs rea
   --elevation-raised-shadows: 0 4px 4px 0 rgba(0, 0, 0, 0.25);
 }
 
-:root[data-theme="dark"] {
+[data-color="dark"] {
   --color-surface-primary: #000000;
 }
 ```
@@ -53,7 +53,11 @@ Only the effect roles a style actually uses are emitted. The stylesheet applies 
 }
 ```
 
-Switching a mode is stamping the attribute on the root element. Nothing re-renders and no component knows it happened.
+Switching a mode is stamping the attribute. Nothing re-renders and no component knows it happened.
+
+The block is not anchored to `:root`, so the attribute scopes whatever element carries it — the document for a whole-page switch, or one subtree for part of a page. That is what makes an element's authored [`themes`](/schema/themes/) selection work: the emitters write the same attribute on the element that selects a theme, and its subtree resolves under that theme while the rest of the page does not.
+
+A subscribed collection emits no override block, because its per-mode values are not in the workspace's fetched data. A spec selecting one of its themes renders under the default, and the run reports which collections those were.
 
 ## What it reads
 
