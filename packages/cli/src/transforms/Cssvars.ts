@@ -149,7 +149,11 @@ export class CssvarsTransformer implements Transformer {
         unthemedRemote.push(coll.name);
         continue;
       }
-      const attr = `data-${kebabizePath(coll.name)}`;
+      // `@directededges/from-specs`' `themeAttrs` spells the attribute the
+      // emitters write, and this selector has to match it exactly. The CLI cannot
+      // import that package, so the two copies agree by discipline — and a prefix
+      // changed on one side alone is a block that matches nothing, silently.
+      const attr = `data-theme-${kebabizePath(coll.name)}`;
       const defaultMode = coll.modes.find((m: Json) => m.modeId === coll.defaultModeId);
       modesManifest[coll.name] = {
         attr,
