@@ -61,6 +61,8 @@ This release makes `specs validate` the authority on whether a spec conforms, an
 
 ### Fixed
 
+- **`specs validate` now checks a composition against the composition schema.** It used the component definitions for every spec, so each composition reported three errors naming members it cannot have — a missing `props`, a missing `default`, and `elements` "not allowed here" — and no composition could be validated at all. The real findings were buried under them: a composition referencing a component the workspace does not have now surfaces instead.
+
 - **`specs validate <key>` reaches zero errors when the spec you named is valid.** Findings from the catalogue scope and the foundation documents are still reported, under their own heading, but they no longer count toward the named spec's tally or fail the run — one unrelated broken foundation file used to put every component permanently at one error.
 
 - **A render resolves another component to the node a render actually drew**, rather than to a stale id from the last fetch, so one authored component can be nested in another without recapturing the file. Recording a render also replaces that component's previous entry instead of accumulating one per overwrite.

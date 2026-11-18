@@ -105,21 +105,52 @@ export interface ConcernValidators {
   examples: ValidateFunction;
 }
 
-let concernCache: ConcernValidators | undefined;
+/** Which kind of spec a concern document belongs to (ADR-096, ADR-109). */
+export type ConcernKind = 'component' | 'composition';
+
+const concernCache = new Map<ConcernKind, ConcernValidators>();
 
 /**
- * Per-concern component-document validators. A caller that already knows which
- * concern a file carries validates against that concern's definition directly,
- * for errors scoped to the right branch rather than a three-way `oneOf` fan-out.
+ * The three definitions each kind's concern documents validate against.
+ *
+ * A composition's documents are its own exact shape, never a loosened form of a
+ * component's (ADR-109): it declares no props and no variants, and its elements
+ * and layout sit at the top level rather than under `default`. Validating one
+ * against the component definitions reports three errors per spec that name
+ * members a composition is not supposed to have and cannot be given.
  */
-export function concernValidators(): ConcernValidators {
-  if (concernCache) return concernCache;
-  concernCache = {
-    api: validatorFor('component-concern.schema.json#/definitions/ComponentApiDocument'),
-    variants: validatorFor('component-concern.schema.json#/definitions/ComponentVariantsDocument'),
-    examples: validatorFor('component-concern.schema.json#/definitions/ComponentExamplesDocument'),
+const CONCERN_DEFINITIONS: Record<ConcernKind, Record<ConcernName, string>> = {
+  component: {
+    api: 'component-concern.schema.json#/definitions/ComponentApiDocument',
+    variants: 'component-concern.schema.json#/definitions/ComponentVariantsDocument',
+    examples: 'component-concern.schema.json#/definitions/ComponentExamplesDocument',
+  },
+  composition: {
+    api: 'composition-concern.schema.json#/definitions/CompositionApiDocument',
+    variants: 'composition-concern.schema.json#/definitions/CompositionVariantsDocument',
+    examples: 'composition-concern.schema.json#/definitions/CompositionExamplesDocument',
+  },
+};
+
+/**
+ * Per-concern document validators for one spec kind. A caller that already knows
+ * which concern a file carries validates against that concern's definition
+ * directly, for errors scoped to the right branch rather than a three-way
+ * `oneOf` fan-out.
+ *
+ * The kind defaults to `component` so an existing caller keeps its behaviour.
+ */
+export function concernValidators(kind: ConcernKind = 'component'): ConcernValidators {
+  const cached = concernCache.get(kind);
+  if (cached) return cached;
+  const defs = CONCERN_DEFINITIONS[kind];
+  const validators: ConcernValidators = {
+    api: validatorFor(defs.api),
+    variants: validatorFor(defs.variants),
+    examples: validatorFor(defs.examples),
   };
-  return concernCache;
+  concernCache.set(kind, validators);
+  return validators;
 }
 
 export type AuthoredKind = 'supplemental' | 'guidelines';
