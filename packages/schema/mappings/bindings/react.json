@@ -357,6 +357,13 @@
         "basis": "implementation",
         "notes": "The emitter never reads a `$token`; tokens reach React only through the stylesheet the CSS binding declares."
       },
+      "theme": {
+        "disposition": "approximated",
+        "realises": "a static `data-<group>` attribute on the element that selects the theme",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "A selection on the default variant emits as an attribute matching the override block the CSS binding declares, and an `InstanceExample` selection emits as a story arg. Not realised: a selection a variant adds, changes, or withdraws with `null`. The attribute is written once from the default variant and does not vary with props, so a component whose variant shifts a theme renders every configuration under the default variant's theme and a `null` withdrawal has no effect. Variant-dependent emission needs the element's selection resolved per prop configuration at render time, which this release does not do. A root selection is emitted before the rest spread, so a consumer setting the attribute overrides it; an encapsulated element's is not overridable, which is the intended shielding."
+      },
       "binding": {
         "disposition": "bound",
         "realises": "prop access on the component — `p.<key>`, member pointers through member access",
