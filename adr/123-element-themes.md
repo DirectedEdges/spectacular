@@ -340,6 +340,42 @@ A sibling array naming the groups this layer withdraws.
 
 ---
 
+### Decision 8 — An example instance's own selection
+
+An `InstanceExample` is a configuration of a whole component, not an element, so nothing above gives it a selection. It reaches a theme only through the variant its `propConfigurations` select — which means one configuration cannot be presented under two themes, the case a reference page most often wants.
+
+#### Option A: `themes` on `InstanceExample` *(Selected)*
+
+The same map, on the example rather than on an element. It applies to the example instance, not to the component instantiated inside it.
+
+**Pros**:
+
+- It is the distinction `styles` already draws on this type: the example's own box, not its content's. A theme is the same kind of fact about the example, and a reader who understands one understands the other.
+- Reuses the `Themes` definition, so the vocabulary, the `null` meaning, and the key spelling rules all carry over with nothing restated.
+- Keeps the selection where the presentation decision is made. The alternative puts a presentation concern into the component's variant axis.
+
+**Cons / Trade-offs**:
+
+- A second site that can select a theme, so a consumer resolving an example's effective themes merges the example's map over the instantiated component's. That is the same merge as for elements and the nearest selection still wins, but it is one more place to look.
+
+---
+
+#### Option B: A theme-valued prop on the component *(Rejected)*
+
+The component declares a prop whose values name themes, and an example configures it.
+
+**Rejected because**: it makes every component that wants a themed example carry a prop that is not part of its API, and it only works where the component's author anticipated the need. An example's presentation is the example's concern.
+
+---
+
+#### Option C: Leave it to the variant *(Rejected)*
+
+An example reaches a theme only through the variant it selects, as today.
+
+**Rejected because**: it forces a variant axis to exist for a presentation difference, which is the axis the component's consumers then have to implement. A light and a dark presentation of one configuration is not two configurations.
+
+---
+
 ## Decision
 
 A new optional `themes` map on `Element`. Keys are variable collection names as the source spells them; each value is the mode pinned on that collection. Written only where the pin was set; inherited by consumers down the element tree.
@@ -350,6 +386,7 @@ A new optional `themes` map on `Element`. Keys are variable collection names as 
 |------|--------|------|
 | `Element.ts` | Added optional field `themes?: Themes` on `Element` | MINOR |
 | `Element.ts` | Added exported type `Themes` | MINOR |
+| `InstanceExample.ts` | Added optional field `themes?: Themes` on `InstanceExample` | MINOR |
 | `index.ts` | Added `Themes` to the barrel export | MINOR |
 
 **Example — new shape** (`types/Element.ts`):
@@ -381,6 +418,7 @@ Themes: Record<string, string | null>   # null selects nothing (Decision 7)
 |------|--------|------|
 | `component.schema.json` | Added definition `Themes` | MINOR |
 | `component.schema.json` | Added optional property `themes` on `#/definitions/Element`, `$ref` to `Themes` | MINOR |
+| `component.schema.json` | Added optional property `themes` on `#/definitions/InstanceExample`, `$ref` to `Themes` | MINOR |
 
 **Example — new shape** (`schema/component.schema.json`):
 
@@ -462,6 +500,7 @@ variants:
 - **Parity check**:
   - `Themes` (type, `types/Element.ts`) ↔ `#/definitions/Themes` (`component.schema.json`) — a named type for a named definition, in both directions, per constitution I.
   - `Element.themes` (type) ↔ `#/definitions/Element/properties/themes` (schema) — optional in both; absent from `required[]`.
+  - `InstanceExample.themes` (type) ↔ `#/definitions/InstanceExample/properties/themes` (schema) — optional in both. The definition carries `additionalProperties: false`, so the property had to be declared there to be admitted at all.
   - `Record<string, string>` ↔ `type: object` with `additionalProperties: { type: string }` — the same open-keyed map the `Elements` and `Images` definitions already use.
 - No type is renamed or removed and no schema file is added, removed, or restructured, so nothing in the `exports` contract changes.
 
