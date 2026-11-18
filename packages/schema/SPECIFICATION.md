@@ -264,6 +264,8 @@ A producer MUST write an explicit selection even where the selected theme is the
 
 A producer MUST NOT write a key that is not a group name — a group identifier that resolves to no name is omitted rather than recorded raw (DSPEC-77), which is what makes the match against `$token` paths total rather than conditional. Group and theme names are open strings; the token source owns that vocabulary, and no validator checks a value against it (§10).
 
+A group name MUST come from a token source the producer's workspace holds, never from the document's source file alone (DSPEC-80). A file outlives the libraries it consumes: a group renamed and republished leaves the file answering under the name it last synced, and a file may reference groups no library the workspace holds has ever published. Both yield a key naming a group no consumer can resolve, and neither is detectable from inside the file — the file reports the retired name as confidently as a current one. So a producer resolves a group identifier against the sources it holds, and omits and reports anything that does not resolve (§11.2's second permitted degradation). A producer with no sources to consult declares no opinion and filters nothing, which is not the same as holding none.
+
 In a Figma-sourced spec a token group is a variable collection and a theme is one of its modes. That reading is provenance, in the sense of §7.2, and binds no consumer: a `themes` entry names a group and a theme, and resolving one requires nothing from any one design tool.
 
 ---

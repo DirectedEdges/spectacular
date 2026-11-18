@@ -1647,6 +1647,13 @@
         "basis": "implementation",
         "notes": "Capture records the bound variable as a `$token`; render resolves the token path back to a variable and binds it. Where the variable cannot be resolved, the value falls back to the cached raw value the document carries — a degradation using only data the document holds (DSPEC-43)."
       },
+      "theme": {
+        "disposition": "bound",
+        "target": "explicitVariableModes / setExplicitVariableModeForCollection",
+        "direction": "both",
+        "basis": "implementation",
+        "notes": "A token group is a variable collection and a theme is one of its modes. Capture reads a node's own mode selections, never the resolved set its ancestors contribute to, which is what records a selection where it was made (DSPEC-74); render applies each selection to the collection the group names and clears it where the value is `null`. Group names are resolved against the variable collections the caller declares it holds, matched id then published key then name, and a collection that matches none is omitted and reported rather than recorded under the name the file answers with (DSPEC-80) — a file reports a renamed collection's retired name, and a collection no held library publishes, with equal confidence. A caller that declares nothing is unfiltered."
+      },
       "binding": {
         "disposition": "bound",
         "target": "component property bindings",
