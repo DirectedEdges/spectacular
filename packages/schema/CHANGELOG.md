@@ -19,9 +19,9 @@ This release adds a layout mode, restructures how a component's examples are hel
 
 ### Added
 
-- `Element.themes` — typed as `Themes` (`Record<string, string>`): the theme selected per token group, keyed by verbatim group name, written where selected and inherited by descendants (ADR-123)
+- `Element.themes` — typed as `Themes` (`Record<string, string | null>`): the theme selected per token group, keyed by verbatim group name, written where selected and inherited by descendants; `null` selects nothing, which is how a layering variant removes a selection the layer beneath made (ADR-123)
 - `Themes` — the token group → theme map `Element.themes` carries (ADR-123)
-- DSPEC-73 to DSPEC-77 — verbatim group keys, selections written only where made, the consumer's ancestor merge, explicit defaults recorded, and an unresolvable group omitted rather than written raw (ADR-123)
+- DSPEC-73 to DSPEC-78 — verbatim group keys, selections written only where made, the consumer's ancestor merge, explicit defaults recorded, an unresolvable group omitted rather than written raw, and `null` dropping a group from the effective set (ADR-123)
 - **A `GRID` container templates one axis into equal tracks and fills cells in source order**, with `gridColumns` or `gridRows` setting that axis and the existing `itemSpacing` holding the gap on both (ADR-122)
 - `Styles.gridColumns` and `Styles.gridRows` — typed as `GridTracks` (`number | AdaptiveGridTracks | null`); an integer fixes the count, and at most one of the two is non-null (ADR-122)
 - `AdaptiveGridTracks` — `{ minSize, collapseUnusedTracks? }`, fitting as many tracks as the container allows at that minimum; `collapseUnusedTracks` drops empty tracks so a short row stretches, and defaults to `false` (ADR-122)

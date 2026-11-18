@@ -6,7 +6,7 @@ description: "The theme an element selects for a token group, and how it resolve
 A design token does not carry one value. `DE Color/Surface/Primary` resolves to one colour under one theme and another colour under a second, and which theme applies is a fact of the element rather than of the token. `themes` is where an element states the theme in force for itself and everything beneath it.
 
 ```ts
-type Themes = Record<string, string>;
+type Themes = Record<string, string | null>;
 ```
 
 It sits on [`Element`](/schema/elements/), beside `styles`, so it reaches every place elements appear:
@@ -61,6 +61,30 @@ variants:
 ```
 
 `decorativeIcon` carries no `themes` key, so its fill resolves under `root`'s `Dark` selection. A descendant that selects the same group overrides it for its own subtree, and selections layer across variants like any other element property ([Variants](/schema/variants/)).
+
+## Removing a selection
+
+A value may be `null`, which selects nothing for that group. It is how a layering variant takes back a selection the `default` variant made:
+
+```yaml
+default:
+  elements:
+    panel:
+      themes:
+        DE Color: Dark
+variants:
+  - configuration: { appearance: Plain }
+    elements:
+      panel:
+        themes:
+          DE Color: null
+```
+
+Under `appearance: Plain` the panel selects nothing, so its subtree resolves against whatever encloses it again.
+
+This is the distinction `null` already draws in a [prop configuration](/schema/prop-configurations/): an absent key inherits from the layer beneath, where a `null` key overrides the inherited value with no value. Every element selects nothing for every group until something says otherwise, so `null` is that baseline written down rather than a new state.
+
+A consumer resolving selections **drops** the key on `null` rather than carrying it — carrying it would read as selected-to-nothing instead of unselected. On the web that falls out for free: no attribute is emitted, so the stylesheet's block stops matching. On the canvas the render clears the mode the node carried.
 
 ## Rules
 

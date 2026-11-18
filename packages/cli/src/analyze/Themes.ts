@@ -30,6 +30,13 @@ interface SelectionJson {
   variant: string;
   /** Token group → theme, verbatim as the spec carries them. */
   themes: Record<string, string>;
+  /**
+   * Token groups this entry selects nothing for — a `null` value, which removes a
+   * selection the layer beneath made (ADR-123 Decision 7). Kept apart from
+   * `themes` so a reader counting selections never counts a removal as one, and
+   * absent where there are none.
+   */
+  removes?: string[];
 }
 
 interface ThemesJson {
@@ -236,10 +243,16 @@ function selectionsIn(elements: Record<string, unknown>, variant: string): Selec
   for (const [element, raw] of Object.entries(elements)) {
     const themes = (raw as Record<string, unknown>)?.themes;
     if (!themes || typeof themes !== 'object' || Array.isArray(themes)) continue;
-    const entries = Object.entries(themes as Record<string, unknown>)
-      .filter(([, theme]) => typeof theme === 'string') as Array<[string, string]>;
-    if (!entries.length) continue;
-    out.push({ element, variant, themes: Object.fromEntries(entries) });
+    const all = Object.entries(themes as Record<string, unknown>);
+    const entries = all.filter(([, theme]) => typeof theme === 'string') as Array<[string, string]>;
+    const removes = all.filter(([, theme]) => theme === null).map(([group]) => group);
+    if (!entries.length && !removes.length) continue;
+    out.push({
+      element,
+      variant,
+      themes: Object.fromEntries(entries),
+      ...(removes.length && { removes }),
+    });
   }
   return out;
 }

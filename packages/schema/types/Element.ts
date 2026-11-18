@@ -22,9 +22,14 @@ export type Elements = Record<string, Element>;
  * path. A key spelled otherwise could not be matched against the references the
  * selection governs.
  *
+ * `null` selects nothing for that group. It is how a layer removes a selection the
+ * layer beneath made: an absent key inherits, where a `null` key overrides the
+ * inherited selection with no selection — the same distinction `null` draws in a
+ * prop configuration.
+ *
  * @since 0.41.0
  */
-export type Themes = Record<string, string>;
+export type Themes = Record<string, string | null>;
 
 /**
  * Represents a single element within a component.

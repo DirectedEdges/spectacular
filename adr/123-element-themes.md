@@ -58,7 +58,7 @@ One thing is deliberately *not* in scope: the schema has no token-definition doc
 
 ## Options Considered
 
-Six independent decisions: **where** the pin lives, **what shape** it takes, **what it is called**, **how its keys are spelled**, **which pins are written**, and **whether Figma ids travel with it**.
+Seven independent decisions: **where** the selection lives, **what shape** it takes, **what it is called**, **how its keys are spelled**, **which selections are written**, **whether Figma ids travel with it**, and **how a layer removes one**.
 
 ### Decision 1 — Placement
 
@@ -290,6 +290,56 @@ Record the `{ collectionId: modeId }` map alongside the named pins.
 
 ---
 
+### Decision 7 — Removing a selection a lower layer made
+
+A variant layers over `default` per element and per key, and absence means inherit. So a variant can *change* a selection and can *add* one, but nothing above says how it withdraws one — how a variant states that this element selects nothing for a group the default variant themed.
+
+#### Option A: `null` selects nothing *(Selected)*
+
+A value widens to `string | null`. `null` is a selection of nothing, and it overrides whatever the layer beneath selected.
+
+```yaml
+default:
+  elements:
+    panel:
+      themes:
+        DE Color: Dark
+variants:
+  - configuration:
+      appearance: Plain
+    elements:
+      panel:
+        themes:
+          DE Color: null      # selects nothing; resolves against ancestors again
+```
+
+**Pros**:
+- It is the distinction this schema already draws with `null`, in the same words: in a prop configuration an absent key inherits from the layer beneath, and a `null` key overrides an inherited value with "no value" (§4.2). A reader who knows one knows this.
+- Every element selects nothing for every group until something says otherwise, so `null` is not a new state — it is the baseline made writable. That is what lets a layer return to it.
+- Additive. A value that was a string stays a string, and no existing spec contains a `null` to reinterpret.
+
+**Cons / Trade-offs**:
+- Two absences now exist and they differ: a missing key inherits, a `null` key does not. That is the same pair `null` already carries elsewhere, but it is the part of §4.2 readers most often miss.
+- A consumer merging selections must *delete* on `null` rather than carry it, or a group will read as selected-to-nothing instead of unselected.
+
+---
+
+#### Option B: An empty string *(Rejected)*
+
+`DE Color: ''` as the withdrawal.
+
+**Rejected because**: an empty string is a theme name that happens to be empty, not the absence of one. It would validate against the same `type: string` as every real name, so nothing could tell a withdrawal from a producer bug that wrote a blank — and the schema already has a value whose entire meaning is "no value".
+
+---
+
+#### Option C: A separate `clearThemes` list *(Rejected)*
+
+A sibling array naming the groups this layer withdraws.
+
+**Rejected because**: it splits one fact across two members, so a variant that re-themes one group and withdraws another writes to both and a reader must consult both to know what is in force. It also admits contradiction — a group named in `themes` and in `clearThemes` at once — which the single map makes impossible.
+
+---
+
 ## Decision
 
 A new optional `themes` map on `Element`. Keys are variable collection names as the source spells them; each value is the mode pinned on that collection. Written only where the pin was set; inherited by consumers down the element tree.
@@ -322,7 +372,7 @@ Element:
   themes?: Themes          # optional — MINOR
 
 # New exported type
-Themes: Record<string, string>
+Themes: Record<string, string | null>   # null selects nothing (Decision 7)
 ```
 
 ### Schema changes (`schema/`)
@@ -342,7 +392,9 @@ Themes:
     The mode this element pins for each variable collection, keyed by collection name.
     Pins cascade to descendants, so a key appears only on the element that sets it.
   additionalProperties:
-    type: string
+    oneOf:
+      - type: string
+      - type: "null"
   examples:
     - { DE Color: Dark }
 
@@ -396,7 +448,9 @@ variants:
 - **Optional, and absence is not a default.** An absent `themes` means the element pinned nothing, not that it pinned a collection's default mode. The two are distinct and both are expressible.
 - **Every key is a name.** A pin whose collection cannot be resolved to a name is not written — a raw identifier never appears as a key, which is what keeps the join to `$token` paths total rather than conditional.
 - **No value validation.** Collection and mode names are open strings; the token source owns that vocabulary. A misspelled name validates clean. This is a known gap, named in Decision 4 Option C with the condition under which to revisit it.
-- **Out of scope — configuration-bound pins.** A value is a mode name, never a `PropBinding`, so a pin cannot vary with a prop. The map shape admits that widening later without a reshape, exactly as `Element.content` and `Styles.visible` are shaped.
+- **Two absences, and they differ (Decision 7).** An absent key inherits from the layer beneath; a `null` key overrides that with no selection, so the group resolves against ancestors again. Every element selects nothing for every group until something says otherwise, which is why `null` is the baseline written down rather than a new state. A consumer merging selections **deletes** the key on `null` — carrying it would read as selected-to-nothing instead of unselected.
+- **`null` is a layering instruction and nothing else.** It belongs in a `variants[]` delta, where a selection exists beneath it to withdraw. In a `default` variant, a composition, or a slot fill there is no lower layer, so it says nothing and an element that selects nothing omits the key instead. It also does not act on tree position: a descendant writing `null` resolves against its ancestors, which omitting the key already does — indistinguishable in the resolved state and on the canvas, where clearing a node's mode and never setting one are the same thing. A round trip of a `default`-variant `null` returns the key absent, which is correct.
+- **Out of scope — configuration-bound pins.** A value is a mode name or `null`, never a `PropBinding`, so a pin cannot vary with a prop. The map shape admits that widening later without a reshape, exactly as `Element.content` and `Styles.visible` are shaped.
 - **Out of scope — non-overridable pins.** This model lets any ancestor or descendant override a pin. A component that must hold its own mode against every ambient context needs a stronger semantic than inheritance, and it is not decided here.
 - **Out of scope — classifying a collection.** Whether a collection is pinned at design time or resolved from the runtime environment is a fact of the collection, not of a pin. The schema has no token-definition document to classify it in; see Context.
 

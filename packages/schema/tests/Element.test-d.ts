@@ -194,3 +194,22 @@ const _wrappedPin: Element = { themes: { 'DE Color': { mode: 'Dark' } } };
 
 // @ts-expect-error: a themes value is a string, not a nested map of modes
 const _nestedPins: Element = { themes: { 'DE Color': { Dark: true } } };
+
+// ─── Element.themes — null selects nothing (ADR-123 Decision 7) ───────────────
+
+// A layering variant removes a selection the default variant made
+const removesSelection: Element = { themes: { 'DE Color': null } };
+
+// Mixed in one map: one group re-themed, another withdrawn
+const rethemeAndRemove: Element = { themes: { 'DE Color': 'Dark', 'DE Space': null } };
+
+// The exported type admits it too
+const nullableAlone: Themes = { 'DE Shape': null };
+
+// Still not a binding — the deferral is unchanged by null
+// @ts-expect-error: a themes value is a string or null, not a PropBinding
+const _stillNoBinding: Element = { themes: { 'DE Color': { $binding: '#/props/theme' } } };
+
+// And `undefined` is not the way to say it — an absent key is, which is a different fact
+// @ts-expect-error: undefined is not a theme value; omit the key instead
+const _undefinedNotNull: Element = { themes: { 'DE Color': undefined } };

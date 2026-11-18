@@ -252,7 +252,11 @@ Its purpose is to be visible. A `mixed` value reports that the source design mix
 
 `Element.themes` maps a token group name to the theme selected for that group (`schema: component.schema.json`; ADR-123). A token resolves to a different value under a different theme, and which theme applies is a fact of the element rather than of the token. The key names the group and the value names the theme, both as the token source spells them: a group name is not a key under §3 and is not formatted to `spec.keys`, because it must match the group segment of the `TokenReference.$token` paths the selection governs (DSPEC-73).
 
-A producer MUST write a key only on the element that explicitly selected a theme for that group, and MUST NOT write the effective selection onto descendants (DSPEC-74). An absent key therefore means *inherit*, which is distinct from both §4.1a's *declared default* and §4.2's *unset* — there is no default at this site to fall back to.
+A producer MUST write a key only on the element that explicitly selected a theme for that group, and MUST NOT write the effective selection onto descendants (DSPEC-74). An absent key therefore means *inherit*, which is distinct from §4.1a's *declared default* — there is no default at this site to fall back to.
+
+A `null` value selects nothing for that group, and a consumer MUST drop the key from the effective set rather than carry it as a selection (DSPEC-78). This is §4.2's distinction at a second site: an absent key inherits from the layer beneath, where a `null` key overrides the inherited selection with no selection. Every element selects nothing for every group until something says otherwise, so a `null` is that baseline written down — which is what lets a layering variant return an element to it.
+
+`null` is a **layering** instruction and nothing else. A producer MUST NOT write one where no layer beneath it selects that group — in a `default` variant, in a composition, or in a slot fill (DSPEC-79). It says nothing at those sites: there is no selection to withdraw, and an element that selects nothing is written by omitting the key. Nor does it act on tree position: a descendant that writes `null` still resolves against its ancestors, which is what omitting the key already does, so the two are indistinguishable in the resolved state and on the canvas alike.
 
 A consumer MUST resolve an element's effective themes by merging its own keys over those of its ancestors, through nested instance boundaries, with the nearest selection winning per group (DSPEC-75). No document states the effective set.
 
@@ -496,6 +500,8 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-75 | An element's effective themes are its own `themes` keys merged over its ancestors', through nested instance boundaries, nearest selection winning per group | consumer | §4.7, ADR-123 |
 | DSPEC-76 | An explicit selection is written even where it equals the group's default theme, because it holds inside a differently themed ancestor where an absent key would inherit | producer | §4.7, ADR-123 |
 | DSPEC-77 | A token group whose identifier resolves to no name is omitted from `themes` rather than recorded as a raw identifier | producer | §4.7, ADR-123 |
+| DSPEC-78 | A `null` theme value selects nothing: a consumer drops the key from the effective set, and a layering variant writes `null` to remove a selection the layer beneath made | consumer | §4.7, ADR-123 |
+| DSPEC-79 | A `null` theme value is written only where a layer beneath selects that group — never in a `default` variant, a composition, or a slot fill, where an element that selects nothing omits the key instead | producer | §4.7, ADR-123 |
 
 The reference validator (§10) implements every **validator** row except DSPEC-33 and DSPEC-63, whose single-document limits §10 states.
 

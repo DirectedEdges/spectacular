@@ -881,11 +881,18 @@
     },
     "Themes": {
       "type": "object",
-      "description": "The theme this element selects for each token group, keyed by the group name as the token source spells it. A key is written only on the element that selects it, so descendants inherit it and the map is never the effective selection.",
+      "description": "The theme this element selects for each token group, keyed by the group name as the token source spells it. A key is written only on the element that selects it, so descendants inherit it and the map is never the effective selection. A `null` value selects nothing, overriding a selection the layer beneath made.",
       "examples": [{ "DE Color": "Dark" }],
       "additionalProperties": {
-        "type": "string",
-        "description": "The theme selected for this token group, named as the token source spells it."
+        "description": "The theme selected for this token group, named as the token source spells it; `null` where the element selects none.",
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ]
       }
     },
     "SlotContent": {
