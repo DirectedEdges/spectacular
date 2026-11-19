@@ -4,6 +4,7 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
+| 127 | Foundation Injection — Icon References, and Config-Declared Custom Foundation Sources | (reserved, draft on `127-foundation-injection`) |
 | 126 | Conditional Style Values Collapse to a Single-Key Null Test | (reserved, draft on `126-conditional-shorthand`) |
 | 125 | Instance-Example Orientation | |
 | 124 | Styles on InstanceExample | |
