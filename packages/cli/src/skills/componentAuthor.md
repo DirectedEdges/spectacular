@@ -10,7 +10,7 @@ description: Author a new component spec from a request — one-command start (s
 
 # Author a new component
 
-**Prerequisites:** `specs-cli.primer`, then `specs-cli.authoring.primer`. Load its `references/styles.md` before authoring `variants.yaml`, and its `references/slots-layout.md` before authoring any layout tree or slot.
+**Prerequisites:** `specs-cli.primer`, then `specs-cli.authoring.primer`. Its five `references/*.md` files load with the pack for the concern file each one serves — step 0 lists them.
 
 Two templates ship beside this skill in `templates/` — `supplemental.yaml`, `guidelines.yaml` (step 7). Never author a file from a blank page or from another spec's structure.
 
@@ -27,7 +27,19 @@ One call writes the collision-checked folder with all three concern files (`--ti
 - `posture.hostStale: true` — run `specs storybook init --force`, then restart the server. The port answers either way, so a stale host serves pages the emitters have already replaced and the symptom reads as missing content.
 - `cache.stale: true` — run `specs cache` now, before the first write. Render treats a stale cache as fatal and render is the last step of this procedure, so the cost of leaving it is a failure that arrives after everything else has already passed. `null` means the workspace fetches nothing, so there is no cache to judge.
 
-**Preparation is staged by file lifecycle, and each stage is one batched read.** Before `api.yaml`, load the **contract pack** in one call: the two primers, the rules files for the concepts this request touches, `config/conventions/*.yaml`, `analysis/props.yaml`, and `analysis/dependencies.byComponent.yaml`. Nothing about styling belongs here — tokens, `references/styles.md`, and the styling reports are not used until `variants.yaml`, and loading them now dilutes the anatomy and props work they sit idle through. Before `variants.yaml` (step 4), load the **styling pack** in one call: `references/styles.md`, the `analysis/foundations/<type>` files for the token types this component needs, `analysis/styling.byToken.yaml` and `analysis/styling.byComponent.yaml` — plus `references/slots-layout.md` when the component has a layout tree or slot. A pack is read once and never reopened — returning to a skill or rules file later means the first read was skimmed, and re-reading is the largest avoidable cost measured in a round. Every remaining question is resolved *during* the file that raises it — one lookup per question, local schema first — never by reading ahead "to be safe." If you notice yourself reading a source the current file does not need, stop and write.
+**Preparation is staged by concern file, one pack per file, each pack one batched read.** A pack is named for the document it precedes and loads immediately before that document — never earlier.
+
+| Pack | Load before | In one call |
+|---|---|---|
+| **api** | `api.yaml` (step 3) | the two primers; the `rules/` files for the concepts this request touches; `references/props.md`; `references/slots.md` and `references/subcomponents.md` when the request describes a slot or an internal part; `config/conventions/*.yaml`; `analysis/props.yaml`; `analysis/dependencies.byComponent.yaml` |
+| **variants** | `variants.yaml` (step 4) | `references/layout.md`; `references/styles.md`; the `analysis/foundations/<type>` files for the token types this component needs; `analysis/styling.byToken.yaml`; `analysis/styling.byComponent.yaml` |
+| **examples** | `examples.yaml` (step 5) | `rules/examples.yaml`; `rules/primitives.yaml`; `data/cache/images.yaml` when the component carries imagery |
+
+Nothing about styling belongs in the api pack — tokens, the styles map, and the styling reports are not used until `variants.yaml`, and loading them early dilutes the anatomy and props work they sit idle through.
+
+**A pack is read once and never reopened** — returning to a skill or rules file later means the first read was skimmed, and re-reading is the largest avoidable cost measured in a round. The examples pack is small because the styles map the variants pack loaded still applies to slot content triplets; continuing to use loaded context is not a reopen.
+
+Every remaining question is resolved *during* the file that raises it — one lookup per question, local schema first — never by reading ahead "to be safe." If you notice yourself reading a source the current file does not need, stop and write.
 
 ## 1. Split the requirements
 
@@ -51,7 +63,7 @@ Read, in order:
 4. `analysis/dependencies.byComponent.yaml` — how components nest, for choosing `instanceOf` targets.
 5. `mappings/bindings/` in the schema package, for the **concepts this component actually touches** — a prop type, a role, a style key. Each concept carries a disposition, and the two that matter are `approximated` (the platform keeps something lossier than the spec says) and `bound` (the platform substitutes a value, such as emitting an authoring-default example as a fallback). Reading them here is half a minute and tells you up front what a surface will do with what you are about to write; reaching for them only after a surface looks wrong has cost whole rounds.
 
-If the digest said `analysis.stale: true`, run `specs analyze` first. A report that is empty at this catalogue size is skipped, not studied. When emulating the closest sibling, read **all three** of its concern files — the pattern a task hinges on has sat in the one file a session skipped. Decide and write down: components to nest and the closest sibling to emulate (idiom only — structure always comes from the schema). The token set is decided at step 4, from the styling pack — not here.
+If the digest said `analysis.stale: true`, run `specs analyze` first. A report that is empty at this catalogue size is skipped, not studied. When emulating the closest sibling, read **all three** of its concern files — the pattern a task hinges on has sat in the one file a session skipped. Decide and write down: components to nest and the closest sibling to emulate (idiom only — structure always comes from the schema). The token set is decided at step 4, from the variants pack — not here.
 
 ## 3. Author api.yaml, then validate
 
@@ -65,7 +77,7 @@ Zero errors before touching the next file. Fix the file the error names, re-run,
 
 ## 4. Author variants.yaml, then validate
 
-Load the styling pack (step 0) first, in one call; token choices come from it. The `default` block fully describes every anatomy element — layout tree, styles, content, bindings. Then one `variants[]` delta per prop configuration that changes anything. Validate again; zero errors.
+Load the variants pack (step 0) first, in one call; token choices come from it. The `default` block fully describes every anatomy element — layout tree, styles, content, bindings. Then one `variants[]` delta per prop configuration that changes anything. Validate again; zero errors.
 
 ## 5. Author examples.yaml (when needed), then validate
 

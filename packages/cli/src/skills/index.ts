@@ -31,6 +31,23 @@
  * Skills that hold a judgment — `icons.setup`, `states.setup`, `roles.propose` —
  * depend on the primer most, because each one decides something from a library's own
  * data and the primer is what says which artifact may be believed.
+ *
+ * ## `rules/` and `references/` are different layers, and rules win
+ *
+ * A `rules/*.yaml` entry is a judgment at one schema node: modality-keyed
+ * (`must` / `never` / `should` / `could`), stating the forbidden mistake, citing the ADR
+ * it projects. A `references/*.md` file is the map of a mechanism that spans several
+ * nodes or files — which properties exist, what shape each value takes, which file each
+ * step of a traversal is written in.
+ *
+ * The test for where a new fact goes: **a choice at a single node is a rule; a fact that
+ * spans more than one node or file is a reference.** A reference that starts advising
+ * which value to pick has grown a second copy of a rule, and the two then drift — which
+ * is what happened to the single `slots-layout.md` this set replaced. When both files
+ * say something, the rules file governs and the reference carries a pointer to it.
+ *
+ * Neither layer is an authority on what a spec *means*. That is the schema's, and both
+ * layers cite it rather than restating it.
  */
 
 import PRIMER from './primer.md';
@@ -43,8 +60,11 @@ import STATES_SETUP from './statesSetup.md';
 import ICONS_SETUP from './iconsSetup.md';
 import IMAGES_SETUP from './imagesSetup.md';
 import AUTHORING_PRIMER from './authoringPrimer.md';
+import REF_PROPS from './references/props.md';
+import REF_SLOTS from './references/slots.md';
+import REF_SUBCOMPONENTS from './references/subcomponents.md';
+import REF_LAYOUT from './references/layout.md';
 import REF_STYLES from './references/styles.md';
-import REF_SLOTS_LAYOUT from './references/slots-layout.md';
 import COMPONENT_AUTHOR from './componentAuthor.md';
 import GUIDELINES_PROPOSE from './guidelinesPropose.md';
 import TEMPLATE_API from './templates/api.yaml';
@@ -102,8 +122,11 @@ export const SKILL_ASSETS: SkillAsset[] = [
       { path: 'rules/slots.yaml', content: RULES_SLOTS },
       { path: 'rules/subcomponents.yaml', content: RULES_SUBCOMPONENTS },
       { path: 'rules/variants.yaml', content: RULES_VARIANTS },
+      { path: 'references/props.md', content: REF_PROPS },
+      { path: 'references/slots.md', content: REF_SLOTS },
+      { path: 'references/subcomponents.md', content: REF_SUBCOMPONENTS },
+      { path: 'references/layout.md', content: REF_LAYOUT },
       { path: 'references/styles.md', content: REF_STYLES },
-      { path: 'references/slots-layout.md', content: REF_SLOTS_LAYOUT },
     ],
   },
   {

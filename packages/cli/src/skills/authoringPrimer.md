@@ -23,6 +23,10 @@ An authored spec is identical in shape to a generated one: the schema is the sin
 
 `<key>` is the camelCase folder key (`tooltip`, `pageHeader`) — compositions included, with no kind prefix (`destinationPicker`, never `compositionDestinationPicker`). Keys *inside* a spec follow the workspace's `spec.keys` setting.
 
+A composition is written as the same three concern files a component is. What differs is the content: most of its anatomy is `type: instance` elements naming real components, its layout is the page structure down from `root`, and its instances configure their targets through `propConfigurations`.
+
+**"Composition" names this spec kind, and nothing else.** The act of arranging and nesting elements — including through instances and into slots — is layout, and it lives in `references/layout.md`. Conflating the two sends a round looking for a composition spec when it is authoring one component's tree. (The schema's bare `Composition` triplet — `anatomy` + `elements` + `layout` — is the shape a `$slotContent` pointer resolves to, not the on-disk folder format.)
+
 ## The three files
 
 | File | Holds | Required top-level |
@@ -39,9 +43,11 @@ Every file's `metadata` states its `concern` (`api`, `variants`, or `examples`).
 
 In `variants.yaml`, `default.elements` describes **every** anatomy element: `styles`, `content` (text string, glyph name, or a `$binding`), `children`, `propConfigurations` (nested instances only). Entries under `variants` describe only what that configuration changes.
 
-## The six references
+## The six pointer forms
 
-| Reference | Written where | Value | Resolves to |
+These are the six ways one spec node points at another thing. They are not the `references/*.md` files beside this skill — those are reading material, and the collision of the word is worth keeping straight.
+
+| Pointer | Written where | Value | Resolves to |
 |---|---|---|---|
 | `instanceOf` | `anatomy.<el>` and `elements.<el>` | component name, plain string | that component's spec folder |
 | `instanceOf: {$ref}` | same | `"#/subcomponents/<name>"` | `subcomponents.<name>` in this spec |
@@ -65,10 +71,24 @@ What the library already holds is in `data/cache/images.yaml`, keyed by content 
 
 ## The authoring order
 
-**A round opens with `specs author start <key>`** — the collision-checked folder with all three concern templates, valid as shipped, plus the status digest. **References then load in two packs, each pack one batched call, each read once.** The **contract pack** — the primers, the rules files for the concepts the request touches, `config/conventions/*.yaml`, `analysis/props.yaml`, `analysis/dependencies.*` — loads before step 1; the catalogue is already in the digest. The **styling pack** — `references/styles.md`, the `analysis/foundations/<type>` files for the token types the component needs, `analysis/styling.byToken.yaml`, `analysis/styling.byComponent.yaml` — loads when `variants.yaml` begins, because styling context read before the contract work sits idle through it. A pack is never reopened: re-reading a skill or rules file mid-author is the single largest avoidable cost measured in a round, ahead of every other startup activity. Returning to a skill file later means the first read was skimmed; read it properly once instead.
+**A round opens with `specs author start <key>`** — the collision-checked folder with all three concern templates, valid as shipped, plus the status digest.
+
+**Context then loads in three packs, one per concern file, each pack one batched call, each read once.** A pack is named for the document it precedes, and it loads immediately before that document is authored — never earlier. Context read ahead of its document sits idle through the work in between, and a model follows whichever rule is nearest rather than whichever applies.
+
+| Pack | Loads before | Carries |
+|---|---|---|
+| api | `api.yaml` | the primers; `rules/` for the concepts the request touches; `references/props.md`, and `references/slots.md` / `references/subcomponents.md` when the request describes either; `config/conventions/*.yaml`; `analysis/props.yaml`; `analysis/dependencies.*` |
+| variants | `variants.yaml` | `references/layout.md`, `references/styles.md`; the `analysis/foundations/<type>.yaml` files for the token types the component needs; `analysis/styling.byToken.yaml`; `analysis/styling.byComponent.yaml` |
+| examples | `examples.yaml` | `rules/examples.yaml`, `rules/primitives.yaml`; `data/cache/images.yaml` when the component carries imagery |
+
+The catalogue is already in the digest, so no pack re-reads it.
+
+**A pack is read once and never reopened.** Re-reading a skill or rules file mid-author is the single largest avoidable cost measured in a round, ahead of every other startup activity; returning to one later means the first read was skimmed. Reading properly once is the whole technique.
+
+Later documents build on what earlier packs already loaded rather than re-reading them. Slot content triplets in `examples.yaml` carry styles, and the styles map the variants pack loaded still applies — that is the same context, not a reopen. The examples pack is small because of it.
 
 1. **Requirements split first.** Before writing anything, list every requirement in a table with its intended home: spec (name the schema path that carries it) or supplemental (name the schema path that cannot). This table is graded later; write it honestly now.
-2. **Correlate.** Read `analysis/props.yaml` (the system's prop vocabulary), `analysis/dependencies.*` (what nests what), and the digest's `catalogue`. Decide what to nest and what to emulate. Token correlation happens at the variants stage, from the styling pack: `analysis/foundations/<type>.yaml` (every token of that type — `$token` path, `$type`, `source` and `defaultValue`) and `analysis/styling.byToken.yaml` (which tokens are used where). An authored spec must look native to its catalogue.
+2. **Correlate.** Read `analysis/props.yaml` (the system's prop vocabulary), `analysis/dependencies.*` (what nests what), and the digest's `catalogue`. Decide what to nest and what to emulate. Token correlation happens at the variants stage, from the variants pack: `analysis/foundations/<type>.yaml` (every token of that type — `$token` path, `$type`, `source` and `defaultValue`) and `analysis/styling.byToken.yaml` (which tokens are used where). An authored spec must look native to its catalogue.
 
    **The foundations manifest is the single answer for a token.** `analysis/foundations.yaml` is the index — summary counts, the theming collections, and a file map — and `analysis/foundations/<type>.yaml` holds every token of that type; path, type and value are in one record there, so a lookup reads one small file. **The index is the authority on what exists**: `summary.tokens` always enumerates every kind — the token types plus `icons` — and a zero means the library has none of that kind, with no file written for it. Use a literal and note the gap (`rules/styles.yaml · tokens`); never re-run `specs analyze` or hunt the caches over a zero. The manifest is stale only when a kind is missing from `summary.tokens` altogether or the index predates the newest fetch. Do not go to `data/cache/variables.yaml` or `styles.yaml` for them: those are render lookup tables keyed for the bridge, they carry no `$type`, and answering a token question from them takes several greps that still cannot confirm the type you must write. A round that greps the cache three ways and then parses a YAML file per fact has spent its startup on a question one read answers.
 3. **api → validate → variants → validate → examples → validate.** The files already exist (start wrote them); the order governs authoring. One file at a time, `specs validate <key> --authored` after each, zero errors before the next file. A validation error is fixed before anything else happens.
@@ -100,10 +120,18 @@ Every question resolves at the nearest of these, never lower:
 
 ## Where to go deeper
 
+The five `references/*.md` files beside this skill each map one mechanism. A reference carries the map — what exists, what shape it takes, which file each step is written in. It never decides which value to write; that is the matching `rules/*.yaml` file, and where the two seem to overlap the rules file governs.
+
+| Topic | Reference | Pack |
+|---|---|---|
+| The prop kinds, their required fields, where a prop is read and set | `references/props.md` | api |
+| A slot across the three files, default against named fills, the pointer forms | `references/slots.md` | api |
+| A part that exists only inside its parent, and the names that must agree | `references/subcomponents.md` | api |
+| Layout trees, flow against pinning, sizing, arranging through instances and slots | `references/layout.md` | variants |
+| The style property map, structural properties, the token reference shape | `references/styles.md` | variants |
+
 | Topic | Skill |
 |---|---|
-| Style properties, token placement, Figma style relationships | `references/styles.md` beside this skill |
-| Layout trees, auto vs absolute positioning, slots across the three files | `references/slots-layout.md` beside this skill |
 | The new-component procedure and templates | `specs-cli.component.author` |
 | What a property, option, or definition *means* — descriptions, defaults, validated examples | the schema files themselves (`@directededges/specs-schema`), mirrored as generated reference pages on the docs site under `/schema/` (per-property style pages under `/schema/styles/`); the site's origin is workspace-configured. If that origin is down, use the installed schema — never fetch documentation from any other host: an external copy tracks a different version than the schema you hold |
 
@@ -114,3 +142,5 @@ A foundation's `guidelines.yaml` is about **how** tokens, themes and raw values 
 Guidance about *using one component* is never a foundations file — it belongs in that component's own `guidelines.yaml`. `specs-cli.guidelines.propose` synthesizes or revises a concern **only when explicitly asked**; inside an authoring round, absent guidance is a gap for your report's Suggestions, never something to fill mid-round. When styling or configuring, resolve in this order: the primitives promotion map for composed content (`config/conventions/<platform>.primitives.yaml` — compositions, instanceExamples, slot content; atomic components' own anatomy stays primitive) → `specs/foundations/` guidance → `analysis/styling.byComponent.yaml` precedent → a literal plus a noted gap.
 
 **Modeling rules live in `rules/*.yaml` beside this skill, not in skill prose.** One file per spec concept, keys mirroring the schema node they govern (`anatomy.yaml` → `type.useWhen.*`, `styles.yaml` → per style property, `layoutStyling.yaml` (flow and positioning — `layout` alone names the AST in specs), `props.yaml`, `slots.yaml`, `subcomponents.yaml` (naming a part so it can be found again, and the slot that admits it), `variants.yaml`, `examples.yaml` (what an instance example is for, and what the variants already cover), `primitives.yaml` (authoring the promotion table)). Node kinds: `useWhen` — ordered usage mappings, evaluate top to bottom, first match wins (`dontUseWhen` for explicit negatives); `when` — property interdependencies (setting this value `opens` the listed properties, or `requires` a condition); `guidelines` — a list of modality-keyed items — `must`/`never` hard, `should`/`avoid` strong convention, `could`/`warn` judgment — a positive pairable with its counter-balancing negative in one item. An `adr: <number>` field cites the decision an item projects — the rules files are the current-state map of the ADRs. Load the file for the concept you are authoring before writing it. A newly learned rule lands as an entry in the matching rules file in the CLI package — never appended to skill prose.
+
+**Rules outrank references.** A rules entry is a judgment at one schema node; a reference is the map of a mechanism spanning several nodes or files. A choice at a single node is a rule; a fact that spans more than one node or file is a reference. When a reference and a rules file appear to say the same thing, the rules file is the one that governs — the reference is the stale copy, and the right fix is to delete the sentence from the reference rather than reconcile the two. Neither layer says what a spec *means*: that is the schema's, and both cite it.

@@ -5,6 +5,20 @@ All notable changes to `@directededges/specs-cli` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **The authoring primer's reading material is five references, one per mechanism**, replacing `styles.md` and the combined `slots-layout.md`. Each now loads only for the work that needs it: `props.md` and `slots.md` before `api.yaml`, `subcomponents.md` with them when the component has an internal part, and `layout.md` and `styles.md` when `variants.yaml` begins. `props.md` and `subcomponents.md` are new — both mechanisms previously had judgment rules but no map of what exists, which left the prop kinds documented only as template comments.
+
+  Delete `references/slots-layout.md` after upgrading. Install writes by name and removes nothing.
+
+- **The reading packs are named for the concern file each one precedes** — the **api**, **variants**, and **examples** packs, where there were previously a "contract pack" and a "styling pack". The old names described the kind of context rather than the moment it is needed, and "contract" already names the whole three-file set. The examples pack is new, and small: slot content triplets carry styles, and the style map the variants pack loaded still applies.
+
+- **Judgment moved out of the references and into `rules/*.yaml`, which now governs.** A rules entry is a judgment at one schema node; a reference maps a mechanism spanning several nodes or files. Where the two overlapped — token preference, structural properties, slot sizing, the pointer prohibition — the reference carried a second copy that could drift from the rule, so each is now a pointer to the owning rules file. The division and the test for where a new fact belongs are stated in the primer and on the docs site.
+
+- **The primer distinguishes the two senses of "composition".** `specs/compositions/<key>/` is a kind of spec; arranging and nesting elements through instances and slots is layout, and `references/layout.md` covers it for components and compositions alike. The primer's `$`-pointer table is now "the six pointer forms" rather than "the six references", which collided with the `references/` files.
+
 ## [0.38.0] - 2026-11-20
 
 This release makes `specs validate` the authority on whether a spec conforms, and opens an authoring round in one command.
