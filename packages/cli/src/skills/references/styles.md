@@ -27,6 +27,7 @@ Properties group by the shape of their value. A property not in this table does 
 | Booleans | `clipsContent`, `wrap`, `locked`, `itemReverseZIndex` | boolean, `$token`, or null (`BooleanStyleValue`) |
 | Bindable boolean | `visible` | boolean, `$token`, `$binding`, or `Conditional` (`BooleanBindableStyleValue`) — the one style a prop may drive |
 | Spacing | `itemSpacing` | number when uniform, `{horizontal, vertical}` when the gaps differ, or `$token` (`ItemSpacingStyleValue`) |
+| Grid tracks | `gridColumns`, `gridRows` | an integer track count, or `{minSize}` for as many tracks as fit (`GridTracksStyleValue`) — structural, and non-null on at most one of the two |
 | Other | `strokeDashPattern`, `aspectRatio` | per their definitions; neither accepts `$token` |
 
 `visible` is the only entry here a prop may drive directly. Where that binding is legal, and the one null-test form that has any effect, are in `rules/styles.yaml · visible` and `rules/variants.yaml · conditionals`.
@@ -35,7 +36,7 @@ Properties group by the shape of their value. A property not in this table does 
 
 Structural properties carry layout structure, accept only their closed value set or null, and reject `$token`. The schema is the authority: every such definition says **"Structural property — not token-bindable"** and declares its options as a described `oneOf`.
 
-They are `layoutMode`, `position`, `mainAxisAlignment`, `crossAxisAlignment`, `wrapAlignment`, `textAlignHorizontal`, `textAlignVertical`, `textOverflow`, `layoutSizingHorizontal`, `layoutSizingVertical`, `primaryAxisSizingMode`, `strokeAlign` — the last five narrowed to closed sets by ADR-115 — plus the `position: ABSOLUTE` offsets `top`, `start`, `end`, `bottom`, `centerHorizontalOffset`, `centerVerticalOffset`, which take numbers.
+They are `layoutMode`, `gridColumns`, `gridRows`, `position`, `mainAxisAlignment`, `crossAxisAlignment`, `wrapAlignment`, `textAlignHorizontal`, `textAlignVertical`, `textOverflow`, `layoutSizingHorizontal`, `layoutSizingVertical`, `primaryAxisSizingMode`, `strokeAlign` — several narrowed to closed sets by ADR-115 — plus the `position: ABSOLUTE` offsets `top`, `start`, `end`, `bottom`, `centerHorizontalOffset`, `centerVerticalOffset`, which take numbers.
 
 ## The token reference shape
 
