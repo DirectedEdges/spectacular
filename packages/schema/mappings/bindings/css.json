@@ -2381,6 +2381,13 @@
         "basis": "implementation",
         "notes": "Emitted per `settings.spec.tokens`: a dedicated token-value path recognises `$token` and renders it in the configured notation."
       },
+      "theme": {
+        "disposition": "bound",
+        "module": ["Cssvars"],
+        "direction": "spec-to-css",
+        "basis": "implementation",
+        "notes": "A token group's non-default themes each emit an override block selected by `[data-theme-<group>=\"<theme>\"]`, re-declaring every custom property whose value differs in that mode — so the attribute the emitters write on a selecting element scopes the override to that element's subtree rather than the document. The attribute spelling has to match `themeAttrs` in `@directededges/from-specs` exactly; the two copies agree by discipline, and a prefix changed on one side alone is a block that matches nothing. A subscribed collection emits no block, because its per-mode values are not in the workspace's fetched data, and the run names those collections rather than skipping them silently (ADR-123)."
+      },
       "binding": {
         "disposition": "approximated",
         "module": ["Css"],

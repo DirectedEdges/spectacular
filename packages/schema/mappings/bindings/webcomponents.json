@@ -323,6 +323,13 @@
         "basis": "implementation",
         "notes": "As on React: the emitter never reads a `$token`."
       },
+      "theme": {
+        "disposition": "approximated",
+        "realises": "a static `data-theme-<group>` attribute, in the template for an element inside the shadow tree and on the host for the root",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "The spelling comes from `themeAttrs` in `@directededges/from-specs`, the same helper React emits through and the stylesheet's override blocks are generated from. The root is the host, so its selections are stamped in the component's own lifecycle and only where the host does not already carry the attribute — which makes the authored theme a default a consumer can override; an element below the root is written into the template and keeps its selection regardless. Not realised: a selection a variant adds, changes, or withdraws with `null`. The attribute is written once from the default variant and does not vary with props, as on React (ADR-123)."
+      },
       "binding": {
         "disposition": "bound",
         "realises": "property access on the element",

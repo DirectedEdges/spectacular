@@ -64,7 +64,7 @@ const elementTypes = componentSchema.definitions.ElementType.oneOf.map((b) => b.
  * may begin with `$`, so no document can mint an eighth marker.
  */
 const referenceForms = [
-  'literal', 'mixed', 'token', 'binding', 'conditional',
+  'literal', 'mixed', 'token', 'theme', 'binding', 'conditional',
   'slotContent', 'subcomponent', 'elementType', 'image', 'nested',
 ];
 
@@ -73,6 +73,7 @@ const REFERENCE_PAGES = {
   literal: '/schema/styles/',
   mixed: '/schema/specification/',
   token: '/schema/token-reference/',
+  theme: '/schema/themes/',
   binding: '/schema/prop-binding/',
   conditional: '/schema/conditional/',
   slotContent: '/schema/slot-content-ref/',
