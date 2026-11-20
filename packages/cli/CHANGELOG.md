@@ -5,7 +5,7 @@ All notable changes to `@directededges/specs-cli` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.38.0] - Unreleased
+## [0.38.0] - 2026-11-20
 
 This release makes `specs validate` the authority on whether a spec conforms, and opens an authoring round in one command.
 
@@ -72,6 +72,20 @@ This release makes `specs validate` the authority on whether a spec conforms, an
 - **The styles rules route schema shape questions to the schema's own property descriptions**, replacing a pointer to a skill name that no longer exists.
 
 - **An element roled `decoration` stops catching clicks when it has no children**, emitting `pointer-events: none` beside the `aria-hidden` it already carried, so a frontmost overlay no longer blocks the content behind it. A decoration with children keeps its hit-test, since its text would otherwise become unselectable.
+
+### Dependency updates
+
+- **A container can lay its children out as a grid, and your specs now record it.** Via `@directededges/specs-schema` 0.41.0 and `@directededges/specs-from-figma` 0.40.0, `layoutMode` takes a fourth value, `GRID`, with one axis templated into equal tracks by a count or by a minimum track size. Figma templates columns and never rows, so a fetch records the column count and the two gaps a grid actually uses — a grid frame previously came back with no gap at all. A grid slot is authored one layer inside the slot, named by the new `figma.slotGrid.match` convention, because Figma refuses grid layout on a slot frame itself.
+
+- **A theme a layer selects survives into the spec and out the other side.** Via the same two releases plus `@directededges/figma-from-specs` 0.8.0, an element records the theme chosen per token group, written only where a designer set it and inherited by everything below. `specs render` re-applies the selection by name on the destination file, so a subtree resolves under the theme it was authored with rather than its destination's.
+
+- **Instance examples are held differently, and this is a breaking change to your specs.** Via `@directededges/specs-schema` 0.41.0, `instanceExamples.<key>` moves to `instanceExamples.items.<key>`, beside an `orientation` saying which way the examples sit, and each example may record the box it was authored at. Regenerate your specs, or move existing entries under `items` by hand — a spec left on the old shape resolves to a single example keyed `items`.
+
+- **`specs render` writes the examples it used to leave behind.** Via `@directededges/figma-from-specs` 0.8.0, a component's instance examples are placed beside it in an `Examples` section, named from each example's title so the keys survive a round trip, and a grid container renders with its tracks and gaps. Slot fills inside a placed instance now land correctly, which is what makes the examples show their own content rather than the component's defaults.
+
+- **The generated code emits grids, themes and a story per example.** Via `@directededges/react-from-specs` 0.8.0 and `@directededges/webcomponents-from-specs` 0.8.0, a `GRID` container becomes `display: grid` with `repeat(n, minmax(0, 1fr))` for its templated axis, a theme selection becomes a `data-<group>` attribute the stylesheet's own theme blocks match, and each instance example gets its own story again now that the block is read from `items`.
+
+- **`specs validate` is backed by a published reference validator.** `@directededges/specs-schema-core` 0.1.0 is a new package carrying the JSON Schema set plus the specification's rule catalogue, reporting each failure by rule identifier. It is the library behind the validation fixes in this release, and it is open (CC-BY-4.0) so a spec can be checked for conformance without this CLI.
 
 
 ## [0.37.0] - 2026-11-12
