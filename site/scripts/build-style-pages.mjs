@@ -38,7 +38,8 @@ import { loadAdrs } from './lib/adr.mjs';
 import { createEmitter } from './lib/emit.mjs';
 import { buildStyleTree } from './lib/style-tree.mjs';
 import { renderStylePage, pageFileName } from './pages/style-page.mjs';
-import { docsSchema, schemaDir, mappingsDir, bindingsDir, adrDir, transforms } from './lib/paths.mjs';
+import { docsSchema, schemaDir, mappingsDir, bindingsDir, adrDir } from './lib/paths.mjs';
+import { elementStyleKeys } from './build-element-style-keys.mjs';
 
 const outRoot = join(docsSchema, 'styles');
 
@@ -85,18 +86,13 @@ const handWritten = new Set(
   readdirSync(docsSchema).filter((f) => f.endsWith('.md')).map((f) => f.replace(/\.md$/, ''))
 );
 
-/** The declared element tables the transforms ship. Absent when not checked out. */
-const elementTables = (() => {
-  const paths = {
-    capture: join(transforms, 'packages/specs-from-figma/src/Component/Styles/style-bindings.json'),
-    render: join(transforms, 'packages/figma-from-specs/src/Styles/style-bindings.json'),
-  };
-  const out = {};
-  for (const [name, p] of Object.entries(paths)) {
-    if (existsSync(p)) out[name] = JSON.parse(readFileSync(p, 'utf8')).elements;
-  }
-  return out;
-})();
+/**
+ * The declared element tables the transforms ship, read from the committed
+ * snapshot. They used to be read from a sibling checkout, which the deploy does
+ * not have — so every published style page omitted its `Elements Supported`
+ * section while every local build showed it.
+ */
+const elementTables = elementStyleKeys();
 
 const adrs = loadAdrs(adrDir);
 

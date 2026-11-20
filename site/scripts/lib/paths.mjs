@@ -34,9 +34,11 @@ export const docsSchema = join(docs, 'schema');
 /**
  * The checkout holding the transform packages, as a sibling of this repo.
  *
- * Two generators read their declared per-element style key tables from here.
- * It is genuinely optional — a clone of this repo alone is a valid checkout —
- * so every read through it is guarded and the pages it feeds degrade to
- * omitting a section rather than failing.
+ * Nothing in a page build may read through this. The deploy checks out this
+ * repo alone, so a sibling read succeeds on a developer's machine and returns
+ * nothing in production — which is how two schema sections rendered locally
+ * and published empty, with no failure anywhere. Data that has to cross from
+ * `specs-transforms` crosses once, into a committed snapshot, by a script run
+ * deliberately: `build-element-style-keys.mjs` is the pattern to copy.
  */
 export const transforms = resolve(repo, '../specs-transforms');

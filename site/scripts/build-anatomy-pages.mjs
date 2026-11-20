@@ -25,7 +25,8 @@ import { frontmatter } from './lib/markdown.mjs';
 import { createEmitter } from './lib/emit.mjs';
 import { loadBindings, platformBindingSections } from './lib/bindings.mjs';
 import { BINDING_LABELS } from './content/common.mjs';
-import { docsSchema, schemaDir, mappingsDir, bindingsDir, adrDir, transforms } from './lib/paths.mjs';
+import { docsSchema, schemaDir, mappingsDir, bindingsDir, adrDir } from './lib/paths.mjs';
+import { elementStyleKeys } from './build-element-style-keys.mjs';
 import { kebab, PLATFORMS, PLATFORM_TITLE } from './lib/naming.mjs';
 import { join } from 'node:path';
 
@@ -43,23 +44,19 @@ const bindings = loadBindings();
 const TYPES = defs.ElementType.oneOf.map((b) => ({ type: b.const, description: b.description ?? '' }));
 
 /**
- * The transforms' declared per-element-type style key tables, where checked
- * out. Their vocabulary is NOT the schema's: they speak `frame` and
- * `component` where the contract says `container` — the root `component` is
- * the component itself, not an anatomy element, and `frame` folds to
- * `container`. The mapping is applied here; the Figma binding's `container`
- * entry declares it.
+ * The transforms' declared per-element-type style key tables, read from the
+ * committed snapshot rather than from a sibling checkout — the deploy has this
+ * repo and nothing else, and a sideways read there produced a page with its
+ * `Styles` section silently absent. Their vocabulary is NOT the schema's: they
+ * speak `frame` and `component` where the contract says `container` — the root
+ * `component` is the component itself, not an anatomy element, and `frame`
+ * folds to `container`. The mapping is applied here; the Figma binding's
+ * `container` entry declares it.
  */
 const TABLE_TYPE_OF = { frame: 'container', component: null };
 const styleKeysByType = (() => {
-  const paths = [
-    join(transforms, 'packages/specs-from-figma/src/Component/Styles/style-bindings.json'),
-    join(transforms, 'packages/figma-from-specs/src/Styles/style-bindings.json'),
-  ];
   const out = {};
-  for (const p of paths) {
-    if (!existsSync(p)) continue;
-    const table = JSON.parse(readFileSync(p, 'utf8')).elements;
+  for (const table of Object.values(elementStyleKeys())) {
     for (const [raw, keys] of Object.entries(table)) {
       const type = raw in TABLE_TYPE_OF ? TABLE_TYPE_OF[raw] : raw;
       if (!type) continue;
