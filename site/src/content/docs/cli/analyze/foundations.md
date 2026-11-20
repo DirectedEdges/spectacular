@@ -3,7 +3,7 @@ title: "foundations"
 description: "Emit the workspace's token language — variables, named styles, and icons — as one authoring-facing manifest"
 ---
 
-Reads the fetched library data — never the specs — and produces `analysis/foundations.yaml`: the workspace's variables and named styles consolidated as tokens, plus its icon glyphs. It is the one analyzer that works on an empty catalogue, because a fresh authoring workspace has zero specs and a complete token language.
+Reads the fetched library data — never the specs — and produces the foundations manifest: a slim `analysis/foundations.yaml` index over one `analysis/foundations/<type>.yaml` file per token type, plus `foundations/icons.yaml`. The split is the point — a token lookup reads that type's own small file instead of scanning one file holding the whole token language. It is the one analyzer that works on an empty catalogue, because a fresh authoring workspace has zero specs and a complete token language.
 
 Every token entry leads with the exact object a spec author writes — `{$token, $type}` — plus orientation: an alias target by name, the default-mode `defaultValue` (alias chains resolved, colors as hex) for understanding what a token is, a description where the library wrote one, and the *presence* of platform code names. Per-mode value dumps never appear, and `defaultValue` is never authored into a spec.
 
@@ -24,34 +24,49 @@ Requires fetched data (`specs fetch`). With nothing fetched the analyzer writes 
 
 ## Output
 
+The index, `analysis/foundations.yaml` — counts, the theming collections, and the file map:
+
 ```yaml
 summary:
-  tokens: { color: 96, dimension: 41, typography: 12, effect: 3 }
-  icons: 56
+  tokens: { color: 96, dimension: 41, string: 0, boolean: 0, typography: 12, effects: 0, icons: 56 }
+collections:
+  - collection: Brand Color
+    modes: [Light, Dark]
+files:
+  color: foundations/color.yaml
+  dimension: foundations/dimension.yaml
+  typography: foundations/typography.yaml
+  icons: foundations/icons.yaml
+```
+
+`summary.tokens` always enumerates every kind — the token types plus `icons` — so a zero is a statement that the library has none of that kind, and no file is written for it (here, `effects`). A kind missing from `summary.tokens` altogether means the manifest predates this vocabulary: re-run the analyzer.
+
+One file per token type, `analysis/foundations/<type>.yaml`:
+
+```yaml
+$type: color
 tokens:
-  color:
-    - $token: Brand Color/Icon/Primary
-      $type: color
-      source: variable
-      aliasOf: Brand Palette/Neutral/900
-      defaultValue: '#1A1A1A'
-      description: Default icon color
-      platformNames: [web]
-    - $token: Images / Hero
-      $type: color
-      source: style
-  dimension:
-    - $token: Brand Sizing/icon/large
-      $type: dimension
-      source: variable
-  typography:
-    - $token: Label/Large
-      $type: typography
-      source: style
+  - $token: Brand Color/Icon/Primary
+    $type: color
+    source: variable
+    aliasOf: Brand Palette/Neutral/900
+    defaultValue: '#1A1A1A'
+    description: Default icon color
+    platformNames: [web]
+  - $token: Images / Hero
+    $type: color
+    source: style
+```
+
+And the glyphs, `analysis/foundations/icons.yaml`:
+
+```yaml
 icons:
   - name: Caret Right
     key: caretRight
 ```
+
+Every run rewrites the whole `foundations/` directory, so a type the library no longer has does not survive as a stale file.
 
 | Field | Meaning |
 |-------|---------|
@@ -63,4 +78,4 @@ icons:
 | `platformNames` | Platforms declaring a code-syntax name for this token — presence, not the names |
 | `icons[].key` | The formatted key spelling under the workspace's `spec.keys` — the spelling specs use |
 
-Named styles map by kind: `TEXT` → `typography`, `EFFECT` → `effect`, `FILL` → `color`. Grid styles bind to nothing a spec styles and are omitted. Variables map by resolved type: color, dimension (float), string, boolean.
+Named styles map by kind: `TEXT` → `typography`, `EFFECT` → `effects`, `FILL` → `color`. Grid styles bind to nothing a spec styles and are omitted. Variables map by resolved type: color, dimension (float), string, boolean.

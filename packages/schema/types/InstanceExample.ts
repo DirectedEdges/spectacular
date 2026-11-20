@@ -1,6 +1,8 @@
 import { Scalar } from "./Scalar.js";
 import { SlotContentRef } from "./SlotContentRef.js";
 import { ObjectPropValue } from "./PropConfigurations.js";
+import { Styles } from "./Styles.js";
+import { Themes } from "./Element.js";
 
 /**
  * The value of one prop in an `InstanceExample`: a scalar, `null` when the prop
@@ -34,6 +36,27 @@ export type InstanceExample = {
   title?: string;
 
   /**
+   * The example instance's own styles — its box, not its content's (ADR-124).
+   * An author-resized example records `layoutSizingHorizontal: 'FIXED'` and
+   * `width` (raw px), the box its interior fixed widths were measured against;
+   * an example left at its component's natural size (`HUG`) omits this property
+   * entirely. A rendering consumer applies these styles to the instantiated
+   * example as its final step. @since 0.41.0
+   */
+  styles?: Styles;
+
+  /**
+   * The theme this example selects for each token group.
+   *
+   * Applies to the example instance, not to the component it instantiates —
+   * the same distinction `styles` draws. An example reaches a theme through
+   * the variant its `propConfigurations` select; this is how it selects one
+   * independently of that, so a single configuration can be presented under
+   * more than one theme. @since 0.42.0
+   */
+  themes?: Themes;
+
+  /**
    * Prop values for this example. Scalar types for scalar props;
    * `SlotContentRef` (into `Component.slotContentExamples`) for slot props;
    * `ObjectPropValue` for object props (ADR-111);
@@ -47,7 +70,22 @@ export type InstanceExample = {
 };
 
 /**
- * Named record of `InstanceExample` entries on `Component.instanceExamples`.
- * Keys are plain identifier strings (`^[a-zA-Z0-9_-]+$`).
+ * The component's instance examples: the named items and how they sit relative
+ * to each other (ADR-125). The wrapper keeps set-level facts out of the items
+ * record, whose keys are formatted layer names and could collide with any
+ * field folded in beside them.
  */
-export type InstanceExamples = Record<string, InstanceExample>;
+export interface InstanceExamples {
+  /**
+   * How the items sit relative to each other. Absent means `VERTICAL`.
+   * @since 0.41.0
+   */
+  orientation?: 'HORIZONTAL' | 'VERTICAL';
+
+  /**
+   * Named record of `InstanceExample` entries. Keys are plain identifier
+   * strings (`^[a-zA-Z0-9_-]+$`). Before 0.41.0 this record was
+   * `Component.instanceExamples` itself.
+   */
+  items: Record<string, InstanceExample>;
+}

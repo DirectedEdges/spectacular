@@ -69,7 +69,7 @@ props:
     default: "Button"
     $extensions:
       com.figma:
-        visibilityProp: showLabel
+        visibilityProp: Show Label
   icon:
     type: string
     contentType: glyph
@@ -77,8 +77,10 @@ props:
     default: null
     $extensions:
       com.figma:
-        visibilityProp: showIcon
+        visibilityProp: Show Icon
 ```
+
+`visibilityProp` records the Figma property's **own name, verbatim** — `Show Label`, with the capitalisation and spacing the component set uses, never a formatted key. Render looks the property up by that string, and a key-shaped value finds nothing and skips the binding.
 
 Now the intent is clear: `label` is a string that defaults to `"Button"` and can be set to `null` to hide the label. `icon` defaults to `null` (hidden) and can be set to a glyph name to show an icon.
 

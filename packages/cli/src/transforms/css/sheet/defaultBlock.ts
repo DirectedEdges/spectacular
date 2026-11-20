@@ -8,6 +8,7 @@ import {
   preserveLineBreaks,
 } from './elementRules.js';
 import { imageRoleTakesFill, imageElementFitDecls } from './imageRole.js';
+import { decorationIsHitTransparent, DECORATION_HIT_DECL } from './decorationRole.js';
 import { defaultContentStylesLines, slotAdmitsComponents } from './contentRules.js';
 import { resolveContentStyles } from '../analysis/contentStylesRead.js';
 import type { ImagesCssContext, RootForm } from '../types.js';
@@ -61,6 +62,10 @@ export function defaultBlockLines(input: DefaultBlockInput): DefaultBlockResult 
           ? imageElementFitDecls(styles.backgroundImage)
           : backgroundImageDecls(styles.backgroundImage, images)),
       );
+    }
+
+    if (decorationIsHitTransparent(elemKey, elemRoles, facts.parentOf)) {
+      decls.push(DECORATION_HIT_DECL);
     }
 
     // Ellipses are circular unless the spec sets an explicit radius.

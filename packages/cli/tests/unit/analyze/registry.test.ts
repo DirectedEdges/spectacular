@@ -39,7 +39,7 @@ describe('the analyzer registry', () => {
   it('still reports every analyzer by name', () => {
     expect(availableAnalyzerNames().sort()).toEqual(
       [
-        'dependencies', 'foundations', 'keys', 'props', 'roles', 'styling',
+        'dependencies', 'foundations', 'keys', 'props', 'roles', 'styling', 'themes',
         // The two reading authored input rather than generated specs (ADR-118).
         'supplemental', 'guidelines',
       ].sort(),

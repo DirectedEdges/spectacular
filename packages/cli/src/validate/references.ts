@@ -326,12 +326,13 @@ export function checkReferences(
   // Storybook as a silently wrong story.
 
   const checkInstanceExamples = (doc: unknown, pathPrefix: string, scope: Scope): void => {
-    const examples = objAt(doc, 'instanceExamples');
+    // The examples live under the wrapper's `items` (ADR-125).
+    const examples = objAt(objAt(doc, 'instanceExamples'), 'items');
     for (const [exampleName, example] of Object.entries(examples)) {
       const configs = objAt(example, 'propConfigurations');
       for (const [prop, value] of Object.entries(configs)) {
         if (prop === '$nested') continue;
-        const path = `${pathPrefix}/instanceExamples/${exampleName}/propConfigurations/${prop}`;
+        const path = `${pathPrefix}/instanceExamples/items/${exampleName}/propConfigurations/${prop}`;
         const decl = scope.props[prop];
         if (!isObj(decl)) {
           findings.push({ file: 'examples', path, message: `prop "${prop}" is not declared in props` });

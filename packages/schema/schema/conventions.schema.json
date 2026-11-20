@@ -101,6 +101,25 @@
           ],
           "additionalProperties": false
         },
+        "slotGrid": {
+          "type": "object",
+          "description": "The layer declaring that a slot lays its content out as a grid, since the platform cannot apply grid layout to a slot frame itself. Absence means the library has no such convention.",
+          "examples": [
+            {
+              "match": "Slot grid"
+            }
+          ],
+          "properties": {
+            "match": {
+              "type": "string",
+              "description": "Literal layer name identifying the declaration frame."
+            }
+          },
+          "required": [
+            "match"
+          ],
+          "additionalProperties": false
+        },
         "subcomponents": {
           "type": "object",
           "description": "Subcomponent organization and naming. Absence means the library has no subcomponent convention.",
@@ -370,7 +389,8 @@
       "properties": {
         "source": {
           "type": "string",
-          "description": "What is read from the captured layer \u2014 a Styles member, a dotted path into typography (e.g. typography.fontStyle), or content."
+          "description": "What is read from the captured layer \u2014 a Styles member, a dotted path into typography (e.g. typography.fontStyle), or content.",
+          "$comment": "A source is formed one of three ways: the literal `content` (the text string or glyph name, not a style), the name of a Styles member, or a dotted path into a composite Styles member. Which members an element of a given kind carries is the closed honoured set, listed per kind in the conventions reference. A source outside it reads as undefined, so its rule never resolves \u2014 the entry is inert rather than invalid, which is why this is unenforced. Two consequences worth knowing: an absent `layoutMode` on a container matches a `NONE` key rather than nothing (ADR-076), and `children` is never a source, because a promoted container's children become the target's slot content on their own."
         },
         "prop": {
           "type": "string",

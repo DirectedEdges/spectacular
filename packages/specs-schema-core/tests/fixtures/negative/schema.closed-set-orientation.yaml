@@ -1,0 +1,16 @@
+# instanceExamples.orientation admits HORIZONTAL or VERTICAL, each a described
+# const branch; GRID is not among them.
+kind: component
+expect: schema
+document:
+  title: Button
+  anatomy:
+    root: { type: container }
+  default:
+    elements:
+      root: {}
+  instanceExamples:
+    orientation: GRID
+    items:
+      primary:
+        title: Primary

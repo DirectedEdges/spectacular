@@ -1,0 +1,16 @@
+# The workspace declares settings.spec.color HEXA; the document carries an
+# inline colour object.
+kind: component
+expect: DSPEC-39
+settings:
+  spec:
+    color: HEXA
+document:
+  title: Panel
+  anatomy:
+    root: { type: container }
+  default:
+    elements:
+      root:
+        styles:
+          backgroundColor: { colorSpace: srgb, components: [1, 0.4, 0], alpha: 1 }

@@ -12,6 +12,13 @@ The structural map — commands, key nodes, data flows, gotchas — is
   hook blocks it). The dev watcher keeps `dist/specs.js` fresh.
 - The watcher does **not** rebuild `dist/bridge-server.js` — after bridge
   server changes, run a build explicitly.
+- **Rebuilding is half of it: restart the bridge too.** The server is a
+  long-running process holding the bundle it launched with, so a rebuilt
+  `dist/bridge-server.js` changes nothing until `specs bridge stop` and
+  `specs bridge start`. A stale process drops request fields its old type
+  never declared, silently — the CLI sends them, the plugin never sees them,
+  and the symptom looks like a bug in the plugin or the engine. Check the
+  process start time against the edit before diagnosing anything downstream.
 - Run tests from the repo root (`npm test` uses the root `vitest.config.ts`);
   package-local runs don't resolve.
 - There is no MCP server. The persistent process is the plugin **bridge**

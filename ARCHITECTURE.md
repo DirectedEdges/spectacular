@@ -72,15 +72,27 @@ enum values except external standards (DTCG, CSS Color 4).
 
 ## The sync set
 
-One schema change fans out across five surfaces, all manually synchronized —
+One schema change fans out across seven surfaces, all manually synchronized —
 the reason `/specs.consistency-check` exists:
 
 - `types/*.ts` ↔ `schema/*.schema.json`
 - `tests/*.test-d.ts`
 - `CHANGELOG.md`
 - `adr/NNN-*.md` + `adr/INDEX.md`
-- `site/src/content/docs/schema/**` (hand-written, `.md`/`.mdx`, including
-  `schema/documents/`; `docs/adr/` mirrors automatically at site build)
+- `SPECIFICATION.md` — only when the change carries a rule the JSON Schema
+  cannot express. §1.5's gradient governs: a leaf style member needs nothing,
+  and a cross-member rule needs a §9 `DSPEC-nn` row and usually a section
+- `mappings/bindings/*.json` — **not optional for a `Styles` key.** DSPEC-41
+  obliges a binding to declare a disposition for *every* property of `Styles`,
+  so a new key with no row is a specification violation, not a gap. Only
+  `figma.json` and `css.json` carry per-style-key rows; React and Web
+  Components bind props and anatomy, and their style story is the CSS one
+- `site/src/content/docs/schema/**` — mixed, and the distinction matters:
+  `schema/styles/**` is **generated** by `site/scripts/build-style-pages.mjs`
+  from `styles.schema.json` plus the binding files and is gitignored, so a
+  new style key's page appears by running that script, never by hand. The
+  rest (`schema/*.md`, `schema/documents/`) is hand-written and includes
+  `styles.md`'s own properties table. `docs/adr/` mirrors at site build
 
 ### The stylesheet sync set
 
@@ -91,14 +103,25 @@ came to describe a gradient-stroke mechanism, a `FILL` translation and a
 `text-align` vocabulary the transformer had all stopped using (specs#691).
 
 - `packages/cli/src/transforms/css/**` — a module's emitted declarations
-- `site/src/content/docs/code/style-mapping.md` — the appendix section that
-  **names that module**, which is what makes the pair checkable
+- `packages/schema/mappings/bindings/css.json` — the per-key declaration: its
+  `disposition`, the `module` that emits it, and the `declarations` it writes.
+  This is the authority, and it is hand-maintained
+- `site/src/content/docs/schema/mappings/css/**` — **generated** from that file
+  by `site/scripts/build-mappings.mjs`, so the published appendix follows the
+  binding and is never edited directly. The former hand-written appendix at
+  `code/style-mapping.md` is gone
 - `site/src/content/docs/code/styles.mdx` — the *Mapping Specs to CSS* table,
-  when a style key is added or removed
+  when a style key is added or removed. Hand-written, keys only
+- `packages/cli/src/transforms/Cssvars.ts` ↔
+  `site/src/content/docs/code/cssvars.md` — the same pair one level up, for the
+  custom properties and theme override blocks every emitted stylesheet reads.
+  The page quotes those selectors verbatim, so a change to their shape leaves it
+  describing a mechanism nothing emits
 
-Changing a module's output without the appendix is drift. The appendix names its
-owning module in every section, so the changed file identifies the section to
-re-verify.
+Changing a module's output without updating the binding is drift, and the binding
+names its owning module per key, so a changed file identifies the entries to
+re-verify. A key the transform starts emitting has to move off `unsupported`:
+leaving it there publishes a claim that it is not realised.
 
 ## Consumers
 

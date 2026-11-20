@@ -1,6 +1,6 @@
 ---
 name: specs-cli.component.author
-description: Author a new component spec from a request — requirements split, correlation against the catalogue, scaffold from templates, one-file-at-a-time validation, live compile into Storybook and Figma, then supplemental platform files for what the spec cannot carry.
+description: Author a new component spec from a request — one-command start (specs author), requirements split, correlation against the catalogue, one-file-at-a-time validation, live compile into Storybook and Figma, then supplemental platform files for what the spec cannot carry.
 ---
 <!--
   Canonical skill emitted by `specs skills install` — overwritten on every
@@ -12,13 +12,22 @@ description: Author a new component spec from a request — requirements split, 
 
 **Prerequisites:** `specs-cli.primer`, then `specs-cli.authoring.primer`. Load its `references/styles.md` before authoring `variants.yaml`, and its `references/slots-layout.md` before authoring any layout tree or slot.
 
-Templates ship beside this skill in `templates/` — `api.yaml`, `variants.yaml`, `examples.yaml`, `supplemental.yaml`, `guidelines.yaml`. Copy them; never author a file from a blank page or from another spec's structure.
+Two templates ship beside this skill in `templates/` — `supplemental.yaml`, `guidelines.yaml` (step 7). Never author a file from a blank page or from another spec's structure.
 
-## 0. Ensure the posture
+## 0. Start: one command
 
-This procedure compiles live — saving a spec must re-emit into Storybook and onto the canvas. **The Storybook port comes from `storybook/package.json` — read it before any curl; never probe a guessed port.** If the posture is down (that port does not answer), run `specs-cli.posture` first; it is idempotent, so checking by running it is fine.
+```
+specs author start <key>
+```
 
-**Preparation is bounded.** Before the first file, read exactly: the two primers, the rules files for the concepts this request touches, the correlation reports (step 2), and the token spellings the request needs. **Load the fixed set in one batched read** — the primers, rules files, references, and templates are known names, and a dozen serial reads is startup cost carrying no judgment. Then write `api.yaml`. Every remaining question is resolved *during* the file that raises it — one lookup per question, local schema first — never by reading ahead "to be safe." If you notice yourself reading a source the current file does not need, stop and write.
+One call writes the collision-checked folder with all three concern files (`--title` when the request names one) and prints the status digest. The folder starts **valid**, so every validation error you see afterwards is one you introduced. Read the digest instead of deriving its facts — no folder listing, no port probing, no freshness checks. Two fields act:
+
+- `posture.up: false` — run `specs-cli.posture` (idempotent; this procedure compiles live). Never probe a guessed port yourself.
+- `analysis.stale: true` — run `specs analyze` before correlating.
+- `posture.hostStale: true` — run `specs storybook init --force`, then restart the server. The port answers either way, so a stale host serves pages the emitters have already replaced and the symptom reads as missing content.
+- `cache.stale: true` — run `specs cache` now, before the first write. Render treats a stale cache as fatal and render is the last step of this procedure, so the cost of leaving it is a failure that arrives after everything else has already passed. `null` means the workspace fetches nothing, so there is no cache to judge.
+
+**Preparation is staged by file lifecycle, and each stage is one batched read.** Before `api.yaml`, load the **contract pack** in one call: the two primers, the rules files for the concepts this request touches, `config/conventions/*.yaml`, `analysis/props.yaml`, and `analysis/dependencies.byComponent.yaml`. Nothing about styling belongs here — tokens, `references/styles.md`, and the styling reports are not used until `variants.yaml`, and loading them now dilutes the anatomy and props work they sit idle through. Before `variants.yaml` (step 4), load the **styling pack** in one call: `references/styles.md`, the `analysis/foundations/<type>` files for the token types this component needs, `analysis/styling.byToken.yaml` and `analysis/styling.byComponent.yaml` — plus `references/slots-layout.md` when the component has a layout tree or slot. A pack is read once and never reopened — returning to a skill or rules file later means the first read was skimmed, and re-reading is the largest avoidable cost measured in a round. Every remaining question is resolved *during* the file that raises it — one lookup per question, local schema first — never by reading ahead "to be safe." If you notice yourself reading a source the current file does not need, stop and write.
 
 ## 1. Split the requirements
 
@@ -37,19 +46,14 @@ Rules: a requirement goes supplemental only after naming the schema path that ca
 Read, in order:
 
 1. `config/conventions/*.yaml` — the workspace's declared vocabulary: component naming, prop naming, platform idioms. A convention that names your component or its props settles the naming before anything else gets a vote; in an empty catalogue the conventions are the *only* place the system's vocabulary lives. `figma.yaml` in particular answers questions that otherwise read as judgment calls: `naming` (layer-name casing), `codeOnlyProps.match` (the code-only container layer), `glyphs` (icon naming), `images`, `subcomponents`, `instanceExamples`.
-2. The component folder list (`specs/components/`) — what exists to nest or emulate. The new component's folder key must not collide.
+2. The start digest's `catalogue` — what exists to nest or emulate (collisions were already checked at start).
 3. `analysis/props.yaml` — the system's prop vocabulary. Reuse a prop name and its value set when the concept matches; never coin a synonym for a prop the system already has.
-4. `analysis/styling.byToken.yaml` and `analysis/styling.byComponent.yaml` — which tokens the system uses for which properties. Your token choices come from here.
-5. `analysis/dependencies.byComponent.yaml` — how components nest, for choosing `instanceOf` targets.
-6. `mappings/bindings/` in the schema package, for the **concepts this component actually touches** — a prop type, a role, a style key. Each concept carries a disposition, and the two that matter are `approximated` (the platform keeps something lossier than the spec says) and `bound` (the platform substitutes a value, such as emitting an authoring-default example as a fallback). Reading them here is half a minute and tells you up front what a surface will do with what you are about to write; reaching for them only after a surface looks wrong has cost whole rounds.
+4. `analysis/dependencies.byComponent.yaml` — how components nest, for choosing `instanceOf` targets.
+5. `mappings/bindings/` in the schema package, for the **concepts this component actually touches** — a prop type, a role, a style key. Each concept carries a disposition, and the two that matter are `approximated` (the platform keeps something lossier than the spec says) and `bound` (the platform substitutes a value, such as emitting an authoring-default example as a fallback). Reading them here is half a minute and tells you up front what a surface will do with what you are about to write; reaching for them only after a surface looks wrong has cost whole rounds.
 
-If `analysis/` is missing or stale, run `specs analyze` first. A report that is empty at this catalogue size is skipped, not studied. When emulating the closest sibling, read **all three** of its concern files — the pattern a task hinges on has sat in the one file a session skipped. Decide and write down: components to nest, the closest sibling to emulate (idiom only — structure always comes from the schema), and the token set.
+If the digest said `analysis.stale: true`, run `specs analyze` first. A report that is empty at this catalogue size is skipped, not studied. When emulating the closest sibling, read **all three** of its concern files — the pattern a task hinges on has sat in the one file a session skipped. Decide and write down: components to nest and the closest sibling to emulate (idiom only — structure always comes from the schema). The token set is decided at step 4, from the styling pack — not here.
 
-## 3. Scaffold
-
-Create `specs/components/<key>/` (camelCase folder key). Copy each template in **at the step that authors it**, not all three upfront — an unauthored template still carries placeholders, and validating the folder would report them as errors that look like yours. Fill `metadata.concern` and `title`; leave `metadata.source` out — this spec is authored, not captured.
-
-## 4. Author api.yaml, then validate
+## 3. Author api.yaml, then validate
 
 Anatomy first (every element, typed), then props (reusing the catalogue's vocabulary), then `invalidPropCombinations` if any. Then:
 
@@ -57,19 +61,19 @@ Anatomy first (every element, typed), then props (reusing the catalogue's vocabu
 specs validate <key> --authored
 ```
 
-Zero errors before touching the next file. Fix the file the error names, re-run, repeat. Never proceed past a validation error — with one expected exception: **a slot-bearing component's `variants.yaml` fails once by design**, because its `children.examples[0]` `$slotContent` pointer targets an `examples.yaml` that does not exist yet. That dangling-pointer error means "author examples next," never "rework the binding."
+Zero errors before touching the next file. Fix the file the error names, re-run, repeat. Never proceed past a validation error — with one expected exception: **a slot-bearing component's `variants.yaml` fails once by design**, because its `children.examples[0]` `$slotContent` pointer targets a slot-content example you have not authored yet. That dangling-pointer error means "author examples next," never "rework the binding."
 
-## 5. Author variants.yaml, then validate
+## 4. Author variants.yaml, then validate
 
-Load the primer's `references/styles.md` first. The `default` block fully describes every anatomy element — layout tree, styles, content, bindings. Then one `variants[]` delta per prop configuration that changes anything. Validate again; zero errors.
+Load the styling pack (step 0) first, in one call; token choices come from it. The `default` block fully describes every anatomy element — layout tree, styles, content, bindings. Then one `variants[]` delta per prop configuration that changes anything. Validate again; zero errors.
 
-## 6. Author examples.yaml (when needed), then validate
+## 5. Author examples.yaml (when needed), then validate
 
-At least one `instanceExamples` entry showing a realistic configuration. `slotContentExamples` for every slot the component declares. Validate; zero errors.
+`slotContentExamples` for every slot the component declares. `instanceExamples` only for what the variants cannot reach — a configuration outside the matrix, a content composition, or content that reads differently from the default. A component whose every configuration is a variant has **no** instance examples, and that is the right answer rather than a gap (`rules/examples.yaml`). Validate; zero errors.
 
 **A component that shows an image also carries an `images` registry here.** Find what the library holds in `data/cache/images.yaml` — keyed by content hash, each entry giving its `src`, the library's `name`, which components `usedBy` it, and an `origin`. Write the entry under a name you choose, carrying `src` and `$extensions.com.figma.imageHash`, then point at it with `$image: "#/components/<key>/images/<name>"` from `backgroundImage` or from an image prop's `examples`. Never put a raw Figma hash in a style value (`rules/styles.yaml · images`).
 
-## 7. Compile and observe
+## 6. Compile and observe
 
 The dev posture is live — `specs run` re-emits the platform trees on save. The canvas is NOT watched: render it yourself, **once, after `api.yaml`, `variants.yaml`, and `examples.yaml` all validate clean** — a render per save on a many-variant component cannot finish before the next save, and the loop breaks Figma:
 
@@ -84,12 +88,26 @@ node_modules/.bin/specs render specs/components/<key> --overwrite
 
 If the posture is not running, start it; do not fall back to one-shot `specs react` invocations per iteration — emit stays the posture's job. If render reports a stale or unusable cache, run `specs cache` once and retry.
 
-Two situations with sanctioned answers, so they cost no deliberation:
+Three situations with sanctioned answers, so they cost no deliberation:
 
 - **The bridge plugin is not connected** — that is a human-side control in the Figma app. Report it as a pending human action, keep authoring; run the render once the plugin reconnects.
 - **The canvas needs refreshing** (the plugin just reconnected, the canvas was cleared) — run the same one-shot render command again; `--overwrite` replaces the previous result.
+**A render that exits successfully still warns.** The warnings are in `.posture/bridge-server.log`, and classifying one is the expensive part, so it is done here once. Act only on the spec-defect rows; a platform limit is report material, and an expected row is noise to be recognised and passed over.
 
-## 8. The two authored documents
+| The log says | Class | What to do |
+|---|---|---|
+| `instance element "X": no manifest entry for "(none)"` | spec defect | A subcomponent's title, its `subcomponents` key and the parent slot's `anyOf` disagree — `rules/subcomponents.yaml`. For a sibling component, render that component once from this tree first |
+| `"X.children": slot fill failed — component id not found` | spec defect | The target has never been rendered into this file, or its cached node was replaced. Render it, then retry |
+| `exposes no slot by that name (it has: Y)` | platform limit | A collapsed-root instance exposes its slot by the layer name, not the prop name. Nothing to fix in the spec |
+| `layoutSizingHorizontal "FILL" skipped` | spec defect | `FILL` needs an auto-layout parent; the parent element declares no `layoutMode` |
+| `propConfig "X.y": follows the host's …` | expected | A live binding cannot be wired on a documented configuration. The instance keeps its own default |
+| `unsupported style key "X"` | platform limit | Declared unsupported in `mappings/bindings/figma.json`. `specs validate` now lists these per spec |
+| `built from a BOOLEAN_OPERATION node` | platform limit | The glyph is placed but its interior is not modelled |
+| `gradient stop: cannot resolve color` | platform limit | The stop's token has no cached raw value. Write the literal and note the token |
+
+- **The render reports `⚠ INCOMPLETE: N instance element(s) could not be resolved`** — and still exits successfully, so the command reads as a pass. The reason is never on stdout. Read `.posture/bridge-server.log`, whose tail covers the render you just ran: a line per unresolved element names the element key and why it could not be placed, and a `slot fill failed` line is followed by the example it caused to be dropped. Two causes account for nearly all of them, and they are different problems: an **instance of another component** that has never been rendered into this file has no node to point at, so render that component once and retry; a **subcomponent of the spec you are authoring** resolves through its `title`, so a disagreement among its title, its `subcomponents` key, and the parent slot's `anyOf` is what to fix (`rules/subcomponents.yaml`). An example the render dropped is not a styling problem — it documented content it could not build, so it was removed rather than shown wrong.
+
+## 7. The two authored documents
 
 **Read the fresh scaffold first, before authoring any platform file.** The emitter regenerates it from the spec you just wrote, and it already produces more than it looks like: the element wrappers your anatomy declares, `object-fit` on a replaced element, `border-radius: inherit`, the selectors the states convention generates. Author only what the scaffold does not produce, and delete any overlay rule it now covers. An overlay written before the scaffold is read duplicates the generator by hand — and when the anatomy changes, every one of those hand-built rules has to be found and removed again.
 
@@ -104,7 +122,7 @@ Then, for every requirement the table in step 1 marked supplemental:
 
 After every later re-emit, diff the fresh scaffold against your custom files again — the anatomy may have gained an element the scaffold now handles. Where an overlay depends on something the emitter produces — a BEM class, a selector the states convention generates — record that dependency in the entry's `checks` so the next re-emit has something to re-verify against.
 
-## 9. Report
+## 8. Report
 
 End every pass with this summary, in this order. Keep unstructured narrative to a sentence or two above it — the sections carry the content.
 

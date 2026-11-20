@@ -66,6 +66,7 @@
 //   back on the matching result message, so responses route to the right
 //   caller even with multiple connections and requests in flight.
 
+import type { KnownFoundations } from './knownFoundations.js';
 import type { ResolvedConventions, ResolvedSettings } from '@directededges/specs-schema';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { createServer, type IncomingMessage, type ServerResponse } from 'http';
@@ -159,7 +160,9 @@ wss.on('connection', (ws: WebSocket) => {
       if (!requestId) return; // no way to route this response
 
       if (msg.type === 'pageId-result') {
-        requests.resolve(requestId, msg.pageId as string);
+        // A plugin build older than the one that started sending `pageName` still
+        // answers, so the name is optional and callers fall back to the id alone.
+        requests.resolve(requestId, { id: msg.pageId as string, name: msg.pageName as string | undefined });
         return;
       }
 
@@ -315,14 +318,25 @@ function respond(res: ServerResponse, status: number, body: unknown): void {
 
 const http = createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/status') {
-    respond(res, 200, { connections: registry.list() });
+    // Each connection is asked where it is, in parallel and tolerantly: a plugin that
+    // does not answer costs its own page line and nothing else, because the point of
+    // status is to report what is reachable, never to fail because something is not.
+    void Promise.all(registry.list().map(async (entry) => {
+      if (!entry.connected) return entry;
+      try {
+        const conn = registry.resolve(entry.fileKey);
+        return { ...entry, page: await ops.getCurrentPage(conn) };
+      } catch {
+        return entry;
+      }
+    })).then((connections) => respond(res, 200, { connections }));
     return;
   }
 
   if (req.method === 'POST' && req.url === '/generate') {
-    type P = { fileKey?: string; nodeId?: string; conventions?: ResolvedConventions; settings?: ResolvedSettings; remove?: boolean };
+    type P = { fileKey?: string; nodeId?: string; conventions?: ResolvedConventions; settings?: ResolvedSettings; foundations?: KnownFoundations; remove?: boolean };
     withJsonBody<P>(req, res, async (p) => {
-      const result = await ops.sendGenerateFromSelection(p.fileKey, p.nodeId, p.conventions, p.settings);
+      const result = await ops.sendGenerateFromSelection(p.fileKey, p.nodeId, p.conventions, p.settings, p.foundations);
       // The spec is in hand before the node goes, so a failed removal cannot cost the read.
       if (p.remove && result.success && result.nodeId) {
         try { await ops.sendRemoveNode(result.nodeId, p.fileKey); } catch { /* reported by the caller's next read */ }

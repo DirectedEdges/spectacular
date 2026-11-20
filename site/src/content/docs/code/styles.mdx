@@ -89,6 +89,7 @@ Per-key claims live in one checked place: the [CSS binding](/schema/mappings/css
 | Transform | [`rotation`](/schema/styles/rotation/) |
 | Position | [`position`](/schema/styles/position/), [`top`](/schema/styles/top/), [`bottom`](/schema/styles/bottom/), [`start`](/schema/styles/start/), [`end`](/schema/styles/end/) |
 | Layout | [`layoutMode`](/schema/styles/layout-mode/), [`mainAxisAlignment`](/schema/styles/main-axis-alignment/), [`crossAxisAlignment`](/schema/styles/cross-axis-alignment/), [`wrap`](/schema/styles/wrap/), [`wrapAlignment`](/schema/styles/wrap-alignment/), [`itemSpacing`](/schema/styles/item-spacing/), [`layoutSizingHorizontal`](/schema/styles/layout-sizing-horizontal/), [`layoutSizingVertical`](/schema/styles/layout-sizing-vertical/) |
+| Grid | [`gridColumns`](/schema/styles/grid-columns/), [`gridRows`](/schema/styles/grid-rows/) |
 
 A key with no CSS realisation is declared `unsupported` in the binding with its resulting behaviour stated — never silently absent. A configured rule can also inject raw declarations before any of this runs, which emit verbatim and last, so a rule can override what the mapping derived.
 

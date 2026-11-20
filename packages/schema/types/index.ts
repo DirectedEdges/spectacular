@@ -27,7 +27,7 @@ export type { Subcomponent, Subcomponents, SubcomponentSource } from './Subcompo
 export type { InstanceExample, InstanceExamples, InstanceExampleConfigurationValue } from './InstanceExample.js';
 
 // Element and structure types
-export type { Element, Elements, ElementType, ElementExtensions, FigmaElementExtension } from './Element.js';
+export type { Element, Elements, ElementType, ElementExtensions, FigmaElementExtension, Themes } from './Element.js';
 export type { Layout, LayoutNode, LayoutBranch } from './Layout.js';
 export type { Children, SlotBinding } from './Children.js';
 export type { SlotContent, SlotContentMap } from './SlotContent.js';
@@ -63,7 +63,7 @@ export type { Settings, ResolvedSettings, ColorFormat, SourceEntry } from './Set
 export { DEFAULT_SETTINGS } from './Settings.js';
 
 // Style types
-export type { Styles, ContentStyles, TextContentStyles, GlyphContentStyles, Style, ColorStyle, ColorString, ColorObject, UnitIntervalStyle, StyleKey, TokenReference, AspectRatioValue, AspectRatioStyle, Typography, Sides, Corners, ItemSpacing, LayoutMode, WrapAlignment, MainAxisAlignment, CrossAxisAlignment, Position, PositionOffset, StrokeDashPattern, TextAlignHorizontal, TextOverflow, StrokeAlign, LayoutSizing, TextAlignVertical, PrimaryAxisSizingMode } from './Styles.js';
+export type { Styles, ContentStyles, TextContentStyles, GlyphContentStyles, Style, ColorStyle, ColorString, ColorObject, UnitIntervalStyle, StyleKey, TokenReference, AspectRatioValue, AspectRatioStyle, Typography, Sides, Corners, ItemSpacing, LayoutMode, GridTracks, AdaptiveGridTracks, WrapAlignment, MainAxisAlignment, CrossAxisAlignment, Position, PositionOffset, StrokeDashPattern, TextAlignHorizontal, TextOverflow, StrokeAlign, LayoutSizing, TextAlignVertical, PrimaryAxisSizingMode, BooleanStyleValue, BooleanBindableStyleValue, NumberStyleValue, StringStyleValue, FontStyleValue, LineHeightStyleValue, StrokeStyleValue, CornerStyleValue, ImageStyleValue } from './Styles.js';
 export type { Shadow, Blur, Effects } from './Effects.js';
 export type { GradientStop, GradientCenter, LinearGradient, RadialGradient, AngularGradient, GradientValue } from './Gradient.js';
 
@@ -102,5 +102,6 @@ export type {
   GuidelinesConcern,
   GuidelinesCheckedBy,
   GuidelineReference,
+  GuidelineReferences,
   ObligationLevel,
 } from './GuidelinesDocument.js';

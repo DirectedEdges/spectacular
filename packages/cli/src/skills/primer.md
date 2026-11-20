@@ -136,5 +136,5 @@ Invoke the highest-level skill that covers the task; each one loads its own prer
 | Synthesize or revise a foundations guidance file (`specs/foundations/<concern>/guidelines.yaml`) — only when explicitly asked | `specs-cli.guidelines.propose` |
 | Propose / apply behavior roles | `specs-cli.roles.propose`, `specs-cli.roles.apply` |
 | Configure states or icon conventions | `specs-cli.states.setup`, `specs-cli.icons.setup` |
-| Pre-merge a library update | `specs-cli.premerge` |
-| Release the library | `specs-cli.release` |
+| Pre-merge a library update | `specs-cli.version.figmapremerge` |
+| Release the library | `specs-cli.version.release` |

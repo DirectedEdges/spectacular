@@ -20,11 +20,20 @@ Apply the following roles to elements:
 | Where | What is emitted |
 |---|---|
 | The decoration element | `aria-hidden="true"` |
+| A decoration element with no children | `pointer-events: none` as well |
 | Everything else | Nothing |
 
-One attribute, whatever the element is. Nothing emits `focusable="false"`, which belongs on an `<svg>` root — neither web target emits one, because a drawing is a span carrying the glyph as a CSS mask.
+Nothing emits `focusable="false"`, which belongs on an `<svg>` root — neither web target emits one, because a drawing is a span carrying the glyph as a CSS mask.
 
-Tag, classes, `data-element` values, layout, and styling are unchanged — only the attribute is added, so nothing visual changes.
+Tag, classes, `data-element` values and layout are unchanged, and nothing visual changes.
+
+### Hit-transparency
+
+An element that means nothing should also **catch** nothing. `aria-hidden` says it to assistive technology; `pointer-events: none` says the same thing to the pointer. Without the second, the role produces an element a screen reader skips that still blocks clicks aimed at the content behind it — a frontmost full-bleed overlay, such as a card's border layer, being the case where it bites.
+
+**Only a decoration with no children is hit-transparent.** The [focusable-content rule](#the-focusable-content-rule) below bars an interactive element or a slot in the subtree, but it does not bar ordinary text: a decorative panel wrapping a caption is well-formed, and making it hit-transparent would render that caption unselectable with nothing warning. A decoration that has children keeps its hit-test and stays a styling decision for the component that draws it.
+
+The declaration lands in the component's own stylesheet beside its other styles, so a consumer can override it where a decoration genuinely needs to be clickable.
 
 `decoration` is the one part that **resolves to no control.** Every other part wires to something: a `label` to the control it names, a `panel` to its disclosure, an `indicator` to the control whose state it draws. A decoration asserts a fact about itself alone, so there is nothing to resolve, nothing to route across a component boundary, and no component that must contain a control for it to be valid. A component whose only role is a decoration is well-formed.
 

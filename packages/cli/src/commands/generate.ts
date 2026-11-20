@@ -42,6 +42,7 @@ import type { FileWriter, WriteResult } from '../writers/FileWriter.js';
 import type { OutputFormat } from '../writers/outputConfig.js';
 import { ImageFillsResolver, IMAGES_DIR_NAME } from '../generate/imageFills.js';
 import { postGenerateFromSelection } from '../bridge/client.js';
+import { knownFoundationsFrom, variablesPathsFor } from '../bridge/knownFoundations.js';
 import { formatKey } from '../utilities/formatKey.js';
 import { resolveFileKey } from '../bridge/pickConnection.js';
 import { figmaOf } from '../config/PlatformConventions.js';
@@ -634,7 +635,11 @@ async function generateBody(source: string | undefined, options: GenerateOptions
         try {
           const fileKey = await resolveFileKey(options.file);
           // The conventions and settings shape the spec the plugin builds, not merely where it is written.
-          result = await postGenerateFromSelection({ fileKey, nodeId: options.node, conventions: config.conventions, settings: config.settings, remove: options.remove });
+          // The foundations do the same for what it is allowed to name: a collection this
+          // workspace has never fetched is a stale reference the file still answers for.
+          const dataDir = path.resolve(config.settings.data?.directory ?? './data');
+          const foundations = knownFoundationsFrom(variablesPathsFor(config.settings, dataDir));
+          result = await postGenerateFromSelection({ fileKey, nodeId: options.node, conventions: config.conventions, settings: config.settings, foundations, remove: options.remove });
         } catch (e) {
           const err = e as NodeJS.ErrnoException & { cause?: NodeJS.ErrnoException };
           if (err.cause && err.cause.code === 'ECONNREFUSED') {

@@ -1,4 +1,4 @@
-// Maps the layout group of spec style keys to CSS flex declarations.
+// Maps the layout group of spec style keys to CSS flex and grid declarations.
 // Each key is emitted when present — variant layering mirrors CSS cascading,
 // so if a key appears in a variant it means it changed and should be emitted.
 
@@ -25,6 +25,45 @@ const WRAP_ALIGN_MAP: Record<string, string> = {
   SPACE_BETWEEN: 'space-between',
 };
 
+/**
+ * The track template for a grid's one templated axis (ADR-122).
+ *
+ * An integer is a count of tracks sharing the space. `minmax(0, 1fr)` rather than a bare
+ * `1fr` so a wide child cannot push its track past its share — the same form Figma
+ * itself reports. The object form fits as many tracks as the container allows at a
+ * minimum size, collapsing the empty ones when asked: that is exactly CSS's `auto-fill`
+ * / `auto-fit` distinction, which is why the key reads as a boolean rather than
+ * importing either keyword.
+ *
+ * Only one axis is emitted. A spec templates one and sizes the other by content, so the
+ * untouched axis keeps the browser's implicit tracks.
+ */
+function gridTemplate(
+  styles: Record<string, unknown>,
+  tokensFormat: string,
+): string | undefined {
+  const axis = styles.gridColumns != null
+    ? { property: 'grid-template-columns', tracks: styles.gridColumns }
+    : styles.gridRows != null
+      ? { property: 'grid-template-rows', tracks: styles.gridRows }
+      : undefined;
+  if (!axis) return undefined;
+
+  if (typeof axis.tracks === 'number') {
+    return `${axis.property}: repeat(${axis.tracks}, minmax(0, 1fr))`;
+  }
+
+  if (typeof axis.tracks === 'object') {
+    const adaptive = axis.tracks as Record<string, unknown>;
+    const minimum = dimensionValue(adaptive.minSize, tokensFormat);
+    if (!minimum) return undefined;
+    const fit = adaptive.collapseUnusedTracks === true ? 'auto-fit' : 'auto-fill';
+    return `${axis.property}: repeat(${fit}, minmax(${minimum}, 1fr))`;
+  }
+
+  return undefined;
+}
+
 export function layoutToCSS(
   styles: Record<string, unknown>,
   tokensFormat = 'TOKEN',
@@ -48,6 +87,10 @@ export function layoutToCSS(
       } else if (layoutMode === 'VERTICAL') {
         decls.push('display: flex');
         decls.push('flex-direction: column');
+      } else if (layoutMode === 'GRID') {
+        decls.push('display: grid');
+        const template = gridTemplate(styles, tokensFormat);
+        if (template) decls.push(template);
       } else if (layoutMode === 'NONE' || layoutMode === null) {
         decls.push('display: block');
       }

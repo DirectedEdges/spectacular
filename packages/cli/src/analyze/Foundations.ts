@@ -7,7 +7,11 @@ import { ANALYSIS_DIR } from '../utilities/specsLayout.js';
 
 /**
  * The foundations manifest: the workspace's token language, icons, and named
- * styles as one authoring-facing report — `analysis/foundations.yaml`.
+ * styles as an authoring-facing report — a slim `analysis/foundations.yaml`
+ * index (summary, collections, file map) over one `analysis/foundations/<type>`
+ * file per token type plus `foundations/icons`. The split is the point: a
+ * token lookup is a read of that type's own small file, where the former
+ * single file had grown large enough that every lookup scanned all of it.
  *
  * Unlike every other analyzer, the input is the *fetched data*, not the
  * catalogue: a workspace with zero specs still has a complete token language,
@@ -15,11 +19,11 @@ import { ANALYSIS_DIR } from '../utilities/specsLayout.js';
  * is therefore a no-op and everything happens in `finalize`, with workspace
  * facts arriving through `setup()`.
  *
- * Variables and named styles consolidate into one `tokens` section, each entry
- * leading with the exact object an author writes (`{$token, $type}`). Entries
- * carry names only — alias targets by name, platform code-name *presence*, a
- * description when the library wrote one — never resolved values, so the
- * report is safe to publish anywhere the spec itself is.
+ * Variables and named styles consolidate into per-type `tokens` lists, each
+ * entry leading with the exact object an author writes (`{$token, $type}`).
+ * Entries carry names only — alias targets by name, platform code-name
+ * *presence*, a description when the library wrote one — never resolved
+ * values, so the report is safe to publish anywhere the spec itself is.
  */
 
 interface TokenEntry {
@@ -46,10 +50,16 @@ interface IconEntry {
   key: string;
 }
 
-interface FoundationsReport {
+/** The index document — `analysis/foundations.yaml`. Entries live in the per-type files it maps. */
+interface FoundationsIndex {
+  /**
+   * `tokens` always enumerates the full kind vocabulary — every token type plus
+   * `icons` — so a zero is a statement that the library has none of that kind
+   * (no file is written for it), and a kind missing from the map altogether
+   * means the manifest predates the vocabulary.
+   */
   summary: {
     tokens: Record<string, number>;
-    icons: number;
   };
   /**
    * The theming axes: each variable collection and its mode names. Both authoring
@@ -57,8 +67,8 @@ interface FoundationsReport {
    * library's own declarations and belong in its manifest.
    */
   collections: Array<{ collection: string; modes: string[] }>;
-  tokens: Record<string, TokenEntry[]>;
-  icons: IconEntry[];
+  /** Token type (or `icons`) → path relative to the analysis directory. */
+  files: Record<string, string>;
 }
 
 /** Figma variable resolvedType → the `$type` an authored token reference uses. */
@@ -143,28 +153,43 @@ export class FoundationsAnalyzer implements Transformer {
       .map(c => ({ collection: c.name, modes: (c.modes ?? []).map(m => m.name) }))
       .sort((a, b) => a.collection.localeCompare(b.collection));
 
-    const report: FoundationsReport = {
-      summary: {
-        tokens: Object.fromEntries(
-          TYPE_ORDER.filter(t => tokens.has(t)).map(t => [t, tokens.get(t)!.length]),
-        ),
-        icons: icons.length,
-      },
-      collections,
-      tokens: Object.fromEntries(
-        TYPE_ORDER.filter(t => tokens.has(t))
-          .map(t => [t, dedupe(tokens.get(t)!).sort((a, b) => a.$token.localeCompare(b.$token))]),
-      ),
-      icons,
-    };
+    const byType = new Map(
+      TYPE_ORDER.filter(t => tokens.has(t))
+        .map(t => [t, dedupe(tokens.get(t)!).sort((a, b) => a.$token.localeCompare(b.$token))]),
+    );
 
     const outDir = analysisDir ?? path.join(outputDir, ANALYSIS_DIR);
+    const partsDir = path.join(outDir, 'foundations');
     await fs.ensureDir(outDir);
+    // The analyzer owns the whole directory: a type the library no longer has
+    // must not survive as a stale file beside the fresh ones.
+    await fs.emptyDir(partsDir);
     const ext = this._outputFormat === 'JSON' ? 'json' : 'yaml';
-    const content = this._outputFormat === 'JSON'
-      ? JSON.stringify(report, null, 2) + '\n'
-      : yaml.stringify(report, { lineWidth: 120 });
-    await fs.writeFile(path.join(outDir, `foundations.${ext}`), content, 'utf-8');
+    const serialize = (doc: unknown): string => this._outputFormat === 'JSON'
+      ? JSON.stringify(doc, null, 2) + '\n'
+      : yaml.stringify(doc, { lineWidth: 120 });
+
+    const files: Record<string, string> = {};
+    for (const [type, entries] of byType) {
+      files[type] = `foundations/${type}.${ext}`;
+      await fs.writeFile(path.join(partsDir, `${type}.${ext}`), serialize({ $type: type, tokens: entries }), 'utf-8');
+    }
+    if (icons.length > 0) {
+      files.icons = `foundations/icons.${ext}`;
+      await fs.writeFile(path.join(partsDir, `icons.${ext}`), serialize({ icons }), 'utf-8');
+    }
+
+    const index: FoundationsIndex = {
+      summary: {
+        tokens: {
+          ...Object.fromEntries(TYPE_ORDER.map(t => [t, byType.get(t)?.length ?? 0])),
+          icons: icons.length,
+        },
+      },
+      collections,
+      files,
+    };
+    await fs.writeFile(path.join(outDir, `foundations.${ext}`), serialize(index), 'utf-8');
   }
 
   private tokenPath(

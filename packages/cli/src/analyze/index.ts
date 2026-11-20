@@ -7,6 +7,7 @@ import { PropsAnalyzer } from './Props.js';
 import { RolesAnalyzer } from './Roles.js';
 import { StylingAnalyzer } from './Styling.js';
 import { SupplementalAnalyzer } from './Supplemental.js';
+import { ThemesAnalyzer } from './Themes.js';
 
 /**
  * An analyzer accumulates across the specs it visits and writes the total in
@@ -30,6 +31,7 @@ const ANALYZERS: Array<new () => Transformer> = [
   FoundationsAnalyzer,
   PropsAnalyzer,
   StylingAnalyzer,
+  ThemesAnalyzer,
   DependenciesAnalyzer,
   KeysAnalyzer,
   RolesAnalyzer,

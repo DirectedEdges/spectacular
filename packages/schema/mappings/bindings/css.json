@@ -460,6 +460,34 @@
         "onAbsentVerified": false,
         "basis": "implementation"
       },
+      "gridColumns": {
+        "disposition": "bound",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": [
+          "grid-template-columns"
+        ],
+        "notes": "An integer emits `repeat(n, minmax(0, 1fr))` — `minmax(0, 1fr)` rather than a bare `1fr`, so a wide child cannot push its track past its share. The adaptive form emits `repeat(auto-fill, minmax(<minSize>, 1fr))`, and `auto-fit` when `collapseUnusedTracks` is set, which is exactly the distinction that boolean names.",
+        "rule": "autoLayout",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
+      "gridRows": {
+        "disposition": "bound",
+        "module": [
+          "layoutToCSS"
+        ],
+        "declarations": [
+          "grid-template-rows"
+        ],
+        "notes": "The column-axis forms transposed. Emitted only when `gridColumns` is absent: a spec templates one axis and sizes the other by content, so the untouched axis keeps the browser's implicit tracks.",
+        "rule": "autoLayout",
+        "onAbsent": "platformInitial",
+        "onAbsentVerified": false,
+        "basis": "implementation"
+      },
       "wrap": {
         "disposition": "bound",
         "module": [

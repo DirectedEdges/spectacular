@@ -38,7 +38,10 @@ const resolveRef = (ref: string, from: string): { node: Node | null; file: strin
   const [filePart, pointer] = ref.split('#');
   const file = filePart ? filePart : from;
   const doc = schemas[file];
-  if (!doc || !pointer) return { node: null, file };
+  if (!doc || pointer === undefined) return { node: null, file };
+  // An empty pointer is the file root — the form a definition uses to give
+  // the root a citable name (`"$ref": "#"`).
+  if (pointer === '') return { node: doc, file };
   const segments = pointer.split('/').filter(Boolean);
   let node: any = doc;
   for (const seg of segments) {

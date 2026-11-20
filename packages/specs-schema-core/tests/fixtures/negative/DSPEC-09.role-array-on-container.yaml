@@ -1,0 +1,11 @@
+# A role array on a container; the array form is meaningful only on an
+# instance, where each concept routes into the composed component.
+kind: component
+expect: DSPEC-09
+document:
+  title: Banner
+  anatomy:
+    root: { type: container, role: [banner, alert] }
+  default:
+    elements:
+      root: {}

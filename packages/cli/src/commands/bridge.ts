@@ -110,6 +110,10 @@ Bridge.command('status')
         console.log(`Bridge running (pid ${pid}). ${connections.length} plugin${connections.length === 1 ? '' : 's'} connected:`);
         for (const c of connections) {
           console.log(`  ${c.fileKey}${c.fileName ? ` (${c.fileName})` : ''} — ${c.connected ? 'connected' : 'disconnected'}`);
+          // The page an unpinned render would write to. Worth a line of its own: the
+          // id names nothing to a reader, and the page is the one thing about a render
+          // that cannot be checked afterwards without looking at the canvas.
+          if (c.page) console.log(`    page: ${c.page.name ?? '(unnamed)'} (${c.page.id})`);
         }
       }
       process.exit(ERROR_CODES.SUCCESS);

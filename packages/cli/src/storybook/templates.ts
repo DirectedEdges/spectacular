@@ -61,6 +61,25 @@ export function renderTemplate(template: string, vars: Record<string, string>): 
  * *announced* rather than silently stale — publish still never touches it
  * (ADR A); upgrading stays the customer's explicit `init --force`.
  */
+/**
+ * Whether a scaffolded host predates the installed CLI's templates. Null when there is no
+ * stamp to compare, which is a host this CLI never scaffolded rather than a stale one.
+ *
+ * Shared by publish, which announces it, and the authoring digest, which reports it —
+ * the port answering says nothing about the host behind it.
+ */
+export function hostIsStale(storybookDir: string): boolean | null {
+  const stampPath = path.join(storybookDir, '.storybook', 'scaffold.json');
+  if (!fs.existsSync(stampPath)) return null;
+  try {
+    const stamp = JSON.parse(fs.readFileSync(stampPath, 'utf-8')) as { templates?: string };
+    if (!stamp.templates) return null;
+    return stamp.templates !== templatesHash();
+  } catch {
+    return null;
+  }
+}
+
 export function templatesHash(): string {
   const dir = templatesDir();
   const hash = crypto.createHash('sha256');

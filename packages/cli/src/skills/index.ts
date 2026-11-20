@@ -35,8 +35,8 @@
 
 import PRIMER from './primer.md';
 import WORKSPACE_SETUP from './workspaceSetup.md';
-import PREMERGE from './premerge.md';
-import RELEASE from './release.md';
+import VERSION_FIGMAPREMERGE from './versionFigmapremerge.md';
+import VERSION_RELEASE from './versionRelease.md';
 import ROLES_PROPOSE from './rolesPropose.md';
 import ROLES_APPLY from './rolesApply.md';
 import STATES_SETUP from './statesSetup.md';
@@ -55,10 +55,13 @@ import TEMPLATE_GUIDELINES from './templates/guidelines.yaml';
 import TEMPLATE_GUIDELINES_RULES from './templates/guidelinesRules.yaml';
 import POSTURE from './posture.md';
 import RULES_ANATOMY from './rules/anatomy.yaml';
+import RULES_EXAMPLES from './rules/examples.yaml';
+import RULES_PRIMITIVES from './rules/primitives.yaml';
 import RULES_STYLES from './rules/styles.yaml';
 import RULES_LAYOUT from './rules/layoutStyling.yaml';
 import RULES_PROPS from './rules/props.yaml';
 import RULES_SLOTS from './rules/slots.yaml';
+import RULES_SUBCOMPONENTS from './rules/subcomponents.yaml';
 import RULES_VARIANTS from './rules/variants.yaml';
 
 export interface SkillAsset {
@@ -79,8 +82,8 @@ export const SKILL_ASSETS: SkillAsset[] = [
   { name: 'specs-cli.primer', markdown: PRIMER },
   { name: 'specs-cli.workspace.setup', markdown: WORKSPACE_SETUP },
   { name: 'specs-cli.posture', markdown: POSTURE },
-  { name: 'specs-cli.premerge', markdown: PREMERGE },
-  { name: 'specs-cli.release', markdown: RELEASE },
+  { name: 'specs-cli.version.figmapremerge', markdown: VERSION_FIGMAPREMERGE },
+  { name: 'specs-cli.version.release', markdown: VERSION_RELEASE },
   { name: 'specs-cli.roles.propose', markdown: ROLES_PROPOSE },
   { name: 'specs-cli.roles.apply', markdown: ROLES_APPLY },
   { name: 'specs-cli.states.setup', markdown: STATES_SETUP },
@@ -91,10 +94,13 @@ export const SKILL_ASSETS: SkillAsset[] = [
     markdown: AUTHORING_PRIMER,
     files: [
       { path: 'rules/anatomy.yaml', content: RULES_ANATOMY },
+      { path: 'rules/examples.yaml', content: RULES_EXAMPLES },
+      { path: 'rules/primitives.yaml', content: RULES_PRIMITIVES },
       { path: 'rules/styles.yaml', content: RULES_STYLES },
       { path: 'rules/layoutStyling.yaml', content: RULES_LAYOUT },
       { path: 'rules/props.yaml', content: RULES_PROPS },
       { path: 'rules/slots.yaml', content: RULES_SLOTS },
+      { path: 'rules/subcomponents.yaml', content: RULES_SUBCOMPONENTS },
       { path: 'rules/variants.yaml', content: RULES_VARIANTS },
       { path: 'references/styles.md', content: REF_STYLES },
       { path: 'references/slots-layout.md', content: REF_SLOTS_LAYOUT },

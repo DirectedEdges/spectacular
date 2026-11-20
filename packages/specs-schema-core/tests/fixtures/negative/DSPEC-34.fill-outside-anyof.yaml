@@ -1,0 +1,21 @@
+# The slot's anyOf admits only pill; the fill is a badge instance.
+kind: component
+expect: DSPEC-34
+document:
+  title: Card
+  anatomy:
+    root: { type: container }
+  props:
+    children: { type: slot, anyOf: [pill] }
+  default:
+    configuration:
+      children: { $slotContent: '#/slotContentExamples/badgeFill' }
+    elements:
+      root: {}
+  slotContentExamples:
+    badgeFill:
+      anatomy:
+        badge: { type: instance, instanceOf: badge }
+      elements:
+        badge: {}
+      layout: [badge]

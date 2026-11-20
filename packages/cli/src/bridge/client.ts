@@ -1,12 +1,19 @@
 // Thin HTTP client for talking to a running bridge server (see bridge/server.ts).
 
 import type { ResolvedConventions, ResolvedSettings } from '@directededges/specs-schema';
+import type { KnownFoundations } from './knownFoundations.js';
 import { HTTP_PORT } from './config.js';
 
 export interface BridgeConnection {
   fileKey: string;
   fileName?: string;
   connected: boolean;
+  /**
+   * The page this plugin is on right now — what an unpinned `specs render` will write
+   * to. Absent when the plugin did not answer in time, or when it predates reporting
+   * it; `name` alone is absent on a plugin that reports only the id.
+   */
+  page?: { id: string; name?: string };
 }
 
 export interface BridgeStatus {
@@ -94,6 +101,16 @@ export interface GenerateFromSelectionRequestBody {
    */
   conventions?: ResolvedConventions;
   settings?: ResolvedSettings;
+  /**
+   * The foundation artifacts this workspace knows about, for the same reason the
+   * two fields above are sent: a file outlives the libraries it consumes, so a
+   * collection renamed and republished leaves the file answering under whatever it
+   * last synced — and a selection read from that answer names a group nothing
+   * downstream recognises.
+   *
+   * Absent means the caller declares nothing and the plugin filters nothing.
+   */
+  foundations?: KnownFoundations;
   /**
    * Testing utility: delete the node once its spec has been read. A catalogue sweep that
    * renders and reads every component otherwise leaves all of them on the page.

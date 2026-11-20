@@ -1,0 +1,56 @@
+# Judgment rules for authoring a subcomponent — api.yaml `subcomponents.*` and the
+# parent slot that admits it. Keys mirror the schema node they govern.
+# useWhen: ordered, evaluate top to bottom, first match wins. guidelines: modality-keyed
+# items — must/never hard, should/avoid strong convention, could/warn judgment.
+# adr: the decision an item projects.
+#
+# Authoring a subcomponent writes three names that must agree: the `subcomponents` key,
+# the subcomponent's `title`, and the component key the parent slot's `anyOf` admits.
+# The library's `config/conventions/figma.yaml` already fixes how those names relate,
+# because the same patterns that discover subcomponents on a fetch are what a hand-authored
+# one has to satisfy to be found again. Deriving the three from that config is the whole
+# rule; choosing any of them freely is what breaks.
+useWhen:
+  subcomponent: a part that exists only inside its parent and carries its own anatomy, props or styling (a card's featured header strip)
+  slot-fill-primitive: the part has no props of its own and the fill can express it as elements (a divider line)
+  sibling-component: the part is independently usable and belongs in the catalogue as its own spec folder, not under a parent
+title:
+  guidelines:
+    - must: "author `title` as a name the library's `figma.subcomponents.match` patterns capture, with `{C}` spelled as the parent's own `title` — read the patterns before naming, and pick the one the library lists first (`{C} / _ / {S}` → `EGDS Card / _ / Header`)"
+      never: "author a bare descriptive title with no parent segment (`Card header`) — nothing in the config matches it, so the next fetch rediscovers the part as an unrelated component and a render has no name to resolve"
+      adr: [31, 94]
+    - must: "let the captured `{S}` be the part's bare name, scoped by its parent rather than repeating it — `EGDS Card / _ / Header`, whose `{S}` is `Header`, not `Card header`"
+      note: "`{S}` is what becomes the key, so a repeated parent word propagates into every other name derived from it"
+      adr: 104
+    - warn: "a library whose `match` list has several patterns resolves the first that fits — authoring to a later pattern when an earlier one would also match the name leaves the discovered key up to the config, not to you"
+key:
+  guidelines:
+    - must: "key the entry under `subcomponents` as the camelCase form of the title's captured `{S}` alone — `EGDS Card / _ / Header` keys as `header`"
+      never: "key it as the parent name joined to the part (`cardHeader`) — the render side matches a subcomponent that has no node id of its own by putting its `title` through the spec-folder-key derivation and looking for that key, so a hand-chosen key cannot be found"
+      adr: 94
+    - should: "treat the key as derived, not chosen — if the key you want and the title you want disagree, the title is the one to change"
+parentSlot:
+  guidelines:
+    - must: "admit the subcomponent in the parent slot's `anyOf` by its **generated component key** — the parent's spec key with the subcomponent key capitalized onto it (`anyOf: [egdsCardHeader]` for `egdsCard` + `header`)"
+      never: "list the bare `subcomponents` key in `anyOf` (`anyOf: [cardHeader]`) — that names no component, and the slot admits nothing"
+      adr: [28, 56]
+    - must: "constrain a single-part slot with `maxChildren: 1` — a header slot that admits any number of headers is not what the component offers"
+      adr: [28, 56]
+visibility:
+  guidelines:
+    - must: "declare the Figma component property that shows and hides the part as `$extensions: {com.figma: {visibilityProp: <the property's exact Figma name>}}` on the slot prop — the name is a literal from the component set, capitalization and spacing included (`Header visible`)"
+      never: "infer the property name from the slot key or spell it in the spec's own casing — the renderer looks for that exact property on the component and skips the binding when it is absent"
+      adr: 94
+    - must: "model an optional part as a nullable slot plus that extension, never as a separate boolean prop beside the slot — one prop decides both whether the part is there and what it is"
+      adr: 99
+    - must: "bind the slot element's `visible` in `variants.yaml` to the same slot prop the `children` binding uses, through an `isNull` condition on the prop — a slot that is bound for content but not for visibility renders its box when the prop is empty"
+      adr: 99
+      note: "the pair is `children: {$binding: '#/props/<slot>'}` and `styles.visible: {if: {condition: {operation: isNull, args: {value: {$binding: '#/props/<slot>'}}}, then: false, else: true}}` on the one element"
+    - should: "leave the default fill unhidden and let the slot's own default (`null`) decide absence — hiding the fill as well expresses the same absence twice, in two places that then have to agree"
+      adr: 99
+fills:
+  guidelines:
+    - must: "reference the subcomponent from a fill as `instanceOf: {$ref: '#/subcomponents/<key>'}` — the pointer is internal, always within the same document"
+      adr: [30, 94]
+    - should: "key the fill's anatomy element for the part it holds, matching the subcomponent key (`header`), so the element, the slot, and the subcomponent read as one thing across the three files"
+    - warn: "a subcomponent authored by hand has no `source.nodeId`, so it resolves only through its `title` — a fill that renders as the parent's default content rather than the part is a naming disagreement among title, key and `anyOf`, not a fill problem"

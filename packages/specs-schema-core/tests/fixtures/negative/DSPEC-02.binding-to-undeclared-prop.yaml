@@ -1,0 +1,14 @@
+# The $binding points at a prop the declaring component does not carry.
+kind: component
+expect: DSPEC-02
+document:
+  title: Button
+  anatomy:
+    root: { type: container }
+    label: { type: text }
+  props:
+    label: { type: string }
+  default:
+    elements:
+      label:
+        content: { $binding: '#/props/caption' }

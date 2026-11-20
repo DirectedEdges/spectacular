@@ -68,6 +68,11 @@ describe('runAnalyze with an empty catalogue', () => {
       'styling.byComponent.yaml',
       'styling.byToken.yaml',
       'supplemental.yaml',
+      // Themes selects nothing over an empty catalogue, and says so in both
+      // directions (ADR-123). `themes.unused` needs foundations to say what was
+      // declared, so it is absent here along with the other foundations-gated ones.
+      'themes.byComponent.yaml',
+      'themes.byTheme.yaml',
     ]);
   });
 

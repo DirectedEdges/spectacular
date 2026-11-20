@@ -11,6 +11,12 @@ layering:
 content:
   guidelines:
     - must: "spell a glyph name — in `content`, a bound prop's `default`, and its `examples` — in the workspace's formatted key spelling (`info`, `caretRight`), never the raw icon cache name (`Info`, `Caret Right`); the renderer matches content against cache names run through `format.keys`, and a raw spelling matches nothing"
+conditionals:
+  guidelines:
+    - must: "write a visibility conditional as `isNull` on the content prop with `then: false` — `visible: {if: {condition: {operation: isNull, args: {value: {$binding: '#/props/<prop>'}}}, then: false, else: true}}`. The operation asks whether the prop *is* null and `then` is the visibility when it is, so the element shows exactly when the prop carries something"
+      never: "name any other operation in a visibility condition — `isNull` is the only null test the analyzer recognizes, and a condition naming anything else yields no rule at all: the element then renders unconditionally, with nothing failing and nothing warning"
+      note: "the generic `{if: {condition, then, else}}` shape in `references/styles.md` describes the schema's conditional, not the vocabulary that has an effect here. The closed operation set is a consequence of prop consolidation — see the consolidating-props guide on the docs site — and a slot or content prop whose boolean visibility toggle was merged into its nullability is the normal case for this form"
+      adr: 80
 configuration:
   guidelines:
     - warn: "an absent prop key inherits; a `null` value overrides with unset — different statements, not interchangeable"
