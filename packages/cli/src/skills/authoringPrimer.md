@@ -105,7 +105,7 @@ The one authoring-specific consequence: when a surface disagrees with the schema
 
 ## Rules
 
-- **Cite the schema path for every shape you write.** If you cannot name the type or definition a node instantiates, you are inferring — go read the schema. "The schema" includes its shipped platform surface: `mappings/bindings/`, `mappings/DEFAULTS.md`.
+- **Cite the schema path for every shape you write.** If you cannot name the type or definition a node instantiates, you are inferring — go read the schema. "The schema" includes its shipped platform surface: `mappings/bindings/<platform>.json`, their `FORMAT.md`, and `mappings/bindings/_defaults.json` — what a consumer assumes when a style key is absent from a document.
 - **Deterministic and complete.** The `default` variant fully describes every element. Variants are deltas layered onto it in order.
 - **A requirement goes supplemental only after naming the schema path that cannot carry it.** "The schema can't do X" requires showing where X would live and why it does not fit. The reverse failure is worse: forcing into the spec what the schema cannot express.
 - **Consistency is graded.** Prop names, enum values, token choices, and element naming follow what `analysis/` shows the system already does.

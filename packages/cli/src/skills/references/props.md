@@ -7,7 +7,7 @@
 
 Load with the **api pack**, before `api.yaml`. Assumes `specs-cli.authoring.primer` is read.
 
-Props are declared in `api.yaml` under `props`, keyed by the prop name. The schema source of truth is `Props.ts` and `component-api.schema.json`; every kind below names its interface there. Read the schema for what a field *means* — this reference carries the map: which kinds exist, what each one requires, and where a prop is read and set across the three files.
+Props are declared in `api.yaml` under `props`, keyed by the prop name. The schema source of truth is `types/Props.ts` and `component-concern.schema.json`; every kind below names its interface there. Read the schema for what a field *means* — this reference carries the map: which kinds exist, what each one requires, and where a prop is read and set across the three files.
 
 Judgment about props — naming, nullability, enum ordering, what earns a `default`, code-only props, invalid combinations — is in `rules/props.yaml` beside this skill. Where this file and that one seem to overlap, the rules file governs.
 

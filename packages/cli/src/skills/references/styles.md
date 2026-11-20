@@ -65,7 +65,7 @@ Composite members declare their own defaults in the schema (ADR-116). Which to o
 
 | Question | Goes to |
 |---|---|
-| What does this property or option mean? | `styles.schema.json`, mirrored as generated pages under `/schema/styles/` |
+| What does this property or option mean? | its definition in `styles.schema.json#/definitions/` — named in the map above, and carrying the description, examples and described `oneOf` the site's pages are generated from |
 | Which value should I write here? | `rules/styles.yaml` |
 | How are elements arranged, and how does sizing work? | `references/layout.md` |
 | Does platform X realise this key? | `mappings/bindings/<platform>.json` |

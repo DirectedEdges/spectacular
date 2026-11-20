@@ -115,25 +115,32 @@ Two consequences before authoring a deep tree:
 
 ## Where to go deeper
 
-Property meanings, options and validated examples — the schema is the authority, and the docs site mirrors it one page per property:
+**For what a property means, read its definition.** Each one carries its own description, its validated examples, and — for a closed value set — a described `oneOf` of every option. All of these are in `styles.schema.json#/definitions/`:
 
-| Property | Page |
+| Property | Definition |
 |---|---|
-| `layoutMode` | `/schema/styles/layout-mode/` |
-| `gridColumns`, `gridRows` | `/schema/styles/grid-columns/`, `/schema/styles/grid-rows/`, `/schema/styles/adaptive-grid-tracks/` |
-| `itemSpacing`, `padding` | `/schema/styles/item-spacing/`, `/schema/styles/padding/` |
-| `mainAxisAlignment`, `crossAxisAlignment` | `/schema/styles/main-axis-alignment/`, `/schema/styles/cross-axis-alignment/` |
-| `wrap`, `wrapAlignment` | `/schema/styles/wrap/`, `/schema/styles/wrap-alignment/` |
-| `position` and its offsets | `/schema/styles/position/`, `/schema/styles/position-offset/` |
-| `layoutSizingHorizontal`, `layoutSizingVertical`, `primaryAxisSizingMode` | `/schema/styles/layout-sizing-horizontal/`, `/schema/styles/layout-sizing-vertical/`, `/schema/styles/primary-axis-sizing-mode/` |
+| `layoutMode` | `LayoutModeStyleValue` — the four modes, each with its own description |
+| `gridColumns`, `gridRows` | `GridTracksStyleValue`, and `AdaptiveGridTracks` for the `{minSize}` form |
+| `itemSpacing` | `ItemSpacingStyleValue` |
+| `padding` | `SidesStyleValue` |
+| `mainAxisAlignment`, `crossAxisAlignment`, `wrapAlignment` | `MainAxisAlignmentStyleValue`, `CrossAxisAlignmentStyleValue`, `WrapAlignmentStyleValue` |
+| `wrap` | `BooleanStyleValue` |
+| `position`, and the offsets it opens | `PositionStyleValue`, `PositionOffset` |
+| `layoutSizingHorizontal`, `layoutSizingVertical` | `LayoutSizingStyleValue` |
+| `primaryAxisSizingMode` | `PrimaryAxisSizingModeStyleValue` |
 
-The installed schema is the version you are authoring against; the site tracks `main`. Where they disagree, the schema wins.
+The `layout` tree's own shape is `types/Layout.ts`; the concern file that carries it is `component-concern.schema.json`, and `composition-concern.schema.json` for a composition.
+
+**Not the docs site's generated pages.** They mirror these definitions, they track `main` rather than the version in your `node_modules`, and naming the definition is how a human finds the page anyway.
 
 | Question | Goes to |
 |---|---|
 | Which value should I write here, and what pairs with what? | `rules/layoutStyling.yaml` — flow, grid, positioning, layout components |
 | Which element type should carry this? | `rules/anatomy.yaml` |
 | Sizing modes, bounds, and what `FILL` means at a root | `rules/styles.yaml · layoutSizingHorizontal\|layoutSizingVertical` |
-| Writing the promotion table | `rules/primitives.yaml`, and `/guides/primitives/` |
-| How Figma constraints become offsets | `/guides/layout-positioning/` |
+| Which layout components this library has, and how they nest | `specs/foundations/layout/guidelines.yaml` in the workspace |
+| Writing the promotion table | `rules/primitives.yaml`, and the `/guides/primitives/` walkthrough |
+| How Figma constraints become offsets | the `/guides/layout-positioning/` walkthrough |
 | How a slot is declared, bound and filled | `references/slots.md` |
+
+The two guides are procedures with no schema equivalent, which is why they are cited as pages rather than definitions.

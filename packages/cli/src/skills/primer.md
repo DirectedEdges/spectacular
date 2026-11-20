@@ -83,6 +83,15 @@ Every question resolves at the nearest of these, never lower:
 
 **Never read emitted output or transform source to learn what a spec means.** A platform is a surface, not an authority: when a surface disagrees with the schema, the surface has a defect — report it; do not bend the spec toward it. Letting an emitter confirm meaning makes the contract whatever the newest emitter happens to do, which is the non-determinism this whole model exists to prevent. The one legitimate reason to open an emitted file is wiring hand-authored platform files to it — imports, exported names — never to settle a schema question.
 
+**Cite the schema, not its mirror.** Most of what the docs site says about a property, type or document shape is *generated from* the schema you already have installed — the per-property pages under `/schema/`, the specification, the binding tables. Citing the page instead of the definition routes a question past authority 1 to authority 4, and the two can disagree: the site tracks `main` while your `node_modules` holds the version you are authoring against. Name the file and the definition (`styles.schema.json#/definitions/GridTracksStyleValue`), which is also how a human finds the matching page.
+
+Two things on the site are not mirrors, and for those it is the authority:
+
+| Kind | Why | Examples |
+|---|---|---|
+| A vocabulary the schema deliberately leaves open | the schema declares the field an open string and says the recognized names are published on the site, so they grow without a schema bump | role concepts (`RoleConceptName` is `string`), action concepts |
+| A walkthrough or procedure with no schema equivalent | it explains a translation or a task rather than describing a field | how Figma constraints become offsets, authoring the promotion table, getting started |
+
 ## Names, keys and conventions
 
 A name is not self-evidently a fact — **but a declared convention can make it one.** That distinction is the system's core mechanic, and both halves matter:
@@ -127,12 +136,11 @@ https://raw.githubusercontent.com/DirectedEdges/specs/main/site/src/content/docs
 
 | Question | `<path>` |
 |---|---|
-| What does this setting accept? | `settings/<topic>.md` — `states`, `glyphs`, `images`, `subcomponents`, `tokens`, `keys`, `curation`, `data-sources`, … |
+| What is a role or action concept, and which exist? | `roles/index.md`, and a page per concept — **the site is the authority here**, because the schema declares these fields open strings and the vocabulary grows without a schema bump |
+| Why is this setting shaped the way it is, and what is it for? | `settings/<topic>.md` — `states`, `glyphs`, `images`, `subcomponents`, `tokens`, `keys`, `curation`, `data-sources`, … For what a setting *accepts*, read `conventions.schema.json` / `settings.schema.json` instead |
 | How do I express this correctly in data? | `guides/<guide>.md` — the derivations table above names them |
-| What is a role, and which exist? | `roles/index.md`, and a page per role |
 | What does a command do? | `cli/commands/<name>.md` |
 | How does versioning classify a change? | `versioning/index.md` |
-| A schema concept in prose rather than types | `schema/<concept>.md` |
 
 Two limits worth knowing. These are `main`, so they describe the newest documentation rather than the CLI you are running — if a page names something the installed CLI does not have, trust the CLI. And each fetch is independent, so look up what you need rather than browsing; `https://spectacular.systems/<topic>/` is the same content rendered, for a human you are pointing at it.
 
