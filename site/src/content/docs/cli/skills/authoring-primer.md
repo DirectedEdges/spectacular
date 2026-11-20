@@ -20,8 +20,12 @@ Installed by [`specs skills install`](/cli/commands/skills/) as `.claude/skills/
 - Anatomy element types, and the rule that `default.elements` describes every element while a variant describes only its delta.
 - The six pointer forms — `instanceOf`, the in-spec `$ref`, `$binding`, `$slotContent`, `$token`, `$image` — and what each resolves against.
 - The authoring order, and the three reading packs that stage it.
-- The authority order: schema, then platform bindings, then rules and guidelines, then this site. Emitted output is never an authority.
-- Where the shipped `rules/*.yaml` layer sits against a library's own ratified guidance.
+- How to read the two layers beside it, and which one governs.
+
+Two things it used to carry and now defers, because each had a better home:
+
+- **The authority order** is in [`specs-cli.primer`](/cli/commands/skills/), which governs reading in every skill rather than only in authoring. It was stated in both, and in two places within the session primer — three statements of one precedence rule that could drift apart.
+- **The guidance layer** — foundations and per-component `guidelines.yaml`, their obligation levels and their scope split — belongs to [`guidelines.propose`](/cli/skills/guidelines-propose/), which already documented all of it in more detail. An authoring round keeps one sentence: absent guidance is a gap for the closing report, never something to fill mid-round.
 
 ## Rules and references are different layers
 

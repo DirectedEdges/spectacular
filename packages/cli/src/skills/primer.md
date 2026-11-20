@@ -69,6 +69,20 @@ Three rules, and the first is the one that gets broken:
 
 The cache row is the one to reach for before authoring anything new. `images.yaml` answers "what images does this library have and what is each called" without reading a single component spec — keyed by content hash, each entry carrying `src`, the library's `name` for it, the components that `usedBy` it, and an `origin` of `style`, `pageFrame` or `component` saying where it lives in Figma. `icons.yaml` answers the same question for glyphs.
 
+### Which source answers which question
+
+Every question resolves at the nearest of these, never lower:
+
+| # | Question | Authority |
+|---|---|---|
+| 1 | Is this legal, and what does it mean? | The schema package's `types/` and `schema/*.json` — and only them. Read the declared property's or definition's `description` and `examples` first (the schema describes every option where it is declared); open `types/*.ts` only when those do not settle it. If the schema answers, stop |
+| 2 | Does platform X realise this key, and how faithfully? | `mappings/bindings/<platform>.json` in the same package — each key's declared `disposition` (`bound` / `approximated` / `unsupported` / `unverified`). A declared field, never an inference |
+| 2a | Is role concept X implemented on platform Y? | The same file's `concepts.roles` block — `implemented` or `inert` per vocabulary concept. Never answer this from the docs site (tracks `main`, not the installed version) or by reading an emitter's dist |
+| 3 | When should I use what the schema permits? | The rules files and workspace guidelines — judgment *about* the contract, not the contract |
+| 4 | Readable walkthrough of 1–2 | The docs site |
+
+**Never read emitted output or transform source to learn what a spec means.** A platform is a surface, not an authority: when a surface disagrees with the schema, the surface has a defect — report it; do not bend the spec toward it. Letting an emitter confirm meaning makes the contract whatever the newest emitter happens to do, which is the non-determinism this whole model exists to prevent. The one legitimate reason to open an emitted file is wiring hand-authored platform files to it — imports, exported names — never to settle a schema question.
+
 ## Names, keys and conventions
 
 A name is not self-evidently a fact — **but a declared convention can make it one.** That distinction is the system's core mechanic, and both halves matter:
