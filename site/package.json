@@ -10,7 +10,8 @@
     "dev": "node scripts/watch-content.mjs",
     "dev:no-watch": "astro dev",
     "start": "node scripts/watch-content.mjs",
-    "build": "astro build",
+    "build": "astro build && node scripts/verify-links.mjs",
+    "verify:links": "node scripts/verify-links.mjs",
     "preview": "astro preview",
     "astro": "astro"
   },

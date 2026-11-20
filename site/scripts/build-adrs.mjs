@@ -37,7 +37,7 @@ function renderInline(text) {
       // actually published — drafts would 404.
       const slug = href.replace(/^\.?\/?/, '').replace(/\.md$/, '');
       if (/^\d{3}-/.test(slug)) {
-        return published.has(slug) ? `<a href="/adr/${slug}/">${label}</a>` : label;
+        return published.has(slug) ? `<a href="/adr/${slug.replace(/\./g, "")}/">${label}</a>` : label;
       }
       return `<a href="${href}">${label}</a>`;
     })
@@ -121,15 +121,18 @@ for (const file of files) {
   }
   const slug = file.replace(/\.md$/, '');
   published.add(slug);
-  accepted.push({ file, md, slug, title, number: file.slice(0, 3) });
+  // Astro drops `.` from a route segment, so `001-metadata.license` is served
+  // at `/adr/001-metadatalicense/`. Linking by the bare slug published a 404
+  // on the index for every such record.
+  accepted.push({ file, md, slug, href: slug.replace(/\./g, ''), title, number: file.slice(0, 3) });
 }
 
 // Bodies are rendered in a second pass so cross-references can be resolved
 // against the full set of published records.
-const adrs = accepted.map(({ file, md, slug, title, number }) => {
+const adrs = accepted.map(({ file, md, slug, href, title, number }) => {
   const summary = extractSummary(md);
   if (!summary) console.warn(`⚠ ${file}: no **Summary** in the metadata block`);
-  return { number, slug, title, summary, body: formatMetadata(stripTitle(md)) };
+  return { number, slug, href, title, summary, body: formatMetadata(stripTitle(md)) };
 });
 
 // Written in place and swept, not wiped and rebuilt. The wipe is why `adr/`
@@ -160,7 +163,7 @@ const rows = [...adrs]
       : '';
     return `<tr>
 <td class="adr-number">${a.number}</td>
-<td class="adr-entry"><a href="/adr/${a.slug}/">${renderInline(a.title)}</a>${summary}</td>
+<td class="adr-entry"><a href="/adr/${a.href}/">${renderInline(a.title)}</a>${summary}</td>
 </tr>`;
   })
   .join('\n');

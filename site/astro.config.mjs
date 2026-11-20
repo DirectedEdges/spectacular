@@ -66,6 +66,9 @@ export default defineConfig({
     starlight({
       title: 'Spectacular',
       description: 'Generate structured, machine-readable UI component specifications from Figma.',
+      // Starlight's default is `/favicon.svg`, which this site never had — so
+      // every page linked a 404 until the asset was named here.
+      favicon: '/favicon.png',
       // Outlined paths, no webfont. Two files because Starlight renders the logo
       // as an <img>, which cannot inherit the page's text color: `light` carries
       // Starlight's light-theme ink, `dark` carries white.

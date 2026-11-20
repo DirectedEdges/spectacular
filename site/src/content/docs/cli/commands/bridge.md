@@ -56,7 +56,7 @@ Bridge running (pid 12345). 2 plugins connected:
 Bridge running (pid 12345). No plugin connected.
 ```
 
-Those file keys are what [`render --file`](/cli/commands/render/#--file) and [`generate --from-bridge --file`](/cli/commands/generate/#--file-filekey) take, so `bridge status` is how you find the value to pin in a scripted run.
+Those file keys are what [`render --file`](/cli/commands/render/#--file-filekey) and [`generate --from-bridge --file`](/cli/commands/generate/#--file-filekey) take, so `bridge status` is how you find the value to pin in a scripted run.
 
 Exits non-zero when the bridge isn't running, so it's safe to use in a conditional (`if specs bridge status; then ...`). It also exits non-zero when the process is up but its control port isn't answering:
 

@@ -14,9 +14,9 @@ A component describes the instances wherever needed, including nested as an elem
 
 | File | Holds | Command | Contract |
 |---|---|---|---|
-| [`api.yaml`](/schema/documents/component-api) | [`anatomy`](/schema/anatomy/), [`props`](/schema/props/), `invalidPropCombinations` | [`generate`](/cli/generate/) | [`ComponentApiDocument`](/schema/documents/component-api/) |
-| [`variants.yaml`](/schema/documents/component-variants) | [`layout`](/schema/layout/), [`styles`](/schema/styles/), [`content`](/schema/content/) | [`generate`](/cli/generate/) | [`ComponentVariantsDocument`](/schema/documents/component-variants/) |
-| [`examples.yaml`](/schema/documents/component-examples) | [`instances`](/schema/instances/), [`slot content examples`](/schema/slot-content-examples/) | [`generate`](/cli/generate/) | [`ComponentExamplesDocument`](/schema/documents/component-examples/) |
+| [`api.yaml`](/schema/documents/component-api) | [`anatomy`](/schema/anatomy/), [`props`](/schema/props/), `invalidPropCombinations` | [`generate`](/cli/commands/generate/) | [`ComponentApiDocument`](/schema/documents/component-api/) |
+| [`variants.yaml`](/schema/documents/component-variants) | [`layout`](/schema/layout/), [`styles`](/schema/styles/), [`content`](/schema/elements/#element) | [`generate`](/cli/commands/generate/) | [`ComponentVariantsDocument`](/schema/documents/component-variants/) |
+| [`examples.yaml`](/schema/documents/component-examples) | [`instance examples`](/schema/instance-examples/), [`slot content examples`](/schema/slot-content/) | [`generate`](/cli/commands/generate/) | [`ComponentExamplesDocument`](/schema/documents/component-examples/) |
 | `styling.yaml` | Component specific styling report | [`analyze`](/cli/analyze/) | — |
 | `analysis/` files | Catalogue-wide summaries derived from the specs above | [`analyze`](/cli/analyze/) | — |
 
@@ -41,7 +41,7 @@ invalidPropCombinations:
 
 ### [`variants`](/schema/documents/component-variants) file
 
-[`variants`](/schema/documents/component-variants) holds the default and varying [`layout`](/schema/layout/) structures, [`styles`](/schema/styles/) and [`content`](/schema/content/).
+[`variants`](/schema/documents/component-variants) holds the default and varying [`layout`](/schema/layout/) structures, [`styles`](/schema/styles/) and [`content`](/schema/elements/#element).
 
 ```yaml
 default:
@@ -106,9 +106,9 @@ A composition is a page type, template, pattern, or other scaffold arranging com
 
 | File | Holds | Command | Contract |
 |---|---|---|---|
-| `api.yaml` | [`anatomy`](/schema/anatomy/), `title`, `description` | [`generate`](/cli/generate/) | [`CompositionApiDocument`](/schema/documents/composition-api/) |
-| `variants.yaml` | [`elements`](/schema/elements/), [`layout`](/schema/layout/) | [`generate`](/cli/generate/) | [`CompositionVariantsDocument`](/schema/documents/composition-variants/) |
-| `examples.yaml` | `slotContent` fills | [`generate`](/cli/generate/) | [`CompositionExamplesDocument`](/schema/documents/composition-examples/) |
+| `api.yaml` | [`anatomy`](/schema/anatomy/), `title`, `description` | [`generate`](/cli/commands/generate/) | [`CompositionApiDocument`](/schema/documents/composition-api/) |
+| `variants.yaml` | [`elements`](/schema/elements/), [`layout`](/schema/layout/) | [`generate`](/cli/commands/generate/) | [`CompositionVariantsDocument`](/schema/documents/composition-variants/) |
+| `examples.yaml` | `slotContent` fills | [`generate`](/cli/commands/generate/) | [`CompositionExamplesDocument`](/schema/documents/composition-examples/) |
 
 ### [`api`](/schema/documents/composition-api) file
 

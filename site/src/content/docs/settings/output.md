@@ -114,7 +114,7 @@ specs/
 
 ## CLI Flag Priority
 
-Output configuration follows the standard [priority system](/settings/#priority-system):
+Output configuration follows the standard [priority system](/settings/#priority):
 
 1. **CLI flags** (highest): `--combine-as-library`, `--combine-concerns`, `--no-subfolders`
 2. **Config file**: `spec` block in `config/settings.yaml`

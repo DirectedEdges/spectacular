@@ -315,7 +315,7 @@ A prefix rather than a whole name because composed content holds many layers of 
 
 `elementType` gates both: a `text` layer never promotes to a `container` entry, whatever it is named.
 
-When more than one entry resolved by score, the promoted element records `multipleMatches: true` in its [capture provenance](/settings/promote-primitives/#what-is-recorded-and-why) — a durable note that the mapping was contested, rather than a warning that scrolls past.
+When more than one entry resolved by score, the promoted element records `multipleMatches: true` in its [capture provenance](/settings/promote-primitives/#provenance) — a durable note that the mapping was contested, rather than a warning that scrolls past.
 
 A source with no matching row does not resolve. It stays in `styles` and reaches output as passed styling, so a component's narrower prop enum constrains without a separate mechanism.
 

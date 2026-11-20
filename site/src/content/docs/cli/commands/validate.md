@@ -19,8 +19,8 @@ With no arguments it validates the whole catalogue — components and compositio
 
 | Option | Description |
 |--------|-------------|
-| [`--authored`](#authored) | Authored spec: a missing `metadata.source` is expected and not reported |
-| [`--format <format>`](#format) | Output format: `text` (default) or `json` |
+| [`--authored`](#--authored) | Authored spec: a missing `metadata.source` is expected and not reported |
+| [`--format <format>`](#--format) | Output format: `text` (default) or `json` |
 | `--config <path>` | Path to a `config/` directory |
 | `-o, --output <dir>` | Specs directory (default: `spec.directory` from settings) |
 
