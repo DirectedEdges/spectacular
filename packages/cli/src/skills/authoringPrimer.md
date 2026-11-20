@@ -23,6 +23,10 @@ An authored spec is identical in shape to a generated one: the schema is the sin
 
 `<key>` is the camelCase folder key (`tooltip`, `pageHeader`) — compositions included, with no kind prefix (`destinationPicker`, never `compositionDestinationPicker`). Keys *inside* a spec follow the workspace's `spec.keys` setting.
 
+A composition is written as the same three concern files a component is. What differs is the content: most of its anatomy is `type: instance` elements naming real components, its layout is the page structure down from `root`, and its instances configure their targets through `propConfigurations`.
+
+**"Composition" names this spec kind, and nothing else.** The act of arranging and nesting elements — including through instances and into slots — is layout, and it lives in `references/layout.md`. Conflating the two sends a round looking for a composition spec when it is authoring one component's tree. (The schema's bare `Composition` triplet — `anatomy` + `elements` + `layout` — is the shape a `$slotContent` pointer resolves to, not the on-disk folder format.)
+
 ## The three files
 
 | File | Holds | Required top-level |
@@ -39,9 +43,11 @@ Every file's `metadata` states its `concern` (`api`, `variants`, or `examples`).
 
 In `variants.yaml`, `default.elements` describes **every** anatomy element: `styles`, `content` (text string, glyph name, or a `$binding`), `children`, `propConfigurations` (nested instances only). Entries under `variants` describe only what that configuration changes.
 
-## The six references
+## The six pointer forms
 
-| Reference | Written where | Value | Resolves to |
+These are the six ways one spec node points at another thing. They are not the `references/*.md` files beside this skill — those are reading material, and the collision of the word is worth keeping straight.
+
+| Pointer | Written where | Value | Resolves to |
 |---|---|---|---|
 | `instanceOf` | `anatomy.<el>` and `elements.<el>` | component name, plain string | that component's spec folder |
 | `instanceOf: {$ref}` | same | `"#/subcomponents/<name>"` | `subcomponents.<name>` in this spec |
@@ -65,29 +71,37 @@ What the library already holds is in `data/cache/images.yaml`, keyed by content 
 
 ## The authoring order
 
-**A round opens with `specs author start <key>`** — the collision-checked folder with all three concern templates, valid as shipped, plus the status digest. **References then load in two packs, each pack one batched call, each read once.** The **contract pack** — the primers, the rules files for the concepts the request touches, `config/conventions/*.yaml`, `analysis/props.yaml`, `analysis/dependencies.*` — loads before step 1; the catalogue is already in the digest. The **styling pack** — `references/styles.md`, the `analysis/foundations/<type>` files for the token types the component needs, `analysis/styling.byToken.yaml`, `analysis/styling.byComponent.yaml` — loads when `variants.yaml` begins, because styling context read before the contract work sits idle through it. A pack is never reopened: re-reading a skill or rules file mid-author is the single largest avoidable cost measured in a round, ahead of every other startup activity. Returning to a skill file later means the first read was skimmed; read it properly once instead.
+**A round opens with `specs author start <key>`** — the collision-checked folder with all three concern templates, valid as shipped, plus the status digest.
 
-1. **Requirements split first.** Before writing anything, list every requirement in a table with its intended home: spec (name the schema path that carries it) or supplemental (name the schema path that cannot). This table is graded later; write it honestly now.
-2. **Correlate.** Read `analysis/props.yaml` (the system's prop vocabulary), `analysis/dependencies.*` (what nests what), and the digest's `catalogue`. Decide what to nest and what to emulate. Token correlation happens at the variants stage, from the styling pack: `analysis/foundations/<type>.yaml` (every token of that type — `$token` path, `$type`, `source` and `defaultValue`) and `analysis/styling.byToken.yaml` (which tokens are used where). An authored spec must look native to its catalogue.
+**Context then loads in three packs, one per concern file, each pack one batched call, each read once.** A pack is named for the document it precedes, and it loads immediately before that document is authored — never earlier. Context read ahead of its document sits idle through the work in between, and a model follows whichever rule is nearest rather than whichever applies.
 
-   **The foundations manifest is the single answer for a token.** `analysis/foundations.yaml` is the index — summary counts, the theming collections, and a file map — and `analysis/foundations/<type>.yaml` holds every token of that type; path, type and value are in one record there, so a lookup reads one small file. **The index is the authority on what exists**: `summary.tokens` always enumerates every kind — the token types plus `icons` — and a zero means the library has none of that kind, with no file written for it. Use a literal and note the gap (`rules/styles.yaml · tokens`); never re-run `specs analyze` or hunt the caches over a zero. The manifest is stale only when a kind is missing from `summary.tokens` altogether or the index predates the newest fetch. Do not go to `data/cache/variables.yaml` or `styles.yaml` for them: those are render lookup tables keyed for the bridge, they carry no `$type`, and answering a token question from them takes several greps that still cannot confirm the type you must write. A round that greps the cache three ways and then parses a YAML file per fact has spent its startup on a question one read answers.
-3. **api → validate → variants → validate → examples → validate.** The files already exist (start wrote them); the order governs authoring. One file at a time, `specs validate <key> --authored` after each, zero errors before the next file. A validation error is fixed before anything else happens.
-4. **Compile and observe.** The dev posture is live: `specs run` re-emits on save and refreshes Storybook. The canvas is NOT watched — render once, after `api`, `variants`, and `examples` all validate: `specs render specs/components/<key> --overwrite`. Never run a render watch; a render per save on a many-variant component cannot finish before the next save, and the loop breaks Figma.
-5. **The two authored documents last.** What the schema cannot carry goes in hand-authored platform files plus `supplemental.yaml` — eleven fixed sections, for whoever *builds* the component. What someone *using* it must observe goes in `guidelines.yaml` beside it, as rules each carrying an obligation level. Both are shape-checked by `specs validate` against the published contracts (ADR-118) — see the triage rule below.
+| Pack | Loads before | Carries |
+|---|---|---|
+| api | `api.yaml` | the primers; `rules/` for the concepts the request touches; `references/props.md`, and `references/slots.md` / `references/subcomponents.md` when the request describes either; `config/conventions/*.yaml`; `analysis/props.yaml`; `analysis/dependencies.*` |
+| variants | `variants.yaml` | `references/layout.md`, `references/styles.md`; the `analysis/foundations/<type>.yaml` files for the token types the component needs; `analysis/styling.byToken.yaml`; `analysis/styling.byComponent.yaml` |
+| examples | `examples.yaml` | `rules/examples.yaml`, `rules/primitives.yaml`; `data/cache/images.yaml` when the component carries imagery |
+
+The catalogue is already in the digest, so no pack re-reads it.
+
+**A pack is read once and never reopened.** Re-reading a skill or rules file mid-author is the single largest avoidable cost measured in a round, ahead of every other startup activity; returning to one later means the first read was skimmed. Reading properly once is the whole technique.
+
+Later documents build on what earlier packs already loaded rather than re-reading them. Slot content triplets in `examples.yaml` carry styles, and the styles map the variants pack loaded still applies — that is the same context, not a reopen. The examples pack is small because of it.
+
+The order itself, which every authoring skill follows:
+
+1. **Requirements split first.** Before writing anything, list every requirement with its intended home: spec (name the schema path that carries it) or supplemental (name the schema path that cannot). The table is graded at the end of the round; write it honestly now.
+2. **Correlate.** Decide what to nest and what to emulate, from `analysis/props.yaml`, `analysis/dependencies.*`, and the digest's `catalogue`. Token correlation waits for the variants pack. An authored spec must look native to its catalogue.
+3. **api → validate → variants → validate → examples → validate.** The files already exist — start wrote them — so the order governs authoring, not creation. One file at a time, `specs validate <key> --authored` after each, zero errors before the next. A validation error is fixed before anything else happens.
+4. **Compile and observe, once, after all three validate.** The dev posture re-emits on save; the canvas is not watched and is rendered once. Never run a render watch.
+5. **The two authored documents last.** What the schema cannot carry goes in hand-authored platform files plus `supplemental.yaml`, for whoever *builds* the component. What someone *using* it must observe goes in `guidelines.yaml` beside it. Both are shape-checked by `specs validate` against the published contracts (ADR-118).
+
+Steps 4 and 5 are procedure, and the skill running the round owns their detail — `specs-cli.component.author` carries the render invocation, the posture repair, and the eleven supplemental sections. Resolving a token is judgment, and `rules/styles.yaml · tokens` owns it: which report is authoritative, what a zero in the index means, and why the render caches never answer a token question.
 
 ## The authority order
 
-Every question resolves at the nearest of these, never lower:
+`specs-cli.primer` carries it — the precedence table and the prohibition on learning a spec's meaning from emitted output. It governs reading in every skill, not just authoring, so it lives there and is read once per session. Nothing in this file overrides it.
 
-| # | Question | Authority |
-|---|---|---|
-| 1 | Is this legal, and what does it mean? | The schema package's `types/` and `schema/*.json` — and only them. Read the declared property's or definition's `description` and `examples` first (the schema describes every option where it is declared); open `types/*.ts` only when those do not settle it. If the schema answers, stop |
-| 2 | Does platform X realise this key, and how faithfully? | `mappings/bindings/<platform>.json` in the same package — each key's declared `disposition` (`bound` / `approximated` / `unsupported` / `unverified`). A declared field, never an inference |
-| 2a | Is role concept X implemented on platform Y? | The same file's `concepts.roles` block — `implemented` or `inert` per vocabulary concept. Never answer this from the docs site (tracks `main`, not the installed version) or by reading an emitter's dist |
-| 3 | When should I use what the schema permits? | The rules files and workspace guidelines — judgment *about* the contract, not the contract |
-| 4 | Readable walkthrough of 1–2 | The docs site |
-
-**Never read emitted output or transform source to learn what a spec means.** A platform is a surface, not an authority: when a surface disagrees with the schema, the surface has a defect — report it in your closing report; do not bend the spec toward it. Letting an emitter confirm meaning makes the contract whatever the newest emitter happens to do, which is the non-determinism this whole model exists to prevent. The one legitimate reason to open an emitted file is wiring your supplemental files to it — imports, exported names — never to settle a schema question.
+The one authoring-specific consequence: when a surface disagrees with the schema, the surface has a defect — report it in your closing report rather than bending the spec toward it.
 
 ## Rules
 
@@ -100,17 +114,24 @@ Every question resolves at the nearest of these, never lower:
 
 ## Where to go deeper
 
-| Topic | Skill |
-|---|---|
-| Style properties, token placement, Figma style relationships | `references/styles.md` beside this skill |
-| Layout trees, auto vs absolute positioning, slots across the three files | `references/slots-layout.md` beside this skill |
-| The new-component procedure and templates | `specs-cli.component.author` |
-| What a property, option, or definition *means* — descriptions, defaults, validated examples | the schema files themselves (`@directededges/specs-schema`), mirrored as generated reference pages on the docs site under `/schema/` (per-property style pages under `/schema/styles/`); the site's origin is workspace-configured. If that origin is down, use the installed schema — never fetch documentation from any other host: an external copy tracks a different version than the schema you hold |
+The five `references/*.md` files beside this skill each map one mechanism. A reference carries the map — what exists, what shape it takes, which file each step is written in. It never decides which value to write; that is the matching `rules/*.yaml` file, and where the two seem to overlap the rules file governs.
 
-**Rules come in two layers, split by provenance.** The shipped `rules/*.yaml` beside this skill argue from the contract — the schema and its ADRs, identical everywhere. The library's own guidance lives in the authored corpus as **`specs/foundations/<concern>/guidelines.yaml`** (color, typography, space, shape, layout, motion, elevation, brand): an optional `meta` header (concern, status, author, updated, sources), then one list of rules per concern key, each a `statement` with a `level` of `must` / `should` / `should-not` / `must-not` / `may`, proposed until the system owner ratifies. A prohibition pairs with its remedy in the same entry — `alternatives` when the remedy is a thing to point at, `instead` when it is a rule.
+| Topic | Reference | Pack |
+|---|---|---|
+| The prop kinds, their required fields, where a prop is read and set | `references/props.md` | api |
+| A slot across the three files, default against named fills, the pointer forms | `references/slots.md` | api |
+| A part that exists only inside its parent, and the names that must agree | `references/subcomponents.md` | api |
+| Layout trees, flow against pinning, sizing, arranging through instances and slots | `references/layout.md` | variants |
+| The style property map, structural properties, the token reference shape | `references/styles.md` | variants |
 
-A foundation's `guidelines.yaml` is about **how** tokens, themes and raw values are applied across the catalogue. It is not a per-token registry: what one token is *for* is a description rather than a rule, and the schema rejects `useWhen` / `dontUseWhen` there (ADR-118, DSPEC-63). Where that per-token description belongs is not yet settled — treat an existing one as content awaiting a home, not as a file to extend.
+The new-component procedure and its templates are `specs-cli.component.author`. What a property or option *means* comes from the schema package itself — `specs-cli.primer` names it and the sources that mirror it.
 
-Guidance about *using one component* is never a foundations file — it belongs in that component's own `guidelines.yaml`. `specs-cli.guidelines.propose` synthesizes or revises a concern **only when explicitly asked**; inside an authoring round, absent guidance is a gap for your report's Suggestions, never something to fill mid-round. When styling or configuring, resolve in this order: the primitives promotion map for composed content (`config/conventions/<platform>.primitives.yaml` — compositions, instanceExamples, slot content; atomic components' own anatomy stays primitive) → `specs/foundations/` guidance → `analysis/styling.byComponent.yaml` precedent → a literal plus a noted gap.
+## Reading the two layers beside this skill
 
-**Modeling rules live in `rules/*.yaml` beside this skill, not in skill prose.** One file per spec concept, keys mirroring the schema node they govern (`anatomy.yaml` → `type.useWhen.*`, `styles.yaml` → per style property, `layoutStyling.yaml` (flow and positioning — `layout` alone names the AST in specs), `props.yaml`, `slots.yaml`, `subcomponents.yaml` (naming a part so it can be found again, and the slot that admits it), `variants.yaml`, `examples.yaml` (what an instance example is for, and what the variants already cover), `primitives.yaml` (authoring the promotion table)). Node kinds: `useWhen` — ordered usage mappings, evaluate top to bottom, first match wins (`dontUseWhen` for explicit negatives); `when` — property interdependencies (setting this value `opens` the listed properties, or `requires` a condition); `guidelines` — a list of modality-keyed items — `must`/`never` hard, `should`/`avoid` strong convention, `could`/`warn` judgment — a positive pairable with its counter-balancing negative in one item. An `adr: <number>` field cites the decision an item projects — the rules files are the current-state map of the ADRs. Load the file for the concept you are authoring before writing it. A newly learned rule lands as an entry in the matching rules file in the CLI package — never appended to skill prose.
+**`rules/*.yaml` — judgment, one file per spec concept**, keyed to mirror the schema node it governs. Node kinds: `useWhen` — ordered usage mappings, first match wins (`dontUseWhen` for explicit negatives); `when` — property interdependencies (setting this value `opens` the listed properties, or `requires` a condition); `guidelines` — modality-keyed items, `must`/`never` hard, `should`/`avoid` strong convention, `could`/`warn` judgment, a positive pairable with its counter-balancing negative in one item. An `adr: <number>` cites the decision an item projects, so the rules files are the current-state map of the ADRs. Load the file for the concept you are authoring before writing it.
+
+**`references/*.md` — the map**, one per mechanism, listed above.
+
+**Rules outrank references.** A rules entry is a judgment at one schema node; a reference maps a mechanism spanning several nodes or files. A choice at a single node is a rule; a fact spanning more than one node or file is a reference. When the two appear to say the same thing, the rules file governs — the reference is the stale copy, and the fix is to delete the sentence from the reference rather than reconcile them. Neither layer says what a spec *means*: that is the schema's, and both cite it. A newly learned rule lands as an entry in the matching rules file in the CLI package — never as skill prose and never as reference prose.
+
+**A third layer is the library's own, and it is not yours to write mid-round.** `specs/foundations/<concern>/guidelines.yaml` and a component's own `guidelines.yaml` carry ratified guidance about this system rather than about the contract. `specs-cli.guidelines.propose` owns their format and writes them **only when explicitly asked**. Inside an authoring round, absent guidance is a gap for your report's Suggestions — never something to fill as you go.
