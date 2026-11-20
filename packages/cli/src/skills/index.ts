@@ -48,6 +48,19 @@
  *
  * Neither layer is an authority on what a spec *means*. That is the schema's, and both
  * layers cite it rather than restating it.
+ *
+ * ## A step a parent skill names is a sub-skill, not a choice
+ *
+ * `posture` and `component.compile` are invoked by name from inside
+ * `component.author`, at a numbered step. That keeps their text out of the round's
+ * priming read — `component.compile` alone is ~790 words that only matter after all
+ * three concern files validate — and it lets the round's own cost be measured apart
+ * from the compile's.
+ *
+ * The distinction that makes this safe: the parent *names* the invocation, so the
+ * session has a directive rather than a decision. A skill a session must first decide
+ * it needs is a new way to fail, which is why the reference files beside the primer are
+ * reading material and not skills, however tempting the symmetry looks.
  */
 
 import PRIMER from './primer.md';
@@ -66,6 +79,7 @@ import REF_SUBCOMPONENTS from './references/subcomponents.md';
 import REF_LAYOUT from './references/layout.md';
 import REF_STYLES from './references/styles.md';
 import COMPONENT_AUTHOR from './componentAuthor.md';
+import COMPONENT_COMPILE from './componentCompile.md';
 import GUIDELINES_PROPOSE from './guidelinesPropose.md';
 import TEMPLATE_API from './templates/api.yaml';
 import TEMPLATE_VARIANTS from './templates/variants.yaml';
@@ -145,4 +159,5 @@ export const SKILL_ASSETS: SkillAsset[] = [
       { path: 'templates/guidelines.yaml', content: TEMPLATE_GUIDELINES },
     ],
   },
+  { name: 'specs-cli.component.compile', markdown: COMPONENT_COMPILE },
 ];

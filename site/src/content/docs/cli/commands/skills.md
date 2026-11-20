@@ -40,7 +40,8 @@ Thirteen skills, in three groups. `specs-cli.workspace.setup` is the one a new w
 
 | Skill | Orchestrates |
 |-------|--------------|
-| [`specs-cli.component.author`](/cli/skills/component-author/) | [`specs author start`](/cli/commands/author/) → split the requirements → correlate against the catalogue → `api` → [`validate`](/cli/commands/validate/) → `variants` → validate → `examples` → validate → [`render`](/cli/commands/render/) once and observe → the two authored documents → a structured report |
+| [`specs-cli.component.author`](/cli/skills/component-author/) | [`specs author start`](/cli/commands/author/) → split the requirements → correlate against the catalogue → `api` → [`validate`](/cli/commands/validate/) → `variants` → validate → `examples` → validate → `component.compile` → the two authored documents → a structured report |
+| [`specs-cli.component.compile`](/cli/skills/component-compile/) | [`specs render`](/cli/commands/render/) once → observe Storybook and the canvas → classify the render's warnings into spec defects, platform limits and expected rows. Invoked by `component.author`, and again after any later change that should reach the canvas |
 | [`specs-cli.guidelines.propose`](/cli/skills/guidelines-propose/) | [`specs analyze`](/cli/commands/analyze/) → synthesize one foundations concern's rules from its own evidence → write `specs/foundations/<concern>/guidelines.yaml` at `status: proposed` plus dated ratifier notes → human ratifies |
 | [`specs-cli.posture`](/cli/skills/posture/) | Read the pinned Storybook port → check it → start [`specs run`](/cli/commands/run/) detached if it is down → verify. Idempotent; the canvas is deliberately not watched |
 | `specs-cli.version.figmapremerge` | [`specs version figmapremerge`](/cli/commands/version/#specs-version-figmapremerge) fetches, generates, and reports → human reviews the report → merge proceeds or not |
