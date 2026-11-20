@@ -8,7 +8,7 @@
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { adrStatus, adrTitle } from './lib/adr.mjs';
+import { adrStatus, adrTitle, adrRoute } from './lib/adr.mjs';
 import { createEmitter } from './lib/emit.mjs';
 import { quoteScalar } from './lib/markdown.mjs';
 import { adrDir, docs } from './lib/paths.mjs';
@@ -37,7 +37,7 @@ function renderInline(text) {
       // actually published — drafts would 404.
       const slug = href.replace(/^\.?\/?/, '').replace(/\.md$/, '');
       if (/^\d{3}-/.test(slug)) {
-        return published.has(slug) ? `<a href="/adr/${slug.replace(/\./g, "")}/">${label}</a>` : label;
+        return published.has(slug) ? `<a href="/adr/${adrRoute(slug)}/">${label}</a>` : label;
       }
       return `<a href="${href}">${label}</a>`;
     })
@@ -121,10 +121,7 @@ for (const file of files) {
   }
   const slug = file.replace(/\.md$/, '');
   published.add(slug);
-  // Astro drops `.` from a route segment, so `001-metadata.license` is served
-  // at `/adr/001-metadatalicense/`. Linking by the bare slug published a 404
-  // on the index for every such record.
-  accepted.push({ file, md, slug, href: slug.replace(/\./g, ''), title, number: file.slice(0, 3) });
+  accepted.push({ file, md, slug, href: adrRoute(slug), title, number: file.slice(0, 3) });
 }
 
 // Bodies are rendered in a second pass so cross-references can be resolved

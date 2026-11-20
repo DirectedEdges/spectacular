@@ -161,10 +161,26 @@ export const loadAdrs = (dir) => {
 };
 
 /**
+ * The route Astro serves an ADR record at, from its filename.
+ *
+ * Astro lowercases a route segment and drops `.` from it, so a record linked by
+ * its filename 404s whenever the two differ — `013-icon-fillColor.md` is served
+ * at `/adr/013-icon-fillcolor/`, and `001-metadata.license.md` at
+ * `/adr/001-metadatalicense/`. A case mismatch survives a developer's build on
+ * a case-insensitive filesystem and fails only in the deploy, which is why
+ * every href goes through this one function.
+ */
+export const adrRoute = (fileOrSlug) =>
+  fileOrSlug
+    .replace(/\.md$/, '')
+    .replace(/\./g, '')
+    .toLowerCase();
+
+/**
  * An ADR link list, one bullet per record, in the order given.
  *
  * The em dash is this site's link-list separator rather than a sentence, so it
  * stays with the link construction instead of moving to a content module.
  */
 export const decisionBullets = (adrs) =>
-  adrs.map((a) => `- [ADR-${a.num}](/adr/${a.file.replace(/\.md$/, '')}/) — ${a.title}`).join('\n');
+  adrs.map((a) => `- [ADR-${a.num}](/adr/${adrRoute(a.file)}/) — ${a.title}`).join('\n');

@@ -42,12 +42,39 @@ function pages(dir, out = new Map()) {
   return out;
 }
 
-/** Does this site-root-relative path resolve to something the build emitted? */
+/**
+ * Every entry name under a directory, for case-exact resolution.
+ *
+ * macOS is case-insensitive and the deploy runs on Linux, so `existsSync` alone
+ * passes locally for a link whose case is wrong and fails in production — which
+ * is exactly how `/adr/013-icon-fillColor/` got past a green local run. Each
+ * segment is matched against the real listing instead.
+ */
+const listingCache = new Map();
+function listing(dir) {
+  if (!listingCache.has(dir)) {
+    listingCache.set(dir, existsSync(dir) && statSync(dir).isDirectory() ? new Set(readdirSync(dir)) : new Set());
+  }
+  return listingCache.get(dir);
+}
+
+/** Does this site-root-relative path resolve, matching case exactly? */
 function resolves(path) {
   const clean = decodeURIComponent(path.split('?')[0]).replace(/\/$/, '');
-  const target = join(DIST, clean);
-  if (!existsSync(target)) return existsSync(`${target}.html`);
-  return statSync(target).isDirectory() ? existsSync(join(target, 'index.html')) : true;
+  const segments = clean.split('/').filter(Boolean);
+  let dir = DIST;
+  for (const [i, segment] of segments.entries()) {
+    const last = i === segments.length - 1;
+    const here = listing(dir);
+    if (here.has(segment)) {
+      const next = join(dir, segment);
+      if (last) return statSync(next).isDirectory() ? listing(next).has('index.html') : true;
+      dir = next;
+      continue;
+    }
+    return last && here.has(`${segment}.html`);
+  }
+  return listing(dir).has('index.html');
 }
 
 /** The anchor targets a page offers — `id` and `name` attributes alike. */
