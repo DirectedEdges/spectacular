@@ -616,6 +616,14 @@ export interface Conventions {
 export interface ResolvedPlatformConventions {
   /** Naming convention this platform uses. Defaulted to NONE inside a declared entry. */
   naming: 'NONE' | 'SENTENCE' | 'TITLE';
+  /**
+   * The runtime catalog identity a catalog-emitting platform (a2ui) publishes under.
+   * A fact about the library — the id renderers negotiate against — not an output
+   * choice, which is why it is a convention rather than a setting. Optional; absence
+   * derives a deterministic id from the workspace. SPIKE (DirectedEdges/spectacular#961):
+   * not yet ADR-governed.
+   */
+  catalogId?: string;
   /** Glyph content assets. Optional; absence means no glyph convention. At least one of `match` / `structure` is declared. */
   glyphs?: {
     /** Name form — membership and `{i}` naming capture. Optional since 0.35.0 (ADR-103). */

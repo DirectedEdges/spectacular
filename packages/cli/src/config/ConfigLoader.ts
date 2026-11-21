@@ -564,6 +564,11 @@ export class ConfigLoader {
       slotPrimitives: raw.slotPrimitives !== false,
     };
 
+    // catalogId — a non-empty string, else absent (catalog-emitting platforms only)
+    if (typeof raw.catalogId === 'string' && raw.catalogId.trim() !== '') {
+      platform.catalogId = raw.catalogId.trim();
+    }
+
     // naming
     const validNaming = ['NONE', 'SENTENCE', 'TITLE'];
     const naming = typeof raw.naming === 'string' ? raw.naming.toUpperCase() : undefined;
