@@ -14,9 +14,15 @@ concept name is an open string; the documented vocabulary comes from ADR 087.
 
 ## Vocabulary
 
-| Action | Meaning | Contract addition |
-|--------|---------|-------------------|
-| [`dismiss`](/actions/dismiss/) | Activating this element removes the component it belongs to | `onDismiss?: () => void` |
+| Action | Status | Meaning | Contract addition |
+|--------|--------|---------|-------------------|
+| [`dismiss`](/actions/dismiss/) | implemented | Activating this element removes the component it belongs to | `onDismiss?: () => void` |
+| [`navigate`](/actions/navigate/) | specified | Activating this element goes somewhere | `onNavigate?: (href?) => void` |
+| [`submit`](/actions/submit/) | specified | Activating this element submits the values around it | `onSubmit?: () => void` |
+| [`select`](/actions/select/) | specified | Activating this element chooses it among alternatives | `onSelect?: (selected?) => void` |
+| [`open` / `close`](/actions/open/) | specified | Activating this element reveals or conceals a named surface elsewhere | `onOpen?` / `onClose?` |
+
+Each page declares the concept's **payload** — named members and the deterministic source each value comes from — and its user message. `ACTION_SPECS` in the shared emitter core transcribes these pages the way `ROLE_SPECS` transcribes the role pages: the page is the specification, and when the two disagree the page is right. A `specified` concept emits nothing from the React and Web Components transforms yet; the A2UI target consumes its payload declaration.
 
 ## Roles and actions
 
