@@ -170,6 +170,13 @@ export type AnatomyElement = {
    */
   type: ElementType | ElementTypeRef;
   detectedIn?: string;
+  /**
+   * This element is purely presentational — assistive technologies should not
+   * announce it, and runtime targets may mark it hidden (A2UI
+   * `@accessibility.hidden`, `aria-hidden` on web). Absent means false.
+   * SPIKE (DirectedEdges/spectacular#961): not yet ADR-governed.
+   */
+  decorative?: boolean;
   /** The component or component set name that this instance element references, or a subcomponent reference. */
   instanceOf?: string | SubcomponentRef;
   /**

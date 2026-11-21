@@ -63,6 +63,33 @@ export interface PropExtensions {
 }
 
 /**
+ * Declarative constraints on an input prop's accepted values — what a consumer
+ * may pass, beyond the type itself.
+ *
+ * Distinct from `invalidPropCombinations`, which constrains props jointly; an
+ * entry here binds one prop alone. Runtime targets lower these to their own
+ * validation vocabulary (A2UI `@checks`); code targets may lower them to native
+ * attributes (`maxlength`, `required`, `pattern`).
+ *
+ * SPIKE (DirectedEdges/spectacular#961): not yet ADR-governed; no JSON Schema
+ * counterpart yet.
+ */
+export interface PropConstraints {
+  /** The prop must be supplied; an absent or null value is invalid. */
+  required?: boolean;
+  /** A regular expression (ECMA-262) the whole string value must match. */
+  pattern?: string;
+  /** Minimum string length, inclusive. */
+  minLength?: number;
+  /** Maximum string length, inclusive. */
+  maxLength?: number;
+  /** Minimum numeric value, inclusive. */
+  min?: number;
+  /** Maximum numeric value, inclusive. */
+  max?: number;
+}
+
+/**
  * Boolean property definition
  */
 export interface BooleanProp {
@@ -87,6 +114,8 @@ export interface StringProp {
   nullable?: boolean;
   /** Sample values demonstrating typical content for this prop */
   examples?: string[];
+  /** Declarative input constraints. SPIKE (DirectedEdges/spectacular#961). */
+  constraints?: PropConstraints;
   /** DTCG §5.2.3 platform-specific extensions. @since 0.14.0 */
   $extensions?: PropExtensions;
 }
@@ -136,6 +165,8 @@ export interface NumberProp {
   nullable?: boolean;
   /** Sample numeric values demonstrating typical content for this prop */
   examples?: number[];
+  /** Declarative input constraints. SPIKE (DirectedEdges/spectacular#961). */
+  constraints?: PropConstraints;
   /** DTCG §5.2.3 platform-specific extensions. @since 0.30.0 */
   $extensions?: PropExtensions;
 }

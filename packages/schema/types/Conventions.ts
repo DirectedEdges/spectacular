@@ -492,6 +492,13 @@ export interface SpecsConventions {
      * an element carrying the name is preferred to a prop.
      */
     label?: PropReference;
+    /**
+     * The prop supplying an accessible description — supplementary information
+     * assistive technologies announce after the name (instructions, format
+     * requirements, the result of an action). The block was declared to grow this
+     * way. SPIKE (DirectedEdges/spectacular#961): not yet ADR-governed.
+     */
+    description?: PropReference;
   };
   /**
    * The prop supplying a control's value where no element represents it — a progress
