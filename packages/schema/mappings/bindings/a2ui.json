@@ -4,7 +4,7 @@
   "realises": "Compiles component contracts into an A2UI v1.0 catalog document (JSON Schema per component) and lowers each composition into a `createSurface` + `updateComponents` message pair. SPIKE STATUS: authored from the a2ui-from-specs spike (DirectedEdges/spectacular#961); rows carry basis: implementation and are unverified beyond the spike's validation harness.",
   "note": "This platform transmits the prop and composition surfaces only. No style key is read: an A2UI node carries props, children and data bindings, and all visual styling lives in the renderer's registration of the design system's own components — the same delegation React makes to CSS, made to the host application instead. The one exception is primitive lowering: an un-promoted layer's styles are read through the workspace's `conventions.primitives` promotion table to become a configured component's props, which is a convention-driven read of specific tokens, not a binding of the style surface.",
   "surfaces": {
-    "note": "Catalog generation is per component; surface emission is per composition. Constraint lowering (invalidPropCombinations → not/anyOf) and placeholder lowering ({Placeholder} text → data-model @path bindings) are this platform's own rules, declared in concepts.propRules.",
+    "note": "Catalog generation is per component; surface emission is per composition and per instance example (each ready-made usage becomes its own one-root surface under components/<Name>/examples.json). Constraint lowering (invalidPropCombinations → not/anyOf), state omission (statesToContract) and placeholder lowering ({Placeholder} text → data-model @path bindings) are this platform's own rules, declared in concepts.propRules.",
     "styleAttachment": "unsupported"
   },
   "concepts": {
@@ -16,7 +16,8 @@
         "realises": "a JSON Schema property `$ref` to A2UI `DynamicBoolean`, carrying the declared `default`",
         "direction": "spec-to-code",
         "basis": "implementation",
-        "notes": "DynamicBoolean admits a literal or a data-model binding, so any boolean prop is bindable at runtime without a schema change."
+        "rule": "statesToContract",
+        "notes": "DynamicBoolean admits a literal or a data-model binding, so any boolean prop is bindable at runtime without a schema change. A boolean classified as a browser-managed state concept never reaches the catalog."
       },
       "string": {
         "disposition": "bound",
@@ -30,7 +31,8 @@
         "realises": "a plain JSON Schema `enum` with the declared `default`; `nullable: true` adds `null` to the value list",
         "direction": "spec-to-code",
         "basis": "implementation",
-        "notes": "Kept literal rather than Dynamic: a closed variant set is a design decision, not a runtime value to bind."
+        "rule": "statesToContract",
+        "notes": "Kept literal rather than Dynamic: a closed variant set is a design decision, not a runtime value to bind. An enum whose every state concept is browser-managed (a state prop) never reaches the catalog."
       },
       "number": {
         "disposition": "bound",
@@ -64,6 +66,12 @@
       }
     },
     "propRules": {
+      "statesToContract": {
+        "disposition": "bound",
+        "form": "prose",
+        "basis": "implementation",
+        "notes": "The states fork (`conventions.specs.states`): a prop whose every concept entry resolves to `contract: 'omit'` (via from-specs' `buildOmittedProps`) reaches neither the catalog's component definition nor any surface payload — captured interaction state like `state: Hover` or `focus: true` is the renderer's to own at runtime. A kept concept's prop (`disabled`, `readOnly`, `validation`) transmits normally. An `invalidPropCombinations` entry naming an omitted prop describes states the payload can no longer express, so it is dropped with the prop; combinations over kept props alone survive into the `not` block. Verified both ways: a surviving combination still fails validation, and an omitted prop on a wire node fails the message schema via `unevaluatedProperties`."
+      },
       "constraintLowering": {
         "disposition": "bound",
         "form": "prose",
