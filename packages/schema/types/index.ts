@@ -58,6 +58,7 @@ export type {
   PropReference,
   ValueConvention,
 } from './Conventions.js';
+export type { StandardCatalogConventions, StandardCatalogEntry } from './Conventions.js';
 export { DEFAULT_CONVENTIONS } from './Conventions.js';
 export type { Settings, ResolvedSettings, ColorFormat, SourceEntry } from './Settings.js';
 export { DEFAULT_SETTINGS } from './Settings.js';

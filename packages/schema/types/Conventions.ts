@@ -624,6 +624,21 @@ export interface ResolvedPlatformConventions {
   /** Naming convention this platform uses. Defaulted to NONE inside a declared entry. */
   naming: 'NONE' | 'SENTENCE' | 'TITLE';
   /**
+   * How this library's vocabulary corresponds to a runtime standard catalog
+   * (A2UI's basic catalog) — the same convention shape as `primitives`, pointed
+   * at a different pair of vocabularies. Declared, never inferred from names.
+   *
+   * `elements` maps the spec's primitive element types and ships as defaults in
+   * the scaffolded conventions file; `components` maps this library's own
+   * components and is hand-maintained. Consumed in both directions: lowering a
+   * surface to the standard vocabulary for reach, and raising standard-catalog
+   * payloads an agent composed into this library's components — the
+   * promote-primitives relationship, with standard components as the raw layer.
+   *
+   * SPIKE (DirectedEdges/spectacular#961): not yet ADR-governed.
+   */
+  standardCatalog?: StandardCatalogConventions;
+  /**
    * The runtime catalog identity a catalog-emitting platform (a2ui) publishes under.
    * A fact about the library — the id renderers negotiate against — not an output
    * choice, which is why it is a convention rather than a setting. Optional; absence
@@ -754,3 +769,47 @@ export interface MetadataConventions {
  * fabricate a fact nobody declared.
  */
 export const DEFAULT_CONVENTIONS: ResolvedConventions = {};
+
+/**
+ * The standard-catalog correspondence (SPIKE, DirectedEdges/spectacular#961):
+ * how this library's vocabulary maps to a runtime standard catalog (A2UI's
+ * basic catalog) — the promote-primitives convention shape, pointed at a
+ * different pair of vocabularies, consumed in both directions.
+ *
+ * Both sections share one entry shape. A prop map's value is the standard
+ * component's prop name; a `values` lookup translates closed vocabularies the
+ * two sides spell differently (a glyph name table), exactly as
+ * `PrimitiveRule.values` does for promotion. A prop with no entry does not
+ * transmit in the lowering direction — a declared loss, the same trade
+ * promotion makes.
+ */
+export interface StandardCatalogConventions {
+  /**
+   * Spec primitive element types → standard components. Shipped as defaults in
+   * the scaffolded conventions file: `text` and `glyph` always; `container`
+   * with a `horizontal` alternate. `slot` has no entry — slots map structurally
+   * (children), not as a component.
+   */
+  elements?: Partial<Record<'text' | 'glyph' | 'container', StandardCatalogEntry>>;
+  /** This library's own components → standard components. Hand-maintained. */
+  components?: Record<string, StandardCatalogEntry>;
+}
+
+/** One correspondence: the standard component, and how props translate. */
+export interface StandardCatalogEntry {
+  /** The standard catalog component name (`Text`, `Icon`, `Row`, `Tabs`). */
+  component: string;
+  /**
+   * The alternate standard component a direction-like condition selects
+   * (`container` → `Column`, `horizontal: Row`). Optional; most entries have
+   * one target.
+   */
+  horizontal?: string;
+  /** This library's prop → the standard component's prop. */
+  props?: Record<string, string>;
+  /**
+   * Per-prop value translation tables, keyed by this library's prop. A value
+   * absent from its table does not transmit.
+   */
+  values?: Record<string, Record<string, string | number | boolean>>;
+}
