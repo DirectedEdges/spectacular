@@ -57,6 +57,7 @@ There is no `Config.ts` anymore — older links to "Config" mean these three.
 | `packages/schema/schema/component-concern.schema.json` | The three component per-concern documents; references `component.schema.json` for shared definitions (renamed from `concern.schema.json`, ADR-110) |
 | `packages/schema/schema/composition-concern.schema.json` | The three composition per-concern documents (ADR-109) |
 | `packages/schema/schema/styles.schema.json` | Pairs with `types/Styles.ts` |
+| `packages/schema/mappings/facts/` | SPIKE (specs#961): the authoritative role/action concept fact tables. `site/scripts/build-concept-facts.mjs` generates the fact blocks inside `/roles/` and `/actions/` pages from them; from-specs' `ROLE_SPECS`/`ACTION_SPECS` are parity-tested copies — facts in data, meaning in authored prose |
 | `packages/schema/CONSTITUTION.md` | Governance: semver policy, 6-gate check |
 | `packages/schema/CHANGELOG.md` | Mandatory per publish; bullets cite ADRs |
 | `packages/schema/tests/` | Type-level `*.test-d.ts` files + runtime tests |
