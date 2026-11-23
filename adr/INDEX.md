@@ -4,6 +4,7 @@
 
 | # | Title | Highlights |
 |---|-------|------------|
+| 128 | Overriding a Member of a Bound Typography Token | (reserved, draft on `128-text-decoration-override`) |
 | 127 | Foundation Injection — Icon References, and Config-Declared Custom Foundation Sources | (reserved, draft on `127-foundation-injection`) |
 | 126 | Conditional Style Values Collapse to a Single-Key Null Test | (reserved, draft on `126-conditional-shorthand`) |
 | 123 | Element Themes — The Variable Modes an Element Pins | (reserved, draft in PR #948) |
