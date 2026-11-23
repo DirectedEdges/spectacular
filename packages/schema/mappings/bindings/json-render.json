@@ -1,0 +1,51 @@
+{
+  "platform": "json-render",
+  "role": "Emits a Zod runtime catalog, a React registry, and flat Spec payloads; styling delegated to the emitted React components",
+  "realises": "Compiles component contracts into a typed defineCatalog module (Zod per component, invalidPropCombinations as .superRefine), a starter defineRegistry binding each entry to the already-emitted react/ tree, and one flat {root, elements, state} Spec per composition and instance example. SPIKE STATUS (DirectedEdges/spectacular#961): authored from the json-render spike; rows carry basis: implementation, verified by the spike's gates against @json-render/core 0.23.2.",
+  "note": "This platform transmits the prop and composition surfaces, like a2ui, with three deliberate divergences from that sibling binding: accessibility-convention props stay ordinary props (json-render has no accessibility envelope); enum values normalize to the enumCase contract (the registry binds to the React components, whose unions spell normalized values — a payload in spec casing would fail both); and declarative constraints live only in the catalog's Zod (no runtime checks surface — the component schema is the enforcement point, since the SDK's composed zodSchema() rebuilds prop objects and drops refinements). Styles are not read except through the promotion table; element visibility (styles.visible: false) lowers to the Spec's native visible: false.",
+  "surfaces": {
+    "note": "Catalog and registry are catalog-wide; Specs are per composition and per instance example. The states fork (statesToContract), placeholder lowering ({Placeholder} → {$state} + seeded state), two-way value/constrained binding ({$bindState: /<id>/<prop>}), template lowering (repeat: {statePath} + one template child with $bindItem), and role/action dispatch (on: {event: {action, params}}) follow the same rules the a2ui binding declares, in this target's idioms.",
+    "styleAttachment": "unsupported"
+  },
+  "concepts": {
+    "styles": {},
+    "styleRules": {},
+    "props": {
+      "boolean": { "disposition": "bound", "realises": "z.boolean().optional()", "direction": "spec-to-code", "basis": "implementation", "rule": "statesToContract", "notes": "A boolean classified as a browser-managed state concept never reaches the catalog." },
+      "string": { "disposition": "bound", "realises": "z.string().nullable().optional(), constraints as .min/.max/.regex; required constraints drop the widening", "direction": "spec-to-code", "basis": "implementation", "notes": "The SDK's validate() is binding-tolerant: a {$state} or {$bindState} object passes a plain string schema." },
+      "enum": { "disposition": "bound", "realises": "z.enum([...]) with values normalized to the enumCase contract", "direction": "spec-to-code", "basis": "implementation", "rule": "statesToContract", "notes": "Normalized because the registry binds to the React contracts; payload values normalize identically." },
+      "number": { "disposition": "bound", "realises": "z.number() with .min/.max; numeric enums as literal unions; never null-widened", "direction": "spec-to-code", "basis": "implementation", "notes": "Mirrors the React contract's scalarType, which spells numbers plain — the registry spread requires the two to agree." },
+      "slot": { "disposition": "bound", "realises": "catalog slots list ('default' for the default slot, named slots verbatim); payload children / slots record; a sole named slot renders as React children, the way the scaffolds consume it", "direction": "spec-to-code", "basis": "implementation" },
+      "image": { "disposition": "approximated", "realises": "z.string().nullable().optional() carrying the registry reference", "direction": "spec-to-code", "basis": "implementation", "notes": "Same loss the a2ui binding declares for the kind." },
+      "object": { "disposition": "bound", "realises": "z.object of its members, each by its own scalar kind", "direction": "spec-to-code", "basis": "implementation" }
+    },
+    "propRules": {
+      "statesToContract": { "disposition": "bound", "form": "prose", "basis": "implementation", "notes": "Identical to the a2ui binding's rule: a prop whose every state concept resolves to contract: 'omit' reaches neither catalog nor payload, and combinations naming one drop as unexpressible." },
+      "constraintLowering": { "disposition": "bound", "form": "prose", "basis": "implementation", "notes": "invalidPropCombinations compile to .superRefine on the component's props schema; a forbidden configuration fails the component schema deterministically. The composed catalog.zodSchema() drops refinements (measured, @json-render/core 0.23.2), so the per-component schema is the declared enforcement point." },
+      "valueBinding": { "disposition": "bound", "form": "prose", "basis": "implementation", "notes": "The value convention's prop and any constrained prop emit as {$bindState: /<id>/<prop>} seeded verbatim in state; the registry wires them through useBoundProp and composes the change event with emit()." },
+      "actionDispatch": { "disposition": "bound", "form": "prose", "basis": "implementation", "notes": "Declared behavior concepts emit on: {<event>: {action: <concept>, params}} with the ACTION_SPECS payload plan; the catalog's actions dictionary carries all vocabulary concepts with typed params; role activation obligations wire the registry's handlers to emit(<event>)." }
+    },
+    "anatomy": {
+      "note": "As the a2ui binding: anatomy does not transmit per component; instance elements become Spec nodes, un-promoted container/text layers lower through conventions.primitives, anything else drops with a warning.",
+      "container": { "disposition": "approximated", "realises": "a configured container primitive, via the promotion table", "basis": "implementation" },
+      "text": { "disposition": "approximated", "realises": "a configured text primitive, via the promotion table", "basis": "implementation" },
+      "glyph": { "disposition": "approximated", "realises": "a configured glyph primitive, via the promotion table", "basis": "implementation" },
+      "instance": { "disposition": "bound", "realises": "a Spec node whose type is the instanced catalog symbol", "basis": "implementation" },
+      "slot": { "disposition": "bound", "realises": "the slot prop surface above", "basis": "implementation" },
+      "vector": { "disposition": "unsupported", "realises": "", "basis": "implementation" },
+      "line": { "disposition": "unsupported", "realises": "", "basis": "implementation" },
+      "ellipse": { "disposition": "unsupported", "realises": "", "basis": "implementation" },
+      "rectangle": { "disposition": "unsupported", "realises": "", "basis": "implementation" },
+      "polygon": { "disposition": "unsupported", "realises": "", "basis": "implementation" },
+      "star": { "disposition": "unsupported", "realises": "", "basis": "implementation" }
+    },
+    "anatomyRules": {},
+    "roles": {
+      "note": "Roles wire the registry (activation handlers → emit) and gate dispatch; semantics live in the React components the registry binds."
+    },
+    "references": {
+      "note": "$slotContent resolves (fills emit into the flat element map; a repeated fill lowers to repeat + $bindItem); {Placeholder} literals resolve to {$state} with seeded state; $token, $binding, $conditional and $image do not transmit."
+    },
+    "referenceRules": {}
+  }
+}
