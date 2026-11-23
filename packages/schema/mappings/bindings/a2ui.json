@@ -1,5 +1,6 @@
 {
   "platform": "a2ui",
+  "dependsOn": ["css"],
   "role": "Emits an A2UI v1.0 runtime catalog and surface payloads; styling delegated to the renderer's registered components",
   "realises": "Compiles component contracts into an A2UI v1.0 catalog document (JSON Schema per component) and lowers each composition into a `createSurface` + `updateComponents` message pair. SPIKE STATUS: authored from the a2ui-from-specs spike (DirectedEdges/spectacular#961); rows carry basis: implementation and are unverified beyond the spike's validation harness.",
   "note": "This platform transmits the prop and composition surfaces only. No style key is read: an A2UI node carries props, children and data bindings, and all visual styling lives in the renderer's registration of the design system's own components — the same delegation React makes to CSS, made to the host application instead. The one exception is primitive lowering: an un-promoted layer's styles are read through the workspace's `conventions.primitives` promotion table to become a configured component's props, which is a convention-driven read of specific tokens, not a binding of the style surface.",
@@ -69,36 +70,55 @@
       "statesToContract": {
         "disposition": "bound",
         "form": "prose",
+        "keys": ["boolean", "enum"],
+        "outputs": ["component definition properties", "node props"],
+        "resolution": "A prop whose every state concept resolves to omit is removed from the component definition's properties and from every emitted node; a constraint naming it drops with it.",
+        "partial": "Omission is all-or-nothing per prop: one kept concept on the prop and it transmits whole.",
         "basis": "implementation",
         "notes": "The states fork (`conventions.specs.states`): a prop whose every concept entry resolves to `contract: 'omit'` (via from-specs' `buildOmittedProps`) reaches neither the catalog's component definition nor any surface payload — captured interaction state like `state: Hover` or `focus: true` is the renderer's to own at runtime. A kept concept's prop (`disabled`, `readOnly`, `validation`) transmits normally. An `invalidPropCombinations` entry naming an omitted prop describes states the payload can no longer express, so it is dropped with the prop; combinations over kept props alone survive into the `not` block. Verified both ways: a surviving combination still fails validation, and an omitted prop on a wire node fails the message schema via `unevaluatedProperties`."
       },
       "constraintLowering": {
         "disposition": "bound",
         "form": "prose",
+        "keys": ["boolean", "enum"],
+        "outputs": ["definition not/anyOf block", "definition description"],
+        "resolution": "Each expressible forbidden configuration becomes one anyOf branch under the definition's not, const-pinning exactly the props it names, plus a prose summary in the description.",
+        "partial": "A combination naming an omitted prop is dropped as unexpressible; the remainder emit.",
         "basis": "implementation",
         "notes": "`invalidPropCombinations` compile to a `not`/`anyOf` block on the component definition — one `anyOf` branch per forbidden configuration, each branch requiring and const-pinning exactly the props the combination names — plus a natural-language summary in `description` for model guidance. Verified by the spike's negative test: a node carrying a forbidden combination fails catalog validation."
       },
       "slotsToChildLists": {
         "disposition": "bound",
         "form": "prose",
+        "keys": ["slot"],
+        "outputs": ["node child-id arrays", "surface component list"],
+        "resolution": "Layout children attach under the instanced component's defaultSlot prop name (falling back to children); a $slotContent pointer resolves through the examples document and its fill emits into the same flat component list.",
+        "partial": "A pointer that resolves to no fill drops the prop with a warning naming it.",
         "basis": "implementation",
         "notes": "A composition element's layout children attach to the instanced component under its `defaultSlot` prop name, falling back to `children`. A `$slotContent` pointer in a prop configuration resolves through the composition's examples document to its fill's own `anatomy + elements + layout` triplet, which is emitted into the same flat component list and referenced by id."
       },
       "numberCoercion": {
         "disposition": "bound",
         "form": "prose",
+        "keys": ["number"],
+        "outputs": ["node props"],
+        "resolution": "A string value configured on a declared number prop parses to a number before emission.",
+        "partial": "An unparsable value passes through unchanged and fails validation visibly.",
         "basis": "implementation",
         "notes": "A string value configured on a declared number prop parses to a number before emission; an unparsable value passes through and fails validation visibly."
       },
       "placeholderBinding": {
         "disposition": "bound",
         "form": "prose",
+        "keys": ["string"],
+        "outputs": ["node props", "createSurface dataModel"],
+        "resolution": "A configuration whose whole value is {Label} lowers to a data-model binding at /label, and the dataModel seeds the label text as the sample value.",
+        "partial": "Applies only to whole-value placeholders; mixed literal-and-placeholder text stays a literal.",
         "basis": "implementation",
         "notes": "A prop configuration whose whole value is `{Label}` lowers to `{\"@path\": \"/label\"}` and seeds the surface's `dataModel` with the label text as the sample value — Spectacular's placeholder convention becoming A2UI's two-way data binding."
       }
     },
     "anatomy": {
-      "note": "SPIKE: anatomy does not transmit per component — an A2UI node is one catalog symbol, and the component's internal structure lives in the renderer's registration. Element types matter only during composition lowering: `instance` elements become nodes; un-promoted `container` and `text` layers lower through `conventions.primitives` (ADR-100 score rule: a matching elementType entry with at least one resolving map rule); anything else resolves to no catalog symbol and is dropped with a warning (AC-04).",
       "container": { "disposition": "approximated", "realises": "a configured container primitive component, via the promotion table", "basis": "implementation", "notes": "Only where a promotion rule resolves; a bare fixed-size frame does not lower." },
       "text": { "disposition": "approximated", "realises": "a configured text primitive component, via the promotion table", "basis": "implementation", "notes": "`content` maps through the entry's `content` rule." },
       "glyph": { "disposition": "approximated", "realises": "a configured glyph primitive component, via the promotion table", "basis": "implementation", "notes": "" },
@@ -113,10 +133,20 @@
     },
     "anatomyRules": {},
     "roles": {
-      "note": "SPIKE: roles inform, they do not emit. An interactive root role (or any declared element action) adds an `action` property referencing A2UI's `Action` type, and the concept names land in the definition's description; semantics are the renderer registration's job."
+      "$comment": "SPIKE: roles inform, they do not emit markup here. Activation obligations drive the node's `action.event`; state obligations resolve context bindings; `alert`/`status` imply `@accessibility.live`; `decoration` implies `hidden`; semantics are the renderer registration's job."
     },
     "references": {
-      "note": "SPIKE: `$slotContent` resolves (see slotsToChildLists); `{Placeholder}` literals resolve (see placeholderBinding); `$token`, `$binding`, `$conditional`, `$image` and `$ref` forms do not transmit — tokens and conditionals are renderer-side facts in this target."
+      "literal": { "disposition": "bound", "realises": "the node's prop value; a whole-value `{Placeholder}` lowers to a data-model binding (placeholderBinding)", "basis": "implementation" },
+      "mixed": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "The mixed sentinel states variance, not a value; nothing is emitted for it." },
+      "token": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "Tokens resolve inside the registered components; a payload never carries one." },
+      "theme": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "Theme selection is the host application's; the payload carries none." },
+      "binding": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "A `$binding` names a prop relation inside one component, which the renderer's implementation already realises." },
+      "conditional": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "Conditional styling is the registered implementation's." },
+      "slotContent": { "disposition": "bound", "realises": "the fill's triplet, emitted into the flat component list and referenced by id (slotsToChildLists)", "basis": "implementation" },
+      "subcomponent": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "A SubcomponentRef `instanceOf` is not a string symbol; the element drops with a warning. Flattened subcomponent names resolve normally." },
+      "elementType": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "External element-type definitions do not transmit." },
+      "image": { "disposition": "approximated", "realises": "the registry reference as a string the host resolves", "basis": "implementation", "notes": "Same loss the image prop kind declares." },
+      "nested": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "Nested-path pointers do not transmit." }
     },
     "referenceRules": {}
   }

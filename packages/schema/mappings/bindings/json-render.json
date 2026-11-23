@@ -1,5 +1,6 @@
 {
   "platform": "json-render",
+  "dependsOn": ["css"],
   "role": "Emits a Zod runtime catalog, a React registry, and flat Spec payloads; styling delegated to the emitted React components",
   "realises": "Compiles component contracts into a typed defineCatalog module (Zod per component, invalidPropCombinations as .superRefine), a starter defineRegistry binding each entry to the already-emitted react/ tree, and one flat {root, elements, state} Spec per composition and instance example. SPIKE STATUS (DirectedEdges/spectacular#961): authored from the json-render spike; rows carry basis: implementation, verified by the spike's gates against @json-render/core 0.23.2.",
   "note": "This platform transmits the prop and composition surfaces, like a2ui, with three deliberate divergences from that sibling binding: accessibility-convention props stay ordinary props (json-render has no accessibility envelope); enum values normalize to the enumCase contract (the registry binds to the React components, whose unions spell normalized values — a payload in spec casing would fail both); and declarative constraints live only in the catalog's Zod (no runtime checks surface — the component schema is the enforcement point, since the SDK's composed zodSchema() rebuilds prop objects and drops refinements). Styles are not read except through the promotion table; element visibility (styles.visible: false) lowers to the Spec's native visible: false.",
@@ -20,13 +21,12 @@
       "object": { "disposition": "bound", "realises": "z.object of its members, each by its own scalar kind", "direction": "spec-to-code", "basis": "implementation" }
     },
     "propRules": {
-      "statesToContract": { "disposition": "bound", "form": "prose", "basis": "implementation", "notes": "Identical to the a2ui binding's rule: a prop whose every state concept resolves to contract: 'omit' reaches neither catalog nor payload, and combinations naming one drop as unexpressible." },
-      "constraintLowering": { "disposition": "bound", "form": "prose", "basis": "implementation", "notes": "invalidPropCombinations compile to .superRefine on the component's props schema; a forbidden configuration fails the component schema deterministically. The composed catalog.zodSchema() drops refinements (measured, @json-render/core 0.23.2), so the per-component schema is the declared enforcement point." },
-      "valueBinding": { "disposition": "bound", "form": "prose", "basis": "implementation", "notes": "The value convention's prop and any constrained prop emit as {$bindState: /<id>/<prop>} seeded verbatim in state; the registry wires them through useBoundProp and composes the change event with emit()." },
-      "actionDispatch": { "disposition": "bound", "form": "prose", "basis": "implementation", "notes": "Declared behavior concepts emit on: {<event>: {action: <concept>, params}} with the ACTION_SPECS payload plan; the catalog's actions dictionary carries all vocabulary concepts with typed params; role activation obligations wire the registry's handlers to emit(<event>)." }
+      "statesToContract": { "disposition": "bound", "form": "prose", "keys": ["boolean", "enum"], "outputs": ["catalog props", "Spec element props"], "resolution": "A prop whose every state concept resolves to omit is removed from the Zod props object and from every emitted element.", "partial": "Omission is all-or-nothing per prop: one kept concept and it transmits whole.", "basis": "implementation", "notes": "Identical to the a2ui binding's rule, in this target's artifacts." },
+      "constraintLowering": { "disposition": "bound", "form": "prose", "keys": ["boolean", "enum"], "outputs": ["props .superRefine"], "resolution": "Expressible forbidden configurations compile to one .superRefine body on the component's Zod props, each failing with a message naming the combination.", "partial": "A combination naming an omitted prop drops; the per-component schema is the enforcement point — the composed catalog.zodSchema() rebuilds prop objects and drops refinements (measured, @json-render/core 0.23.2).", "basis": "implementation" },
+      "valueBinding": { "disposition": "bound", "form": "prose", "keys": ["string"], "outputs": ["element props", "spec.state"], "resolution": "The value convention's prop and any constrained prop emit as {$bindState: /<id>/<prop>}, seeded verbatim in top-level state; the registry wires them through useBoundProp and composes the change event with emit().", "partial": "Only configured props bind; an unconfigured value prop leaves neither binding nor seed.", "basis": "implementation" },
+      "actionDispatch": { "disposition": "bound", "form": "prose", "keys": ["boolean", "enum"], "outputs": ["element.on", "catalog actions dictionary"], "resolution": "A declared behavior concept emits on: {<event>: {action, params}} with the ACTION_SPECS payload plan; the catalog's actions dictionary carries every vocabulary concept with typed params; role activation obligations wire the registry's handlers to emit(<event>).", "partial": "A role-derived-only component emits no on binding — an ActionBinding must name a catalog action, and there is no declared behavior to name.", "basis": "implementation" }
     },
     "anatomy": {
-      "note": "As the a2ui binding: anatomy does not transmit per component; instance elements become Spec nodes, un-promoted container/text layers lower through conventions.primitives, anything else drops with a warning.",
       "container": { "disposition": "approximated", "realises": "a configured container primitive, via the promotion table", "basis": "implementation" },
       "text": { "disposition": "approximated", "realises": "a configured text primitive, via the promotion table", "basis": "implementation" },
       "glyph": { "disposition": "approximated", "realises": "a configured glyph primitive, via the promotion table", "basis": "implementation" },
@@ -41,10 +41,20 @@
     },
     "anatomyRules": {},
     "roles": {
-      "note": "Roles wire the registry (activation handlers → emit) and gate dispatch; semantics live in the React components the registry binds."
+      "$comment": "Roles wire the registry (activation handlers → emit) and gate dispatch; semantics live in the React components the registry binds."
     },
     "references": {
-      "note": "$slotContent resolves (fills emit into the flat element map; a repeated fill lowers to repeat + $bindItem); {Placeholder} literals resolve to {$state} with seeded state; $token, $binding, $conditional and $image do not transmit."
+      "literal": { "disposition": "bound", "realises": "the element's prop value; a whole-value `{Placeholder}` lowers to a `{$state}` read with seeded state", "basis": "implementation" },
+      "mixed": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "The mixed sentinel states variance, not a value; nothing is emitted for it." },
+      "token": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "Tokens resolve inside the React components the registry binds." },
+      "theme": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "Theme selection is the host application's." },
+      "binding": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "A `$binding` names an intra-component relation the React implementation already realises." },
+      "conditional": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "Conditional styling is the React implementation's." },
+      "slotContent": { "disposition": "bound", "realises": "the fill's triplet in the flat element map (children / slots record); a repeated fill lowers to `repeat` + a `$bindItem` template", "basis": "implementation" },
+      "subcomponent": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "A SubcomponentRef `instanceOf` is not a string symbol; the element drops with a warning. Flattened subcomponent names resolve normally." },
+      "elementType": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "External element-type definitions do not transmit." },
+      "image": { "disposition": "approximated", "realises": "the registry reference as a string the host resolves", "basis": "implementation", "notes": "Same loss the image prop kind declares." },
+      "nested": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "Nested-path pointers do not transmit." }
     },
     "referenceRules": {}
   }

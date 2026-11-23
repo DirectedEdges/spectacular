@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`specs a2ui` compiles the workspace into A2UI v1.0 runtime artifacts** — a catalog describing every component, one surface payload per composition, and one per instance example, written to `a2ui/`. Experimental; configure the catalog identity and standard-catalog pairing in `conventions/a2ui.yaml`.
 
+- **`specs json-render` compiles the workspace into json-render runtime artifacts** — a typed Zod catalog, a starter React registry bound to the components `specs react` emitted, and one flat Spec payload per composition and instance example, written to `json-render/`. Experimental; run `specs react` first.
+
 ### Changed
 
 ### Removed
