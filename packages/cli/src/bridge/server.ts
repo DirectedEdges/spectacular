@@ -5,7 +5,8 @@
 // multiple simultaneously connected Figma files (each with its own plugin
 // connection).
 //
-// Ports:
+// Ports (both bound to 127.0.0.1 — this machine only; guards in requestGuards.ts
+// additionally refuse browser-originated requests, which are local too):
 //   9001 — WebSocket, for plugin connections (ui.html) — one per open Figma file
 //   9002 — HTTP, control endpoint for the CLI (`specs render` / `specs generate`) or scripts
 //
@@ -74,6 +75,7 @@ import { readFileSync } from 'fs';
 import { isAbsolute } from 'path';
 import { parse } from 'yaml';
 import { WS_PORT, HTTP_PORT, DEFAULT_PAGE_ID } from './config.js';
+import { httpRejection, wsOriginAllowed } from './requestGuards.js';
 import { ConnectionRegistry } from './connections.js';
 import { RequestTracker } from './requestTracker.js';
 import {
@@ -124,7 +126,9 @@ console.log(`  Ctrl+C to stop.\n`);
 
 // ── WebSocket server (plugin connections) ─────────────────────────────────────
 
-const wss = new WebSocketServer({ port: WS_PORT });
+// Loopback only, like the HTTP listener below: nothing off this machine has business
+// with either port. Browser pages on this machine are handled by the guards, not the bind.
+const wss = new WebSocketServer({ host: '127.0.0.1', port: WS_PORT });
 
 // Keyed by Figma file key. One entry per connected plugin instance.
 const registry = new ConnectionRegistry<WebSocket>();
@@ -138,7 +142,16 @@ const requests = new RequestTracker<TrackedResult>();
 // exercised against a fake socket — see operations.ts.
 const ops = new BridgeOperations<WebSocket>({ registry, requests, resolveDirs });
 
-wss.on('connection', (ws: WebSocket) => {
+wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
+  // Only the Figma plugin may register as a connection — an ordinary web page
+  // announces itself by its Origin header and is turned away before any message
+  // is read. See `wsOriginAllowed` for why this admits every plugin shape.
+  if (!wsOriginAllowed(req.headers.origin)) {
+    console.error(`Rejected socket from origin ${req.headers.origin}`);
+    ws.close(1008, 'Origin not allowed');
+    return;
+  }
+
   // This connection's fileKey isn't known until its 'hello' message arrives.
   let thisFileKey: string | null = null;
   console.log('Plugin socket opened, awaiting hello…');
@@ -317,6 +330,14 @@ function respond(res: ServerResponse, status: number, body: unknown): void {
 }
 
 const http = createServer((req, res) => {
+  // Browser-side guards — see requestGuards.ts. The loopback bind below keeps other
+  // machines out; this keeps out the browser on this one.
+  const rejection = httpRejection(req.headers, req.method);
+  if (rejection) {
+    respond(res, rejection.status, { success: false, error: rejection.error });
+    return;
+  }
+
   if (req.method === 'GET' && req.url === '/status') {
     // Each connection is asked where it is, in parallel and tolerantly: a plugin that
     // does not answer costs its own page line and nothing else, because the point of
@@ -391,7 +412,7 @@ const http = createServer((req, res) => {
   });
 });
 
-http.listen(HTTP_PORT);
+http.listen(HTTP_PORT, '127.0.0.1');
 http.on('error', (e: NodeJS.ErrnoException) => {
   console.error(`HTTP server error: ${e.message}`);
   if (e.code === 'EADDRINUSE') console.error(`Port ${HTTP_PORT} already in use.`);

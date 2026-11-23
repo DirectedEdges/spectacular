@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The bridge accepts connections from this machine only** — both ports bind the loopback interface, and the HTTP API additionally refuses requests from web pages, non-local Host headers, and non-JSON POST bodies.
+
 ### Removed
 
 

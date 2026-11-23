@@ -2,7 +2,7 @@
 
 import type { ResolvedConventions, ResolvedSettings } from '@directededges/specs-schema';
 import type { KnownFoundations } from './knownFoundations.js';
-import { HTTP_PORT } from './config.js';
+import { HTTP_BASE } from './config.js';
 
 export interface BridgeConnection {
   fileKey: string;
@@ -24,7 +24,7 @@ export async function getBridgeStatus(timeoutMs = 1500): Promise<BridgeStatus> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(`http://localhost:${HTTP_PORT}/status`, { signal: controller.signal });
+    const res = await fetch(`${HTTP_BASE}/status`, { signal: controller.signal });
     return (await res.json()) as BridgeStatus;
   } finally {
     clearTimeout(timer);
@@ -80,7 +80,7 @@ export interface RenderResponse {
 }
 
 export async function postRender(body: RenderRequestBody): Promise<RenderResponse> {
-  const res = await fetch(`http://localhost:${HTTP_PORT}/render`, {
+  const res = await fetch(`${HTTP_BASE}/render`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -127,7 +127,7 @@ export interface GenerateFromSelectionResponse {
 }
 
 export async function postGenerateFromSelection(body: GenerateFromSelectionRequestBody = {}): Promise<GenerateFromSelectionResponse> {
-  const res = await fetch(`http://localhost:${HTTP_PORT}/generate`, {
+  const res = await fetch(`${HTTP_BASE}/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -154,7 +154,7 @@ export interface GetVariablesResponse {
 }
 
 export async function postGetVariables(body: GetVariablesRequestBody = {}): Promise<GetVariablesResponse> {
-  const res = await fetch(`http://localhost:${HTTP_PORT}/variables`, {
+  const res = await fetch(`${HTTP_BASE}/variables`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -212,7 +212,7 @@ export interface InspectResponse {
 }
 
 export async function postInspect(body: InspectRequestBody): Promise<InspectResponse> {
-  const res = await fetch(`http://localhost:${HTTP_PORT}/inspect`, {
+  const res = await fetch(`${HTTP_BASE}/inspect`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -286,7 +286,7 @@ export interface AnnotateResponse {
 }
 
 export async function postAnnotate(body: AnnotateRequestBody): Promise<AnnotateResponse> {
-  const res = await fetch(`http://localhost:${HTTP_PORT}/annotate`, {
+  const res = await fetch(`${HTTP_BASE}/annotate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
