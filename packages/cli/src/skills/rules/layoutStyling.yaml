@@ -2,13 +2,34 @@
 # govern flow. (`layout` alone names the AST in specs; this file is layout *styling*.)
 # useWhen: ordered, first match wins. when: property interdependencies — setting the
 # key's value opens (makes meaningful) or requires the listed properties.
+components:
+  guidelines:
+    - should: "reach for the library's own layout component before authoring a tree of styled containers — `config/conventions/<platform>.primitives.yaml` says which component a container promotes to, and `specs/foundations/layout/guidelines.yaml` says which layout components this system offers and how they nest"
+      never: "build a column of rows out of bare `container` elements when the library publishes components for exactly that — the output is styled divs a consumer could not have assembled from the library"
+      note: "which layout components exist, what they are called, and the order they nest in are the library's own facts, declared in its foundations layout guidelines; this rule only says to go and look. A library with neither layout components nor a promotion map authors containers, and the rule is inert rather than implied"
+      adr: [74, 75]
+    - should: "keep an atomic component's own internals primitive — the promotion map governs composed content (compositions, instanceExamples, slot content), not what a small component is built from"
+      adr: 74
+
 layoutMode:
   useWhen:
-    HORIZONTAL|VERTICAL: children flow along an axis — itemSpacing, padding, alignments do the work
+    HORIZONTAL|VERTICAL: children flow along one axis — itemSpacing, padding and the alignments do the work
+    GRID: children fill cells of equal tracks on one templated axis, in source order
     NONE: freeform — every child positioned explicitly
   when:
     HORIZONTAL|VERTICAL:
       opens: [itemSpacing, padding, mainAxisAlignment, crossAxisAlignment, wrap]
+    GRID:
+      opens: [gridColumns, gridRows, itemSpacing, padding]
+      requires: exactly one of gridColumns and gridRows non-null — that is the templated axis
+      adr: 122
+  guidelines:
+    - must: "template exactly one axis on a `GRID` — set `gridColumns` or `gridRows`, never both"
+      never: "reach for `GRID` to express a fixed two-dimensional arrangement; it templates one axis and fills cells in source order, so the other axis is a consequence of the child count"
+      adr: 122
+    - should: "write an integer track count where the design fixes the number of tracks, and the adaptive form (`{minSize: <n>}`) where the count should follow the container's width"
+      adr: 122
+
 width:
   guidelines:
     - should: "give a composition or other page-scale root a concrete width — `FILL` at a rendered root has no parent to fill and collapses"

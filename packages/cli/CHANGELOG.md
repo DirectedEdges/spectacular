@@ -9,9 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`specs skills install` writes `specs-cli.component.compile`**, which renders a validated spec once, names the surfaces to observe, and sorts the render's warnings into spec defects, platform limits, and expected noise.
+
 ### Changed
 
+- **The authoring skills stage their reading by concern file** — an api, a variants and an examples pack, where there were a "contract" and a "styling" pack. Each loads immediately before the file it serves.
+
+- **Five references replace two**, one per mechanism: props, slots, subcomponents, layout, and styles. Props and subcomponents are new.
+
+- **The layout rules and the style property map cover `GRID`**, with its templated axis and adaptive track counts.
+
+- **A rules file governs wherever it and a reference overlap**, and both cite the installed schema rather than the docs site's generated pages, which track a different version.
+
 ### Removed
+
+- **Delete `references/slots-layout.md` from the authoring primer after upgrading.** Install writes by name and removes nothing, so the file it replaced stays until you remove it.
 
 
 ## [0.38.0] - 2026-11-20
