@@ -10,7 +10,7 @@ description: Author a new component spec from a request — one-command start (s
 
 # Author a new component
 
-**Prerequisites:** `specs-cli.primer`, then `specs-cli.authoring.primer`. Load its `references/styles.md` before authoring `variants.yaml`, and its `references/slots-layout.md` before authoring any layout tree or slot.
+**Prerequisites:** `specs-cli.primer`, then `specs-cli.authoring.primer`. Its five `references/*.md` files load with the pack for the concern file each one serves — step 0 lists them.
 
 Two templates ship beside this skill in `templates/` — `supplemental.yaml`, `guidelines.yaml` (step 7). Never author a file from a blank page or from another spec's structure.
 
@@ -27,7 +27,19 @@ One call writes the collision-checked folder with all three concern files (`--ti
 - `posture.hostStale: true` — run `specs storybook init --force`, then restart the server. The port answers either way, so a stale host serves pages the emitters have already replaced and the symptom reads as missing content.
 - `cache.stale: true` — run `specs cache` now, before the first write. Render treats a stale cache as fatal and render is the last step of this procedure, so the cost of leaving it is a failure that arrives after everything else has already passed. `null` means the workspace fetches nothing, so there is no cache to judge.
 
-**Preparation is staged by file lifecycle, and each stage is one batched read.** Before `api.yaml`, load the **contract pack** in one call: the two primers, the rules files for the concepts this request touches, `config/conventions/*.yaml`, `analysis/props.yaml`, and `analysis/dependencies.byComponent.yaml`. Nothing about styling belongs here — tokens, `references/styles.md`, and the styling reports are not used until `variants.yaml`, and loading them now dilutes the anatomy and props work they sit idle through. Before `variants.yaml` (step 4), load the **styling pack** in one call: `references/styles.md`, the `analysis/foundations/<type>` files for the token types this component needs, `analysis/styling.byToken.yaml` and `analysis/styling.byComponent.yaml` — plus `references/slots-layout.md` when the component has a layout tree or slot. A pack is read once and never reopened — returning to a skill or rules file later means the first read was skimmed, and re-reading is the largest avoidable cost measured in a round. Every remaining question is resolved *during* the file that raises it — one lookup per question, local schema first — never by reading ahead "to be safe." If you notice yourself reading a source the current file does not need, stop and write.
+**Preparation is staged by concern file, one pack per file, each pack one batched read.** A pack is named for the document it precedes and loads immediately before that document — never earlier.
+
+| Pack | Load before | In one call |
+|---|---|---|
+| **api** | `api.yaml` (step 3) | the two primers; the `rules/` files for the concepts this request touches; `references/props.md`; `references/slots.md` and `references/subcomponents.md` when the request describes a slot or an internal part; `config/conventions/*.yaml`; `analysis/props.yaml`; `analysis/dependencies.byComponent.yaml` |
+| **variants** | `variants.yaml` (step 4) | `references/layout.md`; `references/styles.md`; the `analysis/foundations/<type>` files for the token types this component needs; `analysis/styling.byToken.yaml`; `analysis/styling.byComponent.yaml` |
+| **examples** | `examples.yaml` (step 5) | `rules/examples.yaml`; `rules/primitives.yaml`; `data/cache/images.yaml` when the component carries imagery |
+
+Nothing about styling belongs in the api pack — tokens, the styles map, and the styling reports are not used until `variants.yaml`, and loading them early dilutes the anatomy and props work they sit idle through.
+
+**A pack is read once and never reopened** — returning to a skill or rules file later means the first read was skimmed, and re-reading is the largest avoidable cost measured in a round. The examples pack is small because the styles map the variants pack loaded still applies to slot content triplets; continuing to use loaded context is not a reopen.
+
+Every remaining question is resolved *during* the file that raises it — one lookup per question, local schema first — never by reading ahead "to be safe." If you notice yourself reading a source the current file does not need, stop and write.
 
 ## 1. Split the requirements
 
@@ -51,7 +63,7 @@ Read, in order:
 4. `analysis/dependencies.byComponent.yaml` — how components nest, for choosing `instanceOf` targets.
 5. `mappings/bindings/` in the schema package, for the **concepts this component actually touches** — a prop type, a role, a style key. Each concept carries a disposition, and the two that matter are `approximated` (the platform keeps something lossier than the spec says) and `bound` (the platform substitutes a value, such as emitting an authoring-default example as a fallback). Reading them here is half a minute and tells you up front what a surface will do with what you are about to write; reaching for them only after a surface looks wrong has cost whole rounds.
 
-If the digest said `analysis.stale: true`, run `specs analyze` first. A report that is empty at this catalogue size is skipped, not studied. When emulating the closest sibling, read **all three** of its concern files — the pattern a task hinges on has sat in the one file a session skipped. Decide and write down: components to nest and the closest sibling to emulate (idiom only — structure always comes from the schema). The token set is decided at step 4, from the styling pack — not here.
+If the digest said `analysis.stale: true`, run `specs analyze` first. A report that is empty at this catalogue size is skipped, not studied. When emulating the closest sibling, read **all three** of its concern files — the pattern a task hinges on has sat in the one file a session skipped. Decide and write down: components to nest and the closest sibling to emulate (idiom only — structure always comes from the schema). The token set is decided at step 4, from the variants pack — not here.
 
 ## 3. Author api.yaml, then validate
 
@@ -65,7 +77,7 @@ Zero errors before touching the next file. Fix the file the error names, re-run,
 
 ## 4. Author variants.yaml, then validate
 
-Load the styling pack (step 0) first, in one call; token choices come from it. The `default` block fully describes every anatomy element — layout tree, styles, content, bindings. Then one `variants[]` delta per prop configuration that changes anything. Validate again; zero errors.
+Load the variants pack (step 0) first, in one call; token choices come from it. The `default` block fully describes every anatomy element — layout tree, styles, content, bindings. Then one `variants[]` delta per prop configuration that changes anything. Validate again; zero errors.
 
 ## 5. Author examples.yaml (when needed), then validate
 
@@ -75,37 +87,14 @@ Load the styling pack (step 0) first, in one call; token choices come from it. T
 
 ## 6. Compile and observe
 
-The dev posture is live — `specs run` re-emits the platform trees on save. The canvas is NOT watched: render it yourself, **once, after `api.yaml`, `variants.yaml`, and `examples.yaml` all validate clean** — a render per save on a many-variant component cannot finish before the next save, and the loop breaks Figma:
+Invoke **`specs-cli.component.compile`** — it renders once, says which surfaces to observe and what the substitute is when you cannot see them, and classifies the render's warnings into the spec defects to fix, the platform limits that belong in your report, and the expected rows to pass over.
 
-```bash
-node_modules/.bin/specs render specs/components/<key> --overwrite
-```
+Two conditions before invoking it, both yours to check:
 
-(render takes a spec *path*, not a key). Re-run the same command after any later change to those files that should reach the canvas. **Observe means the running surfaces — Storybook and the canvas — never the emitted source.** An agent that cannot see those surfaces (no browser, no canvas access) reports the render log's result and node id with an explicit "not visually verified" — that substitute is sanctioned; scraping the Storybook server, curling story HTML, or driving a browser to compensate is not. Visual verification belongs to the human. When a surface disagrees with what the spec declares, consult the platform's binding dispositions (`mappings/bindings/` in the schema package), and a disagreement the bindings call `bound` is a platform defect for your report — not a reason to rework the spec or to read the emitter. Check:
+- **All three concern files validate clean.** A render of an inconsistent spec puts something wrong on the canvas and costs a second render to replace it.
+- **The posture is up.** `specs-cli.posture` if the start digest said otherwise.
 
-1. The emitted component in Storybook — renders, variants switch.
-2. The rendered component on the Figma canvas — structure matches the authored anatomy.
-
-If the posture is not running, start it; do not fall back to one-shot `specs react` invocations per iteration — emit stays the posture's job. If render reports a stale or unusable cache, run `specs cache` once and retry.
-
-Three situations with sanctioned answers, so they cost no deliberation:
-
-- **The bridge plugin is not connected** — that is a human-side control in the Figma app. Report it as a pending human action, keep authoring; run the render once the plugin reconnects.
-- **The canvas needs refreshing** (the plugin just reconnected, the canvas was cleared) — run the same one-shot render command again; `--overwrite` replaces the previous result.
-**A render that exits successfully still warns.** The warnings are in `.posture/bridge-server.log`, and classifying one is the expensive part, so it is done here once. Act only on the spec-defect rows; a platform limit is report material, and an expected row is noise to be recognised and passed over.
-
-| The log says | Class | What to do |
-|---|---|---|
-| `instance element "X": no manifest entry for "(none)"` | spec defect | A subcomponent's title, its `subcomponents` key and the parent slot's `anyOf` disagree — `rules/subcomponents.yaml`. For a sibling component, render that component once from this tree first |
-| `"X.children": slot fill failed — component id not found` | spec defect | The target has never been rendered into this file, or its cached node was replaced. Render it, then retry |
-| `exposes no slot by that name (it has: Y)` | platform limit | A collapsed-root instance exposes its slot by the layer name, not the prop name. Nothing to fix in the spec |
-| `layoutSizingHorizontal "FILL" skipped` | spec defect | `FILL` needs an auto-layout parent; the parent element declares no `layoutMode` |
-| `propConfig "X.y": follows the host's …` | expected | A live binding cannot be wired on a documented configuration. The instance keeps its own default |
-| `unsupported style key "X"` | platform limit | Declared unsupported in `mappings/bindings/figma.json`. `specs validate` now lists these per spec |
-| `built from a BOOLEAN_OPERATION node` | platform limit | The glyph is placed but its interior is not modelled |
-| `gradient stop: cannot resolve color` | platform limit | The stop's token has no cached raw value. Write the literal and note the token |
-
-- **The render reports `⚠ INCOMPLETE: N instance element(s) could not be resolved`** — and still exits successfully, so the command reads as a pass. The reason is never on stdout. Read `.posture/bridge-server.log`, whose tail covers the render you just ran: a line per unresolved element names the element key and why it could not be placed, and a `slot fill failed` line is followed by the example it caused to be dropped. Two causes account for nearly all of them, and they are different problems: an **instance of another component** that has never been rendered into this file has no node to point at, so render that component once and retry; a **subcomponent of the spec you are authoring** resolves through its `title`, so a disagreement among its title, its `subcomponents` key, and the parent slot's `anyOf` is what to fix (`rules/subcomponents.yaml`). An example the render dropped is not a styling problem — it documented content it could not build, so it was removed rather than shown wrong.
+It is the same skill for a later change: anything that should reach the canvas after this point is another invocation, not a different procedure.
 
 ## 7. The two authored documents
 

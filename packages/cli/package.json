@@ -1,6 +1,6 @@
 {
   "name": "@directededges/specs-cli",
-  "version": "0.38.0",
+  "version": "0.39.0",
   "description": "Command-line interface for Spectacular design system operations",
   "type": "module",
   "main": "./dist/index.js",
@@ -22,8 +22,8 @@
   },
   "dependencies": {
     "@directededges/react-from-specs": "^0.8.0",
-    "@directededges/specs-from-figma": "^0.40.0",
-    "@directededges/specs-schema": "^0.41.0",
+    "@directededges/specs-from-figma": "^0.41.0",
+    "@directededges/specs-schema": "^0.41.1",
     "@directededges/specs-schema-core": "^0.1.0",
     "@directededges/webcomponents-from-specs": "^0.8.0",
     "commander": "^11.1.0",

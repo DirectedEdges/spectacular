@@ -69,6 +69,29 @@ Three rules, and the first is the one that gets broken:
 
 The cache row is the one to reach for before authoring anything new. `images.yaml` answers "what images does this library have and what is each called" without reading a single component spec — keyed by content hash, each entry carrying `src`, the library's `name` for it, the components that `usedBy` it, and an `origin` of `style`, `pageFrame` or `component` saying where it lives in Figma. `icons.yaml` answers the same question for glyphs.
 
+### Which source answers which question
+
+Every question resolves at the nearest of these, never lower:
+
+| # | Question | Authority |
+|---|---|---|
+| 1 | Is this legal, and what does it mean? | The schema package's `types/` and `schema/*.json` — and only them. Read the declared property's or definition's `description` and `examples` first (the schema describes every option where it is declared); open `types/*.ts` only when those do not settle it. If the schema answers, stop |
+| 2 | Does platform X realise this key, and how faithfully? | `mappings/bindings/<platform>.json` in the same package — each key's declared `disposition` (`bound` / `approximated` / `unsupported` / `unverified`). A declared field, never an inference |
+| 2a | Is role concept X implemented on platform Y? | The same file's `concepts.roles` block — `implemented` or `inert` per vocabulary concept. Never answer this from the docs site (tracks `main`, not the installed version) or by reading an emitter's dist |
+| 3 | When should I use what the schema permits? | The rules files and workspace guidelines — judgment *about* the contract, not the contract |
+| 4 | Readable walkthrough of 1–2 | The docs site |
+
+**Never read emitted output or transform source to learn what a spec means.** A platform is a surface, not an authority: when a surface disagrees with the schema, the surface has a defect — report it; do not bend the spec toward it. Letting an emitter confirm meaning makes the contract whatever the newest emitter happens to do, which is the non-determinism this whole model exists to prevent. The one legitimate reason to open an emitted file is wiring hand-authored platform files to it — imports, exported names — never to settle a schema question.
+
+**Cite the schema, not its mirror.** Most of what the docs site says about a property, type or document shape is *generated from* the schema you already have installed — the per-property pages under `/schema/`, the specification, the binding tables. Citing the page instead of the definition routes a question past authority 1 to authority 4, and the two can disagree: the site tracks `main` while your `node_modules` holds the version you are authoring against. Name the file and the definition (`styles.schema.json#/definitions/GridTracksStyleValue`), which is also how a human finds the matching page.
+
+Two things on the site are not mirrors, and for those it is the authority:
+
+| Kind | Why | Examples |
+|---|---|---|
+| A vocabulary the schema deliberately leaves open | the schema declares the field an open string and says the recognized names are published on the site, so they grow without a schema bump | role concepts (`RoleConceptName` is `string`), action concepts |
+| A walkthrough or procedure with no schema equivalent | it explains a translation or a task rather than describing a field | how Figma constraints become offsets, authoring the promotion table, getting started |
+
 ## Names, keys and conventions
 
 A name is not self-evidently a fact — **but a declared convention can make it one.** That distinction is the system's core mechanic, and both halves matter:
@@ -113,12 +136,11 @@ https://raw.githubusercontent.com/DirectedEdges/specs/main/site/src/content/docs
 
 | Question | `<path>` |
 |---|---|
-| What does this setting accept? | `settings/<topic>.md` — `states`, `glyphs`, `images`, `subcomponents`, `tokens`, `keys`, `curation`, `data-sources`, … |
+| What is a role or action concept, and which exist? | `roles/index.md`, and a page per concept — **the site is the authority here**, because the schema declares these fields open strings and the vocabulary grows without a schema bump |
+| Why is this setting shaped the way it is, and what is it for? | `settings/<topic>.md` — `states`, `glyphs`, `images`, `subcomponents`, `tokens`, `keys`, `curation`, `data-sources`, … For what a setting *accepts*, read `conventions.schema.json` / `settings.schema.json` instead |
 | How do I express this correctly in data? | `guides/<guide>.md` — the derivations table above names them |
-| What is a role, and which exist? | `roles/index.md`, and a page per role |
 | What does a command do? | `cli/commands/<name>.md` |
 | How does versioning classify a change? | `versioning/index.md` |
-| A schema concept in prose rather than types | `schema/<concept>.md` |
 
 Two limits worth knowing. These are `main`, so they describe the newest documentation rather than the CLI you are running — if a page names something the installed CLI does not have, trust the CLI. And each fetch is independent, so look up what you need rather than browsing; `https://spectacular.systems/<topic>/` is the same content rendered, for a human you are pointing at it.
 
@@ -131,7 +153,7 @@ Invoke the highest-level skill that covers the task; each one loads its own prer
 | Set up a new workspace | `specs-cli.workspace.setup` |
 | Turn on the live posture (Storybook, emit, canvas) — do this before authoring if it is down | `specs-cli.posture` |
 | Author a new component spec | `specs-cli.component.author` |
-| Author a composition spec | `specs-cli.authoring.primer` + its `references/slots-layout.md` §Compositions, with `component.author`'s validate loop — a dedicated `composition.author` skill is pending |
+| Author a composition spec | `specs-cli.authoring.primer` — its §The two kinds covers the composition folder, `references/layout.md` the arrangement — with `component.author`'s validate loop — a dedicated `composition.author` skill is pending |
 | Author anything by hand — read this first | `specs-cli.authoring.primer` (rules and references ride it) |
 | Synthesize or revise a foundations guidance file (`specs/foundations/<concern>/guidelines.yaml`) — only when explicitly asked | `specs-cli.guidelines.propose` |
 | Propose / apply behavior roles | `specs-cli.roles.propose`, `specs-cli.roles.apply` |

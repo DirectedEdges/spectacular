@@ -53,15 +53,17 @@ Nothing is written until the request's context is loaded, and every tool here is
 
 [`specs author start`](/cli/commands/author/) opens the round. It writes the component folder from templates — valid as shipped — and prints a startup digest: your catalogue, your [analysis reports](/cli/analyze/) and their dates, your conventions files, and whether Storybook is answering. An index, not a context dump.
 
-What follows arrives in two batches, each read once and never reopened:
+What follows arrives in three packs — one per concern file, each named for the document it precedes, each read once and never reopened:
 
-- **Contract batch**, before `api.yaml` — the [authoring primer](/cli/skills/authoring-primer/) and the rules files for the concepts this request touches, your `config/conventions/` files, [`analysis/props.yaml`](/cli/analyze/props/) for the prop vocabulary you already use, and [`analysis/dependencies`](/cli/analyze/dependencies/) for what nests inside what.
-- **Styling batch**, at `variants.yaml` — the style reference, [`analysis/foundations/<type>.yaml`](/cli/analyze/foundations/) for the token types this component needs, and [`analysis/styling.byToken.yaml`](/cli/analyze/styling/). It comes later because styling context would sit idle through the contract work.
+- **The api pack**, before `api.yaml` — the [authoring primer](/cli/skills/authoring-primer/), the rules files for the concepts this request touches, the prop and slot references, your `config/conventions/` files, [`analysis/props.yaml`](/cli/analyze/props/) for the prop vocabulary you already use, and [`analysis/dependencies`](/cli/analyze/dependencies/) for what nests inside what.
+- **The variants pack**, at `variants.yaml` — the layout and style references, [`analysis/foundations/<type>.yaml`](/cli/analyze/foundations/) for the token types this component needs, and [`analysis/styling.byToken.yaml`](/cli/analyze/styling/). It comes later because styling context would sit idle through the contract work.
+- **The examples pack**, at `examples.yaml` — the rules for instance examples and primitive promotion, plus your image cache if the component carries imagery. It is the smallest of the three, because the style map loaded for `variants.yaml` still applies to the slot fills authored here.
 
-Three structures keep those batches small:
+Four structures keep those packs small:
 
 - Foundations analysis is split one file per token type behind an index, so a corner-radius question reads one small file.
 - Rules files are keyed per schema concept, so a component with no slots never loads the slot rules.
+- References are split one per mechanism, so a component with no internal parts never loads the subcomponent reference.
 - [`specs-cli.primer`](/cli/commands/skills/) is a prerequisite every skill names, not a copy each one carries.
 
 The effect you see is that the result looks like your system: your shape token names, your prop spelling, and the source-prop name your `config/conventions/figma.yaml` already declares.
