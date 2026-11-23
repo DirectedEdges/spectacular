@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`specs a2ui` compiles the workspace into A2UI v1.0 runtime artifacts** — a catalog describing every component, one surface payload per composition, and one per instance example, written to `a2ui/`. Experimental; configure the catalog identity and standard-catalog pairing in `conventions/a2ui.yaml`.
+
 ### Changed
 
 ### Removed

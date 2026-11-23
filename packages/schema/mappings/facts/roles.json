@@ -1,0 +1,572 @@
+{
+  "button": {
+    "acceptedElementTypes": [
+      "container",
+      "glyph"
+    ],
+    "acceptedParts": [
+      "description",
+      "indicator",
+      "label"
+    ],
+    "nativeStates": [
+      "disabled"
+    ],
+    "obligations": [
+      {
+        "name": "onClick",
+        "type": {
+          "kind": "eventHandler",
+          "event": "click"
+        },
+        "tier": "always",
+        "comment": "Fires on click, Enter and Space."
+      },
+      {
+        "name": "type",
+        "type": {
+          "kind": "enum",
+          "values": [
+            "button",
+            "submit",
+            "reset"
+          ]
+        },
+        "tier": "always"
+      },
+      {
+        "name": "onFocus",
+        "type": {
+          "kind": "eventHandler",
+          "event": "focus"
+        },
+        "tier": "onRequest"
+      },
+      {
+        "name": "onBlur",
+        "type": {
+          "kind": "eventHandler",
+          "event": "blur"
+        },
+        "tier": "onRequest"
+      }
+    ],
+    "phrasingOnly": true,
+    "requiresAccessibleName": true,
+    "rehostedElementTypes": [
+      "glyph"
+    ]
+  },
+  "togglebutton": {
+    "acceptedElementTypes": [
+      "container",
+      "glyph"
+    ],
+    "acceptedParts": [
+      "description",
+      "indicator",
+      "label"
+    ],
+    "nativeStates": [
+      "disabled",
+      "pressed"
+    ],
+    "obligations": [
+      {
+        "name": "onPressedChange",
+        "type": {
+          "kind": "stateChange",
+          "state": "pressed",
+          "valueType": "boolean"
+        },
+        "tier": "always",
+        "wired": true,
+        "requiresState": "pressed",
+        "comment": "Fires after the pressed state flips."
+      },
+      {
+        "name": "onClick",
+        "type": {
+          "kind": "eventHandler",
+          "event": "click"
+        },
+        "tier": "always",
+        "comment": "Called after the toggle. What a click means beyond it is the consumer's."
+      },
+      {
+        "name": "onFocus",
+        "type": {
+          "kind": "eventHandler",
+          "event": "focus"
+        },
+        "tier": "onRequest"
+      },
+      {
+        "name": "onBlur",
+        "type": {
+          "kind": "eventHandler",
+          "event": "blur"
+        },
+        "tier": "onRequest"
+      }
+    ],
+    "phrasingOnly": true,
+    "requiresAccessibleName": true,
+    "rehostedElementTypes": [
+      "glyph"
+    ]
+  },
+  "disclosure": {
+    "acceptedElementTypes": [
+      "container"
+    ],
+    "acceptedParts": [
+      "indicator",
+      "label",
+      "panel"
+    ],
+    "nativeStates": [
+      "disabled",
+      "expanded"
+    ],
+    "obligations": [
+      {
+        "name": "onExpandedChange",
+        "type": {
+          "kind": "stateChange",
+          "state": "expanded",
+          "valueType": "boolean"
+        },
+        "tier": "always",
+        "wired": true,
+        "requiresState": "expanded",
+        "comment": "Fires after the expanded state flips."
+      },
+      {
+        "name": "onClick",
+        "type": {
+          "kind": "eventHandler",
+          "event": "click"
+        },
+        "tier": "always",
+        "comment": "Called after the toggle. What a click means beyond it is the consumer's."
+      }
+    ],
+    "phrasingOnly": true,
+    "requiresAccessibleName": true,
+    "rehostedElementTypes": []
+  },
+  "panel": {
+    "acceptedElementTypes": [
+      "container"
+    ],
+    "acceptedParts": [],
+    "nativeStates": [],
+    "obligations": [],
+    "phrasingOnly": false,
+    "requiresAccessibleName": false,
+    "rehostedElementTypes": []
+  },
+  "alert": {
+    "acceptedElementTypes": [
+      "container"
+    ],
+    "acceptedParts": [],
+    "nativeStates": [],
+    "obligations": [],
+    "phrasingOnly": false,
+    "requiresAccessibleName": false,
+    "rehostedElementTypes": []
+  },
+  "status": {
+    "acceptedElementTypes": [
+      "container"
+    ],
+    "acceptedParts": [],
+    "nativeStates": [
+      "busy"
+    ],
+    "obligations": [],
+    "phrasingOnly": false,
+    "requiresAccessibleName": false,
+    "rehostedElementTypes": []
+  },
+  "progressbar": {
+    "acceptedElementTypes": [
+      "container"
+    ],
+    "acceptedParts": [],
+    "nativeStates": [
+      "busy"
+    ],
+    "obligations": [
+      {
+        "name": "min",
+        "type": {
+          "kind": "number"
+        },
+        "tier": "always",
+        "comment": "Emitted as aria-valuemin; defaults to 0."
+      },
+      {
+        "name": "max",
+        "type": {
+          "kind": "number"
+        },
+        "tier": "always",
+        "comment": "Emitted as aria-valuemax; defaults to 100."
+      }
+    ],
+    "phrasingOnly": false,
+    "requiresAccessibleName": false,
+    "rehostedElementTypes": []
+  },
+  "indicator": {
+    "acceptedElementTypes": [
+      "container",
+      "glyph",
+      "text",
+      "vector"
+    ],
+    "acceptedParts": [],
+    "nativeStates": [],
+    "obligations": [],
+    "phrasingOnly": false,
+    "requiresAccessibleName": false,
+    "hidesSubtree": true,
+    "rehostedElementTypes": []
+  },
+  "checkbox": {
+    "acceptedElementTypes": [
+      "container",
+      "glyph"
+    ],
+    "acceptedParts": [
+      "description",
+      "errormessage",
+      "indicator",
+      "label"
+    ],
+    "nativeStates": [
+      "checked",
+      "disabled",
+      "indeterminate",
+      "invalid",
+      "required",
+      "selected"
+    ],
+    "obligations": [
+      {
+        "name": "onChange",
+        "type": {
+          "kind": "eventHandler",
+          "event": "change"
+        },
+        "tier": "always",
+        "wired": true,
+        "requiresState": [
+          "checked",
+          "selected"
+        ],
+        "comment": "Fires after the checked state flips."
+      },
+      {
+        "name": "onBlur",
+        "type": {
+          "kind": "eventHandler",
+          "event": "blur"
+        },
+        "tier": "always",
+        "comment": "What happens on blur — typically validation — is the consumer's."
+      },
+      {
+        "name": "name",
+        "type": {
+          "kind": "string"
+        },
+        "tier": "always",
+        "comment": "Form submission identity."
+      },
+      {
+        "name": "value",
+        "type": {
+          "kind": "string"
+        },
+        "tier": "always",
+        "comment": "Submitted value."
+      }
+    ],
+    "phrasingOnly": false,
+    "requiresAccessibleName": true,
+    "proxyLabel": true,
+    "rehostedElementTypes": [
+      "glyph"
+    ]
+  },
+  "switch": {
+    "acceptedElementTypes": [
+      "container",
+      "glyph"
+    ],
+    "acceptedParts": [
+      "description",
+      "indicator",
+      "label"
+    ],
+    "nativeStates": [
+      "checked",
+      "disabled",
+      "selected"
+    ],
+    "obligations": [
+      {
+        "name": "onChange",
+        "type": {
+          "kind": "eventHandler",
+          "event": "change"
+        },
+        "tier": "always",
+        "wired": true,
+        "requiresState": [
+          "checked",
+          "selected"
+        ],
+        "comment": "Fires after the on/off state flips."
+      },
+      {
+        "name": "onBlur",
+        "type": {
+          "kind": "eventHandler",
+          "event": "blur"
+        },
+        "tier": "always",
+        "comment": "What happens on blur — typically validation — is the consumer's."
+      },
+      {
+        "name": "name",
+        "type": {
+          "kind": "string"
+        },
+        "tier": "always",
+        "comment": "Form submission identity."
+      },
+      {
+        "name": "value",
+        "type": {
+          "kind": "string"
+        },
+        "tier": "always",
+        "comment": "Submitted value."
+      }
+    ],
+    "phrasingOnly": false,
+    "requiresAccessibleName": true,
+    "proxyLabel": true,
+    "rehostedElementTypes": [
+      "glyph"
+    ]
+  },
+  "textbox": {
+    "acceptedElementTypes": [
+      "container"
+    ],
+    "acceptedParts": [
+      "description",
+      "errormessage",
+      "indicator",
+      "label",
+      "placeholder",
+      "value"
+    ],
+    "nativeStates": [
+      "disabled",
+      "invalid",
+      "readonly",
+      "required"
+    ],
+    "obligations": [
+      {
+        "name": "onChange",
+        "type": {
+          "kind": "eventHandler",
+          "event": "change"
+        },
+        "tier": "always",
+        "wired": true,
+        "comment": "Fires on every keystroke, after the value updates."
+      },
+      {
+        "name": "onBlur",
+        "type": {
+          "kind": "eventHandler",
+          "event": "blur"
+        },
+        "tier": "always",
+        "comment": "What happens on blur — typically validation — is the consumer's."
+      },
+      {
+        "name": "name",
+        "type": {
+          "kind": "string"
+        },
+        "tier": "always",
+        "comment": "Form submission identity."
+      }
+    ],
+    "phrasingOnly": false,
+    "requiresAccessibleName": true,
+    "collapses": true,
+    "rehostedElementTypes": []
+  },
+  "description": {
+    "acceptedElementTypes": [
+      "container",
+      "text"
+    ],
+    "acceptedParts": [],
+    "nativeStates": [],
+    "obligations": [],
+    "phrasingOnly": false,
+    "requiresAccessibleName": false,
+    "rehostedElementTypes": []
+  },
+  "link": {
+    "acceptedElementTypes": [
+      "container",
+      "glyph",
+      "text"
+    ],
+    "acceptedParts": [
+      "label"
+    ],
+    "nativeStates": [
+      "current",
+      "disabled"
+    ],
+    "obligations": [
+      {
+        "name": "href",
+        "type": {
+          "kind": "string"
+        },
+        "tier": "always",
+        "comment": "Destination. Absent renders a placeholder the browser cannot focus."
+      },
+      {
+        "name": "target",
+        "type": {
+          "kind": "string"
+        },
+        "tier": "always"
+      },
+      {
+        "name": "rel",
+        "type": {
+          "kind": "string"
+        },
+        "tier": "always"
+      },
+      {
+        "name": "onClick",
+        "type": {
+          "kind": "eventHandler",
+          "event": "click"
+        },
+        "tier": "always",
+        "comment": "Navigation is the browser's; what a click means beyond it is the consumer's."
+      }
+    ],
+    "phrasingOnly": true,
+    "requiresAccessibleName": true,
+    "rehostedElementTypes": [
+      "glyph"
+    ]
+  },
+  "errormessage": {
+    "acceptedElementTypes": [
+      "container",
+      "text"
+    ],
+    "acceptedParts": [],
+    "nativeStates": [],
+    "obligations": [],
+    "phrasingOnly": false,
+    "requiresAccessibleName": false,
+    "rehostedElementTypes": []
+  },
+  "image": {
+    "acceptedElementTypes": [
+      "container",
+      "ellipse",
+      "glyph",
+      "rectangle",
+      "vector"
+    ],
+    "acceptedParts": [
+      "label"
+    ],
+    "nativeStates": [],
+    "obligations": [
+      {
+        "name": "alt",
+        "type": {
+          "kind": "string"
+        },
+        "tier": "always",
+        "suppressedByName": true,
+        "comment": "Accessible name. Absent or empty means decorative."
+      },
+      {
+        "name": "onLoad",
+        "type": {
+          "kind": "eventHandler",
+          "event": "load"
+        },
+        "tier": "onRequest"
+      },
+      {
+        "name": "onError",
+        "type": {
+          "kind": "eventHandler",
+          "event": "error"
+        },
+        "tier": "onRequest"
+      }
+    ],
+    "phrasingOnly": false,
+    "requiresAccessibleName": false,
+    "namePreferred": true,
+    "rehostedElementTypes": []
+  },
+  "decoration": {
+    "acceptedElementTypes": [
+      "container",
+      "ellipse",
+      "glyph",
+      "line",
+      "polygon",
+      "rectangle",
+      "star",
+      "text",
+      "vector"
+    ],
+    "acceptedParts": [],
+    "nativeStates": [],
+    "obligations": [],
+    "phrasingOnly": false,
+    "requiresAccessibleName": false,
+    "hidesSubtree": true,
+    "rehostedElementTypes": []
+  },
+  "label": {
+    "acceptedElementTypes": [
+      "text"
+    ],
+    "acceptedParts": [],
+    "nativeStates": [],
+    "obligations": [],
+    "phrasingOnly": true,
+    "requiresAccessibleName": false,
+    "rehostedElementTypes": []
+  }
+}

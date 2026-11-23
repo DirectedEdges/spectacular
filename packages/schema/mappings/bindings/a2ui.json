@@ -1,0 +1,123 @@
+{
+  "platform": "a2ui",
+  "role": "Emits an A2UI v1.0 runtime catalog and surface payloads; styling delegated to the renderer's registered components",
+  "realises": "Compiles component contracts into an A2UI v1.0 catalog document (JSON Schema per component) and lowers each composition into a `createSurface` + `updateComponents` message pair. SPIKE STATUS: authored from the a2ui-from-specs spike (DirectedEdges/spectacular#961); rows carry basis: implementation and are unverified beyond the spike's validation harness.",
+  "note": "This platform transmits the prop and composition surfaces only. No style key is read: an A2UI node carries props, children and data bindings, and all visual styling lives in the renderer's registration of the design system's own components — the same delegation React makes to CSS, made to the host application instead. The one exception is primitive lowering: an un-promoted layer's styles are read through the workspace's `conventions.primitives` promotion table to become a configured component's props, which is a convention-driven read of specific tokens, not a binding of the style surface.",
+  "surfaces": {
+    "note": "Catalog generation is per component; surface emission is per composition and per instance example (each ready-made usage becomes its own one-root surface under components/<Name>/examples.json). Constraint lowering (invalidPropCombinations → not/anyOf), state omission (statesToContract) and placeholder lowering ({Placeholder} text → data-model @path bindings) are this platform's own rules, declared in concepts.propRules.",
+    "styleAttachment": "unsupported"
+  },
+  "concepts": {
+    "styles": {},
+    "styleRules": {},
+    "props": {
+      "boolean": {
+        "disposition": "bound",
+        "realises": "a JSON Schema property `$ref` to A2UI `DynamicBoolean`, carrying the declared `default`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "rule": "statesToContract",
+        "notes": "DynamicBoolean admits a literal or a data-model binding, so any boolean prop is bindable at runtime without a schema change. A boolean classified as a browser-managed state concept never reaches the catalog."
+      },
+      "string": {
+        "disposition": "bound",
+        "realises": "a `$ref` to A2UI `DynamicString`, nullable-widened via `anyOf` with `null`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Widened per ADR-065 nullability. `examples` pass through as JSON Schema `examples`, where they guide model generation the way they guide stories elsewhere."
+      },
+      "enum": {
+        "disposition": "bound",
+        "realises": "a plain JSON Schema `enum` with the declared `default`; `nullable: true` adds `null` to the value list",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "rule": "statesToContract",
+        "notes": "Kept literal rather than Dynamic: a closed variant set is a design decision, not a runtime value to bind. An enum whose every state concept is browser-managed (a state prop) never reaches the catalog."
+      },
+      "number": {
+        "disposition": "bound",
+        "realises": "a `$ref` to A2UI `DynamicNumber`, with `enum`, `default` and `examples` carried through",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "rule": "numberCoercion",
+        "notes": "Surface emission coerces a Figma TEXT-authored string value back to a number where the contract declares the kind, mirroring the inference that minted the prop."
+      },
+      "slot": {
+        "disposition": "bound",
+        "realises": "a `$ref` to A2UI `ChildList` under the slot's own prop name; `minChildren`/`maxChildren` become `minItems`/`maxItems`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "rule": "slotsToChildLists",
+        "notes": "`anyOf` component constraints are stated in the property description and unioned into the definition's `allowedChildren` when every slot is constrained; `$text`/`$glyph` markers become description guidance, since A2UI children are component references only."
+      },
+      "image": {
+        "disposition": "approximated",
+        "realises": "a `$ref` to A2UI `DynamicString` carrying the registry reference",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "A2UI has no image registry; the workspace reference is passed as a string the host must resolve to a URL. Lossy until a resolution convention exists."
+      },
+      "object": {
+        "disposition": "bound",
+        "realises": "a JSON Schema `object` with one property per member, each mapped by its own scalar kind; `additionalProperties: false`",
+        "direction": "spec-to-code",
+        "basis": "implementation",
+        "notes": "Member names are the library's own, untranslated."
+      }
+    },
+    "propRules": {
+      "statesToContract": {
+        "disposition": "bound",
+        "form": "prose",
+        "basis": "implementation",
+        "notes": "The states fork (`conventions.specs.states`): a prop whose every concept entry resolves to `contract: 'omit'` (via from-specs' `buildOmittedProps`) reaches neither the catalog's component definition nor any surface payload — captured interaction state like `state: Hover` or `focus: true` is the renderer's to own at runtime. A kept concept's prop (`disabled`, `readOnly`, `validation`) transmits normally. An `invalidPropCombinations` entry naming an omitted prop describes states the payload can no longer express, so it is dropped with the prop; combinations over kept props alone survive into the `not` block. Verified both ways: a surviving combination still fails validation, and an omitted prop on a wire node fails the message schema via `unevaluatedProperties`."
+      },
+      "constraintLowering": {
+        "disposition": "bound",
+        "form": "prose",
+        "basis": "implementation",
+        "notes": "`invalidPropCombinations` compile to a `not`/`anyOf` block on the component definition — one `anyOf` branch per forbidden configuration, each branch requiring and const-pinning exactly the props the combination names — plus a natural-language summary in `description` for model guidance. Verified by the spike's negative test: a node carrying a forbidden combination fails catalog validation."
+      },
+      "slotsToChildLists": {
+        "disposition": "bound",
+        "form": "prose",
+        "basis": "implementation",
+        "notes": "A composition element's layout children attach to the instanced component under its `defaultSlot` prop name, falling back to `children`. A `$slotContent` pointer in a prop configuration resolves through the composition's examples document to its fill's own `anatomy + elements + layout` triplet, which is emitted into the same flat component list and referenced by id."
+      },
+      "numberCoercion": {
+        "disposition": "bound",
+        "form": "prose",
+        "basis": "implementation",
+        "notes": "A string value configured on a declared number prop parses to a number before emission; an unparsable value passes through and fails validation visibly."
+      },
+      "placeholderBinding": {
+        "disposition": "bound",
+        "form": "prose",
+        "basis": "implementation",
+        "notes": "A prop configuration whose whole value is `{Label}` lowers to `{\"@path\": \"/label\"}` and seeds the surface's `dataModel` with the label text as the sample value — Spectacular's placeholder convention becoming A2UI's two-way data binding."
+      }
+    },
+    "anatomy": {
+      "note": "SPIKE: anatomy does not transmit per component — an A2UI node is one catalog symbol, and the component's internal structure lives in the renderer's registration. Element types matter only during composition lowering: `instance` elements become nodes; un-promoted `container` and `text` layers lower through `conventions.primitives` (ADR-100 score rule: a matching elementType entry with at least one resolving map rule); anything else resolves to no catalog symbol and is dropped with a warning (AC-04).",
+      "container": { "disposition": "approximated", "realises": "a configured container primitive component, via the promotion table", "basis": "implementation", "notes": "Only where a promotion rule resolves; a bare fixed-size frame does not lower." },
+      "text": { "disposition": "approximated", "realises": "a configured text primitive component, via the promotion table", "basis": "implementation", "notes": "`content` maps through the entry's `content` rule." },
+      "glyph": { "disposition": "approximated", "realises": "a configured glyph primitive component, via the promotion table", "basis": "implementation", "notes": "" },
+      "instance": { "disposition": "bound", "realises": "a surface node whose `component` is the instanced catalog symbol", "basis": "implementation", "notes": "An instance of a component the catalog does not define is dropped with a warning naming it." },
+      "slot": { "disposition": "bound", "realises": "the slot prop surface above", "basis": "implementation", "notes": "" },
+      "vector": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "No catalog symbol; dropped with a warning." },
+      "line": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "" },
+      "ellipse": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "" },
+      "rectangle": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "" },
+      "polygon": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "" },
+      "star": { "disposition": "unsupported", "realises": "", "basis": "implementation", "notes": "" }
+    },
+    "anatomyRules": {},
+    "roles": {
+      "note": "SPIKE: roles inform, they do not emit. An interactive root role (or any declared element action) adds an `action` property referencing A2UI's `Action` type, and the concept names land in the definition's description; semantics are the renderer registration's job."
+    },
+    "references": {
+      "note": "SPIKE: `$slotContent` resolves (see slotsToChildLists); `{Placeholder}` literals resolve (see placeholderBinding); `$token`, `$binding`, `$conditional`, `$image` and `$ref` forms do not transmit — tokens and conditionals are renderer-side facts in this target."
+    },
+    "referenceRules": {}
+  }
+}

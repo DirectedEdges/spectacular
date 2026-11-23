@@ -1,0 +1,73 @@
+{
+  "dismiss": {
+    "payload": {
+      "componentId": {
+        "from": "componentId"
+      }
+    },
+    "userMessage": "Dismissed",
+    "status": "implemented"
+  },
+  "navigate": {
+    "payload": {
+      "componentId": {
+        "from": "componentId"
+      },
+      "href": {
+        "from": "prop",
+        "prop": "href"
+      }
+    },
+    "userMessage": "Followed a link",
+    "requiresUserActivation": true,
+    "status": "specified"
+  },
+  "submit": {
+    "payload": {
+      "componentId": {
+        "from": "componentId"
+      }
+    },
+    "userMessage": "Submitted",
+    "status": "specified"
+  },
+  "select": {
+    "payload": {
+      "componentId": {
+        "from": "componentId"
+      },
+      "selected": {
+        "from": "state",
+        "concept": "selected"
+      }
+    },
+    "userMessage": "Made a selection",
+    "status": "specified"
+  },
+  "open": {
+    "payload": {
+      "componentId": {
+        "from": "componentId"
+      },
+      "target": {
+        "from": "args",
+        "arg": "target"
+      }
+    },
+    "userMessage": "Opened",
+    "status": "specified"
+  },
+  "close": {
+    "payload": {
+      "componentId": {
+        "from": "componentId"
+      },
+      "target": {
+        "from": "args",
+        "arg": "target"
+      }
+    },
+    "userMessage": "Closed",
+    "status": "specified"
+  }
+}

@@ -154,6 +154,15 @@ export type ActionConceptName = string;
 export interface ActionEntry {
   /** The behavior's concept name. */
   type: ActionConceptName;
+  /**
+   * Per-instance literal arguments the annotation supplies — a `navigate`'s
+   * destination, an `open`'s target surface. The payload *shape* a concept
+   * carries is the vocabulary's declaration (its `/actions/` page and the
+   * ACTION_SPECS table that transcribes it); only instance values land here,
+   * the same division a role draws between concept and annotation.
+   * SPIKE (DirectedEdges/spectacular#961): not yet ADR-governed.
+   */
+  args?: Record<string, string | number | boolean>;
 }
 
 export interface AnatomyElementExtensions {

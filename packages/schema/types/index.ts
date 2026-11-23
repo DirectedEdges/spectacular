@@ -20,14 +20,14 @@ export type {
 export type { Anatomy, AnatomyElement, AnatomyElementExtensions, FigmaAnatomyElementExtension, ElementTypeRef, SubcomponentRef, RoleConceptName, ElementRole, ActionConceptName, ActionEntry } from './Anatomy.js';
 export type { ComponentName } from './ComponentName.js';
 export type { Scalar } from './Scalar.js';
-export type { Props, AnyProp, BooleanProp, StringProp, EnumProp, SlotProp, PrimitiveSlotContent, NumberProp, ObjectProp, ObjectPropMember, FigmaCodeOnlySource, FigmaPropExtension, PropExtensions } from './Props.js';
+export type { Props, AnyProp, BooleanProp, StringProp, EnumProp, SlotProp, PrimitiveSlotContent, NumberProp, ObjectProp, ObjectPropMember, FigmaCodeOnlySource, FigmaPropExtension, PropExtensions, PropConstraints } from './Props.js';
 export type { Variant, Variants } from './Variant.js';
 export type { Metadata, RunMetadata, Concern } from './Metadata.js';
 export type { Subcomponent, Subcomponents, SubcomponentSource } from './Subcomponent.js';
 export type { InstanceExample, InstanceExamples, InstanceExampleConfigurationValue } from './InstanceExample.js';
 
 // Element and structure types
-export type { Element, Elements, ElementType, ElementExtensions, FigmaElementExtension, Themes } from './Element.js';
+export type { Element, Elements, ElementType, ElementExtensions, FigmaElementExtension, Themes, Repetition } from './Element.js';
 export type { Layout, LayoutNode, LayoutBranch } from './Layout.js';
 export type { Children, SlotBinding } from './Children.js';
 export type { SlotContent, SlotContentMap } from './SlotContent.js';
@@ -58,6 +58,7 @@ export type {
   PropReference,
   ValueConvention,
 } from './Conventions.js';
+export type { StandardCatalogConventions, StandardCatalogEntry } from './Conventions.js';
 export { DEFAULT_CONVENTIONS } from './Conventions.js';
 export type { Settings, ResolvedSettings, ColorFormat, SourceEntry } from './Settings.js';
 export { DEFAULT_SETTINGS } from './Settings.js';

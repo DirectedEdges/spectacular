@@ -57,8 +57,35 @@ export type Element = {
   instanceOf?: string | PropBinding | SubcomponentRef;
   /** The content for content-bearing elements: text string for text elements, glyph name for glyph elements, or a PropBinding reference. */
   content?: string | PropBinding;
+  /**
+   * This element's children are one template repeated over a data series, rather
+   * than authored individually. Records the fact a design states by unrolling —
+   * six parallel tab instances are one tab, six configurations — so a runtime
+   * target can emit a bound list template instead of unrolled nodes, and a code
+   * target can emit a map over data.
+   * SPIKE (DirectedEdges/spectacular#961): not yet ADR-governed; no JSON Schema
+   * counterpart; nothing captures it yet — targets may detect repetition
+   * themselves until capture records it.
+   */
+  repeat?: Repetition;
   /** Platform extensions; `com.figma` carries capture provenance. @since 0.32.0 */
   $extensions?: ElementExtensions;
+};
+
+/**
+ * A repeated-template fact: which child element is the template, and the
+ * per-instance configurations that distinguish the repetitions.
+ * SPIKE (DirectedEdges/spectacular#961).
+ */
+export type Repetition = {
+  /** The element key of the child serving as the template. */
+  template: string;
+  /**
+   * One entry per repetition, in order. Each carries only the props that vary
+   * between instances; props the template configures identically stay on the
+   * template element itself.
+   */
+  items: PropConfigurations[];
 };
 
 /**

@@ -564,6 +564,32 @@ export class ConfigLoader {
       slotPrimitives: raw.slotPrimitives !== false,
     };
 
+    // catalogId — a non-empty string, else absent (catalog-emitting platforms only)
+    if (typeof raw.catalogId === 'string' && raw.catalogId.trim() !== '') {
+      platform.catalogId = raw.catalogId.trim();
+    }
+
+    // standardCatalog — carried structurally; entries missing a component are dropped
+    if (raw.standardCatalog && typeof raw.standardCatalog === 'object') {
+      const carryEntries = (section: unknown): Record<string, { component: string }> | undefined => {
+        if (!section || typeof section !== 'object') return undefined;
+        const kept = Object.fromEntries(
+          Object.entries(section as Record<string, { component?: unknown }>).filter(
+            ([, entry]) => entry && typeof entry === 'object' && typeof entry.component === 'string',
+          ),
+        );
+        return Object.keys(kept).length ? (kept as Record<string, { component: string }>) : undefined;
+      };
+      const elements = carryEntries(raw.standardCatalog.elements);
+      const components = carryEntries(raw.standardCatalog.components);
+      if (elements || components) {
+        platform.standardCatalog = {
+          ...(elements && { elements }),
+          ...(components && { components }),
+        };
+      }
+    }
+
     // naming
     const validNaming = ['NONE', 'SENTENCE', 'TITLE'];
     const naming = typeof raw.naming === 'string' ? raw.naming.toUpperCase() : undefined;
