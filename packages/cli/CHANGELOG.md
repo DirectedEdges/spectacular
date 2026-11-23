@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`rules/props.yaml · stateProps` pairs a `state` enum with `disabled`** — active states are declared illegal while disabled through `invalidPropCombinations`.
+- **`rules/anatomy.yaml` rules out hand-authored `promotedPrimitive` blocks** — the extension is a generator capture record; authored elements declare `instanceOf` and render as instances. The slots reference carries the same caution.
+- **The slots reference states the slot-only component shape** — the root is the slot; a container root is earned by a sibling element, and generated exemplars showing a leftover wrapper are capture evidence, not the authored contract.
+
 ### Changed
 
 ### Removed

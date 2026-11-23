@@ -25,6 +25,8 @@ extensions:
   guidelines:
     - must: "give a collapsed primitive its Figma layer identity — when the primitive IS the component root (a glyph or text with no wrapper, per ADR-058), author `$extensions: {com.figma: {name: <layer name>}}` on that anatomy element; without it the renderer names and binds the layer from the raw spec key"
       adr: 58
+    - never: "hand-author `$extensions.com.figma.promotedPrimitive` — it is a capture record the generator writes so the renderer can restore the original layer (ADR-074/076/090); an authored element that declares `instanceOf` and its props renders as that instance with no record at all, so copying the block from a generated spec adds Figma-namespace weight it cannot justify"
+      adr: [74, 76, 90]
 instanceOf:
   guidelines:
     - must: "reference a subcomponent as `{$ref: \"#/subcomponents/<key>\"}` — the pointer is internal, always within the same document"
@@ -43,6 +45,7 @@ elements:
       adr: 58
     - never: "author a container whose only child is a slot — the slot is the content area"
       adr: 83
-      note: "the sanctioned shape: the root *is* the collapsed primitive — `root: {type: slot}` for a slot-only component, exactly as a text- or glyph-only component's root is the text or glyph element"
+      note: "the sanctioned shape: the root *is* the collapsed primitive — `root: {type: slot}` for a slot-only component, exactly as a text- or glyph-only component's root is the text or glyph element. A root stays a `container` the moment any sibling element exists beside the slot"
+    - never: "copy a generated spec's container-root-with-slot shape into authored work — capture can leave a wrapper that collapsing did not remove, so a generated exemplar is evidence of what capture produced, not of the sanctioned authored shape; this rule governs"
     - never: "bind the root element's `visible` to a prop — whether the component exists at all is the consumer's decision, taken at the call site"
       note: "a tooltip does not decide whether it is on screen; the thing that opens it does, as `{open && <Tooltip/>}`. The root *is* the instance, so hiding it is hiding the instance — which belongs to whatever placed it. `visible` on a child element is the normal case and stays: 73 of them across the reference catalogue, and not one on a root."

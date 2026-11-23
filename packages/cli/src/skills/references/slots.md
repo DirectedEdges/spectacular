@@ -59,6 +59,12 @@ instanceExamples:
 
 Never inline content and never a `$binding` there — `rules/examples.yaml · instanceExamples` carries why.
 
+## The slot-only component
+
+A component whose entire content area is one slot has no wrapper: the root *is* the slot (`root: {type: slot}`), the same collapse a text-only or glyph-only component gets. A `container` root is earned only by a sibling element beside the slot. Generated specs can show a different shape — capture sometimes leaves a wrapper the collapse did not remove — and that shape is capture evidence, not the authored contract; `rules/anatomy.yaml · elements` governs.
+
+The same caution covers `$extensions.com.figma.promotedPrimitive` seen inside generated fills: it is a capture record for the renderer's round trip, never an authoring surface. An authored fill declares the instance and its props; `rules/anatomy.yaml · extensions` governs.
+
 ## Where to go deeper
 
 | Question | Goes to |

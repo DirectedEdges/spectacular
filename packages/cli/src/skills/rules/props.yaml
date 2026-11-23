@@ -31,6 +31,7 @@ default:
 stateProps:
   guidelines:
     - should: "name a `state` enum's resting value `Rest` and list it first (`enum: [Rest, Hover, Pressed]`) — the states convention fixes only the `Hover` and `Pressed` spellings, and an unnamed resting concept invites a new synonym per component"
+    - must: "pair a `state` enum with a `disabled` boolean through `invalidPropCombinations` — every active state is illegal while disabled (`{disabled: true, state: Hover}`, `{disabled: true, state: Pressed}`), else the matrix claims a disabled control can hover"
 variantProps:
   guidelines:
     - must: "declare a boolean prop whose value drives variant deltas — it appears in any `variants[].configuration` — with `$extensions: {com.figma: {type: VARIANT}}`; the renderer otherwise models it as a Figma BOOLEAN property, which can only toggle visibility, and the styling deltas never land on the canvas"
