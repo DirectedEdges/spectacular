@@ -27,11 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Dependency updates
 
-- **A hidden element keeps a size it declares for itself.** Via `@directededges/specs-from-figma` 0.41.0, this narrows the blanket drop 0.38.0 shipped. Sizing is read once per component from the default variant, where the element is still in flow, and consulted per axis: an axis declaring FILL or HUG drops the measured size, while an axis declaring FIXED or declaring nothing keeps it. Glyphs hidden by a prop had been losing their dimensions in every variant at once, and no longer do.
+- **A hidden element keeps a size it declares for itself.** Via `@directededges/specs-from-figma` 0.41.0, sizing is read from the default variant and consulted per axis: FILL or HUG drops the measured size, FIXED or no declaration keeps it.
 
-- **A slot fill holding an instance whose own slot is filled records that inner fill too.** Via the same release, a chain reaching through several instance boundaries records every level, so nested content stops disappearing from the spec. Two variants whose fills differ only inside a nested instance each get their own entry, while fills identical all the way down still collapse to one.
+- **A slot fill holding an instance whose own slot is filled records that inner fill.** Via the same release, every level of a chain through nested instances is recorded, and two variants whose fills differ only inside a nested instance each get their own entry.
 
-- **The CSS and Web Components binding tables name the `theme` reference form.** Via `@directededges/specs-schema` 0.41.1, all four platform binding tables now cover it; the CSS and Web Components tables had been missing the row the Figma and React tables already carried.
+- **The CSS and Web Components binding tables name the `theme` reference form.** Via `@directededges/specs-schema` 0.41.1, all four platform binding tables cover it.
 
 
 ## [0.38.0] - 2026-11-20
