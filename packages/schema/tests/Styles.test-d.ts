@@ -5,7 +5,8 @@
  */
 import type {
   Styles, Shadow, Blur, Effects, Typography,
-  TokenReference, ColorStyle, ColorObject, GradientStop, GradientCenter, LinearGradient, RadialGradient,
+  TokenReference, OverriddenTypographyReference,
+  ColorStyle, ColorObject, GradientStop, GradientCenter, LinearGradient, RadialGradient,
   AngularGradient, GradientValue, AspectRatioValue, AspectRatioStyle,
   Sides, Corners, ItemSpacing, LayoutMode, GridTracks, AdaptiveGridTracks, WrapAlignment,
   MainAxisAlignment, CrossAxisAlignment, Position, PositionOffset,
@@ -367,6 +368,56 @@ const withTypographyGroup: Styles = {
 
 // typography is optional — no typography key at all is valid
 const withNoTypography: Styles = {};
+
+// ─── Styles.typography — the token with locally replaced members ───────────
+
+const withOverriddenTextStyle: Styles = {
+  typography: {
+    $token: 'Type/Body/Default',
+    $type: 'typography',
+    $overrides: { textDecoration: 'STRIKETHROUGH' },
+  } satisfies OverriddenTypographyReference,
+};
+
+// $overrides is required — without it the value is a TokenReference, and an
+// optional member would let one value match two arms of the union
+// @ts-expect-error: $overrides is required on this arm
+const _noOverrides: OverriddenTypographyReference = { $token: 'T', $type: 'typography' };
+
+// $type is narrowed to the one token type whose value has members
+const _wrongTokenType: OverriddenTypographyReference = {
+  // @ts-expect-error: only 'typography' carries overridable members
+  $token: 'T', $type: 'color', $overrides: { textDecoration: 'STRIKETHROUGH' },
+};
+
+// The payload is Typography, so a member's own value set still binds
+const _badOverrideValue: OverriddenTypographyReference = {
+  // @ts-expect-error: 'WAVY' is not a textDecoration value
+  $token: 'T', $type: 'typography', $overrides: { textDecoration: 'WAVY' },
+};
+
+// Members keep their inline types — a member may itself be token-bound
+const withTokenBoundOverride: OverriddenTypographyReference = {
+  $token: 'T',
+  $type: 'typography',
+  $overrides: { fontSize: { $token: 'Size/Large', $type: 'dimension' } },
+};
+
+// The arm reaches content styles too, which carry typography as one composite
+const contentWithOverride: TextContentStyles = {
+  typography: {
+    $token: 'Type/Body/Default',
+    $type: 'typography',
+    $overrides: { textDecoration: 'STRIKETHROUGH' },
+  },
+};
+
+// The members are Typography's, not a second vocabulary — no flat sibling form
+const _flatSibling: OverriddenTypographyReference = {
+  $token: 'T', $type: 'typography',
+  // @ts-expect-error: a member does not sit beside $token
+  textDecoration: 'STRIKETHROUGH',
+};
 
 // ─── Verify flat typography properties removed from Styles ────────────────
 

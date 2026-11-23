@@ -50,7 +50,7 @@ export type Styles = Partial<{
   strokeWeight: Style | Sides;
   /** Dash pattern for a stroke. Present (non-null) when the stroke is dashed; null or absent when solid. Structural property — not token-bindable. @since 0.27.0 */
   strokeDashPattern: StrokeDashPattern | null;
-  typography: TokenReference | Typography;
+  typography: TokenReference | OverriddenTypographyReference | Typography;
   /** Horizontal text alignment using logical inline-axis directions (`START`/`END`). `JUSTIFY` maps from Figma's `JUSTIFIED`. Structural property — not token-bindable. Present on TEXT element type only. @since 0.29.0 */
   textAlignHorizontal: TextAlignHorizontal;
   /** Where text sits within the height available to it. Structural property — not token-bindable. @since 0.40.0 */
@@ -103,7 +103,7 @@ export type TextContentStyles = Partial<{
   /** Text color of the content. */
   textColor: ColorStyle;
   /** Typography of the content, as a composite or a type-token reference. */
-  typography: TokenReference | Typography;
+  typography: TokenReference | OverriddenTypographyReference | Typography;
   /** Horizontal text alignment, using logical inline-axis directions (`START`/`END`). */
   textAlignHorizontal: TextAlignHorizontal;
   /** Vertical text alignment. */
@@ -197,6 +197,31 @@ export interface TokenReference {
       rawValue?: string | number | boolean | ColorObject;
     };
   };
+}
+
+/**
+ * A type token reference carrying the members whose resolved value differs from the
+ * ones the referenced style declares.
+ *
+ * Identical to {@link TokenReference} but for `$overrides` and a `$type` narrowed to
+ * `'typography'`. A text layer can hold a named text style and a locally replaced member
+ * at once without the binding breaking, and this is the form that states both: the token
+ * for a consumer that resolves tokens, the diverging members for one that renders text.
+ *
+ * `$overrides` is required. An instance with no overrides is a {@link TokenReference},
+ * and an optional member would let one value match two arms of the union — which fails
+ * validation rather than degrading.
+ * @since 0.41.0
+ */
+export interface OverriddenTypographyReference {
+  /** DTCG dot-separated token path, as {@link TokenReference.$token}. */
+  $token: string;
+  /** Narrowed to the one token type whose value has members to override. */
+  $type: 'typography';
+  /** Tool-specific metadata per DTCG §5.2.3, as {@link TokenReference.$extensions}. */
+  $extensions?: TokenReference['$extensions'];
+  /** The members whose resolved value differs from the referenced style's own. */
+  $overrides: Typography;
 }
 
 /**

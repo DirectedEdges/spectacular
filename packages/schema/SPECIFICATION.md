@@ -270,6 +270,20 @@ A group name MUST come from a token source the producer's workspace holds, never
 
 In a Figma-sourced spec a token group is a variable collection and a theme is one of its modes. That reading is provenance, in the sense of §7.2, and binds no consumer: a `themes` entry names a group and a theme, and resolving one requires nothing from any one design tool.
 
+### 4.8 A composite token reference may carry the members that diverge from it
+
+`styles.typography` and `contentStyles.$text.typography` admit a third form beside a token reference and an inline composite: a token reference carrying `$overrides`, the members whose resolved value differs from the ones the referenced style declares. A layer can hold a named style and a locally replaced member at once without the binding breaking, and this form states both facts rather than forcing a producer to discard one.
+
+Membership is a statement of divergence, not of local authorship. A member appears in `$overrides` only where its resolved value differs from the value the referenced style declares for it, and a member that agrees with the style is omitted (DSPEC-82). This is the rule that makes the block checkable: a consumer that resolves the token can verify every entry, and a reader may take an entry's presence as the statement that the rendered text differs from its token. It is also why the schema cannot enforce it — the comparison requires resolving the token, which no document carries.
+
+Absence therefore asserts agreement with the token *where the producer could compare*. A producer that cannot resolve the referenced style's declared members writes the token alone, so an absent `$overrides` does not by itself prove the absence of divergence. A producer MUST NOT write `$overrides` it has not compared.
+
+A consumer resolves the reference first and applies `$overrides` over the resolved value, member by member, an override winning for the members it names and the token standing for the rest (DSPEC-83). An empty `$overrides` is admitted by the schema and carries no divergence; a consumer treats it as the token alone.
+
+`$overrides` is required on this form. An instance carrying none is a plain token reference, and making the member optional would let one value satisfy two arms of the union, which fails validation rather than degrading to the simpler reading.
+
+Which members a given authoring tool permits to diverge is that tool's behaviour and is not declared here: the member set is `Typography`'s, and a producer emits whichever of them it finds diverging.
+
 ---
 
 ## 5. Pointers
@@ -506,6 +520,8 @@ Semantic rules — requirements JSON Schema cannot express. Each rule binds the 
 | DSPEC-77 | A token group whose identifier resolves to no name is omitted from `themes` rather than recorded as a raw identifier | producer | §4.7, ADR-123 |
 | DSPEC-78 | A `null` theme value selects nothing: a consumer drops the key from the effective set, and a layering variant writes `null` to remove a selection the layer beneath made | consumer | §4.7, ADR-123 |
 | DSPEC-79 | A `null` theme value is written only where a layer beneath selects that group — never in a `default` variant, a composition, or a slot fill, where an element that selects nothing omits the key instead | producer | §4.7, ADR-123 |
+| DSPEC-82 | A member appears in a typography reference's `$overrides` only where its resolved value differs from the value the referenced style declares; a member that agrees is omitted, and a producer that cannot resolve the style writes the reference alone | producer | §4.8, ADR-128 |
+| DSPEC-83 | A consumer resolves a typography reference and applies `$overrides` over the resolved value member by member, the override winning for the members it names and the token standing for the rest | consumer | §4.8, ADR-128 |
 
 The reference validator (§10) implements every **validator** row except DSPEC-33 and DSPEC-63, whose single-document limits §10 states.
 

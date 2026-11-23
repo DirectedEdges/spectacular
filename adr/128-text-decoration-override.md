@@ -3,7 +3,7 @@
 **Branch**: `128-text-decoration-override`
 **Created**: 2026-11-23
 **Status**: DRAFT
-**Summary**: *(written at implementation — see `/specs.adr.implement`)*
+**Summary**: An `OverriddenTypographyReference` joins the token and inline forms of `typography`, carrying the members that diverge from the referenced style.
 **Decides**: the shape a `typography` value takes when it references a type token and one of that token's members is locally replaced; what presence in the override block asserts; which members may appear; whether the mechanism reaches other composite token-bindable values; the vocabulary for both the key and the new named type
 **Deciders**: Nathan Curtis (author)
 **Supersedes**: *(none)*
@@ -47,6 +47,23 @@ Two consequences follow, and they are the reason this is a contract decision rat
 
 - **A member-level answer requires the definition.** Whether a resolved `STRIKETHROUGH` is a local replacement or something the token itself carries cannot be read off the layer. The unattributed boolean narrows the question; only the definition's own members answer it.
 - **The spec has nowhere to put the answer.** Even once a producer knows that one member diverges, `TypographyStyleValue` admits no value that says "this token, with this member replaced". The honest options available today are both lossy: emit the token and discard the divergence, or discard the token and emit all thirteen resolved members inline. The first under-describes the text; the second destroys the token binding that the authoring file still holds, so a render back to the file would detach a style that was never detached.
+
+### How narrow the surface is
+
+The authoring tool's type settings offer six controls alongside a bound text style, and only one of them is a member of the composite the token resolves to. The rest are already represented elsewhere in the contract, or not at all:
+
+| Control | Where the contract carries it | A member of `Typography`? |
+|---|---|---|
+| Alignment | `Styles.textAlignHorizontal` / `textAlignVertical` | No |
+| **Decoration** | `Typography.textDecoration` | **Yes** |
+| List style | not captured | No |
+| Truncate text | `Styles.textOverflow` | No |
+| Max lines | `Styles.maxLines` | No |
+| Position (subscript / superscript) | `fontVariantPosition` — present in the authoring tool's text-style payload, absent from `Typography` | No |
+
+Four of the six raise no override question at all. They are their own `Styles` properties, so the spec never claimed the type token owned them, and a locally set value is simply that property's value. Two more are not captured in any form — a separate gap, recorded in Consequences and not addressed here.
+
+So the surface this ADR opens is, on present evidence, a **single member**: `textDecoration`. That bounds what the override block will hold in practice and it shapes two of the decisions below — Decision 1 Option F, which is at its most defensible against a one-member surface, and Decision 3, which declines to encode the set anyway. It is evidence about one tool's behaviour at one moment, not a contract fact, which is precisely why it is recorded here rather than in the schema.
 
 ### Why this is not the override surface already in flight
 
@@ -170,7 +187,11 @@ Express the divergence as an override entry on the element, through the surface 
 
 Add `textDecorationOverride` (and, in time, one sibling per member that can diverge) to `Styles`.
 
-**Rejected because**: it special-cases one member of one composite on the strength of the first example encountered. The set of members an authoring tool permits to diverge is not known to be a single member and is not the contract's to fix (see Decision 3), so this trades one shape decision for an open-ended series of them. It also states the fact in a second vocabulary — `textDecoration` already exists inside `Typography` with a declared type and value set — so every consumer would carry two spellings of one property and a rule about which wins.
+**Rejected because**: the asymmetry of being wrong decides it, not the size of the surface. This is the option a one-member surface argues for, and Context grants that the surface does look like one member — so the rejection has to answer that case rather than the general one.
+
+It fails on cost of error. If the surface is one member and the contract is general, we carry a `$overrides` object that usually holds one key — an aesthetic cost, paid in an existing type, reversible by never using the others. If the surface widens by one member and the contract named `textDecorationOverride`, the fix is a second property and a precedence rule between them, or a breaking change. One mistake is free to unmake and the other is not, and nothing in the evidence rules out the widening: the set is the authoring tool's behaviour, observed once, not a contract fact (Decision 3).
+
+Two further costs are independent of the surface's size. It states the fact in a second vocabulary — `textDecoration` already exists inside `Typography` with a declared type and value set — so every consumer carries two spellings of one property and a rule about which wins. And it puts the override at the wrong altitude: a member of the type token's value becomes a sibling of `typography` itself, where nothing connects the two and the schema cannot say that one qualifies the other.
 
 ---
 
@@ -215,10 +236,12 @@ A member appears if the authoring tool reports it as locally set on the node —
 
 **Pros**:
 - The permitted set is a property of the authoring tool, not of the contract. Which members a tool lets a designer replace without breaking a style binding is behaviour that can change under us, and a contract that enumerated today's set would be wrong the first time it widens — and would be a catalogue of one tool's permissions in a tool-neutral schema.
+- Narrowness sharpens that argument rather than softening it. A set of one is the most obviously tool-specific set there could be, and generality is free here: `$overrides` reuses `Typography`, so admitting thirteen members adds no surface, no new definition and no second vocabulary.
 - No second member vocabulary. A value valid inline is valid as an override, which keeps the two forms of `Typography` in parity for free and gives the emitters one mapping to maintain.
 - The producer is the right place for the narrowing. It emits what it finds diverging; a member that cannot diverge simply never appears.
 
 **Cons / Trade-offs**:
+- In practice the block holds one key. On present evidence `textDecoration` is the only member that can reach it, so the twelve others buy insurance against a widening rather than expressiveness anyone can use today.
 - The type admits documents a given tool could not have produced, so the schema will not catch a hand-authored override of a member that tool treats as style-owned.
 - No declared answer to "may I override this?" at authoring time. ADR-119's `overridable` annotation answers a related question for a different axis, and whether one annotation can serve both is not settled here.
 
@@ -415,3 +438,5 @@ A consumer that switches exhaustively on the typography union gets a compile err
 - The pattern is set for `EffectsStyleValue`, which has the identical union shape, without this ADR extending to it. A later ADR adopting it adds one definition and one arm.
 - Two properties in the contract are named for overrides — `Element.overrides` (ADR-119, instance internals, keyed by element) and `$overrides` (this ADR, token members, inside a style value). The docs must state the distinction where both are reachable.
 - Which members an authoring tool permits to diverge is not declared in the contract. An author has no schema-level answer to "may I override this?", and a hand-authored override of a member the tool treats as style-owned validates.
+- `textDecoration` is expected to be the only member that reaches the block. The arm is general, so a widening costs nothing; a widening is also the only thing that makes the generality visible.
+- Two text properties the authoring tool offers beside a bound style remain uncaptured, and this ADR does not change that: **list style** (ordered, unordered, none) and **`fontVariantPosition`** (subscript, superscript). Neither is a `Typography` member today, so neither is an override question — each is a capture gap, and adding either is its own additive change to the composite.

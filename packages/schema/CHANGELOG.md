@@ -19,6 +19,9 @@ This release adds a layout mode, restructures how a component's examples are hel
 
 ### Added
 
+- **A text layer can keep its type token and still replace a member of it.** `styles.typography` and `contentStyles.$text.typography` admit a third form — a token reference carrying `$overrides` — so a locally struck-through line no longer has to discard either the token or the strikethrough (ADR-128)
+- `OverriddenTypographyReference` — `{ $token, $type: 'typography', $extensions?, $overrides }`, where `$overrides` is a `Typography` holding only the members whose resolved value differs from the referenced style's; required, since an instance without it is a `TokenReference` (ADR-128)
+- DSPEC-82 and DSPEC-83 — a member is written only where it diverges from the referenced style, and a consumer applies `$overrides` over the resolved token member by member (ADR-128)
 - `Element.themes` — typed as `Themes` (`Record<string, string | null>`): the theme selected per token group, keyed by verbatim group name, written where selected and inherited by descendants; `null` selects nothing, which is how a layering variant removes a selection the layer beneath made (ADR-123)
 - `Themes` — the token group → theme map `Element.themes` carries (ADR-123)
 - DSPEC-73 to DSPEC-78 — verbatim group keys, selections written only where made, the consumer's ancestor merge, explicit defaults recorded, an unresolvable group omitted rather than written raw, and `null` dropping a group from the effective set (ADR-123)
