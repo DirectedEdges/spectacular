@@ -138,10 +138,9 @@ Do not reorder these, and do not fold two steps into one pass. A tier-3 or tier-
 
 12. **Update CHANGELOG.md**:
     - The release branch scaffolds an `## [X.Y.Z] - Unreleased` heading with empty sections. Add entries into the existing scaffold — do **not** replace `Unreleased` with a date (the date is set at release time). If no scaffold heading exists, prepend one using `Unreleased` as the date.
-    - **Format**: one top-level bullet per user-visible change; no sub-bullets; no bold; no code blocks; no wrapping prose paragraphs
-    - **Entry line**: `` `Parent.field` `` — one-phrase description; aim for ≤ 12 words; omit implementation detail (class names, file paths, method names)
-    - **Names**: `<Parent>.<field>` in backticks, em dash separator — e.g. `Styles.cornerSmoothing` — corner smoothing factor (0–1)
-    - **Consolidation**: When a new type exists only to serve a property, merge into one property-first bullet — e.g. `` `Styles.mainAxisAlignment` — typed as `MainAxisAlignment` (`'START' | 'END' | 'CENTER' | 'SPACE_BETWEEN'`) or `null`; description ``. Do not list the type as a separate bullet.
+    - **Format**: one top-level bullet per user-visible change; no sub-bullets; no code blocks; no wrapping prose paragraphs
+    - **Entry shape**: a present-tense claim bolded through the verb, stating what a spec author can now express, with the identifier in backticks inside the sentence — e.g. **`Styles.cornerSmoothing` carries the corner smoothing factor** (0–1). Never a bare `Parent.field` followed by an em-dash gloss — the identifier-then-appositive shape reads as an index entry and hides the verb. One sentence, 40 words at most; no prior-behavior narration; no implementation detail (class names, file paths, method names).
+    - **Consolidation**: When a new type exists only to serve a property, fold the type into that property's entry. Do not list the type as a separate bullet.
     - **Sections**: use `### Added`, `### Changed`, `### Removed` as needed; add `### Migration` (MAJOR or rename only)
     - **Migration line**: `` `Parent.old` → `Parent.new` ``: one sentence; imperative; describe what to read instead and how to handle the new type
     - **Gate**: After writing, verify the new entry is present in the file. If CHANGELOG.md does not contain the new version heading, halt and report — do not proceed to step 13.
