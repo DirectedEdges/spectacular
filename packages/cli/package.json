@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@directededges/a2ui-from-specs": "file:../../../specs-transforms/packages/a2ui-from-specs",
+    "@directededges/json-render-from-specs": "file:../../../specs-transforms/packages/json-render-from-specs",
     "@directededges/react-from-specs": "^0.8.0",
     "@directededges/specs-from-figma": "^0.40.0",
     "@directededges/specs-schema": "^0.41.0",

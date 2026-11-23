@@ -32,6 +32,7 @@ import { ApplyCustomTokens } from './commands/applyCustomTokens.js';
 import { React } from './commands/react.js';
 import { WebComponents } from './commands/webcomponents.js';
 import { A2ui } from './commands/a2ui.js';
+import { JsonRender } from './commands/json-render.js';
 import { Render } from './commands/render.js';
 import { Validate } from './commands/validate.js';
 import { Author } from './commands/author.js';
@@ -91,6 +92,7 @@ export function createProgram(): Command {
   program.addCommand(React);
   program.addCommand(WebComponents);
   program.addCommand(A2ui);
+  program.addCommand(JsonRender);
   program.addCommand(Analyze);
   program.addCommand(Validate);
   program.addCommand(Author);
