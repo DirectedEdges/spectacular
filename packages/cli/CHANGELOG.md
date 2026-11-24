@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`specs generate` refuses to overwrite authored specs** — an existing spec with no `metadata.source` is authored work, and the run now aborts before writing anything, naming the components. Replacing authored specs requires an explicit `--overwrite`; the `specs run` pipeline can never pass it, so a watch chain is structurally incapable of destroying authored work. The posture skill's start command now carries `--skip scan generate`.
+
 ### Removed
 
 - **`specs validate` no longer reports platform style support** — the unsupported-key advisory block and its `platformGaps` JSON field are gone. Validation is the spec's own contract; what a platform does with a key lives in the schema package's bindings, which the authoring skill directs authors to read.
