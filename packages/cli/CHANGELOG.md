@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`component.author` directs the bindings read at element scope** — a key bound on a platform but scoped to element types that exclude the carrying element (strokes on a glyph) is skipped silently there, and the bindings are the only place that is knowable before a render.
 - **`component.author` starts pattern-reading at the analysis reports** — an individual sibling opens only when a specific question warrants it, authored siblings preferred (`metadata.source` is the captured-spec tell).
 - **`component.author` stops on named concepts that resolve to nothing** — a request naming a token, color concept, prop vocabulary, or glyph the lookup cannot find becomes a question in the report, never an invented literal.
+- **`component.author` carries the revision round** — what a reply to its report re-enters, what forces a story to re-point at a hand-authored platform file, and when another render is needed.
+- **`rules/examples.yaml` states that an instance example carries its own box styles** — a resized example records `layoutSizingHorizontal: FIXED` with a raw-px width (ADR-124); a round had reported this as a schema gap and dropped the requirement.
+- **The primer requires a declaration to be cited entire** — a binding's `notes`, a rule's `note`, a schema description; a truncated quote once excused a real emitter defect as declared behavior.
 - **`rules/props.yaml` points state-settability at the `states` convention** — whether a state prop is consumer API or a browser-realized affordance is the convention's ruling, not a per-component debate.
 
 ### Changed

@@ -15,5 +15,8 @@ instanceExamples:
     - could: "keep an example whose props the matrix reaches when its **content** is what it documents — the variants cover a prop surface, not what the component holds, so a realistic string, a different glyph, or a composed fill can carry something no variant shows"
       avoid: "an example per possible content value — one that reads differently from the default earns its place; a second of the same kind does not"
     - should: "give each entry a title naming the usage rather than the configuration — what a reader is looking at, not which props are set"
+    - could: "state an example's own box on the entry's `styles` — an author-resized example records `layoutSizingHorizontal: FIXED` with a raw-px `width`, and one left at its component's natural size omits `styles` entirely (ADR-124)"
+      note: "these are the example instance's styles, never its content's — a narrower line measure on a text example is this field, not a shorter string. A round reported it as a schema gap and dropped the requirement because nothing here named the field"
+      adr: 124
     - must: "fill a slot prop with a `$slotContent` pointer, never inline content and never a `$binding` — an instance example is a documented configuration, not a live binding"
       adr: [46, 47]

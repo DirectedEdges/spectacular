@@ -129,4 +129,13 @@ End every pass with this summary, in this order. Keep unstructured narrative to 
 
 The Suggestions section is also a scope rule: an unprompted improvement is proposed there, never implemented in the same pass.
 
+## 9. The revision round
+
+A reply to your step-8 report is a work round of its own, and it does not start over. Steps 1 and 2 are already done — the requirements table and the catalogue correlation stand, amended by the reply. Re-enter only the steps the reply touches, in file order (`api.yaml` → `variants.yaml` → `examples.yaml`), validating after each exactly as in a first pass, then compile and report again. Amend the step-1 table in place rather than rewriting it: a reply that renames a prop or drops a value changes a row, and the table is still what you grade against.
+
+Two mechanics the posture does not make obvious:
+
+- **A new hand-authored platform file does not re-point the generated story at itself.** The posture watches `specs/`, so the story keeps importing the scaffold until a spec file changes. Touch the spec's `api.yaml` (or save any concern file) to force the re-emit, then confirm the import by reading the emitted story.
+- **Anything that changes what the canvas should show needs another render** — a new prop, a changed variant matrix, a changed style. A code-only prop is the one case that does not: it exists in code, and the Figma side carries only its layer. Render once per revision round that changed canvas-visible facts, never once per file.
+
 **Foundations guidelines are the exception to waiting.** A guess that only a foundations guideline could have settled — which colors a concept may use, what a type scale's default is — names a missing `guidelines/<area>/<topic>`. Propose the topic in Suggestions, and you may go further: run `specs-cli.guidelines.propose` for it in the same pass. Its output is a proposal for the ratifier, not shipped behavior, so drafting one expands no scope — and the next component inherits a ruling instead of re-guessing.
