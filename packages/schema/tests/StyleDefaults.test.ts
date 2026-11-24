@@ -104,12 +104,18 @@ describe('DSPEC-45 — a declared default is a literal', () => {
 });
 
 /**
- * The four value forms are documented once at the schema root and are not style
+ * The value forms are documented once at the schema root and are not style
  * composites: they describe how any value may be written, not a shape a style
  * key resolves to. A `default` is forbidden on all of them by DSPEC-45 anyway.
+ *
+ * `OverriddenTypographyReference` is one of them for the same reason — a
+ * reference form carrying the members that diverge from what it references.
+ * The members themselves are `Typography`, which the traversal reaches and
+ * holds to this rule on its own account.
  */
 const VALUE_FORMS = new Set([
   'TokenReference',
+  'OverriddenTypographyReference',
   'PropBinding',
   'Conditional',
   'ConditionArgs',

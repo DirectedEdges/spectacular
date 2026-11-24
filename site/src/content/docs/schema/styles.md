@@ -68,7 +68,7 @@ The Default column is the value a property is treated as having when absent — 
 | [`textDecoration`](/schema/styles/typography/text-decoration/) | `string` | *(via `typography`)* | `"NONE"` |
 | [`textOverflow`](/schema/styles/text-overflow/) | `TextOverflow` | `textTruncation` (remapped) <small>[ADR 062](https://github.com/DirectedEdges/specs/blob/main/adr/062-text-truncation.md)</small> | `"CLIP"` |
 | [`top`](/schema/styles/top/) | `PositionOffset` | `y` and constraints <small>[ADR 041](https://github.com/DirectedEdges/specs/blob/main/adr/041-layout-positioning.md)</small> | `null` |
-| [`typography`](/schema/styles/typography/) | `TokenReference`<br>`Typography` | — | `null` |
+| [`typography`](/schema/styles/typography/) | `TokenReference`<br>`OverriddenTypographyReference`<br>`Typography` | — | `null` |
 | [`visible`](/schema/styles/visible/) | `boolean`<br>`TokenReference`<br>`PropBinding`<br>`Conditional` | — | `true` |
 | [`width`](/schema/styles/width/) | `Style` | — | `0` |
 | [`wrap`](/schema/styles/wrap/) | `Style` | `layoutWrap` <small>[ADR 039](https://github.com/DirectedEdges/specs/blob/main/adr/039-wrap-alignment.md)</small> | `false` |
@@ -94,7 +94,7 @@ Six properties and nothing else:
 | Property | Type |
 |----------|------|
 | [`textColor`](/schema/styles/text-color/) | `ColorStyle` |
-| [`typography`](/schema/styles/typography/) | `TokenReference`<br>`Typography` |
+| [`typography`](/schema/styles/typography/) | `TokenReference`<br>`OverriddenTypographyReference`<br>`Typography` |
 | [`textAlignHorizontal`](/schema/styles/text-align-horizontal/) | `TextAlignHorizontal` |
 | [`textAlignVertical`](/schema/styles/text-align-vertical/) | `Style` |
 | [`textOverflow`](/schema/styles/text-overflow/) | `TextOverflow` |

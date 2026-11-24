@@ -1811,6 +1811,39 @@
       },
       "additionalProperties": false
     },
+    "OverriddenTypographyReference": {
+      "type": "object",
+      "title": "A type token whose referenced style declares a different value for one or more of the members in `$overrides`.",
+      "description": "A type token reference carrying the members whose resolved value differs from the ones the referenced style declares.",
+      "examples": [
+        {
+          "$token": "Type/Body/Default",
+          "$type": "typography",
+          "$overrides": { "textDecoration": "STRIKETHROUGH" }
+        }
+      ],
+      "required": [
+        "$token",
+        "$type",
+        "$overrides"
+      ],
+      "properties": {
+        "$token": {
+          "$ref": "#/definitions/TokenReference/properties/$token"
+        },
+        "$type": {
+          "const": "typography"
+        },
+        "$extensions": {
+          "$ref": "#/definitions/TokenReference/properties/$extensions"
+        },
+        "$overrides": {
+          "$ref": "#/definitions/Typography",
+          "description": "The members whose resolved value differs from the referenced style's own."
+        }
+      },
+      "additionalProperties": false
+    },
     "VariableStyle": {
       "examples": [{ "id": "VariableID:1:23" }],
       "deprecated": true,
@@ -2039,10 +2072,13 @@
     },
     "TypographyStyleValue": {
       "examples": [{ "fontFamily": "Inter", "fontSize": 16, "lineHeight": 24 }],
-      "description": "Typography value. TokenReference when the text node references a named text style; Typography when typography is defined inline.",
+      "description": "Typography value. TokenReference when the text node references a named text style; OverriddenTypographyReference when it references one and locally replaces a member of it; Typography when typography is defined inline.",
       "oneOf": [
         {
           "$ref": "#/definitions/TokenReference"
+        },
+        {
+          "$ref": "#/definitions/OverriddenTypographyReference"
         },
         {
           "$ref": "#/definitions/Typography",
