@@ -11,12 +11,21 @@ reports:
     - should: "read how siblings style a property before authoring it — a raw literal is a last resort after the promotion map and the token set both come up empty"
       reads: analysis/styling.byComponent.yaml
 tokens:
+  # The reports exist so an author never slices the caches. They are ordered, and the
+  # order is the point: each rung answers a different question, and reaching past one
+  # that would have answered is the failure this table exists to prevent.
+  useWhen:
+    foundations-type-file: "resolving a token NAME for a property — `analysis/foundations/<type>.yaml` is the complete token language for that type, as ready-to-paste token objects with alias targets. Start here, always"
+    foundations-index: "asking whether a type exists in this library at all, or whether the reports are current — `analysis/foundations.yaml`. An index, so it says where to look and never what is true"
+    styling-by-token: "asking which namespace this library EXPOSES, or what siblings already do — `analysis/styling.byToken.yaml`. A report, and the authority on precedent: the namespaces other components already use are the exposed ones, and a token in use somewhere is a token you may write"
+    data-cache: "last resort, and only to settle EXISTENCE when the reports disagree with each other — `<data>/cache/*.yaml`. Never for browsing, never for precedent, never to re-derive what a report already carries"
   guidelines:
     - must: "resolve token names from the per-type foundations report first — each type's file is the complete token language for that type as ready-to-paste `{$token, $type}` objects, with alias targets"
       reads: analysis/foundations/<type>.yaml (the language), analysis/foundations.yaml (the index), analysis/foundations/icons.yaml (icon key spellings), analysis/styling.byToken.yaml (usage precedent — which components already use a token where)
     - must: "treat a zero or an absence in `analysis/foundations.yaml` `summary.tokens` as the report not seeing those tokens, never as the library lacking them — the reports are an index, and the primer's authority order is explicit that an index says where to look and never what is true"
-      should: "settle existence against the caches, which the primer's artifact table names as what the library already has by name — a count of zero beside a cache full of token paths is a report defect, and the cache wins"
-      reads: <data>/cache/*.yaml
+      should: "check `analysis/styling.byToken.yaml` next when the index reads empty — a namespace in use across the catalogue is proof the library holds it, and that is a report answering the question rather than a cache slice"
+      instead: "settle existence against `<data>/cache/*.yaml` only when the two reports disagree with each other — a count of zero beside a cache full of token paths is a report defect, and the cache wins the existence question alone"
+      note: "the reports exist so that nobody slices the caches: a cache read is minutes of data handling where a report read is seconds, and the habit of reaching for the raw data is what the report layer was built to retire"
     - must: "copy token paths exactly as the reports spell them"
       must-not: "write a re-cased, re-segmented, or otherwise reformatted variant"
     - should: "use a token wherever the library has one for the property — a literal there is a consistency defect"
@@ -33,11 +42,19 @@ visible:
     - must: "state both `then` and `else` when visibility derives from a nullable content prop via a `Conditional`"
       must-not: "point a bare `$binding` at a string prop to drive visibility"
       adr: 18
-padding|strokeWeight|cornerRadius:
+padding|strokeWeight:
   guidelines:
-    - should: "write a scalar when every side or corner is equal, and the logical-key object only when they differ"
-      example: "`{top, end, bottom, start}`, `{topStart, …}`"
-      must-not: "use physical `left`/`right` keys or the string `\"mixed\"`"
+    - should: "write a scalar when every side is equal, and the logical-side object only when they differ"
+      example: "`{top, end, bottom, start}`"
+      must-not: "use physical `left`/`right` keys, or the string `\"mixed\"`"
+      note: "`end` and `start` are logical because a spec is direction-agnostic; the emitters resolve them per writing mode"
+      adr: 10
+cornerRadius:
+  guidelines:
+    - should: "write a scalar when every corner is equal, and the logical-corner object only when they differ"
+      example: "`{topStart, topEnd, bottomEnd, bottomStart}`"
+      must-not: "use physical corner keys (`topLeft`), or the string `\"mixed\"`"
+      note: "the corner vocabulary is its own — four two-part keys pairing an edge with a logical side, not the four side keys `padding` uses"
       adr: 10
 itemSpacing:
   guidelines:

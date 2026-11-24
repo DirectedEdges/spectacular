@@ -58,6 +58,12 @@ variantProps:
     - must: "declare a boolean prop whose value drives variant deltas — it appears in any `variants[].configuration` — with `$extensions: {com.figma: {type: VARIANT}}`; the renderer otherwise models it as a Figma BOOLEAN property, which can only toggle visibility, and the styling deltas never land on the canvas"
       note: "enum props — string and number alike — become variant axes on their own, no marker; the marker is specifically the styling-driving boolean's"
 codeOnly:
+  # Where a requirement lands. The question is never "is this code or design" — it is
+  # which surface can hold the control, and the three answers are different homes.
+  useWhen:
+    figma-prop: "Figma can express the control — a variant axis, a boolean, a text value. The ordinary case: declare it as a prop and let both surfaces carry it"
+    code-only-prop: "the control is real in code and has no Figma expression — a semantic element choice, an accessibility label, a heading level — or Figma genuinely cannot build it, a cross product too large for a component set being the clear case. Still a prop in api.yaml, declared with the codeOnly extension"
+    supplemental: "no prop surface can carry it at all — a behavior, an implementation detail, a platform-specific override. Only here, and only after naming the schema path that would have carried it"
   guidelines:
     - must: "give a requirement that is a prop in code a code-only prop in api.yaml — supplemental is for what no prop surface can carry, and a behavior the consumer configures is a prop"
       example: "a semantic element choice (`tag`), an accessibility label, a heading level"
