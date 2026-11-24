@@ -37,35 +37,42 @@ describe('wsOriginAllowed', () => {
 });
 
 describe('httpRejection', () => {
-  const ok = { host: 'localhost:9002', 'content-type': 'application/json' };
+  const TOKEN = 'a'.repeat(32);
+  const ok = { host: 'localhost:9002', 'content-type': 'application/json', 'x-bridge-token': TOKEN };
 
   it('lets the CLI client shape through', () => {
-    expect(httpRejection(ok, 'POST')).toBeNull();
-    expect(httpRejection({ host: '127.0.0.1:9002' }, 'GET')).toBeNull();
+    expect(httpRejection(ok, 'POST', TOKEN)).toBeNull();
+    expect(httpRejection({ host: '127.0.0.1:9002', 'x-bridge-token': TOKEN }, 'GET', TOKEN)).toBeNull();
   });
 
   it('accepts a charset parameter on the content type', () => {
-    expect(httpRejection({ ...ok, 'content-type': 'application/json; charset=utf-8' }, 'POST')).toBeNull();
+    expect(httpRejection({ ...ok, 'content-type': 'application/json; charset=utf-8' }, 'POST', TOKEN)).toBeNull();
   });
 
   it('refuses any request carrying an Origin header', () => {
-    expect(httpRejection({ ...ok, origin: 'https://evil.example' }, 'POST')).toEqual(
+    expect(httpRejection({ ...ok, origin: 'https://evil.example' }, 'POST', TOKEN)).toEqual(
       { status: 403, error: 'Requests from web pages are not accepted.' });
     // Even a localhost origin: no web page has business here, so none is allowlisted.
-    expect(httpRejection({ ...ok, origin: 'http://localhost:9002' }, 'GET')?.status).toBe(403);
+    expect(httpRejection({ ...ok, origin: 'http://localhost:9002' }, 'GET', TOKEN)?.status).toBe(403);
   });
 
   it('refuses a non-loopback Host', () => {
-    expect(httpRejection({ ...ok, host: 'rebind.evil.example:9002' }, 'POST')?.status).toBe(403);
-    expect(httpRejection({ 'content-type': 'application/json' }, 'POST')?.status).toBe(403);
+    expect(httpRejection({ ...ok, host: 'rebind.evil.example:9002' }, 'POST', TOKEN)?.status).toBe(403);
+    expect(httpRejection({ 'content-type': 'application/json', 'x-bridge-token': TOKEN }, 'POST', TOKEN)?.status).toBe(403);
+  });
+
+  it('refuses a missing or wrong pairing token', () => {
+    expect(httpRejection({ host: 'localhost:9002', 'content-type': 'application/json' }, 'POST', TOKEN)?.status).toBe(401);
+    expect(httpRejection({ ...ok, 'x-bridge-token': 'b'.repeat(32) }, 'POST', TOKEN)?.status).toBe(401);
+    expect(httpRejection({ ...ok, 'x-bridge-token': '' }, 'GET', TOKEN)?.status).toBe(401);
   });
 
   it('refuses a POST without application/json — the no-preflight cross-site shape', () => {
-    expect(httpRejection({ ...ok, 'content-type': 'text/plain' }, 'POST')?.status).toBe(415);
-    expect(httpRejection({ host: 'localhost:9002' }, 'POST')?.status).toBe(415);
+    expect(httpRejection({ ...ok, 'content-type': 'text/plain' }, 'POST', TOKEN)?.status).toBe(415);
+    expect(httpRejection({ host: 'localhost:9002', 'x-bridge-token': TOKEN }, 'POST', TOKEN)?.status).toBe(415);
   });
 
   it('does not require a content type on GET', () => {
-    expect(httpRejection({ host: 'localhost:9002' }, 'GET')).toBeNull();
+    expect(httpRejection({ host: 'localhost:9002', 'x-bridge-token': TOKEN }, 'GET', TOKEN)).toBeNull();
   });
 });

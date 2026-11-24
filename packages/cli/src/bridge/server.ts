@@ -76,6 +76,7 @@ import { isAbsolute } from 'path';
 import { parse } from 'yaml';
 import { WS_PORT, HTTP_PORT, DEFAULT_PAGE_ID } from './config.js';
 import { httpRejection, wsOriginAllowed } from './requestGuards.js';
+import { loadOrCreateToken, tokenMatches, bridgeTokenFile } from './token.js';
 import { ConnectionRegistry } from './connections.js';
 import { RequestTracker } from './requestTracker.js';
 import {
@@ -118,9 +119,15 @@ const workspaceOverrides: WorkspaceOverrides = {
 
 const resolveDirs = (fromPath: string) => resolveWorkspaceDirs(fromPath, workspaceOverrides);
 
+// The pairing token every request must present — created on first start. The value
+// itself stays out of this log; `specs bridge status` prints it for the one-time
+// paste into the plugin's Bridge pane.
+const bridgeToken = loadOrCreateToken();
+
 console.log(`\nSpectacular — CLI bridge`);
 console.log(`  WebSocket : ws://localhost:${WS_PORT}  (plugin)`);
 console.log(`  HTTP      : http://localhost:${HTTP_PORT}/render  (control)`);
+console.log(`  Pairing   : token in ${bridgeTokenFile()}`);
 console.log(`  Enable the CLI Bridge in the Figma plugin to connect.`);
 console.log(`  Ctrl+C to stop.\n`);
 
@@ -161,9 +168,21 @@ wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
     try { msg = JSON.parse(data.toString()); } catch { return; }
 
     if (msg.type === 'hello') {
+      // The origin guard above cannot tell the plugin from a hostile sandboxed iframe —
+      // both present origin `null` — so registration demands the pairing token, which a
+      // browser context has no way to read off disk. Answered either way: the plugin
+      // shows its pairing state from this result, and close code 4001 tells it to stop
+      // reconnecting and ask for the token instead of retrying a hello that cannot pass.
+      if (!tokenMatches(bridgeToken, msg.token)) {
+        console.error('Rejected hello without a valid pairing token.');
+        ws.send(JSON.stringify({ type: 'hello-result', success: false, error: 'Pairing required — run `specs bridge status` and enter the token in this pane.' }));
+        ws.close(4001, 'pairing required');
+        return;
+      }
       thisFileKey = msg.fileKey as string;
       const fileName = msg.fileName as string | undefined;
       registry.register(thisFileKey, ws, fileName);
+      ws.send(JSON.stringify({ type: 'hello-result', success: true }));
       console.log(`Plugin connected: ${thisFileKey}${fileName ? ` (${fileName})` : ''}`);
       return;
     }
@@ -332,7 +351,7 @@ function respond(res: ServerResponse, status: number, body: unknown): void {
 const http = createServer((req, res) => {
   // Browser-side guards — see requestGuards.ts. The loopback bind below keeps other
   // machines out; this keeps out the browser on this one.
-  const rejection = httpRejection(req.headers, req.method);
+  const rejection = httpRejection(req.headers, req.method, bridgeToken);
   if (rejection) {
     respond(res, rejection.status, { success: false, error: rejection.error });
     return;

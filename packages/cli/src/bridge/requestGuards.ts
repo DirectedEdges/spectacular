@@ -1,8 +1,10 @@
 // Request guards for the bridge's two listeners (see server.ts). Both servers bind to
 // 127.0.0.1, so nothing off this machine reaches them — these guards close what a
 // loopback bind cannot: a browser on this machine is local too, and any website it
-// visits can fire requests at localhost ports. Pure functions, so the rules are
-// testable without opening a port.
+// visits can fire requests at localhost ports. Pure functions (the token compare is
+// the one import), so the rules are testable without opening a port.
+
+import { tokenMatches } from './token.js';
 
 /**
  * Hosts a request may legitimately name. Anything else is DNS rebinding: a hostile
@@ -49,7 +51,8 @@ export interface HttpRejection {
 /**
  * Why an HTTP request must be refused before routing, or null to let it through.
  *
- * Three rules, each closing one browser-side vector:
+ * Four rules. The first three close one browser-side vector each; the last is the
+ * positive credential the others only approximate:
  * - A request carrying any Origin header came from a web page — the CLI and scripts
  *   never send one, and a cross-site caller cannot omit it. Refused outright rather
  *   than matched against an allowlist, because no web page has business here.
@@ -57,17 +60,24 @@ export interface HttpRejection {
  * - A POST must declare `application/json`. A cross-site form or fetch that avoids
  *   the CORS preflight can only send simple content types, so requiring the one the
  *   real clients already send refuses those bodies without costing any caller.
+ * - `x-bridge-token` must match the pairing token (see token.ts). A browser cannot
+ *   read the token file, so this holds even against a request shape the header
+ *   heuristics above failed to anticipate.
  */
 export function httpRejection(headers: {
   origin?: string;
   host?: string;
   'content-type'?: string;
-}, method: string | undefined): HttpRejection | null {
+  'x-bridge-token'?: string;
+}, method: string | undefined, expectedToken: string): HttpRejection | null {
   if (headers.origin !== undefined) {
     return { status: 403, error: 'Requests from web pages are not accepted.' };
   }
   if (!hostAllowed(headers.host)) {
     return { status: 403, error: 'Host must be localhost.' };
+  }
+  if (!tokenMatches(expectedToken, headers['x-bridge-token'])) {
+    return { status: 401, error: 'Missing or invalid bridge token — see ~/.specs/bridge-token.' };
   }
   if (method === 'POST') {
     const contentType = (headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
