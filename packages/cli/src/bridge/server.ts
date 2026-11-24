@@ -5,7 +5,8 @@
 // multiple simultaneously connected Figma files (each with its own plugin
 // connection).
 //
-// Ports:
+// Ports (both bound to 127.0.0.1 — this machine only; guards in requestGuards.ts
+// additionally refuse browser-originated requests, which are local too):
 //   9001 — WebSocket, for plugin connections (ui.html) — one per open Figma file
 //   9002 — HTTP, control endpoint for the CLI (`specs render` / `specs generate`) or scripts
 //
@@ -74,6 +75,8 @@ import { readFileSync } from 'fs';
 import { isAbsolute } from 'path';
 import { parse } from 'yaml';
 import { WS_PORT, HTTP_PORT, DEFAULT_PAGE_ID } from './config.js';
+import { httpRejection, wsOriginAllowed } from './requestGuards.js';
+import { loadOrCreateToken, tokenMatches, bridgeTokenFile } from './token.js';
 import { ConnectionRegistry } from './connections.js';
 import { RequestTracker } from './requestTracker.js';
 import {
@@ -116,15 +119,23 @@ const workspaceOverrides: WorkspaceOverrides = {
 
 const resolveDirs = (fromPath: string) => resolveWorkspaceDirs(fromPath, workspaceOverrides);
 
+// The pairing token every request must present — created on first start. The value
+// itself stays out of this log; `specs bridge status` prints it for the one-time
+// paste into the plugin's Bridge pane.
+const bridgeToken = loadOrCreateToken();
+
 console.log(`\nSpectacular — CLI bridge`);
 console.log(`  WebSocket : ws://localhost:${WS_PORT}  (plugin)`);
 console.log(`  HTTP      : http://localhost:${HTTP_PORT}/render  (control)`);
+console.log(`  Pairing   : token in ${bridgeTokenFile()}`);
 console.log(`  Enable the CLI Bridge in the Figma plugin to connect.`);
 console.log(`  Ctrl+C to stop.\n`);
 
 // ── WebSocket server (plugin connections) ─────────────────────────────────────
 
-const wss = new WebSocketServer({ port: WS_PORT });
+// Loopback only, like the HTTP listener below: nothing off this machine has business
+// with either port. Browser pages on this machine are handled by the guards, not the bind.
+const wss = new WebSocketServer({ host: '127.0.0.1', port: WS_PORT });
 
 // Keyed by Figma file key. One entry per connected plugin instance.
 const registry = new ConnectionRegistry<WebSocket>();
@@ -138,22 +149,62 @@ const requests = new RequestTracker<TrackedResult>();
 // exercised against a fake socket — see operations.ts.
 const ops = new BridgeOperations<WebSocket>({ registry, requests, resolveDirs });
 
-wss.on('connection', (ws: WebSocket) => {
+wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
+  // Only the Figma plugin may register as a connection — an ordinary web page
+  // announces itself by its Origin header and is turned away before any message
+  // is read. See `wsOriginAllowed` for why this admits every plugin shape.
+  if (!wsOriginAllowed(req.headers.origin)) {
+    console.error(`Rejected socket from origin ${req.headers.origin}`);
+    ws.close(1008, 'Origin not allowed');
+    return;
+  }
+
   // This connection's fileKey isn't known until its 'hello' message arrives.
   let thisFileKey: string | null = null;
   console.log('Plugin socket opened, awaiting hello…');
+
+  // A socket that never pairs does not get to sit here holding a connection — it is
+  // closed after a grace period. The plugin pairs within a second of opening (its hello
+  // waits only on the worker's fileKey-info message), so ten seconds is generous for the
+  // legitimate caller and a short leash for anything else.
+  const pairingDeadline = setTimeout(() => {
+    if (thisFileKey === null) {
+      console.error('Closed socket that never paired.');
+      ws.close(4001, 'pairing required');
+    }
+  }, 10_000);
+  ws.on('close', () => clearTimeout(pairingDeadline));
 
   ws.on('message', (data: Buffer) => {
     let msg: Record<string, unknown>;
     try { msg = JSON.parse(data.toString()); } catch { return; }
 
     if (msg.type === 'hello') {
+      // The origin guard above cannot tell the plugin from a hostile sandboxed iframe —
+      // both present origin `null` — so registration demands the pairing token, which a
+      // browser context has no way to read off disk. Answered either way: the plugin
+      // shows its pairing state from this result, and close code 4001 tells it to stop
+      // reconnecting and ask for the token instead of retrying a hello that cannot pass.
+      if (!tokenMatches(bridgeToken, msg.token)) {
+        console.error('Rejected hello without a valid pairing token.');
+        ws.send(JSON.stringify({ type: 'hello-result', success: false, error: 'Pairing required — run `specs bridge status` and enter the token in this pane.' }));
+        ws.close(4001, 'pairing required');
+        return;
+      }
       thisFileKey = msg.fileKey as string;
       const fileName = msg.fileName as string | undefined;
       registry.register(thisFileKey, ws, fileName);
+      ws.send(JSON.stringify({ type: 'hello-result', success: true }));
       console.log(`Plugin connected: ${thisFileKey}${fileName ? ` (${fileName})` : ''}`);
       return;
     }
+
+    // An unpaired socket is mute: until a hello passes the token check (which is what
+    // sets thisFileKey), nothing else it sends is processed. Without this, a connection
+    // that never paired could still submit *-result messages and race to resolve another
+    // caller's pending request — infeasible while requestIds are random UUIDs, but the
+    // guard keeps that from being load-bearing.
+    if (thisFileKey === null) return;
 
     if (msg.type === 'pageId-result' || msg.type === 'renderComponent-result' || msg.type === 'generateFromSelection-result' || msg.type === 'removeNode-result' || msg.type === 'getVariables-result' || msg.type === 'inspectComponent-result' || msg.type === 'annotateElements-result') {
       const requestId = msg.requestId as string | undefined;
@@ -317,6 +368,14 @@ function respond(res: ServerResponse, status: number, body: unknown): void {
 }
 
 const http = createServer((req, res) => {
+  // Browser-side guards — see requestGuards.ts. The loopback bind below keeps other
+  // machines out; this keeps out the browser on this one.
+  const rejection = httpRejection(req.headers, req.method, bridgeToken);
+  if (rejection) {
+    respond(res, rejection.status, { success: false, error: rejection.error });
+    return;
+  }
+
   if (req.method === 'GET' && req.url === '/status') {
     // Each connection is asked where it is, in parallel and tolerantly: a plugin that
     // does not answer costs its own page line and nothing else, because the point of
@@ -391,7 +450,7 @@ const http = createServer((req, res) => {
   });
 });
 
-http.listen(HTTP_PORT);
+http.listen(HTTP_PORT, '127.0.0.1');
 http.on('error', (e: NodeJS.ErrnoException) => {
   console.error(`HTTP server error: ${e.message}`);
   if (e.code === 'EADDRINUSE') console.error(`Port ${HTTP_PORT} already in use.`);

@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+### Security
+
+- **The bridge accepts connections from this machine only** — both ports bind the loopback interface, and the HTTP API additionally refuses requests from web pages, non-local Host headers, and non-JSON POST bodies.
+
+- **The bridge requires a pairing token** — created at `~/.specs/bridge-token` on first start and printed by `bridge start` and `bridge status`; the CLI presents it automatically, and the plugin asks for it once per machine in its Bridge pane. Delete the file and restart the bridge to rotate it.
+
+Reported privately by giuskywalkerxyz — thank you.
+
 
 ## [0.39.0] - 2026-11-23
 
