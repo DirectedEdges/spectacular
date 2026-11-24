@@ -5,6 +5,19 @@ All notable changes to `@directededges/specs-cli` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.0] - 2026-11-23
+
+**The bridge now answers only you.** Connections come solely from your own machine, and the command line and the Figma plugin prove themselves with a pairing token the first time they connect — so nothing on your network, and no website you visit, can read or change your Figma file through the bridge. Pairing is a one-time paste per computer; everything else works exactly as before.
+
+### Security
+
+- **The bridge accepts connections from this machine only** — both ports bind the loopback interface, and the HTTP API additionally refuses requests from web pages, non-local Host headers, and non-JSON POST bodies.
+
+- **The bridge requires a pairing token** — created at `~/.specs/bridge-token` on first start and printed by `bridge start` and `bridge status`; the CLI presents it automatically, and the plugin asks for it once per machine in its Bridge pane. Delete the file and restart the bridge to rotate it.
+
+Reported privately by giuskywalkerxyz — thank you.
+
+
 ## [0.39.0] - 2026-11-23
 
 ### Added
