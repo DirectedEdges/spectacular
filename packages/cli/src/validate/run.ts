@@ -16,7 +16,7 @@ import {
 } from './authored.js';
 import { checkReferences, type ParsedSpec, type WorkspaceIndex } from './references.js';
 import { loadTokenIndex, type TokenIndex } from './tokens.js';
-import { platformGaps as gapsForSpec, type PlatformGap } from './platformGaps.js';
+import { platformGaps as gapsForSpec, elementScopeGaps as scopeGapsForSpec, type PlatformGap, type ElementScopeGap } from './platformGaps.js';
 import { checkPromotionMap } from './promotionMap.js';
 import { resolveSpecsLayout, SPEC_KINDS, type SpecKind } from '../utilities/specsLayout.js';
 
@@ -80,6 +80,8 @@ export interface ValidateResult {
   resolved: ResolvedToken[];
   /** Style properties a platform declares it cannot deliver — correct spec, limited surface. */
   platformGaps: PlatformGap[];
+  /** Style keys bound on a platform but scoped to element types that exclude the carrying element. */
+  elementScopeGaps: ElementScopeGap[];
   /**
    * What a scoped run did not check. Absent when the run covered the catalogue.
    *
@@ -178,6 +180,7 @@ export function runValidate(options: ValidateOptions): ValidateResult {
   const findings: Finding[] = [];
   const resolved: ResolvedToken[] = [];
   const platformGaps: PlatformGap[] = [];
+  const elementScopeGaps: ElementScopeGap[] = [];
   const counts: Record<SpecKind, number> = { component: 0, composition: 0 };
 
   for (const kind of SPEC_KINDS) {
@@ -225,6 +228,9 @@ export function runValidate(options: ValidateOptions): ValidateResult {
       // What this spec asks for that a platform declares it cannot deliver. Never a
       // finding — the spec is right and the surface is limited.
       platformGaps.push(...gapsForSpec(name, [parsed.api, parsed.variants, parsed.examples]));
+      // Bound on the platform, but not for the element type carrying it — the
+      // strokes-on-glyph class: passes schema validation, silently skipped at render.
+      elementScopeGaps.push(...scopeGapsForSpec(name, [parsed.api, parsed.variants, parsed.examples]));
 
       for (const dup of duplicatedFills(parsed)) {
         findings.push({ kind, spec: name, file: 'examples.yaml', path: dup.path, message: dup.message, level: 'warning' });
@@ -325,7 +331,7 @@ export function runValidate(options: ValidateOptions): ValidateResult {
     if (specs > 0) skipped = { specs, errors };
   }
 
-  return { findings, counts, missing, notes, resolved, platformGaps, skipped };
+  return { findings, counts, missing, notes, resolved, platformGaps, elementScopeGaps, skipped };
 }
 
 /** Schema errors in one spec folder, counted without building findings for it. */

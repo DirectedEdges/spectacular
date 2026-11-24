@@ -127,6 +127,7 @@ export const Validate = new Command('validate')
           warnings: result.findings.filter(f => f.level === 'warning' && f.scope === undefined),
           outOfScope: result.findings.filter(f => f.scope === 'workspace'),
           platformGaps: result.platformGaps,
+          elementScopeGaps: result.elementScopeGaps,
           skipped: result.skipped,
           resolved: result.resolved,
         }, null, 2));
@@ -137,6 +138,13 @@ export const Validate = new Command('validate')
           console.log(`⚠ ${n} ${n === 1 ? 'property' : 'properties'} will not reach a platform that declares it unsupported — the spec is right, the surface is limited. Write a supplemental requirement for anything the design depends on:`);
           for (const g of result.platformGaps) {
             console.log(`    ${g.spec} ${g.property} → ${g.platform}: ${g.note}`);
+          }
+        }
+        if (result.elementScopeGaps.length > 0) {
+          const n = result.elementScopeGaps.length;
+          console.log(`⚠ ${n} style ${n === 1 ? 'key is' : 'keys are'} bound on a platform, but not for the element type carrying ${n === 1 ? 'it' : 'them'} — the platform will skip the key silently. Restate the intent on an element kind the platform formats, or report the gap:`);
+          for (const g of result.elementScopeGaps) {
+            console.log(`    ${g.spec} ${g.element} (${g.elementType}) ${g.property} → ${g.platform}`);
           }
         }
         if (result.resolved.length > 0) {

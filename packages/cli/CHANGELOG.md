@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`rules/props.yaml · stateProps` pairs a `state` enum with `disabled`** — active states are declared illegal while disabled through `invalidPropCombinations`.
 - **`rules/anatomy.yaml` rules out hand-authored `promotedPrimitive` blocks** — the extension is a generator capture record; authored elements declare `instanceOf` and render as instances. The slots reference carries the same caution.
 - **The slots reference states the slot-only component shape** — the root is the slot; a container root is earned by a sibling element, and generated exemplars showing a leftover wrapper are capture evidence, not the authored contract.
+- **`specs validate` reports style keys outside their binding's element scope** — a key bound on a platform but scoped to element types that exclude the carrying element (strokes on a glyph) surfaces at authoring time instead of being skipped silently at render.
+- **`component.author` starts pattern-reading at the analysis reports** — an individual sibling opens only when a specific question warrants it, authored siblings preferred (`metadata.source` is the captured-spec tell).
+- **`component.author` stops on named concepts that resolve to nothing** — a request naming a token, color concept, prop vocabulary, or glyph the lookup cannot find becomes a question in the report, never an invented literal.
+- **`rules/props.yaml` points state-settability at the `states` convention** — whether a state prop is consumer API or a browser-realized affordance is the convention's ruling, not a per-component debate.
 
 ### Changed
 
