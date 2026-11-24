@@ -31,6 +31,18 @@ authoringOrder:
   guidelines:
     - should: "author `examples.yaml` next when `variants.yaml` fails validation on a slot-bearing component, rather than reworking the binding"
       note: "expect that failure once: the `children.examples[0]` `$slotContent` pointer cannot resolve until `examples.yaml` exists"
+contentStyles:
+  guidelines:
+    - must: "declare `contentStyles` on the slot element itself, keyed by primitive kind — one fill may hold both a text run and a glyph, and each kind takes a disjoint property set"
+      example: "`$text`, `$glyph` — the same reserved markers the slot prop's `anyOf` carries"
+      reads: styles.schema.json ContentStyles, Element.contentStyles
+      adr: 102
+    - must: "keep the fill primitive where the slot's `contentStyles` carries formatting that matters — a component fill is formatted by the component it instantiates, so a consumer applies the component's styles and discards `contentStyles` entirely"
+      note: "this is the one condition under which the promotion map's `must` yields: `anatomy.yaml · primitiveOrInstance` routes the decision here, and the formatting the slot declares is what decides it"
+      adr: [102, 74]
+    - must-not: "inline a governed key on the fill itself — a key the sheet states against the fill's `data-content` marker outranks every variant rule and the consumer's cascade when it is also written inline"
+      instead: "state it once in `contentStyles` and let the emitted stylesheet carry it per variant"
+      adr: 102
 layout:
   guidelines:
     - must: "size a slot-bearing element `layoutSizingVertical: HUG` — a slot's height belongs to whatever fills it, and `FIXED` renders the component wrong"

@@ -13,7 +13,8 @@ components:
       reads: config/conventions/<platform>.primitives.yaml (which component a container promotes to), specs/foundations/layout/guidelines.yaml (which layout components this system offers and how they nest)
       note: "which layout components exist, what they are called, and the order they nest in are the library's own facts, declared in its foundations layout guidelines; this rule only says to go and look. A library with neither layout components nor a promotion map authors containers, and the rule is inert rather than implied"
       adr: [74, 75]
-    - should: "keep an atomic component's own internals primitive — the promotion map governs composed content (compositions, instanceExamples, slot content), not what a small component is built from"
+    - must: "decide primitive-versus-instance at `anatomy.yaml · primitiveOrInstance`, not here — whether a layout container becomes an instance of the library's layout component depends on whose anatomy you are writing, and that table is the one place it is settled"
+      reads: rules/anatomy.yaml · primitiveOrInstance
       adr: 74
 
 layoutMode:

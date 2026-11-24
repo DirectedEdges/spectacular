@@ -14,20 +14,35 @@ type:
     vector: literal vector artwork, none of the above
     rectangle|ellipse|line|polygon|star: literal vector geometry only
   guidelines:
-    - must: "in compositions, instanceExamples, and slot content, author a primitive the library's promotion map covers as that component instance, configured by its mapped props"
+    - must: "model a styled block as a `container`"
+      example: "`notch: container; 12x12; rotation 45; position ABSOLUTE; bottom -6; parent clipsContent: false`"
+      must-not: "use a shape primitive for anything carrying style — background, radius, padding, offsets"
+primitiveOrInstance:
+  # Four separate judgments, not one rule with exceptions. The first question is whose
+  # anatomy you are writing: a component's own internals are never the promotion map's
+  # business. Only inside composed content does the map decide anything, and even there
+  # two conditions keep a primitive primitive.
+  useWhen:
+    own-internals: "you are writing the component's own anatomy — its label, its box, its icon slot. The promotion map does not reach here at all"
+    composed-promoted: "composed content (a composition, an `instanceExamples` entry, a `slotContentExamples` fill) where the map covers the primitive AND the target has a spec folder — author the instance"
+    composed-pending-target: "composed content where the map names a target that has no spec folder yet — author the primitive and report the gap"
+    composed-content-styles: "composed content inside a slot whose `contentStyles` must format the fill — author the primitive, because an instance would discard that formatting (`slots.yaml · contentStyles`)"
+  guidelines:
+    - should: "keep a component's own internals primitive — `text`, `glyph` and `container` elements the component itself owns"
+      note: "the promotion map governs composed content, never what a small component is built from; a component-owned primitive is the correct authoring, not a missed promotion"
+      example: "a badge's label is `text`, not `acmeText`"
+      adr: 74
+    - must: "author a primitive the library's promotion map covers as that component instance, configured by its mapped props, in compositions, instanceExamples, and slot content"
       must-not: "author a styled primitive in composed content where a promoted component exists"
       example: "a `text` card title where a heading component is mapped"
       reads: config/conventions/<platform>.primitives.yaml
       note: "no promotion map in the workspace → primitives govern composed content too; this rule is inert, not implied"
       adr: [74, 75]
-    - should: "author the primitive and note the gap when the map names a target that has no spec folder yet — a growing catalogue declares its roster before authoring it, and the rule binds only once the target's spec exists"
-    - may: "keep a primitive where the slot's own `contentStyles` must format it — a component fill discards `contentStyles`, so promoting would defeat the formatting the slot declares"
-      reads: Element.contentStyles (the schema says so there)
-    - should: "inside a smaller atomic component, favor primitive `text` and `container` elements for its own anatomy — the promotion map governs composed content, not a component's internals"
-      example: "a badge's label is `text`, not `acmeText`"
-    - must: "model a styled block as a `container`"
-      example: "`notch: container; 12x12; rotation 45; position ABSOLUTE; bottom -6; parent clipsContent: false`"
-      must-not: "use a shape primitive for anything carrying style — background, radius, padding, offsets"
+    - should: "author the primitive and report the gap when the map names a target that has no spec folder yet — a growing catalogue declares its roster before authoring it, and the promotion binds only once the target's spec exists"
+      note: "the gap is the map's, not yours: the entry is correct and its target is pending. Name it in the report so the roster catches up"
+    - may: "keep a primitive in a slot fill the slot's own `contentStyles` formats"
+      reads: rules/slots.yaml · contentStyles
+      note: "a component fill discards `contentStyles`, so promoting would defeat the formatting the slot declares — the slots rule carries the mechanism"
 extensions:
   guidelines:
     - must: "give a collapsed primitive its Figma layer identity — when the primitive IS the component root (a glyph or text with no wrapper), author `$extensions: {com.figma: {name: <layer name>}}` on that anatomy element; without it the renderer names and binds the layer from the raw spec key"
