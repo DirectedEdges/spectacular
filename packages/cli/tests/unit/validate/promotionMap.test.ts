@@ -73,7 +73,19 @@ describe('checkPromotionMap', () => {
     });
     const out = check(['dsText']);
     expect(out).toHaveLength(1);
-    expect(out[0].message).toBe('2 promotion targets have no spec folder, so they promote nothing: dsBox, dsCard');
+    expect(out[0].message).toBe('2 promotion targets have no spec folder, so they promote nothing and their rows cannot be checked against a declared prop surface: dsBox, dsCard');
+  });
+
+  // One line used to stand in for every defect beneath a wrongly keyed entry.
+  it('still checks the rows of a target that has no spec folder', async () => {
+    await table({
+      dsGhost: { elementType: 'text', map: [{ source: 'layoutMode', prop: 'label' }] },
+    });
+    const out = check([]);
+    expect(out.map(w => w.message)).toContainEqual(
+      expect.stringContaining('"layoutMode" is not read from a text'),
+    );
+    expect(out.some(w => w.message.includes('no spec folder'))).toBe(true);
   });
 
   it('reports a value outside the target prop\'s declared enum', async () => {

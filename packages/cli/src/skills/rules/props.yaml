@@ -18,6 +18,8 @@ enum:
       adr: 72
     - should: "keep the whole prop a string enum when any one option is non-numeric"
       adr: 72
+    - should: "keep a letter scale's own spelling for every step that has one, and the library's own name for a step that has none (`enum: [XS, S, M, L, Lead]` where the type ramp publishes `DE/Body/Lead`) — the scale and the named step are different kinds of value, and both are vocabulary"
+      never: "promote a named step into the next free letter (`Lead` as `XL`) — that asserts a scale position the library never declared, and the name is the only thing carrying what the step is for"
 glyphProps:
   guidelines:
     - could: "omit a glyph prop's `default` — a glyph prop with no default renders nothing, which is a designed fallback, not an error; declare a `default` only when the component should always show some glyph"

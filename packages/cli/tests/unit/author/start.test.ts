@@ -37,14 +37,25 @@ describe('author start', () => {
     expect(api.metadata.source).toBeUndefined();
   });
 
-  it('a freshly started folder validates clean as authored', () => {
+  // The templates carry no live data by design: placeholder props and elements used to
+  // reach the analysis reports as a real prop surface, and the reports are what the next
+  // author correlates against. So a fresh folder reports exactly the required nodes that
+  // are still unwritten — never an error about content nobody authored.
+  it('a freshly started folder reports only its unwritten required nodes', () => {
     start('iconButton');
     const result = runValidate({
       specsPath: path.join(dir, 'specs'),
       components: ['iconButton'],
       authored: true,
     });
-    expect(result.findings.filter(f => f.level === 'error')).toEqual([]);
+    const errors = result.findings.filter(f => f.level === 'error');
+    expect(errors.map(f => `${f.file}${f.path}`).sort()).toEqual([
+      'api.yaml/anatomy',
+      'api.yaml/props',
+      'variants.yaml/default',
+      'variants.yaml/variants',
+    ]);
+    for (const e of errors) expect(e.message).toBe('required property is missing');
   });
 
   it('refuses a key that is not a folder key, naming the derived spelling', () => {

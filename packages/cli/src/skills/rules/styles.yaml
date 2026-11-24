@@ -8,8 +8,9 @@ reports:
 tokens:
   guidelines:
     - must: "resolve token names from `analysis/foundations/<type>.yaml` first — each type's file is the complete token language for that type as ready-to-paste `{$token, $type}` objects, with alias targets (`analysis/foundations.yaml` is the index; icon key spellings sit in `foundations/icons.yaml`); `analysis/styling.byToken.yaml` adds usage precedent (which components already use a token where); never grep the raw data caches for spellings"
-    - must: "trust the index on existence — a zero in `analysis/foundations.yaml` `summary.tokens` means the library has no tokens of that kind (no file is written for it); use a literal and note the gap"
-      never: "re-run `specs analyze` or grep the caches over a zero count — the manifest is stale only when a kind is missing from `summary.tokens` altogether or the index predates the newest fetch"
+    - must: "treat a zero or an absence in `analysis/foundations.yaml` `summary.tokens` as the report not seeing those tokens, never as the library lacking them — the reports are an index, and the primer's authority order is explicit that an index says where to look and never what is true"
+      should: "settle existence against `<data>/cache/*.yaml`, which the primer's artifact table names as what the library already has by name — a count of zero beside a cache full of `DE Space/*` paths is a report defect, and the cache wins"
+      note: "a round obeyed the older form of this rule — trust the zero, never check the cache — and reported to a human that the library had no text color tokens when six exist. `analysis/styling.byToken.yaml` is the third view: which components already use a token where"
     - must: "copy token paths exactly as the reports spell them — never a re-cased, re-segmented, or otherwise reformatted variant"
     - should: "use a token wherever the library has one for the property — a literal there is a consistency defect"
     - never: "invent a token name — a path that looks plausible for this system but appears in no report or cache"

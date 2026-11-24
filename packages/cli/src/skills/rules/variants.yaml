@@ -21,3 +21,10 @@ configuration:
   guidelines:
     - warn: "an absent prop key inherits; a `null` value overrides with unset — different statements, not interchangeable"
       adr: 80
+variantBudget:
+  guidelines:
+    - must: "multiply the enum lengths of every Figma variant axis before authoring `variants.yaml`, and state the product — a Figma component set is the cross product of its axes, not the count of `variants[]` entries (`mode` 3 × `gridColumns` 3 × `itemSpacing` 10 × `padding` 11 = 990 frames from 23 deltas)"
+      note: "the product is arithmetic on `api.yaml` alone, available before the first variant is written and before any Figma access"
+    - must: "stop and get the human's approval when the product exceeds 100 — name the number, name the risk (render time, and a component set large enough to make their Figma file unusable), and offer the alternative of fewer enum values or fewer variant axes in the spec"
+      never: "reach `specs render` to discover the count — render exits successfully and reports a node id either way, and the file it leaves behind can be unusable (990 frames took 56.5s and locked a human's Figma; the same spec at 140 took 3.0s)"
+    - should: "move the axis carrying the least visual information to a code-only prop when the product cannot come down otherwise — `rules/props.yaml · codeOnly` already names a cross-product too large for a component set as its clear case"

@@ -20,7 +20,7 @@ Two templates ship beside this skill in `templates/` — `supplemental.yaml`, `g
 specs author start <key>
 ```
 
-One call writes the collision-checked folder with all three concern files (`--title` when the request names one) and prints the status digest. The folder starts **valid**, so every validation error you see afterwards is one you introduced. Read the digest instead of deriving its facts — no folder listing, no port probing, no freshness checks. Two fields act:
+One call writes the collision-checked folder with all three concern files (`--title` when the request names one) and prints the status digest. The folder starts **empty**: each file carries its metadata and its commented guide, nothing more, so the only errors `specs validate` reports are the required nodes you have not written yet (`anatomy` and `props` until api.yaml exists; `default` until variants.yaml does). They clear as you author each file in order, and any error naming something *you* wrote is one you introduced. Read the digest instead of deriving its facts — no folder listing, no port probing, no freshness checks. Two fields act:
 
 - `posture.up: false` — run `specs-cli.posture` (idempotent; this procedure compiles live). Never probe a guessed port yourself.
 - `analysis.stale: true` — run `specs analyze` before correlating.
@@ -80,6 +80,8 @@ specs validate <key> --authored
 Zero errors before touching the next file. Fix the file the error names, re-run, repeat. Never proceed past a validation error — with one expected exception: **a slot-bearing component's `variants.yaml` fails once by design**, because its `children.examples[0]` `$slotContent` pointer targets a slot-content example you have not authored yet. That dangling-pointer error means "author examples next," never "rework the binding."
 
 ## 4. Author variants.yaml, then validate
+
+**Before writing a delta, multiply the axes.** A Figma component set is the cross product of its variant axes, not the number of `variants[]` entries you write — so compute it from `api.yaml`'s enum lengths and state the product (`mode 2 × itemSpacing 10 × padding 7 = 140`). Over 100, stop and get the human's approval: name the number, name the risk — render time, and a set large enough to make their Figma file unusable — and offer the alternative of fewer enum values or fewer axes. `rules/variants.yaml · variantBudget` carries the rule; a round that skipped this arithmetic rendered 990 frames and locked a human's Figma file.
 
 Load the variants pack (step 0) first, in one call; token choices come from it. The `default` block fully describes every anatomy element — layout tree, styles, content, bindings. Then one `variants[]` delta per prop configuration that changes anything. Validate again; zero errors.
 

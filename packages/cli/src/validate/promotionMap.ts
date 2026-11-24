@@ -74,11 +74,14 @@ export function checkPromotionMap(options: {
 
   for (const [target, entry] of Object.entries(table)) {
     if (!entry || typeof entry !== 'object') continue;
-    if (!known.has(target)) {
-      missingTargets.push(target);
-      continue; // without the target's api there is nothing further to check
-    }
-    const props = declaredProps(specsPath, target);
+    // A target with no spec folder used to short-circuit the whole entry, so one line
+    // ("promotes nothing") stood in for every defect beneath it — an entry keyed to a
+    // name that was never a spec folder hid four dead size rows and seven dead colour
+    // rows until someone rekeyed it by hand. The rows that do not need the target's own
+    // api — the honoured-source check and the token-path check — run regardless; the
+    // prop checks below are already guarded on `props`.
+    if (!known.has(target)) missingTargets.push(target);
+    const props = known.has(target) ? declaredProps(specsPath, target) : undefined;
     const honoured = typeof entry.elementType === 'string' ? HONOURED_SOURCES[entry.elementType] : undefined;
     for (const [i, rule] of (entry.map ?? []).entries()) {
       const at = `/${target}/map/${i}`;
@@ -133,7 +136,7 @@ export function checkPromotionMap(options: {
     const names = missingTargets.sort();
     warnings.push({
       at: '/',
-      message: `${names.length} promotion ${names.length === 1 ? 'target has' : 'targets have'} no spec folder, so ${names.length === 1 ? 'it promotes' : 'they promote'} nothing: ${names.join(', ')}`,
+      message: `${names.length} promotion ${names.length === 1 ? 'target has' : 'targets have'} no spec folder, so ${names.length === 1 ? 'it promotes' : 'they promote'} nothing and ${names.length === 1 ? 'its' : 'their'} rows cannot be checked against a declared prop surface: ${names.join(', ')}`,
     });
   }
   return warnings;
