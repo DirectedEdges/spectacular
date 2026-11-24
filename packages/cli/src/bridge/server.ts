@@ -163,6 +163,18 @@ wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
   let thisFileKey: string | null = null;
   console.log('Plugin socket opened, awaiting hello…');
 
+  // A socket that never pairs does not get to sit here holding a connection — it is
+  // closed after a grace period. The plugin pairs within a second of opening (its hello
+  // waits only on the worker's fileKey-info message), so ten seconds is generous for the
+  // legitimate caller and a short leash for anything else.
+  const pairingDeadline = setTimeout(() => {
+    if (thisFileKey === null) {
+      console.error('Closed socket that never paired.');
+      ws.close(4001, 'pairing required');
+    }
+  }, 10_000);
+  ws.on('close', () => clearTimeout(pairingDeadline));
+
   ws.on('message', (data: Buffer) => {
     let msg: Record<string, unknown>;
     try { msg = JSON.parse(data.toString()); } catch { return; }
