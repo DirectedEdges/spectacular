@@ -21,6 +21,7 @@ import {
   BRIDGE_LOG_FILE,
 } from '../bridge/pidfile.js';
 import { getBridgeStatus } from '../bridge/client.js';
+import { loadOrCreateToken } from '../bridge/token.js';
 import { ERROR_CODES } from '../utilities/errorCodes.js';
 
 function resolveBridgeServerScript(): string {
@@ -44,6 +45,9 @@ Bridge.command('start')
     }
 
     ensureSpecsHome();
+    // Created here, before the spawn, so the value can be printed to the terminal for
+    // the one-time paste into the plugin's Bridge pane; the server loads the same file.
+    const token = loadOrCreateToken();
     const serverScript = resolveBridgeServerScript();
     const args = options.workspace ? ['--workspace', options.workspace] : [];
 
@@ -66,7 +70,9 @@ Bridge.command('start')
     console.log('  WebSocket : ws://localhost:9001  (plugin)');
     console.log('  HTTP      : http://localhost:9002/render  (control)');
     console.log(`  Logs      : ${BRIDGE_LOG_FILE}`);
-    console.log('Enable the CLI Bridge in the Figma plugin to connect.');
+    console.log(`  Pairing   : ${token}`);
+    console.log('Enable the CLI Bridge in the Figma plugin to connect — first time on this');
+    console.log('machine, enter the pairing token in the plugin\'s Bridge pane.');
   });
 
 Bridge.command('stop')
@@ -104,6 +110,7 @@ Bridge.command('status')
 
     try {
       const { connections } = await getBridgeStatus();
+      console.log(`Pairing token: ${loadOrCreateToken()}`);
       if (connections.length === 0) {
         console.log(`Bridge running (pid ${pid}). No plugin connected.`);
       } else {
