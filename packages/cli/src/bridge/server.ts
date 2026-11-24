@@ -187,6 +187,13 @@ wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
       return;
     }
 
+    // An unpaired socket is mute: until a hello passes the token check (which is what
+    // sets thisFileKey), nothing else it sends is processed. Without this, a connection
+    // that never paired could still submit *-result messages and race to resolve another
+    // caller's pending request — infeasible while requestIds are random UUIDs, but the
+    // guard keeps that from being load-bearing.
+    if (thisFileKey === null) return;
+
     if (msg.type === 'pageId-result' || msg.type === 'renderComponent-result' || msg.type === 'generateFromSelection-result' || msg.type === 'removeNode-result' || msg.type === 'getVariables-result' || msg.type === 'inspectComponent-result' || msg.type === 'annotateElements-result') {
       const requestId = msg.requestId as string | undefined;
       if (!requestId) return; // no way to route this response
