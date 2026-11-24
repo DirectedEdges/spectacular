@@ -1,30 +1,44 @@
 # Judgment rules for variants.yaml — the default baseline and the layered deltas.
+#
+# guidelines: items keyed by obligation, RFC 2119 — must / must-not (absolute),
+# should / should-not (strong, disregard only with a considered reason), may (permitted).
+# Beside an obligation: instead, example, reads, note, adr.
 defaultBaseline:
   guidelines:
-    - should: "describe every element the anatomy declares in `default.elements` — an element declared but left out of `default` is legal and validates clean, and is still poor practice: the baseline is where a reader learns what the element is, and a variant that is the element's first mention reads as a delta from nothing"
+    - should: "describe every element the anatomy declares in `default.elements` — the baseline is where a reader learns what an element is, and a variant that is the element's first mention reads as a delta from nothing"
+      note: "an element declared but left out of `default` is legal and validates clean; this is practice, not a constraint"
 layering:
   guidelines:
     - must: "author each variant as only its diff from `default` — the resolved state is every matching variant layered onto the default in order"
       should: "omit a variant whose diff is empty"
       adr: 34
-    - never: "write two style keys that compete for the same outcome within one variant or within `default` — state one. Across variants it is fine: matching variants layer, and the resolution is the renderer's own styles mechanics, not something to restate here"
+    - must-not: "write two style keys that compete for the same outcome within one variant or within `default`"
+      instead: "state one of them"
+      note: "across variants this is fine: matching variants layer, and the resolution is the renderer's own styles mechanics rather than something restated here"
 content:
   guidelines:
-    - must: "spell a glyph name — in `content`, a bound prop's `default`, and its `examples` — in the workspace's formatted key spelling (`info`, `caretRight`), never the raw icon cache name (`Info`, `Caret Right`); the renderer matches content against cache names run through `format.keys`, and a raw spelling matches nothing"
+    - must: "spell a glyph name — in `content`, a bound prop's `default`, and its `examples` — in the workspace's formatted key spelling, never the raw icon cache name; the renderer matches content against cache names run through `format.keys`, and a raw spelling matches nothing"
+      example: "`info`, `caretRight` — not `Info`, `Caret Right`"
 conditionals:
   guidelines:
-    - must: "write a visibility conditional as `isNull` on the content prop with `then: false` — `visible: {if: {condition: {operation: isNull, args: {value: {$binding: '#/props/<prop>'}}}, then: false, else: true}}`. The operation asks whether the prop *is* null and `then` is the visibility when it is, so the element shows exactly when the prop carries something"
-      never: "name any other operation in a visibility condition — `isNull` is the only null test the analyzer recognizes, and a condition naming anything else yields no rule at all: the element then renders unconditionally, with nothing failing and nothing warning"
+    - must: "write a visibility conditional as `isNull` on the content prop with `then: false` — the operation asks whether the prop *is* null and `then` is the visibility when it is, so the element shows exactly when the prop carries something"
+      example: "`visible: {if: {condition: {operation: isNull, args: {value: {$binding: '#/props/<prop>'}}}, then: false, else: true}}`"
+      must-not: "name any other operation in a visibility condition — `isNull` is the only null test the analyzer recognizes, and a condition naming anything else yields no rule at all: the element then renders unconditionally, with nothing failing and nothing warning"
       note: "the generic `{if: {condition, then, else}}` shape in `references/styles.md` describes the schema's conditional, not the vocabulary that has an effect here. The closed operation set is a consequence of prop consolidation — see the consolidating-props guide on the docs site — and a slot or content prop whose boolean visibility toggle was merged into its nullability is the normal case for this form"
+      reads: references/styles.md
       adr: 80
 configuration:
   guidelines:
-    - warn: "an absent prop key inherits; a `null` value overrides with unset — different statements, not interchangeable"
+    - must: "read an absent prop key as inheriting and a `null` value as overriding with unset — different statements, not interchangeable"
       adr: 80
 variantBudget:
   guidelines:
-    - must: "multiply the enum lengths of every Figma variant axis before authoring `variants.yaml`, and state the product — a Figma component set is the cross product of its axes, not the count of `variants[]` entries (`mode` 3 × `gridColumns` 3 × `itemSpacing` 10 × `padding` 11 = 990 frames from 23 deltas)"
+    - must: "multiply the enum lengths of every Figma variant axis before authoring `variants.yaml`, and state the product — a Figma component set is the cross product of its axes, not the count of `variants[]` entries"
+      example: "`mode` 3 × `gridColumns` 3 × `itemSpacing` 10 × `padding` 11 = 990 frames from 23 deltas"
       note: "the product is arithmetic on `api.yaml` alone, available before the first variant is written and before any Figma access"
+      reads: api.yaml
     - must: "stop and get the human's approval when the product exceeds 100 — name the number, name the risk (render time, and a component set large enough to make their Figma file unusable), and offer the alternative of fewer enum values or fewer variant axes in the spec"
-      never: "reach `specs render` to discover the count — render exits successfully and reports a node id either way, and the file it leaves behind can be unusable (990 frames took 56.5s and locked a human's Figma; the same spec at 140 took 3.0s)"
-    - should: "move the axis carrying the least visual information to a code-only prop when the product cannot come down otherwise — `rules/props.yaml · codeOnly` already names a cross-product too large for a component set as its clear case"
+      must-not: "reach `specs render` to discover the count — render exits successfully and reports a node id either way, and the file it leaves behind can be unusable"
+    - should: "move the axis carrying the least visual information to a code-only prop when the product cannot come down otherwise"
+      reads: rules/props.yaml · codeOnly
+      note: "that rule already names a cross-product too large for a component set as its clear case"

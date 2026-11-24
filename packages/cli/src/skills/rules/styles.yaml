@@ -2,33 +2,42 @@
 # Facts about the styles schema — which properties exist, their shapes, where $token is
 # legal — live in the schema's own property descriptions (authority order #1), walked
 # through in references/styles.md beside this skill; this file carries judgment only.
+#
+# guidelines: items keyed by obligation, RFC 2119 — must / must-not (absolute),
+# should / should-not (strong, disregard only with a considered reason), may (permitted).
+# Beside an obligation: instead, example, reads, note, adr.
 reports:
   guidelines:
-    - should: "read `analysis/styling.byComponent.yaml` for how siblings style a property before authoring it — a raw literal is a last resort after the promotion map and the token set both come up empty"
+    - should: "read how siblings style a property before authoring it — a raw literal is a last resort after the promotion map and the token set both come up empty"
+      reads: analysis/styling.byComponent.yaml
 tokens:
   guidelines:
-    - must: "resolve token names from `analysis/foundations/<type>.yaml` first — each type's file is the complete token language for that type as ready-to-paste `{$token, $type}` objects, with alias targets (`analysis/foundations.yaml` is the index; icon key spellings sit in `foundations/icons.yaml`); `analysis/styling.byToken.yaml` adds usage precedent (which components already use a token where); never grep the raw data caches for spellings"
+    - must: "resolve token names from the per-type foundations report first — each type's file is the complete token language for that type as ready-to-paste `{$token, $type}` objects, with alias targets"
+      reads: analysis/foundations/<type>.yaml (the language), analysis/foundations.yaml (the index), analysis/foundations/icons.yaml (icon key spellings), analysis/styling.byToken.yaml (usage precedent — which components already use a token where)
     - must: "treat a zero or an absence in `analysis/foundations.yaml` `summary.tokens` as the report not seeing those tokens, never as the library lacking them — the reports are an index, and the primer's authority order is explicit that an index says where to look and never what is true"
-      should: "settle existence against `<data>/cache/*.yaml`, which the primer's artifact table names as what the library already has by name — a count of zero beside a cache full of `DE Space/*` paths is a report defect, and the cache wins"
-      note: "a round obeyed the older form of this rule — trust the zero, never check the cache — and reported to a human that the library had no text color tokens when six exist. `analysis/styling.byToken.yaml` is the third view: which components already use a token where"
-    - must: "copy token paths exactly as the reports spell them — never a re-cased, re-segmented, or otherwise reformatted variant"
+      should: "settle existence against the caches, which the primer's artifact table names as what the library already has by name — a count of zero beside a cache full of token paths is a report defect, and the cache wins"
+      reads: <data>/cache/*.yaml
+    - must: "copy token paths exactly as the reports spell them"
+      must-not: "write a re-cased, re-segmented, or otherwise reformatted variant"
     - should: "use a token wherever the library has one for the property — a literal there is a consistency defect"
-    - never: "invent a token name — a path that looks plausible for this system but appears in no report or cache"
-      should: "use a literal and note the gap when no suitable token exists"
-    - must: "grep a token type's file anchored on the namespace you are looking for (`'^\\s+- \\$token: <Namespace>/'`), never on an unanchored keyword — a type's file is one flat list and a library's theme-level aliases can be a small minority of it, so a keyword search returns whichever entries happen to contain the word and buries the handful an author can write"
-      never: "write a token a theme resolves *through* rather than one it exposes — a library may carry per-brand or per-mode variables in the same file as the aliases that select among them, and only the alias is addressable from a spec"
+    - must-not: "invent a token name — a path that looks plausible for this system but appears in no report or cache"
+      instead: "use a literal and note the gap when no suitable token exists"
+    - must: "grep a token type's file anchored on the namespace you are looking for — a type's file is one flat list and a library's theme-level aliases can be a small minority of it, so a keyword search returns whichever entries happen to contain the word and buries the handful an author can write"
+      example: "`'^\\s+- \\$token: <Namespace>/'`"
+      must-not: "write a token a theme resolves *through* rather than one it exposes — a library may carry per-brand or per-mode variables in the same file as the aliases that select among them, and only the alias is addressable from a spec"
       note: "`analysis/styling.byToken.yaml` is the fastest way to tell the two apart in an unfamiliar library: the namespaces other components already use are the exposed ones. Which namespace this library exposes is the library's own fact — a foundations guidelines topic, not a rule here"
 visible:
   guidelines:
     - must: "bind `visible` on nested elements only — root show/hide is interaction state owned by the behavior layer"
-      never: "put a `$binding` on the root element's `visible` (also emits broken React today — specs#766)"
+      must-not: "put a `$binding` on the root element's `visible` (also emits broken React today — specs#766)"
     - must: "state both `then` and `else` when visibility derives from a nullable content prop via a `Conditional`"
-      never: "point a bare `$binding` at a string prop to drive visibility"
+      must-not: "point a bare `$binding` at a string prop to drive visibility"
       adr: 18
 padding|strokeWeight|cornerRadius:
   guidelines:
-    - should: "write a scalar when every side or corner is equal, and the logical-key object only when they differ (`{top, end, bottom, start}`, `{topStart, …}`)"
-      never: "use physical `left`/`right` keys or the string `\"mixed\"`"
+    - should: "write a scalar when every side or corner is equal, and the logical-key object only when they differ"
+      example: "`{top, end, bottom, start}`, `{topStart, …}`"
+      must-not: "use physical `left`/`right` keys or the string `\"mixed\"`"
       adr: 10
 itemSpacing:
   guidelines:
@@ -37,7 +46,8 @@ itemSpacing:
 typography|effects:
   guidelines:
     - must: "express typography and effects as one composite key — a style/token reference when the layer uses a named style, the inline object otherwise"
-      never: "emit flat legacy keys (`fontSize`, `lineHeight`, `effectStyleId`)"
+      must-not: "emit flat legacy keys"
+      example: "`fontSize`, `lineHeight`, `effectStyleId` are the legacy keys"
       adr: [2, 5]
     - should: "order `shadows` as an array where `inset: true` means inner; `layerBlur`/`backgroundBlur` are singular"
       adr: 2
@@ -47,13 +57,16 @@ gradients:
       adr: 3
 structural:
   guidelines:
-    - never: "put a `$token` or `$binding` on any property whose definition says \"Structural property — not token-bindable\" — literal value from its declared set, or null; the schema's described `oneOf` is the authority on which properties and options"
+    - must-not: "put a `$token` or `$binding` on any property whose definition says \"Structural property — not token-bindable\""
+      instead: "write a literal value from its declared set, or null"
+      note: "the schema's described `oneOf` is the authority on which properties and options"
       adr: [4, 38, 39, 40, 59, 62, 115]
     - should: "express a solid stroke by omitting `strokeDashPattern`"
       adr: 4
 defaults:
   guidelines:
-    - should: "omit an optional composite member sitting at its schema-declared default (`Sides`/`Corners` members 0, `alpha` 1, `inset` false, `objectFit` COVER, the `Typography` transform members) — writing it out restates the schema"
+    - should: "omit an optional composite member sitting at its schema-declared default — writing it out restates the schema"
+      example: "`Sides`/`Corners` members 0, `alpha` 1, `inset` false, `objectFit` COVER, the `Typography` transform members"
       adr: [113, 116]
 fillColor:
   guidelines:
@@ -61,7 +74,8 @@ fillColor:
       adr: 13
 backgroundImage:
   guidelines:
-    - must: "point `backgroundImage` and an image prop's default at an `images` registry entry via `$image` — never a raw Figma hash"
+    - must: "point `backgroundImage` and an image prop's default at an `images` registry entry via `$image`"
+      must-not: "point either at a raw Figma hash"
       adr: 63
     - must: "forward an image into a nested image instance through `propConfigurations` with an `ImageBinding` — `backgroundImage` carries only the static no-component fallback"
       adr: 63
@@ -75,4 +89,5 @@ layoutSizingHorizontal|layoutSizingVertical:
       opens: [minWidth|minHeight, maxWidth|maxHeight]
   guidelines:
     - should: "prefer `HUG`/`FILL` so content drives size; `FIXED` plus `width`/`height` only when the design truly fixes the dimension"
-    - could: "bound any sizing mode with `min`/`max` — hug-with-a-floor (`HUG` + `minWidth`) and fill-with-a-ceiling (`FILL` + `maxWidth`) are both legal and useful"
+    - may: "bound any sizing mode with `min`/`max` — hug-with-a-floor and fill-with-a-ceiling are both legal and useful"
+      example: "`HUG` + `minWidth`; `FILL` + `maxWidth`"

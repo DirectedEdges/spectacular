@@ -1,11 +1,16 @@
 # Judgment rules for flow and positioning styling — keys are the style properties that
 # govern flow. (`layout` alone names the AST in specs; this file is layout *styling*.)
+#
 # useWhen: ordered, first match wins. when: property interdependencies — setting the
 # key's value opens (makes meaningful) or requires the listed properties.
+# guidelines: items keyed by obligation, RFC 2119 — must / must-not (absolute),
+# should / should-not (strong, disregard only with a considered reason), may (permitted).
+# Beside an obligation: instead, example, reads, note, adr.
 components:
   guidelines:
-    - should: "reach for the library's own layout component before authoring a tree of styled containers — `config/conventions/<platform>.primitives.yaml` says which component a container promotes to, and `specs/foundations/layout/guidelines.yaml` says which layout components this system offers and how they nest"
-      never: "build a column of rows out of bare `container` elements when the library publishes components for exactly that — the output is styled divs a consumer could not have assembled from the library"
+    - should: "reach for the library's own layout component before authoring a tree of styled containers"
+      must-not: "build a column of rows out of bare `container` elements when the library publishes components for exactly that — the output is styled divs a consumer could not have assembled from the library"
+      reads: config/conventions/<platform>.primitives.yaml (which component a container promotes to), specs/foundations/layout/guidelines.yaml (which layout components this system offers and how they nest)
       note: "which layout components exist, what they are called, and the order they nest in are the library's own facts, declared in its foundations layout guidelines; this rule only says to go and look. A library with neither layout components nor a promotion map authors containers, and the rule is inert rather than implied"
       adr: [74, 75]
     - should: "keep an atomic component's own internals primitive — the promotion map governs composed content (compositions, instanceExamples, slot content), not what a small component is built from"
@@ -25,19 +30,22 @@ layoutMode:
       adr: 122
   guidelines:
     - must: "template exactly one axis on a `GRID` — set `gridColumns` or `gridRows`, never both"
-      never: "reach for `GRID` to express a fixed two-dimensional arrangement; it templates one axis and fills cells in source order, so the other axis is a consequence of the child count"
+      must-not: "reach for `GRID` to express a fixed two-dimensional arrangement; it templates one axis and fills cells in source order, so the other axis is a consequence of the child count"
       adr: 122
-    - should: "write an integer track count where the design fixes the number of tracks, and the adaptive form (`{minSize: <n>}`) where the count should follow the container's width"
+    - should: "write an integer track count where the design fixes the number of tracks, and the adaptive form where the count should follow the container's width"
+      example: "`{minSize: <n>}` for the adaptive form"
       adr: 122
 
 width:
   guidelines:
     - should: "give a composition or other page-scale root a concrete width — `FILL` at a rendered root has no parent to fill and collapses"
       note: "the number is the system's page width, not a default — read it from the system's own compositions or ask; nothing here supplies one"
-    - warn: "writing `width` forces the node's horizontal sizing to FIXED on render, whatever the spec declares beside it — so `width` next to `layoutSizingHorizontal: FILL` is not a pair that negotiates. On a *component root* the FILL intent survives as a Dev Mode annotation, because a Figma root cannot hold FILL; anywhere else the width simply wins"
+    - must-not: "write `width` beside `layoutSizingHorizontal: FILL` and expect them to negotiate — writing `width` forces the node's horizontal sizing to FIXED on render, whatever the spec declares beside it"
+      note: "on a *component root* the FILL intent survives as a Dev Mode annotation, because a Figma root cannot hold FILL; anywhere else the width simply wins"
 layoutSizingHorizontal|layoutSizingVertical:
   guidelines:
-    - could: "declare `FILL` on a *component* root to state how it sizes in a consumer's layout (`layoutSizingHorizontal: FILL` on a text root for \"fill its container\") — the standalone rendered node has no parent and collapses to content width, which is expected, not a defect"
+    - may: "declare `FILL` on a *component* root to state how it sizes in a consumer's layout — the standalone rendered node has no parent and collapses to content width, which is expected rather than a defect"
+      example: "`layoutSizingHorizontal: FILL` on a text root, for \"fill its container\""
       note: "capture reads this off a Dev Mode annotation (`sizingHorizontal:fill` / `sizingVertical:fill` on the root, same grammar as `role:`) because a Figma root cannot hold FILL itself; an authored spec just states the value"
 position:
   useWhen:
@@ -51,8 +59,11 @@ position:
     AUTO:
       opens: [layoutSizingHorizontal, layoutSizingVertical]
   guidelines:
-    - should: "pin an `ABSOLUTE` child with offsets; hanging past the edge takes a negative offset and parent `clipsContent: false` (`bottom: -6`)"
+    - should: "pin an `ABSOLUTE` child with offsets; hanging past the edge takes a negative offset and parent `clipsContent: false`"
+      example: "`bottom: -6`"
       adr: 41
-    - must: "swap offset edges in a placement variant — null the old edge, set the new one (`bottom: null` + `top: -6`)"
-      never: "stack both edges of an axis"
-    - could: "pin a full-bleed layer to all four sides (`top: 0, end: 0, bottom: 0, start: 0`) — a state background or scrim stretches with its parent, and is the sanctioned departure from the one-edge-per-axis rule (ruled by the system owner, Pill round)"
+    - must: "swap offset edges in a placement variant — null the old edge, set the new one"
+      example: "`bottom: null` + `top: -6`"
+      must-not: "stack both edges of an axis"
+    - may: "pin a full-bleed layer to all four sides — a state background or scrim stretches with its parent, and is the sanctioned departure from the one-edge-per-axis rule (ruled by the system owner)"
+      example: "`top: 0, end: 0, bottom: 0, start: 0`"

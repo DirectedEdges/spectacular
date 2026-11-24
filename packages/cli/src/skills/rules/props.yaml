@@ -1,9 +1,17 @@
 # Judgment rules for api.yaml props.* — consistency with the catalogue is graded.
+#
+# guidelines: items keyed by obligation, RFC 2119 — must / must-not (absolute),
+# should / should-not (strong, disregard only with a considered reason), may (permitted).
+# Beside an obligation: instead, example, reads, note, adr.
 naming:
   guidelines:
-    - should: "reuse an existing prop name and value set when the concept matches (`analysis/props.yaml`)"
-      never: "coin a synonym for a prop the system already has (`text` where the catalogue says `label`)"
-    - should: "follow the enum value casing and vocabulary the catalogue itself uses (`analysis/props.yaml`) — never import another system's casing or size scale"
+    - should: "reuse an existing prop name and value set when the concept matches"
+      must-not: "coin a synonym for a prop the system already has"
+      example: "`text` where the catalogue says `label`"
+      reads: analysis/props.yaml
+    - should: "follow the enum value casing and vocabulary the catalogue itself uses"
+      must-not: "import another system's casing or size scale"
+      reads: analysis/props.yaml
 nullable:
   guidelines:
     - should: "omit `nullable` on open-valued props — absence already means nullable for string, number, slot, and image props"
@@ -11,45 +19,63 @@ nullable:
       adr: 65
 imageProps:
   guidelines:
-    - must: "treat unset and explicitly empty as different statements on an image prop — a prop never mentioned resolves to its authoring-default example, and one passed empty resolves to the placeholder surface; the role concept's page carries the contract"
+    - must: "treat unset and explicitly empty as different statements on an image prop — a prop never mentioned resolves to its authoring-default example, and one passed empty resolves to the placeholder surface"
+      reads: the role concept's own docs page, which carries the contract
 enum:
   guidelines:
-    - must: "write `nullable: false` on a number prop carrying an `enum`; order any enum naturally — the scale's own order (`XS, S, M, L, XL`; `100, 200, 300`) or the library's axis order — and set the default with the `default` field, never by position; never re-sort an ordered vocabulary"
+    - must: "write `nullable: false` on a number prop carrying an `enum`; order any enum naturally — the scale's own order or the library's axis order — and set the default with the `default` field, never by position"
+      example: "`XS, S, M, L, XL`; `100, 200, 300`"
+      must-not: "re-sort an ordered vocabulary"
       adr: 72
     - should: "keep the whole prop a string enum when any one option is non-numeric"
       adr: 72
-    - should: "keep a letter scale's own spelling for every step that has one, and the library's own name for a step that has none (`enum: [XS, S, M, L, Lead]` where the type ramp publishes `DE/Body/Lead`) — the scale and the named step are different kinds of value, and both are vocabulary"
-      never: "promote a named step into the next free letter (`Lead` as `XL`) — that asserts a scale position the library never declared, and the name is the only thing carrying what the step is for"
+    - should: "keep a letter scale's own spelling for every step that has one, and the library's own name for a step that has none — the scale and the named step are different kinds of value, and both are vocabulary"
+      example: "`enum: [XS, S, M, L, Lead]` where the type ramp publishes `DE/Body/Lead`"
+      must-not: "promote a named step into the next free letter — that asserts a scale position the library never declared, and the name is the only thing carrying what the step is for"
 glyphProps:
   guidelines:
-    - could: "omit a glyph prop's `default` — a glyph prop with no default renders nothing, which is a designed fallback, not an error; declare a `default` only when the component should always show some glyph"
-    - must: "spell a glyph-bound prop's `default` and every entry in its `examples` in the workspace's formatted key spelling (`info`, `caretRight`) — a glyph name is a reference into the icon key space, exactly as `instanceOf` is into the component key space, and the renderer matches it against `formatKey(<cache name>, format.keys)`; the raw cache spelling (`Info`, `Caret Right`) matches nothing and the glyph silently drops"
+    - may: "omit a glyph prop's `default` — a glyph prop with no default renders nothing, which is a designed fallback rather than an error"
+      should: "declare a `default` only when the component should always show some glyph"
+    - must: "spell a glyph-bound prop's `default` and every entry in its `examples` in the workspace's formatted key spelling — a glyph name is a reference into the icon key space, exactly as `instanceOf` is into the component key space, and the renderer matches it against `formatKey(<cache name>, format.keys)`; the raw cache spelling matches nothing and the glyph silently drops"
+      example: "`info`, `caretRight` — not `Info`, `Caret Right`"
       note: "deliberately opposite to enum option values, which are vocabulary and keep the library's own spelling verbatim (`Primary inverse`) — references are formatted, vocabulary is verbatim; when unsure which a value is, ask whether something resolves it (reference) or displays it (vocabulary)"
 default:
   guidelines:
-    - should: "put demo content in `examples` and reserve `default` for a genuine contractual fallback (a Figma-authored `Label` value is an example, not a default)"
-      adr: [14, 88]
+    - should: "put demo content in `examples` and reserve `default` for a genuine contractual fallback"
+      example: "a Figma-authored `Label` value is an example, not a default"
       note: "the two fields serve different consumers — `examples` is what Figma renders as the prop's shown value (demo content); `default` is encoded into the component itself (what it does when the consumer passes nothing). A request stating default content in passing (\"make the default text X\") is naming demo content for `examples`; only an explicitly stated fallback behavior earns `default`"
+      adr: [14, 88]
 stateProps:
   guidelines:
-    - should: "name a `state` enum's resting value `Rest` and list it first (`enum: [Rest, Hover, Pressed]`) — the states convention fixes only the `Hover` and `Pressed` spellings, and an unnamed resting concept invites a new synonym per component"
-    - must: "pair a `state` enum with a `disabled` boolean through `invalidPropCombinations` — every active state is illegal while disabled (`{disabled: true, state: Hover}`, `{disabled: true, state: Pressed}`), else the matrix claims a disabled control can hover"
-    - note: "whether a state prop is consumer-settable API or a browser-realized affordance is already ruled by the workspace's `states` convention (`config/conventions/specs.yaml`, docs at `/settings/states/`): a classified prop emits real pseudo-class/ARIA selectors and is omitted from the generated Props contract — do not re-litigate it per component"
+    - should: "name a `state` enum's resting value `Rest` and list it first — the states convention fixes only the `Hover` and `Pressed` spellings, and an unnamed resting concept invites a new synonym per component"
+      example: "`enum: [Rest, Hover, Pressed]`"
+    - must: "pair a `state` enum with a `disabled` boolean through `invalidPropCombinations` — every active state is illegal while disabled, else the matrix claims a disabled control can hover"
+      example: "`{disabled: true, state: Hover}`, `{disabled: true, state: Pressed}`"
+    - must-not: "re-litigate per component whether a state prop is consumer-settable API or a browser-realized affordance — the workspace's `states` convention already rules it: a classified prop emits real pseudo-class/ARIA selectors and is omitted from the generated Props contract"
+      reads: config/conventions/specs.yaml, and the docs site's /settings/states/ page
 variantProps:
   guidelines:
     - must: "declare a boolean prop whose value drives variant deltas — it appears in any `variants[].configuration` — with `$extensions: {com.figma: {type: VARIANT}}`; the renderer otherwise models it as a Figma BOOLEAN property, which can only toggle visibility, and the styling deltas never land on the canvas"
       note: "enum props — string and number alike — become variant axes on their own, no marker; the marker is specifically the styling-driving boolean's"
 codeOnly:
   guidelines:
-    - must: "give a requirement that is a prop in code — a semantic element choice (`tag`), an accessibility label, a heading level — a code-only prop in api.yaml, never a hand-authored platform file; supplemental is for what no prop surface can carry, and a behavior the consumer configures is a prop"
+    - must: "give a requirement that is a prop in code a code-only prop in api.yaml — supplemental is for what no prop surface can carry, and a behavior the consumer configures is a prop"
+      example: "a semantic element choice (`tag`), an accessibility label, a heading level"
+      must-not: "carry such a requirement in a hand-authored platform file"
       note: "a closed vocabulary makes it an enum code-only prop — enum values on the prop, codeOnly extension beside them (the schema's `instanceOf` carries the Figma-side enum source when captured); an open string is only for genuinely free text like a label"
-    - must: "declare a prop that exists only in code — never as a Figma variant axis — with `$extensions: {com.figma: {type: TEXT, source: {kind: codeOnlyProp, layer: <name>}, name: <name>}}`; the renderer's code-only handling reads exactly this declaration, and an undeclared string prop's disposition in the component set is guesswork (an accessibility label is the canonical case)"
+    - must: "declare a prop that exists only in code — never as a Figma variant axis — with `$extensions: {com.figma: {type: TEXT, source: {kind: codeOnlyProp, layer: <name>}, name: <name>}}`; the renderer's code-only handling reads exactly this declaration, and an undeclared string prop's disposition in the component set is guesswork"
+      example: "an accessibility label is the canonical case"
       note: "`type: TEXT` names the **Figma layer's** kind, not the prop's own type, and is the same for every code-only prop whatever the prop declares. A boolean code-only prop stays `type: boolean` in the api — its value is carried on that prop's text layer child inside the code-only props layer, which is what `TEXT` describes"
-    - could: "let a code-only prop drive presentation when the presentation genuinely cannot be built in Figma — a cross-product too large for a component set is the clear case"
-      never: "reach for a code-only prop for presentation Figma *can* carry; that belongs on a Figma prop, code-only or not is a question of where the control can exist, not of what it controls"
-    - never: "coin the `name`/`layer` value yourself — both are config lookups, not judgment: the container layer is `config/conventions/figma.yaml codeOnlyProps.match`, and the per-prop sub-layer is the same file's `naming` convention applied to the prop key; only when the workspace declares neither does the designer's own language decide, surfaced under Decisions to confirm"
-    - must: "read `layer` as this prop's own sub-layer — one per code-only prop (`layer: headingLevel` for a `headingLevel` prop) — never the name of a shared container holding all code-only props"
+    - may: "let a code-only prop drive presentation when the presentation genuinely cannot be built in Figma — a cross-product too large for a component set is the clear case"
+      must-not: "reach for a code-only prop for presentation Figma *can* carry"
+      instead: "declare it as a Figma prop — code-only or not is a question of where the control can exist, never of what it controls"
+    - must-not: "coin the `name`/`layer` value yourself — both are config lookups, not judgment"
+      instead: "read the container layer from `codeOnlyProps.match` and derive the per-prop sub-layer by applying the same file's `naming` convention to the prop key; only when the workspace declares neither does the designer's own language decide, surfaced under Decisions to confirm"
+      reads: config/conventions/figma.yaml
+    - must: "read `layer` as this prop's own sub-layer — one per code-only prop, never the name of a shared container holding all code-only props"
+      example: "`layer: headingLevel` for a `headingLevel` prop"
 invalidPropCombinations:
   guidelines:
-    - must: "declare illegal prop combinations as `invalidPropCombinations` in api.yaml — api vocabulary (prop names and values), never in variants"
+    - must: "declare illegal prop combinations as `invalidPropCombinations` in api.yaml — api vocabulary (prop names and values)"
+      must-not: "declare them in variants"
       adr: 92
