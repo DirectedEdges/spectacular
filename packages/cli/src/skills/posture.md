@@ -31,12 +31,14 @@ Up → the posture is on; **stop here and author**. No pid archaeology, no log r
 
 ```bash
 mkdir -p .posture
-nohup node_modules/.bin/specs run > .posture/specs-run.log 2>&1 & echo $! > .posture/specs-run.pid
+nohup node_modules/.bin/specs run --skip scan generate > .posture/specs-run.log 2>&1 & echo $! > .posture/specs-run.pid
 ```
 
 Portable sh — no `setsid` (absent on macOS), no GNU-only flags.
 
 Detached means the posture outlives this session — never run it in the foreground, and never through `npm run storybook` (its interactive prompts exit silently when backgrounded; `specs run` owns Storybook correctly).
+
+**`--skip scan generate` is not optional.** The authoring posture emits and serves; it never re-reads Figma data over the specs. A plain `specs run` arms the `scan` and `generate` steps, and `generate` round-trips captured data over authored specs — the posture must be structurally incapable of that, not merely expected to avoid it.
 
 A leftover `render-watch.pid` from the old posture shape is stale by definition: kill its process if alive, delete the pidfile, and never start a replacement.
 
