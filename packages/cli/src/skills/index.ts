@@ -16,51 +16,11 @@
  * and `watch` scripts. A new skill is a new `.md` plus a row below; adding one
  * without the loader flag fails the build rather than shipping an empty skill.
  *
- * ## The primer is a prerequisite, not a preamble
- *
- * `primer.md` is what Specs *is* — a schema and a CLI over strongly structured data,
- * and why that makes an inference a defect rather than a shortcut. Every other skill
- * names it in a prerequisite line instead of carrying a copy.
- *
- * That is a context decision, not a tidiness one. Inlining it charged every skill
- * read for the same 450 words, so an onboarding session that touches three skills
- * paid for it three times. As a prerequisite an agent reads it once and the rest of
- * the session is already taught. The cost is one extra read, once; the saving scales
- * with how many skills a session uses.
- *
- * Skills that hold a judgment — `icons.setup`, `states.setup`, `roles.propose` —
- * depend on the primer most, because each one decides something from a library's own
- * data and the primer is what says which artifact may be believed.
- *
- * ## `rules/` and `references/` are different layers, and rules win
- *
- * A `rules/*.yaml` entry is a judgment at one schema node: modality-keyed
- * (`must` / `never` / `should` / `could`), stating the forbidden mistake, citing the ADR
- * it projects. A `references/*.md` file is the map of a mechanism that spans several
- * nodes or files — which properties exist, what shape each value takes, which file each
- * step of a traversal is written in.
- *
- * The test for where a new fact goes: **a choice at a single node is a rule; a fact that
- * spans more than one node or file is a reference.** A reference that starts advising
- * which value to pick has grown a second copy of a rule, and the two then drift — which
- * is what happened to the single `slots-layout.md` this set replaced. When both files
- * say something, the rules file governs and the reference carries a pointer to it.
- *
- * Neither layer is an authority on what a spec *means*. That is the schema's, and both
- * layers cite it rather than restating it.
- *
- * ## A step a parent skill names is a sub-skill, not a choice
- *
- * `posture` and `component.compile` are invoked by name from inside
- * `component.author`, at a numbered step. That keeps their text out of the round's
- * priming read — `component.compile` alone is ~790 words that only matter after all
- * three concern files validate — and it lets the round's own cost be measured apart
- * from the compile's.
- *
- * The distinction that makes this safe: the parent *names* the invocation, so the
- * session has a directive rather than a decision. A skill a session must first decide
- * it needs is a new way to fail, which is why the reference files beside the primer are
- * reading material and not skills, however tempting the symmetry looks.
+ * `ARCHITECTURE.md` beside this file is the map: the layers an authoring agent reads
+ * and which one a new fact belongs in, the obligation vocabulary, the delivery path,
+ * the roster, and the two doctrines that govern how skills cite each other — the
+ * primer as a prerequisite rather than a preamble, and a parent-named step as a
+ * sub-skill rather than a choice.
  */
 
 import PRIMER from './primer.md';

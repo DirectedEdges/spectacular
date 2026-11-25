@@ -33,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`specs analyze` refuses to run on a tree whose fetched data is absent** — a source declaring `variables` or `styles` with no `<alias>.<kind>.json` on disk now fails before any report is written, naming each missing file and directing the reader to `specs fetch`. A source that declares neither kind stays silent, because a foundations file carrying no variables is a correct configuration. The raw payloads are gitignored while `data/cache/` stays committed, so a fresh clone or a new worktree has the cache index and none of the token universe behind it — analysed anyway, that tree reported `collections: []`, which cannot be told apart from a library that declares no themes.
+
 - **`specs generate` refuses to overwrite authored specs** — an existing spec with no `metadata.source` is authored work, and the run now aborts before writing anything, naming the components. Replacing authored specs requires an explicit `--overwrite`; the `specs run` pipeline can never pass it, so a watch chain is structurally incapable of destroying authored work. The posture skill's start command now carries `--skip scan generate`.
 
 ### Removed
