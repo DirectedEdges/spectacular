@@ -300,6 +300,19 @@ async function renderSpecPath(
   const SHOW_RENDER_WARNINGS = process.env.SPECS_RENDER_WARNINGS === '1';
   if (SHOW_RENDER_WARNINGS) for (const w of result.warnings ?? []) console.warn(`  ⚠ ${w}`);
 
+  // Withholding them from stdout is not the same as withholding them from the author.
+  // The full set is written beside the invoking workspace's other posture artifacts, so
+  // the one place a render's reasons could be read used to be the bridge server's own
+  // log — which lives in whichever working tree started the bridge, and a parallel tree
+  // is forbidden to read another tree's files. That made the warning-classification step
+  // of `specs-cli.component.compile` impossible to perform wherever it mattered most.
+  // Written whether or not they were printed, and named in the outcome so it is findable.
+  const warningLog = await writeRenderWarnings(result.warnings);
+  if (warningLog && !SHOW_RENDER_WARNINGS) {
+    const n = result.warnings?.length ?? 0;
+    console.log(`  ${n} render warning(s) → ${warningLog}`);
+  }
+
   // A render that could not place an instance produced a component missing
   // content, so "✓ Rendered" on its own overstates what happened. Say it plainly
   // — a per-warning line scrolls past in a batch, a count does not.
@@ -388,6 +401,29 @@ function printTimingReport(result: RenderResponse, elapsed: number): void {
     for (const p of phases) row(p.label, p.ms, p.count);
   }
   console.log(`    ${'TOTAL'.padEnd(24)} ${String(elapsed).padStart(6)}ms`);
+}
+
+/**
+ * Write a render's warnings beside the invoking workspace's posture artifacts, and
+ * return the path to name in the outcome.
+ *
+ * `.posture/` is the invoking tree's own directory — which is the point: the bridge
+ * server's log is not, and a working tree may not read another tree's files. One file
+ * per workspace, replaced each render, so it always describes the render just run.
+ * Returns undefined when there was nothing to write, or when the directory cannot be
+ * created — a warning log that fails is never a reason to fail a render.
+ */
+async function writeRenderWarnings(warnings: string[] | undefined): Promise<string | undefined> {
+  if (!warnings || warnings.length === 0) return undefined;
+  try {
+    const dir = path.join(process.cwd(), '.posture');
+    await fs.ensureDir(dir);
+    const file = path.join(dir, 'render-warnings.log');
+    await fs.writeFile(file, `${warnings.join('\n')}\n`, 'utf-8');
+    return path.relative(process.cwd(), file) || file;
+  } catch {
+    return undefined;
+  }
 }
 
 function countDroppedInstances(warnings?: string[]): number {

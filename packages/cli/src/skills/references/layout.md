@@ -82,8 +82,6 @@ A promoted container's **children become the target's slot content on their own*
 
 **Which layout components a library has is the library's own fact.** The names, what each is for, and the order they nest in — a page shell holding rows, a row holding sections, a section holding blocks — are declared in `specs/foundations/layout/guidelines.yaml`, not here and not inferred from component names. Read it before authoring a container tree in composed content.
 
-An atomic component's own internals stay primitive. The promotion map governs composed content — compositions, `instanceExamples`, slot content — not what a small component is built from.
-
 ## Arrangement through a hierarchy
 
 A tree gets deeper three ways, and they are not interchangeable:

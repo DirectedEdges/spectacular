@@ -50,7 +50,9 @@ Neither costs deliberation:
 
 ## 4. Classify the warnings
 
-**A render that exits successfully still warns**, and `⚠ INCOMPLETE: N instance element(s) could not be resolved` exits successfully too — so the command reads as a pass either way. The reason is never on stdout. Read `.posture/bridge-server.log`, whose tail covers the render just run.
+**A render that exits successfully still warns**, and `⚠ INCOMPLETE: N instance element(s) could not be resolved` exits successfully too — so the command reads as a pass either way. The reasons are not on stdout; the render writes them to **`.posture/render-warnings.log`** in the workspace you ran it from, replaced each render and named in the command's own outcome line. Read that file.
+
+It is the tree's own file by design. The bridge server's log is not: one bridge serves every working tree, its log lives in whichever tree started it, and a tree may not read another tree's files — so a parallel round could never perform this step. If `render-warnings.log` is absent after a render, the render produced no warnings.
 
 Classifying a warning is the expensive part, so it is done here once. **Act only on the spec-defect rows.** A platform limit is report material; an expected row is noise to recognise and pass over.
 

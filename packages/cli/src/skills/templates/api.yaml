@@ -1,43 +1,50 @@
 # api.yaml — the contract (schema: component-concern.schema.json#/definitions/ComponentApiDocument)
-# Replace <Name> and every placeholder; delete the props and elements you don't need.
+#
+# Everything below the metadata and title is COMMENTED, by design: a started folder
+# states nothing about a component nobody has described yet. Uncomment what the
+# component actually has and fill it in. Until `anatomy` and `props` exist, validate
+# reports them missing — that is the file telling you what is still unwritten, not a
+# defect. Live placeholder data here used to reach the analysis reports as if it were
+# a real prop surface, and the reports are what the next author correlates against.
+#
 # Authored spec: metadata omits `source` — validate with `specs validate <key> --authored`.
 metadata:
   concern: api
 title: <Name>
-anatomy:
-  # Every element the component is made of. Keys follow the workspace's spec.keys
-  # setting (camelCase here). Types: container | text | glyph | slot | instance |
-  # vector | line | ellipse | rectangle | polygon | star
-  root:
-    type: container
-  label:
-    type: text
-  # An element that is an instance of another workspace component:
-  # icon:
-  #   type: instance
-  #   instanceOf: <componentFolderKey>
-props:
-  # BooleanProp — requires type + default
-  disabled:
-    type: boolean
-    default: false
-  # StringProp — open value set; default optional (deprecated — prefer examples)
-  text:
-    type: string
-    examples:
-      - <Sample text>
-  # EnumProp — requires type + default + enum
-  appearance:
-    type: string
-    default: <value>
-    enum:
-      - <value>
-      - <other value>
-  # SlotProp — content the component exposes but does not define
-  # children:
-  #   type: slot
-  #   defaultSlot: true
-# Prop value combinations that are invalid together (optional):
+# anatomy:
+#   # Every element the component is made of. Keys follow the workspace's spec.keys
+#   # setting (camelCase here). Types: container | text | glyph | slot | instance |
+#   # vector | line | ellipse | rectangle | polygon | star
+#   root:
+#     type: container
+#   label:
+#     type: text
+#   # An element that is an instance of another workspace component:
+#   icon:
+#     type: instance
+#     instanceOf: <componentFolderKey>
+# props:
+#   # BooleanProp — requires type + default
+#   disabled:
+#     type: boolean
+#     default: false
+#   # StringProp — open value set; default optional (deprecated — prefer examples)
+#   text:
+#     type: string
+#     examples:
+#       - <Sample text>
+#   # EnumProp — requires type + default + enum
+#   appearance:
+#     type: string
+#     default: <value>
+#     enum:
+#       - <value>
+#       - <other value>
+#   # SlotProp — content the component exposes but does not define
+#   children:
+#     type: slot
+#     defaultSlot: true
+# # Prop value combinations that are invalid together:
 # invalidPropCombinations:
 #   - disabled: true
-#     hover: true
+#     state: Hover

@@ -1,19 +1,28 @@
 # Judgment rules for examples.yaml — `instanceExamples`, the whole-component
 # configurations, and the named slot fills beside them. Keys mirror the schema node they
 # govern; `slotContentExamples` is governed by `slots.yaml · fills`.
-# useWhen: ordered, evaluate top to bottom, first match wins. guidelines: modality-keyed
-# items — must/never hard, should/avoid strong convention, could/warn judgment.
-# adr: the decision an item projects.
+#
+# useWhen: ordered, evaluate top to bottom, first match wins.
+# guidelines: items keyed by obligation, RFC 2119 — must / must-not (absolute),
+# should / should-not (strong, disregard only with a considered reason), may (permitted).
+# Beside an obligation: instead (what to do in its place), example (a concrete instance),
+# reads (the artifacts to consult), note (mechanism or rationale), adr (the decision it
+# projects).
 instanceExamples:
   guidelines:
     - must: "author the named entries under `items`, beside an optional `orientation` that says how they sit relative to each other"
       adr: 125
     - must: "show only configurations the variants do not already carry — a variant is the component in one state, and an example that restates one documents nothing twice and emits a second story for the same thing"
-      never: "write an example per state, per appearance, or per size — the variant matrix is where a state lives, and every surface already renders it"
-      note: "the test is whether the configuration is reachable by setting the props a variant sets. If it is, drop the example"
+      must-not: "write an example per state, per appearance, or per size — the variant matrix is where a state lives, and every surface already renders it"
+      note: "the test is whether the configuration is reachable by setting the props a variant sets; if it is, drop the example"
     - must: "write no instance examples at all where every configuration is a variant — a component whose props are all state is fully documented by its matrix, and zero entries is the right answer rather than a gap to fill"
-    - could: "keep an example whose props the matrix reaches when its **content** is what it documents — the variants cover a prop surface, not what the component holds, so a realistic string, a different glyph, or a composed fill can carry something no variant shows"
-      avoid: "an example per possible content value — one that reads differently from the default earns its place; a second of the same kind does not"
+    - may: "keep an example whose props the matrix reaches when its **content** is what it documents — the variants cover a prop surface, not what the component holds, so a realistic string, a different glyph, or a composed fill can carry something no variant shows"
+      should-not: "write an example per possible content value"
+      instead: "keep one that reads differently from the default; a second of the same kind earns nothing"
     - should: "give each entry a title naming the usage rather than the configuration — what a reader is looking at, not which props are set"
-    - must: "fill a slot prop with a `$slotContent` pointer, never inline content and never a `$binding` — an instance example is a documented configuration, not a live binding"
+    - may: "state an example's own box on the entry's `styles` — an author-resized example records `layoutSizingHorizontal: FIXED` with a raw-px `width`, and one left at its component's natural size omits `styles` entirely"
+      note: "these are the example instance's styles, never its content's — a narrower line measure on a text example is this field, not a shorter string"
+      adr: 124
+    - must: "fill a slot prop with a `$slotContent` pointer — an instance example is a documented configuration, not a live binding"
+      must-not: "write inline content or a `$binding` there"
       adr: [46, 47]

@@ -36,7 +36,8 @@ Any implementation can be a surface in either direction. Nothing about the spec 
 2. **Resolve paths from config, never hardcode them.** `data.directory`, `spec.directory` and `assets.directory` are settings (defaults `./data`, `./specs`, `./assets`); `spec.directory` is also overridable with `-o`, and the config directory itself with `--config`. Read the settings, then build the path.
 3. **Indexes are not authorities.** Analysis reports and scan manifests aggregate across a library, which no single spec can do, and they are lossy by design. An index says where to look; it never says what is true.
 4. **Verify against output.** A classification that emits nothing is indistinguishable from one never made. Report the numbers, never that a step succeeded.
-5. **Absence in one library is not absence in the domain.** A shape you did not find in this workspace is not a shape that does not occur.
+5. **A declaration is read and cited entire, or not cited.** A binding's `notes`, a rule's `note`, a schema `description` — each is one statement, and its last sentence routinely reverses its first (`a closed enum of numbers selects like an enum does`). Truncating one in a print and quoting the half that agrees with you is how a real defect gets excused as declared behavior.
+6. **Absence in one library is not absence in the domain.** A shape you did not find in this workspace is not a shape that does not occur.
 
 ## Reports
 

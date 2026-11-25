@@ -20,7 +20,7 @@ Two templates ship beside this skill in `templates/` — `supplemental.yaml`, `g
 specs author start <key>
 ```
 
-One call writes the collision-checked folder with all three concern files (`--title` when the request names one) and prints the status digest. The folder starts **valid**, so every validation error you see afterwards is one you introduced. Read the digest instead of deriving its facts — no folder listing, no port probing, no freshness checks. Two fields act:
+One call writes the collision-checked folder with all three concern files (`--title` when the request names one) and prints the status digest. The folder starts **empty**: each file carries its metadata and its commented guide, nothing more, so the only errors `specs validate` reports are the required nodes you have not written yet (`anatomy` and `props` until api.yaml exists; `default` until variants.yaml does). They clear as you author each file in order, and any error naming something *you* wrote is one you introduced. Read the digest instead of deriving its facts — no folder listing, no port probing, no freshness checks. Two fields act:
 
 - `posture.up: false` — run `specs-cli.posture` (idempotent; this procedure compiles live). Never probe a guessed port yourself.
 - `analysis.stale: true` — run `specs analyze` before correlating.
@@ -51,6 +51,8 @@ Before writing anything, restate every requirement from the request as a table:
 | … | supplemental | the schema path that *would* carry it and why it cannot |
 | … | guidelines | the obligation level it binds a consumer at |
 
+**A named concept that resolves to nothing is a question, never a guess.** When the request names something in the system's own voice — a color concept, a token name, a prop vocabulary, a glyph — look it up where that kind of key lives (the foundations files, the token caches, the analysis reports, the icon report). A named concept the lookup cannot find stops that requirement: it goes into the report as a question for the requester, never approximated with an invented literal. Proving an absence once is the point of the lookup; burning a search re-proving it, then guessing anyway, is the recorded failure this rule retires.
+
 Rules: a requirement goes supplemental only after naming the schema path that cannot carry it; forcing into the spec what the schema cannot express is the worse failure. And before marking anything supplemental, check it is not a prop: a behavior the consumer configures in code — a semantic element choice, an accessibility label, a heading level — is a **code-only prop** in api.yaml (`rules/props.yaml · codeOnly`), not a hand-authored platform file; routing a prop to supplemental is a wrong-surface failure even when the overlay works. Sort by **who acts on it** — a thing the component must do is supplemental, a thing its caller must do is guidelines. This table is the plan — keep it, you grade against it in step 7.
 
 ## 2. Correlate against the catalogue
@@ -61,9 +63,11 @@ Read, in order:
 2. The start digest's `catalogue` — what exists to nest or emulate (collisions were already checked at start).
 3. `analysis/props.yaml` — the system's prop vocabulary. Reuse a prop name and its value set when the concept matches; never coin a synonym for a prop the system already has.
 4. `analysis/dependencies.byComponent.yaml` — how components nest, for choosing `instanceOf` targets.
-5. `mappings/bindings/` in the schema package, for the **concepts this component actually touches** — a prop type, a role, a style key. Each concept carries a disposition, and the two that matter are `approximated` (the platform keeps something lossier than the spec says) and `bound` (the platform substitutes a value, such as emitting an authoring-default example as a fallback). Reading them here is half a minute and tells you up front what a surface will do with what you are about to write; reaching for them only after a surface looks wrong has cost whole rounds.
+5. `mappings/bindings/` in the schema package, for the **concepts this component actually touches** — a prop type, a role, a style key. Each concept carries a disposition, and the two that matter are `approximated` (the platform keeps something lossier than the spec says) and `bound` (the platform substitutes a value, such as emitting an authoring-default example as a fallback). Reading them here is half a minute and tells you up front what a surface will do with what you are about to write; reaching for them only after a surface looks wrong has cost whole rounds. Check the key's `elements` scope too: a key `bound` on a platform but scoped to element types that do not include the element you are giving it is skipped silently there — `strokes` on a `glyph` passed validation and died on canvas exactly this way. Validation will not catch this class; the bindings are the only place it is knowable before a render.
 
-If the digest said `analysis.stale: true`, run `specs analyze` first. A report that is empty at this catalogue size is skipped, not studied. When emulating the closest sibling, read **all three** of its concern files — the pattern a task hinges on has sat in the one file a session skipped. Decide and write down: components to nest and the closest sibling to emulate (idiom only — structure always comes from the schema). The token set is decided at step 4, from the variants pack — not here.
+If the digest said `analysis.stale: true`, run `specs analyze` first. A report that is empty at this catalogue size is skipped, not studied.
+
+**Patterns come from the analysis reports first, individual specs second.** The reports are the catalogue's own summary of its api and styling idiom — start there, and open an individual sibling only when a specific question the reports cannot answer warrants it. Specs are never read to learn *how to write a spec* (the schema, rules, and references carry that); a sibling is opened only to look for api and styling patterns. When one is warranted, check its `metadata.source` first: a captured spec carries it, an authored one omits it — prefer an authored sibling, and treat a captured one as evidence of what capture produced, not of authored idiom. When you do open the sibling, read **all three** of its concern files — the pattern a task hinges on has sat in the one file a session skipped. Decide and write down: components to nest and the closest sibling to emulate (idiom only — structure always comes from the schema). The token set is decided at step 4, from the variants pack — not here.
 
 ## 3. Author api.yaml, then validate
 
@@ -76,6 +80,8 @@ specs validate <key> --authored
 Zero errors before touching the next file. Fix the file the error names, re-run, repeat. Never proceed past a validation error — with one expected exception: **a slot-bearing component's `variants.yaml` fails once by design**, because its `children.examples[0]` `$slotContent` pointer targets a slot-content example you have not authored yet. That dangling-pointer error means "author examples next," never "rework the binding."
 
 ## 4. Author variants.yaml, then validate
+
+**Before writing a delta, multiply the axes.** A Figma component set is the cross product of its variant axes, not the number of `variants[]` entries you write — so compute it from `api.yaml`'s enum lengths and state the product (`mode 2 × itemSpacing 10 × padding 7 = 140`). Over 100, stop and get the human's approval: name the number, name the risk — render time, and a set large enough to make their Figma file unusable — and offer the alternative of fewer enum values or fewer axes. `rules/variants.yaml · variantBudget` carries the rule; a round that skipped this arithmetic rendered 990 frames and locked a human's Figma file.
 
 Load the variants pack (step 0) first, in one call; token choices come from it. The `default` block fully describes every anatomy element — layout tree, styles, content, bindings. Then one `variants[]` delta per prop configuration that changes anything. Validate again; zero errors.
 
@@ -124,5 +130,14 @@ End every pass with this summary, in this order. Keep unstructured narrative to 
 - One stats line: validate attempts per file; requirements spec-carried vs supplemental vs guidelines
 
 The Suggestions section is also a scope rule: an unprompted improvement is proposed there, never implemented in the same pass.
+
+## 9. The revision round
+
+A reply to your step-8 report is a work round of its own, and it does not start over. Steps 1 and 2 are already done — the requirements table and the catalogue correlation stand, amended by the reply. Re-enter only the steps the reply touches, in file order (`api.yaml` → `variants.yaml` → `examples.yaml`), validating after each exactly as in a first pass, then compile and report again. Amend the step-1 table in place rather than rewriting it: a reply that renames a prop or drops a value changes a row, and the table is still what you grade against.
+
+Two mechanics the posture does not make obvious:
+
+- **A new hand-authored platform file does not re-point the generated story at itself.** The posture watches `specs/`, so the story keeps importing the scaffold until a spec file changes. Touch the spec's `api.yaml` (or save any concern file) to force the re-emit, then confirm the import by reading the emitted story.
+- **Anything that changes what the canvas should show needs another render** — a new prop, a changed variant matrix, a changed style. A code-only prop is the one case that does not: it exists in code, and the Figma side carries only its layer. Render once per revision round that changed canvas-visible facts, never once per file.
 
 **Foundations guidelines are the exception to waiting.** A guess that only a foundations guideline could have settled — which colors a concept may use, what a type scale's default is — names a missing `guidelines/<area>/<topic>`. Propose the topic in Suggestions, and you may go further: run `specs-cli.guidelines.propose` for it in the same pass. Its output is a proposal for the ratifier, not shipped behavior, so drafting one expands no scope — and the next component inherits a ruling instead of re-guessing.

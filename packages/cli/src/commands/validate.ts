@@ -126,19 +126,11 @@ export const Validate = new Command('validate')
           errors: result.findings.filter(f => f.level === 'error' && f.scope === undefined),
           warnings: result.findings.filter(f => f.level === 'warning' && f.scope === undefined),
           outOfScope: result.findings.filter(f => f.scope === 'workspace'),
-          platformGaps: result.platformGaps,
           skipped: result.skipped,
           resolved: result.resolved,
         }, null, 2));
       } else {
         formatText(result.findings, result.counts, result.skipped);
-        if (result.platformGaps.length > 0) {
-          const n = result.platformGaps.length;
-          console.log(`⚠ ${n} ${n === 1 ? 'property' : 'properties'} will not reach a platform that declares it unsupported — the spec is right, the surface is limited. Write a supplemental requirement for anything the design depends on:`);
-          for (const g of result.platformGaps) {
-            console.log(`    ${g.spec} ${g.property} → ${g.platform}: ${g.note}`);
-          }
-        }
         if (result.resolved.length > 0) {
           console.log('ℹ dimension tokens resolve to (default mode — themed, orientation only):');
           for (const r of result.resolved) console.log(`    ${r.spec} ${r.prop}: ${r.token} → ${r.value}`);

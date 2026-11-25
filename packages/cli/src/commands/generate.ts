@@ -33,6 +33,7 @@ import { LicenseStatus } from '../generate/licenseStatus.js';
 import { StepError } from '../pipeline/StepError.js';
 import { TRANSIENT_FAILURES, transientFailureLines } from '../generate/licenseGuidance.js';
 import { FileManifest } from '../writers/FileManifest.js';
+import { authoredOverwrites } from '../writers/authoredGuard.js';
 import { RunMetadataFile } from '../writers/RunMetadataFile.js';
 import { SingleFileWriter } from '../writers/SingleFileWriter.js';
 import { ComponentFileWriter } from '../writers/ComponentFileWriter.js';
@@ -80,6 +81,7 @@ interface GenerateOptions {
   file?: string;
   node?: string;
   remove?: boolean;
+  overwrite?: boolean;
 }
 
 /**
@@ -479,12 +481,32 @@ async function writeGeneratedOutput(
   // Components first, so a run's output reads in the order the manifest lists it. A
   // `--compositions` / `--no-compositions` run covers one kind, and the kind it excluded
   // is one it is not authoritative over — so nothing of that kind's is written or removed.
+  const manifests: Array<{ kind: SpecKind; group: typeof processedComponents; manifest: FileManifest }> = [];
   for (const kind of kindScope.kinds) {
     const group = byKind.get(kind);
     if (!group || group.length === 0) continue;
-    const result = await writer.write(
-      new FileManifest(group, outputConfig, layout.dirFor(kind), outputFileName, timestamp, kind)
-    );
+    manifests.push({
+      kind, group,
+      manifest: new FileManifest(group, outputConfig, layout.dirFor(kind), outputFileName, timestamp, kind),
+    });
+  }
+
+  // Generate is authoritative over captured specs only. An existing spec with no
+  // `metadata.source` is authored work, and overwriting it is data loss — the run
+  // refuses before touching any file, in every invocation path (`specs run`'s
+  // generate step calls this same body and can never pass --overwrite).
+  if (!options.overwrite) {
+    const authored = (await Promise.all(manifests.map(m => authoredOverwrites(m.manifest)))).flat();
+    if (authored.length > 0) {
+      console.error(`Error: ${authored.length} existing spec(s) are authored (no metadata.source) — generate refuses to overwrite them:`);
+      for (const name of authored) console.error(`    ${name}`);
+      console.error('Re-run with --overwrite to deliberately replace authored specs, or scope with -c to components that are not authored.');
+      stop(ERROR_CODES.VALIDATION_FAILED);
+    }
+  }
+
+  for (const { kind, group, manifest } of manifests) {
+    const result = await writer.write(manifest);
     writeResult.filesWritten.push(...result.filesWritten);
     writeResult.warnings.push(...result.warnings);
     writeResult.errors.push(...result.errors);
@@ -594,6 +616,7 @@ export const Generate = new Command('generate')
   .option('--file <fileKey>', 'Target a specific connected Figma file with --from-bridge (prompts to choose if more than one is connected in an interactive terminal; required otherwise)')
   .option('--node <id>', 'With --from-bridge: generate from this node id instead of the current selection')
   .option('--remove', 'With --from-bridge: delete the node once its spec has been read (round-trip testing — leaves the Figma page as it was found)')
+  .option('--overwrite', 'Replace existing AUTHORED specs (those with no metadata.source) — without this flag generate refuses to touch them')
   .option('--verbose', 'Enable detailed logging', false)
   .action(async (source: string | undefined, options: GenerateOptions) => {
     try {

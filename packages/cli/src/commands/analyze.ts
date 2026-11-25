@@ -170,14 +170,33 @@ export async function runAnalyze(
   // `finalize` needs it to report tokens no spec referenced.
   const dataDirectory = config.settings.data?.directory;
   const dataDir = dataDirectory ? path.resolve(dataDirectory) : path.resolve(process.cwd());
-  const foundationsPathsFor = (kind: 'variables' | 'styles'): string[] =>
+  // A source that does not declare a kind is silent — a foundations file with no
+  // variables is a correct configuration, not an omission. A source that *declares*
+  // the kind and has no file is an un-fetched tree, and that is fatal: the raw
+  // payloads are gitignored (megabytes, no reviewable diff), so a fresh clone or a
+  // new worktree has the committed `data/cache/` index and none of the universe
+  // behind it. Skipped silently, `collections` renders as `[]` and the analysis reads
+  // as "this library declares no themes" — which is how a card round was authored
+  // against an empty theme vocabulary and reported success.
+  const declaredFoundationsPaths = (kind: 'variables' | 'styles'): string[] =>
     Object.entries(config.settings.data?.sources ?? {})
       .filter(([, s]) => Array.isArray(s.fetch) && s.fetch.includes(kind))
-      .map(([alias]) => path.join(dataDir, `${alias}.${kind}.json`))
-      .filter(p => fs.existsSync(p));
+      .map(([alias]) => path.join(dataDir, `${alias}.${kind}.json`));
 
-  const variablesPaths = foundationsPathsFor('variables');
-  const stylesPaths = foundationsPathsFor('styles');
+  const declared = [...declaredFoundationsPaths('variables'), ...declaredFoundationsPaths('styles')];
+  const missing = declared.filter(p => !fs.existsSync(p));
+  if (missing.length > 0) {
+    const list = missing.map(p => `  - ${path.relative(process.cwd(), p)}`).join('\n');
+    throw new StepError(
+      `this tree has no fetched data for ${missing.length === 1 ? 'a source' : 'sources'} the config declares:\n${list}\n`
+        + `Analysis would report an empty token universe and no theme vocabulary.\n`
+        + `Run \`specs fetch\` to populate them.`,
+      ERROR_CODES.FILE_ERROR,
+    );
+  }
+
+  const variablesPaths = declaredFoundationsPaths('variables');
+  const stylesPaths = declaredFoundationsPaths('styles');
   const foundations = variablesPaths.length > 0 || stylesPaths.length > 0
     ? await loadFoundations(variablesPaths, stylesPaths)
     : undefined;

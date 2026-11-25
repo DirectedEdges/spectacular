@@ -9,9 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`rules/props.yaml · stateProps` pairs a `state` enum with `disabled`** — active states are declared illegal while disabled through `invalidPropCombinations`.
+- **`rules/anatomy.yaml` rules out hand-authored `promotedPrimitive` blocks** — the extension is a generator capture record; authored elements declare `instanceOf` and render as instances. The slots reference carries the same caution.
+- **The slots reference states the slot-only component shape** — the root is the slot; a container root is earned by a sibling element, and generated exemplars showing a leftover wrapper are capture evidence, not the authored contract.
+- **`component.author` directs the bindings read at element scope** — a key bound on a platform but scoped to element types that exclude the carrying element (strokes on a glyph) is skipped silently there, and the bindings are the only place that is knowable before a render.
+- **`component.author` starts pattern-reading at the analysis reports** — an individual sibling opens only when a specific question warrants it, authored siblings preferred (`metadata.source` is the captured-spec tell).
+- **`component.author` stops on named concepts that resolve to nothing** — a request naming a token, color concept, prop vocabulary, or glyph the lookup cannot find becomes a question in the report, never an invented literal.
+- **`rules/anatomy.yaml · primitiveOrInstance`** separates four judgments that read as one rule with exceptions: a component's own internals stay primitive, composed content promotes to a mapped component, a pending target means author the primitive and report the gap, and a slot's `contentStyles` keeps its fill primitive. The decision is a table; `rules/slots.yaml · contentStyles` carries the mechanism behind the last case, and the duplicate statements in `layoutStyling.yaml` and `references/layout.md` are gone.
+- **The token cascade is an ordered table** — `rules/styles.yaml · tokens` names which artifact answers which question: the per-type foundations report resolves a name, the index says whether a type exists, `styling.byToken.yaml` carries precedent and which namespace a library exposes, and the raw caches are a last resort for existence alone. The reports exist so nobody slices a cache.
+- **`rules/props.yaml · codeOnly` is a three-way table** — a control Figma can express is an ordinary prop, one only code can express is a code-only prop, and only what no prop surface can carry goes supplemental.
+- **`cornerRadius` has its own rule, apart from `padding`/`strokeWeight`** — the corner vocabulary (`topStart`…) and the side vocabulary (`top`, `end`…) are different key sets, and one rule covering both read as though they shared one.
+- **The authoring rules speak RFC 2119** — `must`, `must-not`, `should`, `should-not`, `may`, the same five levels a component's `guidelines.yaml` declares, replacing the colloquial `never`/`avoid`/`could`/`warn`. Obligations that had been written as notes are now obligations, and three new fields carry what statements used to absorb: `instead` (the replacement for a prohibited thing), `example` (a concrete instance, now identifiable as an illustration rather than evidence), and `reads` (the artifacts to consult).
+- **A render writes its warnings to `.posture/render-warnings.log`** in the workspace it ran from, named in the command's outcome — the reasons behind a successful-but-incomplete render are now readable from the tree that rendered, where the bridge server's own log never was.
+- **`specs author start` writes templates that carry no live data** — each file starts as its metadata plus a commented guide, so validate reports only the required nodes still unwritten, and placeholder props no longer reach the analysis reports as a real prop surface.
+- **A promotion entry whose target has no spec folder still has its rows checked** — the honoured-source and token-path checks run, and the missing-target warning says the rows could not be checked against a declared prop surface. One line used to stand in for every defect beneath such an entry.
+- **`rules/variants.yaml · variantBudget`** — the Figma variant cross product is multiplied out and stated before deltas are written, and a product over 100 stops for approval; `component.author` step 4 carries the step.
+- **`rules/styles.yaml · tokens` describes token authority as it cascades** — a zero in the foundations index means the report did not see those tokens, never that the library lacks them, and `<data>/cache/*.yaml` settles existence.
+- **`rules/props.yaml · enum` keeps a named step's name in a letter scale** (`[XS, S, M, L, Lead]`), rather than promoting it into the next free letter.
+- **`component.author` carries the revision round** — what a reply to its report re-enters, what forces a story to re-point at a hand-authored platform file, and when another render is needed.
+- **`rules/examples.yaml` states that an instance example carries its own box styles** — a resized example records `layoutSizingHorizontal: FIXED` with a raw-px width (ADR-124); a round had reported this as a schema gap and dropped the requirement.
+- **The primer requires a declaration to be cited entire** — a binding's `notes`, a rule's `note`, a schema description; a truncated quote once excused a real emitter defect as declared behavior.
+- **`rules/props.yaml` points state-settability at the `states` convention** — whether a state prop is consumer API or a browser-realized affordance is the convention's ruling, not a per-component debate.
+
 ### Changed
 
+- **`specs analyze` refuses to run on a tree whose fetched data is absent** — a source declaring `variables` or `styles` with no `<alias>.<kind>.json` on disk now fails before any report is written, naming each missing file and directing the reader to `specs fetch`. A source that declares neither kind stays silent, because a foundations file carrying no variables is a correct configuration. The raw payloads are gitignored while `data/cache/` stays committed, so a fresh clone or a new worktree has the cache index and none of the token universe behind it — analysed anyway, that tree reported `collections: []`, which cannot be told apart from a library that declares no themes.
+
+- **`specs generate` refuses to overwrite authored specs** — an existing spec with no `metadata.source` is authored work, and the run now aborts before writing anything, naming the components. Replacing authored specs requires an explicit `--overwrite`; the `specs run` pipeline can never pass it, so a watch chain is structurally incapable of destroying authored work. The posture skill's start command now carries `--skip scan generate`.
+
 ### Removed
+
+- **`specs validate` no longer reports platform style support** — the unsupported-key advisory block and its `platformGaps` JSON field are gone. Validation is the spec's own contract; what a platform does with a key lives in the schema package's bindings, which the authoring skill directs authors to read.
 
 
 ## [0.40.0] - 2026-11-23
