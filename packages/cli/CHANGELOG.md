@@ -5,6 +5,15 @@ All notable changes to `@directededges/specs-cli` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.41.0] - Unreleased
+
+### Added
+
+### Changed
+
+### Removed
+
+
 ## [0.40.0] - 2026-11-23
 
 **The bridge now answers only you.** Connections come solely from your own machine, and the command line and the Figma plugin prove themselves with a pairing token the first time they connect — so nothing on your network, and no website you visit, can read or change your Figma file through the bridge. Pairing is a one-time paste per computer; everything else works exactly as before.
